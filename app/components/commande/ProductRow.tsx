@@ -4,7 +4,10 @@ import type { ProductOption, VariantGid } from "../../lib/commande/types";
 import { formatChf, formatInteger } from "../../lib/format/money";
 import { QuantityStepper } from "./QuantityStepper";
 
-/** Un vin : vignette, nom, prix, stock et quantité choisie. */
+/**
+ * Un vin : vignette, nom, prix, stock, puis les boutons de quantité.
+ * Un vin choisi se voit tout de suite : fond grisé, bord marqué et « ✓ 3 bouteilles dans la commande ».
+ */
 
 interface ProductRowProps {
   readonly product: ProductOption;
@@ -18,12 +21,17 @@ function stockText(available: number | null): string | null {
   return available <= 0 ? "Rupture de stock" : `${formatInteger(available)} en stock`;
 }
 
+export function bottlesText(quantity: number): string {
+  return `${formatInteger(quantity)} bouteille${quantity > 1 ? "s" : ""}`;
+}
+
 function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
   const label = productLabel(product);
   const overStock = isOverStock(product, quantity);
+  const chosen = quantity > 0;
 
   return (
-    <s-box padding="small-100 none" borderStyle="none none solid none" borderWidth="small" borderColor="subdued">
+    <s-box padding="base" borderRadius="base" border={chosen ? "large strong" : "base"} background={chosen ? "subdued" : "base"}>
       <s-stack direction="block" gap="small-200">
         <s-stack direction="inline" gap="small-200" alignItems="center">
           {product.imageUrl === null ? (
@@ -39,6 +47,11 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
                 .join(" · ")}
             </s-text>
           </s-stack>
+          {chosen ? (
+            <s-badge tone="success" icon="check" size="large">
+              {`${bottlesText(quantity)} dans la commande`}
+            </s-badge>
+          ) : null}
         </s-stack>
         <QuantityStepper
           productLabel={label}

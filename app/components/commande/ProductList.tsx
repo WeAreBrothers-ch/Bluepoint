@@ -3,9 +3,10 @@ import { quantityOf, type Quantities } from "../../lib/commande/cart";
 import { filterProducts } from "../../lib/commande/catalog";
 import type { ProductOption, VariantGid } from "../../lib/commande/types";
 import { CATALOG_MAX_VARIANTS } from "../../lib/commande/queries";
+import { ChosenWines } from "./ChosenWines";
 import { ProductRow } from "./ProductRow";
 
-/** Les vins en vente, avec une recherche rapide par nom (ou code). */
+/** Les vins choisis en haut, puis les vins en vente avec une recherche rapide par nom. */
 
 interface ProductListProps {
   readonly products: readonly ProductOption[];
@@ -19,10 +20,12 @@ export function ProductList({ products, truncated, quantities, onSet, onAdd }: P
   const [filter, setFilter] = useState("");
   const deferredFilter = useDeferredValue(filter);
   const visible = useMemo(() => filterProducts(products, deferredFilter), [products, deferredFilter]);
+  const byId = useMemo(() => new Map(products.map((product) => [product.variantId, product])), [products]);
 
   return (
     <s-section heading="2. Vins">
       <s-stack direction="block" gap="base">
+        <ChosenWines products={byId} quantities={quantities} onSet={onSet} />
         <s-search-field
           label="Chercher un vin"
           placeholder="Nom du vin, par exemple « Barolo »"
@@ -39,7 +42,7 @@ export function ProductList({ products, truncated, quantities, onSet, onAdd }: P
             {products.length === 0 ? "Aucun vin en vente dans la boutique." : "Aucun vin ne correspond. Effacez la recherche pour tout revoir."}
           </s-text>
         ) : (
-          <s-stack direction="block" gap="none">
+          <s-stack direction="block" gap="small-200">
             {visible.map((product) => (
               <ProductRow
                 key={product.variantId}

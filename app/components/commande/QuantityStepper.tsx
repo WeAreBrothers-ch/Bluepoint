@@ -1,8 +1,10 @@
 import { CARTON_SIZES, parseQuantity } from "../../lib/commande/cart";
 import { MAX_LINE_QUANTITY } from "../../lib/commande/types";
-import { TouchButton } from "./TouchButton";
 
-/** Quantité d'une variante : −, saisie libre, +, et raccourcis carton de 6 et de 12. */
+/**
+ * Boutons de quantité d'un vin, sur une seule ligne.
+ * Pas encore choisi : « Ajouter 1 bouteille » et les cartons. Déjà choisi : −, la quantité, +, cartons, « Retirer ».
+ */
 
 interface QuantityStepperProps {
   readonly productLabel: string;
@@ -11,15 +13,35 @@ interface QuantityStepperProps {
   readonly onAdd: (delta: number) => void;
 }
 
+function CartonButtons({ productLabel, onAdd }: Pick<QuantityStepperProps, "productLabel" | "onAdd">) {
+  return (
+    <>
+      {CARTON_SIZES.map((size) => (
+        <s-button key={size} accessibilityLabel={`Ajouter un carton de ${size} de ${productLabel}`} onClick={() => onAdd(size)}>
+          {`+ carton de ${size}`}
+        </s-button>
+      ))}
+    </>
+  );
+}
+
 export function QuantityStepper({ productLabel, quantity, onSet, onAdd }: QuantityStepperProps) {
+  if (quantity === 0) {
+    return (
+      <s-stack direction="inline" gap="small-200" alignItems="center">
+        <s-button icon="plus" accessibilityLabel={`Ajouter une bouteille de ${productLabel}`} onClick={() => onAdd(1)}>
+          Ajouter 1 bouteille
+        </s-button>
+        <CartonButtons productLabel={productLabel} onAdd={onAdd} />
+      </s-stack>
+    );
+  }
   return (
     <s-stack direction="inline" gap="small-200" alignItems="center">
-      <TouchButton label={`Retirer une bouteille de ${productLabel}`} onPress={() => onAdd(-1)} disabled={quantity === 0}>
-        <s-icon type="minus" />
-      </TouchButton>
-      <s-box inlineSize="88px">
+      <s-button icon="minus" accessibilityLabel={`Retirer une bouteille de ${productLabel}`} onClick={() => onAdd(-1)} />
+      <s-box inlineSize="80px">
         <s-number-field
-          label={`Quantité de ${productLabel}`}
+          label={`Nombre de bouteilles de ${productLabel}`}
           labelAccessibilityVisibility="exclusive"
           value={String(quantity)}
           min={0}
@@ -29,14 +51,11 @@ export function QuantityStepper({ productLabel, quantity, onSet, onAdd }: Quanti
           onInput={(event) => onSet(parseQuantity(event.currentTarget.value))}
         />
       </s-box>
-      <TouchButton label={`Ajouter une bouteille de ${productLabel}`} onPress={() => onAdd(1)}>
-        <s-icon type="plus" />
-      </TouchButton>
-      {CARTON_SIZES.map((size) => (
-        <TouchButton key={size} label={`Ajouter un carton de ${size} de ${productLabel}`} onPress={() => onAdd(size)}>
-          <s-text>{`+ carton de ${size}`}</s-text>
-        </TouchButton>
-      ))}
+      <s-button icon="plus" accessibilityLabel={`Ajouter une bouteille de ${productLabel}`} onClick={() => onAdd(1)} />
+      <CartonButtons productLabel={productLabel} onAdd={onAdd} />
+      <s-button icon="delete" variant="tertiary" tone="critical" accessibilityLabel={`Retirer ${productLabel} de la commande`} onClick={() => onSet(0)}>
+        Retirer
+      </s-button>
     </s-stack>
   );
 }
