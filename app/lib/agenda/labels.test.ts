@@ -8,14 +8,14 @@ const at = (overrides: Parameters<typeof task>[0]) => scheduleTask(task(override
 
 describe("libellés de l'agenda", () => {
   it("parle de paiement en mots simples", () => {
-    expect(PAYMENT_LABELS.PENDING).toEqual({ label: "Pas encore payée", tone: "warning" });
+    expect(PAYMENT_LABELS.PENDING).toEqual({ label: "Le client n’a pas encore payé", tone: "warning" });
   });
 
   it("nomme les modes et l'action qui confirme la remise", () => {
     expect(modeLabel("poste").label).toBe("Envoi par la Poste");
-    expect(modeLabel("retrait").doneAction).toBe("C’est retiré");
-    expect(modeLabel(null).doneAction).toBe("C’est livré");
-    expect(modeLabel("livraison").doneQuestion("#1042")).toBe("La commande #1042 est-elle bien livrée ?");
+    expect(modeLabel("retrait").doneAction).toBe("Le client est venu la chercher");
+    expect(modeLabel(null).doneAction).toBe("J’ai livré la commande");
+    expect(modeLabel("livraison").doneQuestion("#1042")).toBe("Avez-vous bien livré la commande #1042 ?");
   });
 
   it("écrit la date de livraison en toutes lettres", () => {
@@ -48,15 +48,15 @@ describe("libellés de l'agenda", () => {
 
 describe("badge de paiement", () => {
   it("dit pourquoi une commande n'est pas encore payée", () => {
-    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Facture à 30 jours");
+    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Le client paiera sur facture (30 jours)");
     expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: { type: "FULFILLMENT", dueInDays: null } })?.label).toBe(
-      "Paiement à la livraison",
+      "Le client paiera à la livraison",
     );
-    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: null })?.label).toBe("Pas encore payée");
+    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: null })?.label).toBe("Le client n’a pas encore payé");
   });
 
   it("garde le statut Shopify une fois payée", () => {
-    expect(paymentBadge({ financialStatus: "PAID", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Payée");
+    expect(paymentBadge({ financialStatus: "PAID", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Le client a déjà payé");
     expect(paymentBadge({ financialStatus: null, paymentTerms: null })).toBeNull();
   });
 });

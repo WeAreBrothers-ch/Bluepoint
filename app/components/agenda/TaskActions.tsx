@@ -9,7 +9,7 @@ import { InvoiceShortcutButtons } from "../factures/InvoiceShortcutButtons";
 import { DayChoicePanel } from "./DeliveryDayPicker";
 
 /**
- * Boutons d'une tâche, sur une seule ligne. « C'est livré » demande une confirmation avant d'agir :
+ * Boutons d'une tâche, sur une seule ligne. « J'ai livré la commande » demande une confirmation avant d'agir :
  * l'action prévient Shopify et fait la facture, on ne la déclenche pas par un toucher malheureux.
  * Une commande sans date (souvent venue du site) propose d'abord « Choisir le jour ».
  * Tous les boutons sont désactivés pendant qu'une action est en cours.
@@ -23,10 +23,10 @@ interface TaskActionsProps {
   readonly today: IsoDate;
 }
 
-/** Panneau ouvert à la place des boutons : confirmation de « C'est livré » ou choix du jour. */
+/** Panneau ouvert à la place des boutons : confirmation de la livraison ou choix du jour. */
 type Panel = "aucun" | "confirmer" | "jour";
 
-/** La commande reste à encaisser : on propose « C'est payé » sous la facture. */
+/** La commande n'est pas encore payée : on propose « Le client a payé » sous la facture. */
 function awaitsPayment(task: ScheduledTask): boolean {
   return task.financialStatus === "PENDING" || task.financialStatus === "PARTIALLY_PAID" || task.financialStatus === "AUTHORIZED";
 }
@@ -47,7 +47,7 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
   const canInvoice = task.status === "livree" || task.status === "expediee";
   const canReschedule = task.status === "a_livrer" || task.status === "partielle";
   const undated = task.plannedDate === null;
-  // Juste après « C'est livré », avant le rechargement : on connaît seulement le numéro de la facture.
+  // Juste après la livraison, avant le rechargement : on connaît seulement le numéro de la facture.
   const createdInvoice = invoice === null && fetcher.data?.ok ? fetcher.data.invoice : null;
   const disabled = busy ? { disabled: true } : {};
 
@@ -56,7 +56,7 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
       <s-box padding="base" background="subdued" borderRadius="base">
         <s-stack direction="block" gap="small-200">
           <s-text type="strong">{mode.doneQuestion(task.name)}</s-text>
-          <s-text>La facture sera préparée tout de suite après.</s-text>
+          <s-text>La facture sera faite tout de suite après.</s-text>
           <s-stack direction="inline" gap="small-200">
             <s-button
               variant="primary"

@@ -19,11 +19,11 @@ function day(value: string): string {
 }
 
 function StatusBadge({ invoice }: { readonly invoice: InvoiceListItem }) {
-  if (invoice.paymentState === "payee") return <s-badge tone="success">Payée</s-badge>;
+  if (invoice.paymentState === "payee") return <s-badge tone="success">Le client a déjà payé</s-badge>;
   if (invoice.paymentState === "en_retard") {
-    return <s-badge tone="critical">{`En retard de ${invoice.overdueDays} jour${invoice.overdueDays > 1 ? "s" : ""}`}</s-badge>;
+    return <s-badge tone="critical">{`Paiement en retard de ${invoice.overdueDays} jour${invoice.overdueDays > 1 ? "s" : ""}`}</s-badge>;
   }
-  return <s-badge tone="warning">À payer</s-badge>;
+  return <s-badge tone="warning">Pas encore payée</s-badge>;
 }
 
 /** Relance d'une facture en retard : WhatsApp prérempli, ou e-mail avec le PDF. */

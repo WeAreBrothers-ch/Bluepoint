@@ -20,7 +20,7 @@ export type ModeIcon = "delivery" | "package" | "store" | "question-circle";
 export interface ModeLabel {
   readonly label: string;
   readonly icon: ModeIcon;
-  /** Bouton qui confirme la remise au client : « C'est livré ». */
+  /** Bouton qui confirme la remise au client, en phrase entière : « J'ai livré la commande ». */
   readonly doneAction: string;
   /** Question de confirmation, ex. « La commande #1042 est-elle bien livrée ? ». */
   readonly doneQuestion: (orderName: string) => string;
@@ -34,24 +34,24 @@ export const MODE_LABELS: Readonly<Record<DeliveryMode, ModeLabel>> = {
   livraison: {
     label: "Livraison",
     icon: "delivery",
-    doneAction: "C’est livré",
-    doneQuestion: (name) => `La commande ${name} est-elle bien livrée\u202F?`,
+    doneAction: "J’ai livré la commande",
+    doneQuestion: (name) => `Avez-vous bien livré la commande ${name}\u202F?`,
     chooseDay: "Choisir le jour de livraison",
     dayQuestion: (name) => `Quel jour livrer la commande ${name}\u202F?`,
   },
   poste: {
     label: "Envoi par la Poste",
     icon: "package",
-    doneAction: "C’est envoyé",
-    doneQuestion: (name) => `La commande ${name} est-elle bien partie à la Poste\u202F?`,
+    doneAction: "J’ai envoyé le colis",
+    doneQuestion: (name) => `Avez-vous bien posté le colis de la commande ${name}\u202F?`,
     chooseDay: "Choisir le jour d’envoi",
     dayQuestion: (name) => `Quel jour envoyer la commande ${name}\u202F?`,
   },
   retrait: {
     label: "Retrait au dépôt",
     icon: "store",
-    doneAction: "C’est retiré",
-    doneQuestion: (name) => `Le client a-t-il bien retiré la commande ${name}\u202F?`,
+    doneAction: "Le client est venu la chercher",
+    doneQuestion: (name) => `Le client est-il bien venu chercher la commande ${name}\u202F?`,
     chooseDay: "Choisir le jour de retrait",
     dayQuestion: (name) => `Quel jour le client vient-il chercher la commande ${name}\u202F?`,
   },
@@ -65,14 +65,14 @@ export function modeLabel(mode: DeliveryMode | null): ModeLabel {
 
 export const STATUS_LABELS: Readonly<Record<Exclude<DeliveryStatus, "a_livrer">, BadgeLabel>> = {
   partielle: { label: "Livrée en partie", tone: "caution" },
-  expediee: { label: "En route", tone: "info" },
-  livree: { label: "Livrée", tone: "success" },
+  expediee: { label: "En route vers le client", tone: "info" },
+  livree: { label: "Déjà livrée", tone: "success" },
 };
 
 export const PAYMENT_LABELS: Readonly<Record<FinancialStatus, BadgeLabel>> = {
-  PENDING: { label: "Pas encore payée", tone: "warning" },
-  PAID: { label: "Payée", tone: "success" },
-  PARTIALLY_PAID: { label: "Payée en partie", tone: "caution" },
+  PENDING: { label: "Le client n’a pas encore payé", tone: "warning" },
+  PAID: { label: "Le client a déjà payé", tone: "success" },
+  PARTIALLY_PAID: { label: "Le client a payé une partie", tone: "caution" },
   AUTHORIZED: { label: "Paiement par carte à confirmer", tone: "info" },
   PARTIALLY_REFUNDED: { label: "Remboursée en partie", tone: "neutral" },
   REFUNDED: { label: "Remboursée", tone: "neutral" },
@@ -82,14 +82,14 @@ export const PAYMENT_LABELS: Readonly<Record<FinancialStatus, BadgeLabel>> = {
 
 /**
  * Badge de paiement. Une commande pas encore payée avec des conditions dit pourquoi :
- * « Facture à 30 jours » (bon de commande d'un pro), « Paiement à la livraison » (à encaisser sur place).
+ * « Le client paiera sur facture (30 jours) » (bon de commande d'un pro), « Le client paiera à la livraison » (sur place).
  */
 export function paymentBadge(task: Pick<DeliveryTask, "financialStatus" | "paymentTerms">): BadgeLabel | null {
   if (task.financialStatus === null) return null;
   const terms = task.paymentTerms;
   if (task.financialStatus === "PENDING" && terms !== null) {
-    if (terms.type === "NET" && terms.dueInDays !== null) return { label: `Facture à ${terms.dueInDays} jours`, tone: "info" };
-    if (terms.type === "FULFILLMENT" || terms.type === "RECEIPT") return { label: "Paiement à la livraison", tone: "warning" };
+    if (terms.type === "NET" && terms.dueInDays !== null) return { label: `Le client paiera sur facture (${terms.dueInDays} jours)`, tone: "info" };
+    if (terms.type === "FULFILLMENT" || terms.type === "RECEIPT") return { label: "Le client paiera à la livraison", tone: "warning" };
   }
   return PAYMENT_LABELS[task.financialStatus];
 }

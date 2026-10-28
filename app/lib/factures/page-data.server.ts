@@ -11,11 +11,11 @@ import { listInvoices, type Invoice } from "./repository.server";
 import { whatsappReminderLinkFor } from "./send.server";
 import { channelsByCustomer, invoiceShortcuts } from "./shortcuts.server";
 
-/** Données de la page Factures : à encaisser d'abord, avec le total dû et les retards. */
+/** Données de la page Factures : pas encore payées d'abord, avec le total dû et les retards. */
 
 export interface FacturesPageData {
   readonly view: FacturesView;
-  /** Factures de la vue choisie, les retards les plus anciens d'abord pour « À encaisser ». */
+  /** Factures de la vue choisie, les retards les plus anciens d'abord pour « Pas encore payées ». */
   readonly invoices: readonly InvoiceListItem[];
   readonly summary: FacturesSummary;
   readonly totalCount: number;

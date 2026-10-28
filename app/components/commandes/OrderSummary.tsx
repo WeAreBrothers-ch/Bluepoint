@@ -10,7 +10,7 @@ import { TaskBadges } from "../agenda/TaskBadges";
 
 /**
  * Haut de la fiche commande : pour qui, quand, la remarque, puis les mêmes boutons que la carte
- * de l'agenda (C'est livré, Changer le jour, la facture et son envoi).
+ * de l'agenda (J'ai livré la commande, Changer le jour, la facture et son envoi).
  */
 
 interface OrderSummaryProps {
@@ -26,7 +26,7 @@ export function OrderSummary({ detail, invoice, today, emailConfigured }: OrderS
   const fetcher = useFetcher<AgendaActionResult>({ key: `agenda-${task.orderId}` });
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
   const optimisticDelivered = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "livrer";
-  // Avant « C'est livré » seulement : ensuite, la facture (ou « Faire la facture ») est affichée.
+  // Avant la livraison seulement : ensuite, la facture (ou « Faire la facture ») est affichée.
   const beforeDelivery = task.status !== "livree" && task.status !== "expediee" && !optimisticDelivered;
   const mode = modeLabel(task.mode);
 

@@ -5,7 +5,7 @@ import type { ShopifyGraphqlError, ShopifyRequestError } from "../shopify/errors
 import { runAdminGraphql, runAdminMutation } from "../shopify/graphql.server";
 import { paymentMethodTag, type PaymentMethod } from "./payment";
 
-/** Statut de paiement des commandes facturées, et « C'est payé » (Admin API, vérifié sur le schéma 2026-10). */
+/** Statut de paiement des commandes facturées, et « Le client a payé » (Admin API, vérifié sur le schéma 2026-10). */
 
 const STATUS_BATCH = 100;
 

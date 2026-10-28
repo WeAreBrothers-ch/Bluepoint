@@ -31,7 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<FacturesA
 
 function SummaryBanner({ summary }: { readonly summary: FacturesSummary }) {
   if (summary.unpaidCount === 0) return <s-banner tone="success" heading="Tout est payé. Personne ne vous doit d’argent." />;
-  const heading = `À encaisser\u202F: ${formatChf(summary.unpaidCents)} (${summary.unpaidCount} facture${summary.unpaidCount > 1 ? "s" : ""})`;
+  const heading = `On vous doit ${formatChf(summary.unpaidCents)} (${summary.unpaidCount} facture${summary.unpaidCount > 1 ? "s" : ""} pas encore payée${summary.unpaidCount > 1 ? "s" : ""})`;
   return (
     <s-banner tone={summary.overdueCount > 0 ? "warning" : "info"} heading={heading}>
       {summary.overdueCount > 0
@@ -54,7 +54,7 @@ function ViewTabs({ current }: { readonly current: FacturesView }) {
 }
 
 const EMPTY_TEXT: Readonly<Record<FacturesView, string>> = {
-  a_encaisser: "Aucune facture à encaisser.",
+  a_encaisser: "Aucune facture en attente de paiement.",
   payees: "Aucune facture payée pour l’instant.",
   toutes: "Aucune facture pour l’instant.",
 };
@@ -78,7 +78,7 @@ export default function FacturesPage() {
       </s-section>
       {data.totalCount === 0 ? (
         <EmptyState heading="Aucune facture pour l’instant" action={<s-button href="/app">Aller à l’agenda</s-button>}>
-          Les factures se font toutes seules quand vous touchez « C’est livré » dans l’agenda.
+          Les factures se font toutes seules quand vous touchez « J’ai livré la commande » dans l’agenda.
         </EmptyState>
       ) : data.invoices.length === 0 ? (
         <s-section>

@@ -12,7 +12,7 @@ export type SentVia = "email" | "whatsapp";
 export interface InvoiceShortcuts {
   readonly id: string;
   readonly number: string;
-  /** Lien public signé vers le PDF (14 jours) : « Voir / imprimer » dans un nouvel onglet. */
+  /** Lien public signé vers le PDF (14 jours) : « Voir ou imprimer la facture » dans un nouvel onglet. */
   readonly viewUrl: string;
   /** Lien wa.me prérempli, ou null sans numéro de portable (ou sans réglages vendeur). */
   readonly whatsappUrl: string | null;
@@ -71,9 +71,9 @@ export type FacturesActionResult =
 export type FacturesView = "a_encaisser" | "payees" | "toutes";
 
 export const FACTURES_VIEWS: readonly { readonly id: FacturesView; readonly label: string }[] = [
-  { id: "a_encaisser", label: "À encaisser" },
-  { id: "payees", label: "Payées" },
-  { id: "toutes", label: "Toutes" },
+  { id: "a_encaisser", label: "Pas encore payées" },
+  { id: "payees", label: "Déjà payées" },
+  { id: "toutes", label: "Toutes les factures" },
 ];
 
 export function isFacturesView(value: unknown): value is FacturesView {

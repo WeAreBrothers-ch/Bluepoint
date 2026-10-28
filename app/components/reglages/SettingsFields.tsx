@@ -100,14 +100,14 @@ export function AutomationFields({ values }: Pick<FieldsProps, "values">) {
           name="autoInvoiceOnDelivery"
           value="on"
           label="Faire la facture aussi quand une commande est expédiée directement dans Shopify"
-          details="« C’est livré » dans l’agenda fait toujours la facture, que cette case soit cochée ou non."
+          details="« J’ai livré la commande » dans l’agenda fait toujours la facture, que cette case soit cochée ou non."
           {...(values.autoInvoiceOnDelivery ? { checked: true } : {})}
         />
         <s-checkbox
           name="notifyCustomerOnDelivery"
           value="on"
           label="Prévenir le client par e-mail quand sa commande est livrée"
-          details="C’est l’e-mail automatique de Shopify, envoyé quand vous touchez « C’est livré »."
+          details="C’est l’e-mail automatique de Shopify, envoyé quand vous touchez « J’ai livré la commande »."
           {...(values.notifyCustomerOnDelivery ? { checked: true } : {})}
         />
       </s-stack>

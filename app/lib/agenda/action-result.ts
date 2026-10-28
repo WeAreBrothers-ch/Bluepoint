@@ -1,4 +1,4 @@
-/** Réponse des actions de l'agenda (« C'est livré », « Faire la facture », « Choisir le jour »), sérialisable. */
+/** Réponse des actions de l'agenda (« J'ai livré la commande », « Faire la facture », « Choisir le jour »), sérialisable. */
 
 export type AgendaIntent = "livrer" | "facturer" | "dater";
 

@@ -62,7 +62,7 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured }: InvoiceShor
       <s-stack direction="inline" gap="small-200">
         {ordered}
         <s-button icon="view" href={invoice.viewUrl} target="_blank">
-          Voir / imprimer
+          Voir ou imprimer la facture
         </s-button>
       </s-stack>
       {invoice.sentLabel === null ? null : <s-text color="subdued">{invoice.sentLabel}</s-text>}

@@ -5,7 +5,7 @@ import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS } from "../../lib/factures/payme
 import { InvoiceResultBanner } from "./InvoiceShortcutButtons";
 
 /**
- * « C'est payé » : un toucher, puis « comment ? » (virement, cash, TWINT). Le paiement est noté
+ * « Le client a payé » : un toucher, puis « comment ? » (virement, cash, TWINT). Le paiement est noté
  * dans Shopify ; la facture passe dans « Payées » et la commande devient « Payée » dans l'agenda.
  */
 
@@ -26,7 +26,7 @@ export function InvoicePaymentButtons({ invoiceId, invoiceNumber }: InvoicePayme
       <s-stack direction="block" gap="small-200">
         <s-stack direction="inline">
           <s-button icon="cash-dollar" onClick={() => setChoosing(true)} {...(busy ? { loading: true } : {})}>
-            C’est payé
+            Le client a payé
           </s-button>
         </s-stack>
         <InvoiceResultBanner result={result} />

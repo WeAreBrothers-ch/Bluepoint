@@ -7,7 +7,7 @@ import { parseIsoDate, type IsoDate } from "../../lib/metafields/definitions";
 /**
  * Choix du jour d'une commande (surtout celles du site, arrivées sans date) : deux raccourcis
  * (aujourd'hui, prochain jour de livraison) et un calendrier pour les autres jours.
- * S'affiche à la place des boutons de la carte, comme la confirmation de « C'est livré ».
+ * S'affiche à la place des boutons de la carte, comme la confirmation de la livraison.
  */
 
 interface DayChoicePanelProps {

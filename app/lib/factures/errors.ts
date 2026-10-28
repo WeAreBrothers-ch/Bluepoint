@@ -16,7 +16,7 @@ export type InvoiceErrorCode =
 const MESSAGES: Readonly<Record<InvoiceErrorCode, string>> = {
   reglages_incomplets: "La facture n’a pas été faite\u202F: il manque vos coordonnées ou votre compte bancaire.",
   commande_introuvable: "Cette commande n’existe plus dans Shopify (elle a peut-être été supprimée).",
-  commande_non_livree: "Appuyez d’abord sur « C’est livré »\u202F: la facture indique le jour de livraison.",
+  commande_non_livree: "Touchez d’abord « J’ai livré la commande »\u202F: la facture indique le jour de livraison.",
   donnees_invalides: "La facture n’a pas pu être faite.",
   shopify_indisponible: "Shopify ne répond pas pour le moment. Réessayez dans un instant.",
   facture_introuvable: "Cette facture n’existe plus.",

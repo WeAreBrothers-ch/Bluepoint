@@ -13,7 +13,7 @@ interface TaskBadgesProps {
 }
 
 function StatusBadge({ task, optimisticDelivered }: TaskBadgesProps) {
-  if (optimisticDelivered) return <s-badge tone="success">Livrée — un instant…</s-badge>;
+  if (optimisticDelivered) return <s-badge tone="success">Déjà livrée — un instant…</s-badge>;
   if (task.status === "a_livrer") {
     return task.urgency === "en_retard" ? <s-badge tone="critical">En retard</s-badge> : null;
   }

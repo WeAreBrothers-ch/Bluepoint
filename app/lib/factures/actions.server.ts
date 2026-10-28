@@ -6,7 +6,7 @@ import { loadPaymentStatuses, markOrderPaid } from "./payment.server";
 import { getShopInvoice } from "./repository.server";
 import { emailInvoice, recordWhatsappShare } from "./send.server";
 
-/** Actions sur une facture : envoi par e-mail, envoi WhatsApp, relance par e-mail, « C'est payé ». */
+/** Actions sur une facture : envoi par e-mail, envoi WhatsApp, relance par e-mail, « Le client a payé ». */
 
 function failed(invoiceId: string, message: string, settingsLink = false): FacturesActionResult {
   return { ok: false, invoiceId, message, settingsLink };
@@ -22,7 +22,7 @@ async function markPaid(admin: AdminApiContext, shop: string, invoiceId: string,
   const invoice = await getShopInvoice(shop, invoiceId);
   if (invoice === null) return failed(invoiceId, "Cette facture n’existe plus.");
   const paid = await markOrderPaid(admin, invoice.orderId, method);
-  // Deux personnes touchent « C'est payé » en même temps : Shopify refuse la seconde, mais c'est bien payé.
+  // Deux personnes touchent « Le client a payé » en même temps : Shopify refuse la seconde, mais c'est bien payé.
   if (!paid.ok && !(await alreadyPaid(admin, invoice.orderId))) {
     logError("Paiement non enregistré dans Shopify", paid.error, { invoiceId });
     return failed(invoiceId, "Le paiement n’a pas pu être noté dans Shopify. Réessayez dans un instant.");
