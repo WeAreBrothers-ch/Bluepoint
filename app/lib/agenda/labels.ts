@@ -130,6 +130,19 @@ export function deliveryDateText(task: ScheduledTask, today: IsoDate): string {
   return `À livrer ${when}${sameLimit ? "" : ` (au plus tard ${dayText(limitDate, today)})`}`;
 }
 
+/**
+ * Ligne de date d'une carte, seulement quand elle apprend quelque chose : le titre de la partie
+ * (« À livrer aujourd’hui », « Demain », « Jeudi 29 octobre ») dit déjà quand livrer.
+ * Restent le retard et une date limite plus tardive que le jour prévu.
+ */
+export function cardDateLine(task: ScheduledTask, today: IsoDate): string | null {
+  const { plannedDate, limitDate } = task;
+  if (task.status === "livree" || plannedDate === null || limitDate === null) return null;
+  if (task.urgency === "en_retard") return deliveryDateText(task, today);
+  const sameLimit = limitDate === plannedDate || (task.urgency === "aujourdhui" && limitDate === today);
+  return sameLimit ? null : `Au plus tard ${dayText(limitDate, today)}`;
+}
+
 /** Ex. « 8 bouteilles ». */
 export function bottleCountText(count: number): string {
   return `${count} bouteille${count > 1 ? "s" : ""}`;

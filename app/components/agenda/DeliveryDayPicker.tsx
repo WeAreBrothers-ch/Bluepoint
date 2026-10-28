@@ -1,22 +1,20 @@
 import { useState } from "react";
-import type { FetcherWithComponents } from "react-router";
-import type { AgendaActionResult } from "../../lib/agenda/action-result";
 import { addDays, capitalize, longDay, nextDeliveryDay } from "../../lib/agenda/dates";
 import { modeLabel } from "../../lib/agenda/labels";
 import type { ScheduledTask } from "../../lib/agenda/types";
 import { parseIsoDate, type IsoDate } from "../../lib/metafields/definitions";
 
 /**
- * « Choisir le jour » : surtout pour les commandes du site arrivées sans date.
- * Deux raccourcis (aujourd'hui, prochain jour de livraison) et un calendrier pour les autres jours.
+ * Choix du jour d'une commande (surtout celles du site, arrivées sans date) : deux raccourcis
+ * (aujourd'hui, prochain jour de livraison) et un calendrier pour les autres jours.
+ * S'affiche à la place des boutons de la carte, comme la confirmation de « C'est livré ».
  */
 
-interface DeliveryDayPickerProps {
+interface DayChoicePanelProps {
   readonly task: ScheduledTask;
   readonly today: IsoDate;
-  readonly fetcher: FetcherWithComponents<AgendaActionResult>;
-  readonly busy: boolean;
-  readonly saving: boolean;
+  readonly onChoose: (date: IsoDate) => void;
+  readonly onCancel: () => void;
 }
 
 function shortcutLabel(date: IsoDate, today: IsoDate): string {
@@ -25,39 +23,17 @@ function shortcutLabel(date: IsoDate, today: IsoDate): string {
   return capitalize(longDay(date));
 }
 
-export function DeliveryDayPicker({ task, today, fetcher, busy, saving }: DeliveryDayPickerProps) {
-  const [open, setOpen] = useState(false);
+export function DayChoicePanel({ task, today, onChoose, onCancel }: DayChoicePanelProps) {
   const [day, setDay] = useState<string>(task.plannedDate ?? "");
-  const mode = modeLabel(task.mode);
-  const undated = task.plannedDate === null;
   const chosen = parseIsoDate(day);
-  const choose = (date: IsoDate) => {
-    setOpen(false);
-    fetcher.submit({ intent: "dater", orderId: task.orderId, date, deadline: task.deadline ?? "" }, { method: "post" });
-  };
-
-  if (!open) {
-    return (
-      <s-button
-        icon="calendar"
-        variant={undated ? "primary" : "secondary"}
-        onClick={() => setOpen(true)}
-        {...(saving ? { loading: true } : {})}
-        {...(busy ? { disabled: true } : {})}
-      >
-        {undated ? mode.chooseDay : "Changer le jour"}
-      </s-button>
-    );
-  }
-
   const shortcuts = [...new Set([today, nextDeliveryDay(today)])];
   return (
     <s-box padding="base" background="subdued" borderRadius="base">
       <s-stack direction="block" gap="small-200">
-        <s-text type="strong">{mode.dayQuestion(task.name)}</s-text>
+        <s-text type="strong">{modeLabel(task.mode).dayQuestion(task.name)}</s-text>
         <s-stack direction="inline" gap="small-200">
           {shortcuts.map((date) => (
-            <s-button key={date} onClick={() => choose(date)}>
+            <s-button key={date} onClick={() => onChoose(date)}>
               {shortcutLabel(date, today)}
             </s-button>
           ))}
@@ -68,13 +44,13 @@ export function DeliveryDayPicker({ task, today, fetcher, busy, saving }: Delive
             variant="primary"
             icon="check"
             onClick={() => {
-              if (chosen !== null) choose(chosen);
+              if (chosen !== null) onChoose(chosen);
             }}
             {...(chosen === null || chosen < today ? { disabled: true } : {})}
           >
             Valider ce jour
           </s-button>
-          <s-button icon="x" onClick={() => setOpen(false)}>
+          <s-button icon="x" onClick={onCancel}>
             Annuler
           </s-button>
         </s-stack>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { d, task } from "./fixtures";
-import { bottleCountText, deliveryDateText, modeLabel, PAYMENT_LABELS, paymentBadge, urgencyBadge } from "./labels";
+import { bottleCountText, cardDateLine, deliveryDateText, modeLabel, PAYMENT_LABELS, paymentBadge, urgencyBadge } from "./labels";
 import { scheduleTask } from "./urgency";
 
 const today = d("2026-10-21");
@@ -58,5 +58,20 @@ describe("badge de paiement", () => {
   it("garde le statut Shopify une fois payée", () => {
     expect(paymentBadge({ financialStatus: "PAID", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Payée");
     expect(paymentBadge({ financialStatus: null, paymentTerms: null })).toBeNull();
+  });
+});
+
+describe("ligne de date d'une carte", () => {
+  it("ne répète pas le jour que la partie de l'agenda dit déjà", () => {
+    expect(cardDateLine(at({ requestedDate: d("2026-10-21") }), today)).toBeNull();
+    expect(cardDateLine(at({ requestedDate: d("2026-10-22") }), today)).toBeNull();
+    expect(cardDateLine(at({}), today)).toBeNull();
+  });
+
+  it("garde le retard et une date limite plus tardive", () => {
+    expect(cardDateLine(at({ requestedDate: d("2026-10-19"), deadline: d("2026-10-20") }), today)).toBe(
+      "Devait être livrée au plus tard le mardi 20 octobre",
+    );
+    expect(cardDateLine(at({ requestedDate: d("2026-10-22"), deadline: d("2026-10-24") }), today)).toBe("Au plus tard le samedi 24 octobre");
   });
 });

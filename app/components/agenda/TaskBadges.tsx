@@ -1,29 +1,32 @@
-import { STATUS_LABELS, modeLabel, paymentBadge, urgencyBadge } from "../../lib/agenda/labels";
+import { STATUS_LABELS, modeLabel, paymentBadge } from "../../lib/agenda/labels";
 import type { ScheduledTask } from "../../lib/agenda/types";
-import type { IsoDate } from "../../lib/metafields/definitions";
 
-/** Badges d'une tâche : où en est la livraison, Poste ou retrait, client pro, paiement. */
+/**
+ * Badges d'une tâche, réduits à ce qui sert : retard ou état de la livraison, Poste ou retrait, paiement.
+ * Le jour n'y est pas : le titre de la partie le dit déjà.
+ */
 
 interface TaskBadgesProps {
   readonly task: ScheduledTask;
-  readonly today: IsoDate;
   /** Livraison en cours d'enregistrement : on l'affiche déjà comme livrée. */
   readonly optimisticDelivered: boolean;
 }
 
-function StatusBadge({ task, today, optimisticDelivered }: TaskBadgesProps) {
+function StatusBadge({ task, optimisticDelivered }: TaskBadgesProps) {
   if (optimisticDelivered) return <s-badge tone="success">Livrée — un instant…</s-badge>;
-  const badge = task.status === "a_livrer" ? urgencyBadge(task, today) : STATUS_LABELS[task.status];
+  if (task.status === "a_livrer") {
+    return task.urgency === "en_retard" ? <s-badge tone="critical">En retard</s-badge> : null;
+  }
+  const badge = STATUS_LABELS[task.status];
   return <s-badge tone={badge.tone}>{badge.label}</s-badge>;
 }
 
-export function TaskBadges({ task, today, optimisticDelivered }: TaskBadgesProps) {
+export function TaskBadges({ task, optimisticDelivered }: TaskBadgesProps) {
   const payment = paymentBadge(task);
   return (
     <s-stack direction="inline" gap="small-200">
-      <StatusBadge task={task} today={today} optimisticDelivered={optimisticDelivered} />
+      <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
       {task.mode === "poste" || task.mode === "retrait" ? <s-badge>{modeLabel(task.mode).label}</s-badge> : null}
-      {task.isPro ? <s-badge tone="info">Client pro</s-badge> : null}
       {payment === null ? null : <s-badge tone={payment.tone}>{payment.label}</s-badge>}
     </s-stack>
   );

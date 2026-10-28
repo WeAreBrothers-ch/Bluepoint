@@ -1,7 +1,7 @@
 import { useFetcher } from "react-router";
 import type { AgendaActionResult } from "../../lib/agenda/action-result";
 import { addressText, directionsUrl, phoneDisplay, phoneHref } from "../../lib/agenda/contact";
-import { bottleCountText, deliveryDateText, modeLabel } from "../../lib/agenda/labels";
+import { bottleCountText, cardDateLine, modeLabel } from "../../lib/agenda/labels";
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
@@ -11,8 +11,9 @@ import { TaskActions } from "./TaskActions";
 import { TaskBadges } from "./TaskBadges";
 
 /**
- * Une livraison, avec tout ce qu'il faut pour la faire sans quitter l'écran :
- * client, jour, adresse et itinéraire, téléphone, vins, montant, remarque, puis l'action.
+ * Une livraison, dans l'ordre où on en a besoin : qui, où (itinéraire, téléphone), quels vins,
+ * combien, la remarque, puis l'action. Le jour n'est répété que s'il apprend quelque chose
+ * (retard, date limite) : le titre de la partie le dit déjà.
  */
 
 interface TaskCardProps {
@@ -23,11 +24,13 @@ interface TaskCardProps {
 }
 
 function ContactButtons({ task }: { readonly task: ScheduledTask }) {
-  const address = addressText(task);
-  const directions = directionsUrl(task);
+  // Retrait : le client vient au dépôt, son adresse et l'itinéraire ne servent à rien.
+  const pickup = task.mode === "retrait";
+  const address = pickup ? null : addressText(task);
+  const directions = pickup ? null : directionsUrl(task);
   const call = phoneHref(task.phone);
   if (address === null && task.phone === null) {
-    return <s-text color="subdued">Pas d’adresse ni de téléphone sur cette commande.</s-text>;
+    return pickup ? null : <s-text color="subdued">Pas d’adresse ni de téléphone sur cette commande.</s-text>;
   }
   return (
     <s-stack direction="block" gap="small-200">
@@ -68,6 +71,8 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
   const optimisticDelivered = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "livrer";
   const mode = modeLabel(task.mode);
   const late = task.urgency === "en_retard" && task.status !== "livree";
+  const dateLine = cardDateLine(task, today);
+  const who = task.company === null ? `Commande ${task.name}` : `${task.customerName} · commande ${task.name}`;
 
   return (
     <s-box padding="base" border="base" borderRadius="base" background="base">
@@ -77,13 +82,16 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
             <s-icon type={mode.icon} />
             <s-heading>{task.company ?? task.customerName}</s-heading>
           </s-stack>
-          {task.company === null ? null : <s-text>{task.customerName}</s-text>}
-          <s-text type="strong" {...(late ? { tone: "critical" as const } : {})}>
-            {deliveryDateText(task, today)}
-          </s-text>
-          <TaskBadges task={task} today={today} optimisticDelivered={optimisticDelivered} />
+          <s-text color="subdued">{who}</s-text>
+          {dateLine === null ? null : (
+            <s-text type="strong" {...(late ? { tone: "critical" as const } : {})}>
+              {dateLine}
+            </s-text>
+          )}
+          <TaskBadges task={task} optimisticDelivered={optimisticDelivered} />
         </s-stack>
-        <ContactButtons task={task} />
+        {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
+        {task.status === "livree" ? null : <ContactButtons task={task} />}
         <WineList task={task} />
         {task.note === null ? null : (
           <s-banner tone="info" heading="Remarque pour la livraison">
@@ -93,7 +101,7 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
         <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} today={today} />
         {result === undefined ? null : <ActionFeedback result={result} />}
         <s-link href={`shopify://admin/orders/${gidToNumericId(task.orderId)}`}>
-          {`Tous les détails de la commande ${task.name} (dans Shopify)`}
+          {`Ouvrir la commande ${task.name} dans Shopify`}
         </s-link>
       </s-stack>
     </s-box>

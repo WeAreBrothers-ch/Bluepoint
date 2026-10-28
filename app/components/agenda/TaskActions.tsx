@@ -6,10 +6,10 @@ import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { InvoicePaymentButtons } from "../factures/InvoicePaymentButtons";
 import { InvoiceShortcutButtons } from "../factures/InvoiceShortcutButtons";
-import { DeliveryDayPicker } from "./DeliveryDayPicker";
+import { DayChoicePanel } from "./DeliveryDayPicker";
 
 /**
- * Boutons d'une tâche. « C'est livré » demande une confirmation avant d'agir :
+ * Boutons d'une tâche, sur une seule ligne. « C'est livré » demande une confirmation avant d'agir :
  * l'action prévient Shopify et fait la facture, on ne la déclenche pas par un toucher malheureux.
  * Une commande sans date (souvent venue du site) propose d'abord « Choisir le jour ».
  * Tous les boutons sont désactivés pendant qu'une action est en cours.
@@ -23,6 +23,9 @@ interface TaskActionsProps {
   readonly today: IsoDate;
 }
 
+/** Panneau ouvert à la place des boutons : confirmation de « C'est livré » ou choix du jour. */
+type Panel = "aucun" | "confirmer" | "jour";
+
 /** La commande reste à encaisser : on propose « C'est payé » sous la facture. */
 function awaitsPayment(task: ScheduledTask): boolean {
   return task.financialStatus === "PENDING" || task.financialStatus === "PARTIALLY_PAID" || task.financialStatus === "AUTHORIZED";
@@ -35,7 +38,7 @@ function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): Agen
 }
 
 export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: TaskActionsProps) {
-  const [confirming, setConfirming] = useState(false);
+  const [panel, setPanel] = useState<Panel>("aucun");
   const pending = pendingIntent(fetcher);
   const busy = pending !== null;
   const submit = (intent: AgendaIntent) => fetcher.submit({ intent, orderId: task.orderId }, { method: "post" });
@@ -46,8 +49,9 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
   const undated = task.plannedDate === null;
   // Juste après « C'est livré », avant le rechargement : on connaît seulement le numéro de la facture.
   const createdInvoice = invoice === null && fetcher.data?.ok ? fetcher.data.invoice : null;
+  const disabled = busy ? { disabled: true } : {};
 
-  if (confirming && !delivered) {
+  if (panel === "confirmer" && !delivered) {
     return (
       <s-box padding="base" background="subdued" borderRadius="base">
         <s-stack direction="block" gap="small-200">
@@ -58,13 +62,13 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
               variant="primary"
               icon="check"
               onClick={() => {
-                setConfirming(false);
+                setPanel("aucun");
                 submit("livrer");
               }}
             >
               {`Oui, ${mode.doneAction.charAt(0).toLocaleLowerCase("fr-CH")}${mode.doneAction.slice(1)}`}
             </s-button>
-            <s-button icon="x" onClick={() => setConfirming(false)}>
+            <s-button icon="x" onClick={() => setPanel("aucun")}>
               Non, annuler
             </s-button>
           </s-stack>
@@ -73,44 +77,61 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
     );
   }
 
-  // Sans date, choisir le jour vient en premier ; sinon « Changer le jour » reste discret, sous les actions.
-  const dayPicker = canReschedule ? (
-    <DeliveryDayPicker task={task} today={today} fetcher={fetcher} busy={busy} saving={pending === "dater"} />
+  if (panel === "jour" && canReschedule) {
+    return (
+      <DayChoicePanel
+        task={task}
+        today={today}
+        onCancel={() => setPanel("aucun")}
+        onChoose={(date) => {
+          setPanel("aucun");
+          fetcher.submit({ intent: "dater", orderId: task.orderId, date, deadline: task.deadline ?? "" }, { method: "post" });
+        }}
+      />
+    );
+  }
+
+  const dayButton = canReschedule ? (
+    <s-button
+      icon="calendar"
+      variant={undated ? "primary" : "secondary"}
+      onClick={() => setPanel("jour")}
+      {...(pending === "dater" ? { loading: true } : {})}
+      {...disabled}
+    >
+      {undated ? mode.chooseDay : "Changer le jour"}
+    </s-button>
   ) : null;
 
   return (
     <s-stack direction="block" gap="base">
-      {undated ? dayPicker : null}
       <s-stack direction="inline" gap="small-200">
-      {delivered ? null : (
-        <s-button
-          variant={undated ? "secondary" : "primary"}
-          icon="check"
-          onClick={() => setConfirming(true)}
-          accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
-          {...(pending === "livrer" ? { loading: true } : {})}
-          {...(busy ? { disabled: true } : {})}
-        >
-          {mode.doneAction}
-        </s-button>
-      )}
-      {canInvoice && invoice === null && createdInvoice === null ? (
-        <s-button
-          icon="receipt"
-          onClick={() => submit("facturer")}
-          {...(pending === "facturer" ? { loading: true } : {})}
-          {...(busy ? { disabled: true } : {})}
-        >
-          Faire la facture
-        </s-button>
-      ) : null}
-      {createdInvoice === null ? null : (
-        <s-button icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
-          {`Voir la facture ${createdInvoice.number}`}
-        </s-button>
-      )}
+        {/* Sans date, choisir le jour vient en premier. */}
+        {undated ? dayButton : null}
+        {delivered ? null : (
+          <s-button
+            variant={undated ? "secondary" : "primary"}
+            icon="check"
+            onClick={() => setPanel("confirmer")}
+            accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
+            {...(pending === "livrer" ? { loading: true } : {})}
+            {...disabled}
+          >
+            {mode.doneAction}
+          </s-button>
+        )}
+        {undated ? null : dayButton}
+        {canInvoice && invoice === null && createdInvoice === null ? (
+          <s-button icon="receipt" onClick={() => submit("facturer")} {...(pending === "facturer" ? { loading: true } : {})} {...disabled}>
+            Faire la facture
+          </s-button>
+        ) : null}
+        {createdInvoice === null ? null : (
+          <s-button icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
+            {`Voir la facture ${createdInvoice.number}`}
+          </s-button>
+        )}
       </s-stack>
-      {undated ? null : dayPicker}
       {invoice === null ? null : (
         <s-stack direction="block" gap="small-200">
           <s-text type="strong">{`Facture ${invoice.number}`}</s-text>
