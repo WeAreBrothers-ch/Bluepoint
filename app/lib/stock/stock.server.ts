@@ -5,6 +5,7 @@ import { ShopifyUserErrors, type ShopifyRequestError } from "../shopify/errors";
 import { runAdminGraphql, runAdminMutation } from "../shopify/graphql.server";
 import { collectPages, type Page } from "../shopify/paginate";
 import { grantedScopes } from "../shopify/access.server";
+import { NEW_WINE_SCOPES } from "./new-wine.server";
 import {
   parseStockChange,
   STALE_STOCK_MESSAGE,
@@ -30,6 +31,8 @@ export interface StockPageData {
   readonly loadError: string | null;
   /** `false` : l'autorisation de changer le stock n'a pas encore été donnée à l'app. */
   readonly canEdit: boolean;
+  /** `false` : l'autorisation de créer des vins n'a pas encore été donnée à l'app. */
+  readonly canCreateWines: boolean;
 }
 
 function stockPage(admin: AdminApiContext) {
@@ -45,11 +48,13 @@ export async function loadStockPage(admin: AdminApiContext): Promise<StockPageDa
   const [pages, scopes] = await Promise.all([collectPages(stockPage(admin), STOCK_PAGE_SIZE, STOCK_MAX_VARIANTS), grantedScopes(admin)]);
   // Autorisations illisibles : on laisse essayer, Shopify refusera au besoin avec un message clair.
   const canEdit = scopes === null || scopes.has(STOCK_WRITE_SCOPE);
+  const canCreateWines = scopes === null || NEW_WINE_SCOPES.every((scope) => scopes.has(scope));
   if (!pages.ok) {
     logError("Stock illisible", pages.error);
-    return { items: [], truncated: false, loadError: "Shopify ne répond pas pour le moment. Rechargez la page dans un instant.", canEdit };
+    const loadError = "Shopify ne répond pas pour le moment. Rechargez la page dans un instant.";
+    return { items: [], truncated: false, loadError, canEdit, canCreateWines };
   }
-  return { items: pages.value.items.map(toStockItem), truncated: pages.value.truncated, loadError: null, canEdit };
+  return { items: pages.value.items.map(toStockItem), truncated: pages.value.truncated, loadError: null, canEdit, canCreateWines };
 }
 
 const ADJUST_MUTATION = `#graphql

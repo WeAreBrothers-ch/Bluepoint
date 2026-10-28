@@ -36,7 +36,9 @@ Elle sert à l’équipe, pas aux clients :
 - **Stock** (`/app/stock`) : bouteilles disponibles, en cave et réservées par vin, « Ajouter des
   bouteilles » (`inventoryAdjustQuantities`, raison `received`) et « Corriger le nombre »
   (`inventorySetQuantities` sur `on_hand`), avec contrôle de la quantité attendue et clé
-  d’idempotence. Autorisation `write_inventory`.
+  d’idempotence. Autorisation `write_inventory`. « Nouveau vin » : produit actif à variante unique
+  créé par `productSet` (prix, stock au dépôt), mis en vente sur les mêmes canaux que les autres vins
+  (`publishablePublish`). Autorisations `write_products`, `read_locations`, `read/write_publications`.
 - **Réglages** (`/app/reglages`) : vendeur, TVA, IBAN / QR-IBAN, délai de paiement, automatismes.
 - **Webhook `fulfillments/create`** : facture automatique si le réglage est activé.
 - **Nouvelle commande (téléphone)** (`/app/commande`) : recherche du client (nom, entreprise, téléphone,
