@@ -34,10 +34,20 @@ export interface CartDelivery {
   readonly ignored: readonly IgnoredAttribute[];
 }
 
-/** « livraison », « Poste », « Retrait sur place »… → mode connu, sinon `null`. */
+/** Libellés courts aussi acceptés (le thème peut écrire des mots lisibles dans la commande). */
+const MODE_ALIASES: Readonly<Record<string, DeliveryMode>> = {
+  poste: "poste",
+  "la poste": "poste",
+  retrait: "retrait",
+  "retrait au depot": "retrait",
+};
+
+/** « livraison », « Poste », « Retrait au dépôt », « Retrait sur place »… → mode connu, sinon `null`. */
 export function parseDeliveryMode(raw: string): DeliveryMode | null {
   const value = normalizeSearch(raw);
-  return DELIVERY_MODES.find((mode) => mode === value || normalizeSearch(DELIVERY_MODE_LABELS[mode]) === value) ?? null;
+  return (
+    DELIVERY_MODES.find((mode) => mode === value || normalizeSearch(DELIVERY_MODE_LABELS[mode]) === value) ?? MODE_ALIASES[value] ?? null
+  );
 }
 
 function present(value: string | null): value is string {

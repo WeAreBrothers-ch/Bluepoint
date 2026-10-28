@@ -1,7 +1,8 @@
 # Publie la configuration de l'app chez Shopify (shopify.app.toml : autorisations, webhooks,
-# proxy d'app, métachamps) en créant une nouvelle version de l'app.
-# À lancer à la main après un changement de shopify.app.toml :
-#   GitHub › Actions › « Configuration Shopify » › Run workflow.
+# proxy d'app, métachamps) et ses extensions (cadre « BluePoint » de la page de commande)
+# en créant une nouvelle version de l'app.
+# Se lance tout seul quand shopify.app.toml ou extensions/ changent sur main ;
+# à la main : GitHub › Actions › « Configuration Shopify » › Run workflow.
 # Prérequis (une seule fois) : secret SHOPIFY_APP_AUTOMATION_TOKEN, créé dans le Dev Dashboard
 # (app › Settings › App Automation Token) puis ajouté dans GitHub (Settings › Secrets and variables › Actions).
 # L'app elle-même (Vercel) n'est pas concernée : elle se met en ligne à chaque envoi sur main.
@@ -9,6 +10,11 @@ name: Configuration Shopify
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - shopify.app.toml
+      - "extensions/**"
 
 permissions:
   contents: read
@@ -44,4 +50,4 @@ jobs:
           SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
         # --allow-updates : met à jour sans jamais rien supprimer (sinon l'étape échoue).
-        run: shopify app deploy --allow-updates --no-build --source-control-url "$COMMIT_URL" --message "Configuration publiée depuis GitHub"
+        run: shopify app deploy --allow-updates --source-control-url "$COMMIT_URL" --message "Configuration publiée depuis GitHub"

@@ -100,6 +100,12 @@ module.exports = {
         node: true,
       },
     },
+
+    // Extensions d'admin Shopify (Preact, sans TypeScript) : pas de prop-types.
+    {
+      files: ["extensions/**/*.{js,jsx}"],
+      rules: { "react/prop-types": "off" },
+    },
   ],
   globals: {
     shopify: "readonly",

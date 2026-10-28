@@ -9,11 +9,8 @@ export const AGENDA_PAGE_SIZE = 25;
 /** Plafond de commandes chargées par affichage (un avis s'affiche s'il est atteint). */
 export const AGENDA_MAX_ORDERS = 300;
 
-export const AGENDA_ORDERS_QUERY = `#graphql
-query AgendaCommandes($first: Int!, $after: String, $query: String!) {
-  orders(first: $first, after: $after, query: $query, sortKey: PROCESSED_AT) {
-    pageInfo { hasNextPage endCursor }
-    nodes {
+/** Champs d'une commande lus par l'agenda (et par le résumé de la page de commande Shopify). */
+const AGENDA_ORDER_FIELDS = `
       id
       name
       cancelledAt
@@ -32,8 +29,21 @@ query AgendaCommandes($first: Int!, $after: String, $query: String!) {
       dateSouhaitee: metafield(namespace: "$app", key: "livraison_date_souhaitee") { value }
       dateLimite: metafield(namespace: "$app", key: "livraison_date_limite") { value }
       mode: metafield(namespace: "$app", key: "livraison_mode") { value }
-      fulfillments(first: 5) { status displayStatus createdAt }
+      fulfillments(first: 5) { status displayStatus createdAt }`;
+
+export const AGENDA_ORDERS_QUERY = `#graphql
+query AgendaCommandes($first: Int!, $after: String, $query: String!) {
+  orders(first: $first, after: $after, query: $query, sortKey: PROCESSED_AT) {
+    pageInfo { hasNextPage endCursor }
+    nodes {${AGENDA_ORDER_FIELDS}
     }
+  }
+}`;
+
+/** Une seule commande, avec les mêmes champs que l'agenda. */
+export const AGENDA_ORDER_QUERY = `#graphql
+query ResumeCommande($id: ID!) {
+  order(id: $id) {${AGENDA_ORDER_FIELDS}
   }
 }`;
 

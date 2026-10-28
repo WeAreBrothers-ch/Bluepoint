@@ -1,6 +1,7 @@
 import { decimalToCents } from "../commande/totals";
 import { isDeliveryMode, parseIsoDate, type DeliveryMode, type IsoDate } from "../metafields/definitions";
 import { parseGid } from "../shopify/ids";
+import { parseDeliveryMode } from "../webhooks/cart-delivery";
 import { CART_ATTRIBUTE_KEYS, findAttribute, parseLooseDate } from "./attributes";
 import { swissIsoDate } from "./dates";
 import type { AgendaOrderNode } from "./query";
@@ -43,8 +44,8 @@ function readDates(order: AgendaOrderNode): TaskDates {
 function readMode(order: AgendaOrderNode): DeliveryMode | null {
   const value = order.mode?.value.trim().toLowerCase();
   if (isDeliveryMode(value)) return value;
-  const fromCart = findAttribute(order.customAttributes, CART_ATTRIBUTE_KEYS.mode)?.trim().toLowerCase();
-  return isDeliveryMode(fromCart) ? fromCart : null;
+  const fromCart = findAttribute(order.customAttributes, CART_ATTRIBUTE_KEYS.mode);
+  return fromCart === null ? null : parseDeliveryMode(fromCart);
 }
 
 export function readDeliveryStatus(order: Pick<AgendaOrderNode, "displayFulfillmentStatus" | "fulfillments">): DeliveryStatus {
