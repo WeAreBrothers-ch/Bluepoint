@@ -75,6 +75,13 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
             <StatusBadge invoice={invoice} />
           </s-stack>
         </s-stack>
+        {invoice.orderPath === null ? null : (
+          <s-stack direction="inline">
+            <s-button icon="order" href={invoice.orderPath}>
+              {`Voir la commande ${invoice.orderName}`}
+            </s-button>
+          </s-stack>
+        )}
         <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} />
         <Reminders invoice={invoice} emailConfigured={emailConfigured} />
         {invoice.paymentState === "payee" ? null : <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />}

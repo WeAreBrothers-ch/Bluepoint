@@ -2,6 +2,7 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { swissIsoDate } from "../agenda/dates";
 import { logError } from "../core/logger.server";
 import { loadCompleteSettings } from "../reglages/settings.server";
+import { gidToNumericId, parseGid } from "../shopify";
 import { isEmailConfigured } from "./email.server";
 import type { FacturesSummary, FacturesView, InvoiceListItem } from "./list-item";
 import { paymentSituation } from "./payment";
@@ -24,6 +25,11 @@ export interface FacturesPageData {
   readonly statusError: string | null;
 }
 
+function orderPath(orderId: string): string | null {
+  const gid = parseGid(orderId, "Order");
+  return gid === null ? null : `/app/commandes/${gidToNumericId(gid)}`;
+}
+
 function toListItem(
   invoice: Invoice,
   financialStatus: string | null,
@@ -35,6 +41,7 @@ function toListItem(
   return {
     ...invoiceShortcuts(invoice, sellerName, channels, now),
     orderName: invoice.orderName,
+    orderPath: orderPath(invoice.orderId),
     customerName: invoice.customerName,
     issueDate: invoice.issueDate,
     dueDate: invoice.dueDate,

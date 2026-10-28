@@ -25,6 +25,8 @@ export interface InvoiceShortcuts {
 
 export interface InvoiceListItem extends InvoiceShortcuts {
   readonly orderName: string;
+  /** Fiche de la commande dans l'app (`/app/commandes/…`), ou null si l'identifiant est illisible. */
+  readonly orderPath: string | null;
   readonly customerName: string;
   readonly issueDate: string;
   readonly dueDate: string;
