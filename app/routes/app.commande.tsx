@@ -3,6 +3,7 @@ import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "re
 import { useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { OrderOutcomeBanner } from "../components/commande/OrderOutcomeBanner";
 import { PhoneOrderForm } from "../components/commande/PhoneOrderForm";
 import type { Submission } from "../components/commande/usePhoneOrder";
 import { handleCommandeAction, type CommandeActionResult } from "../lib/commande/action.server";
@@ -28,6 +29,11 @@ function formKey(outcome: PhoneOrderOutcome | undefined): string {
   return "saisie";
 }
 
+/** Commande enregistrée (ou laissée en brouillon) : le résultat va en haut de la page vidée. */
+function isDone(outcome: PhoneOrderOutcome | undefined): boolean {
+  return outcome?.kind === "commande" || outcome?.kind === "brouillon";
+}
+
 function useCreateOrder() {
   const fetcher = useFetcher<CommandeActionResult>({ key: "commande-creer" });
   const { submit } = fetcher;
@@ -37,8 +43,9 @@ function useCreateOrder() {
     [submit],
   );
 
+  // Le formulaire se vide : on remonte en haut, où le résultat s'affiche en grand.
   useEffect(() => {
-    if (outcome?.kind === "commande" && !outcome.replayed) shopify.toast.show(`Commande ${outcome.orderName} enregistrée`);
+    if (isDone(outcome)) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [outcome]);
 
   return { outcome, onSubmit, submitting: fetcher.state !== "idle" };
@@ -55,13 +62,14 @@ export default function NouvelleCommandePage() {
       </s-button>
       <s-stack direction="block" gap="base">
         {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
+        {outcome !== undefined && isDone(outcome) ? <OrderOutcomeBanner outcome={outcome} /> : null}
         <PhoneOrderForm
           key={formKey(outcome)}
           products={data.products}
           truncated={data.truncated}
           paymentTermDays={data.paymentTermDays}
           today={data.today}
-          outcome={outcome}
+          outcome={isDone(outcome) ? undefined : outcome}
           submitting={submitting}
           onSubmit={onSubmit}
         />

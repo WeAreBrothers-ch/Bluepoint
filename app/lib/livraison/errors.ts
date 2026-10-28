@@ -1,3 +1,5 @@
+import { plainShopifyRefusal } from "../shopify/plain-refusal";
+
 /** Erreurs de la livraison, avec un message en français prêt à afficher. */
 
 export type DeliveryErrorCode =
@@ -24,9 +26,10 @@ export class DeliveryError extends Error {
 
   constructor(
     readonly code: DeliveryErrorCode,
-    detail?: string,
+    /** Texte brut de Shopify (souvent en anglais) : pour les journaux, jamais affiché tel quel. */
+    readonly detail?: string,
   ) {
-    // Le détail brut de Shopify (souvent en anglais) reste visible pour la personne qui assiste l'utilisateur.
-    super(detail === undefined ? MESSAGES[code] : `${MESSAGES[code]} Détail pour l’assistance\u202F: ${detail}`);
+    const plain = detail === undefined ? null : plainShopifyRefusal(detail);
+    super(plain === null ? MESSAGES[code] : `${MESSAGES[code]} ${plain}`);
   }
 }

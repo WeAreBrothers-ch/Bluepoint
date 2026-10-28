@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -9,7 +10,7 @@ import { formDataToRecord, parseSettings } from "../lib/reglages/schema";
 import { completeSettings } from "../lib/reglages/seller";
 import { loadStoredSettings, saveSettings } from "../lib/reglages/settings.server";
 
-/** Réglages de facturation : coordonnées du vendeur, compte bancaire, automatismes. */
+/** Réglages de facturation : coordonnées de l'entreprise, compte en banque, ce qui se fait tout seul. */
 
 interface ReglagesLoaderData {
   readonly values: SettingsFormValues;
@@ -26,7 +27,7 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<SettingsA
   const { session } = await authenticate.admin(request);
   const parsed = parseSettings(formDataToRecord(await request.formData()));
   if (!parsed.ok) {
-    return { ok: false, errors: parsed.errors, message: "Certains champs sont à corriger." };
+    return { ok: false, errors: parsed.errors, message: "Certaines cases sont à corriger\u202F: elles sont en rouge ci-dessous." };
   }
   try {
     await saveSettings(session.shop, parsed.values);
@@ -43,13 +44,18 @@ export default function ReglagesPage() {
   const saving = useNavigation().state === "submitting";
   const errors = result !== undefined && !result.ok ? result.errors : {};
 
+  // Le bouton est en bas, le résultat en haut : on remonte pour qu'il soit vu.
+  useEffect(() => {
+    if (result !== undefined) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [result]);
+
   return (
     <s-page heading="Réglages" inlineSize="base">
-      {result?.ok ? <s-banner tone="success" heading="Réglages enregistrés." /> : null}
+      {result?.ok ? <s-banner tone="success" heading="C’est enregistré." /> : null}
       {result !== undefined && !result.ok ? <s-banner tone="critical" heading={result.message} /> : null}
       {!complete && result === undefined ? (
-        <s-banner tone="info" heading="Réglages à compléter">
-          Les factures ne sont créées qu’une fois toutes ces informations enregistrées.
+        <s-banner tone="info" heading="À remplir une seule fois">
+          Les factures pourront être faites dès que ces informations seront enregistrées.
         </s-banner>
       ) : null}
       <Form method="post">

@@ -41,7 +41,10 @@ async function generate(admin: AdminApiContext, shop: string, orderId: OrderGid)
 async function deliver(admin: AdminApiContext, shop: string, orderId: OrderGid): Promise<AgendaActionResult> {
   const settings = await loadStoredSettings(shop);
   const delivered = await markOrderDelivered(admin, orderId, { notifyCustomer: settings?.notifyCustomerOnDelivery ?? false });
-  if (!delivered.ok) return { ok: false, orderId, message: delivered.error.message, details: [], settingsLink: false };
+  if (!delivered.ok) {
+    logError("Livraison non notée", delivered.error, { orderId, detail: delivered.error.detail ?? null });
+    return { ok: false, orderId, message: delivered.error.message, details: [], settingsLink: false };
+  }
   const message = delivered.value.alreadyDelivered ? "Cette commande était déjà notée livrée." : "C’est noté\u202F: commande livrée.";
   const invoice = await ensureInvoice(admin, shop, orderId);
   if (invoice.ok) {

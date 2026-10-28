@@ -1,4 +1,5 @@
 import type { IsoDate } from "../metafields/definitions";
+import { plainShopifyRefusal } from "../shopify/plain-refusal";
 import type { PhoneOrderErrors } from "./schema";
 import type { PaymentChoice } from "./types";
 
@@ -66,5 +67,5 @@ export function isPaymentTermsRefusal(userErrors: readonly UserErrorLike[]): boo
 
 /** Refus de Shopify : phrase simple ; le détail brut (souvent en anglais) reste pour la personne qui assiste. */
 export function refusalMessage(detail: string): string {
-  return `Shopify n’a pas accepté la commande. Vérifiez le client et les vins, puis réessayez. Détail pour l’assistance\u202F: ${detail}`;
+  return `Shopify n’a pas accepté la commande. ${plainShopifyRefusal(detail) ?? "Vérifiez le client et les vins, puis réessayez."}`;
 }

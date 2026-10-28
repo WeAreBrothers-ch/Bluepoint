@@ -3,6 +3,7 @@ import { success, type Result } from "../core/result";
 import { logError, logInfo } from "../core/logger.server";
 import { ShopifyUserErrors, type ShopifyGraphqlError } from "../shopify/errors";
 import { runAdminGraphql } from "../shopify/graphql.server";
+import { plainShopifyRefusal } from "../shopify/plain-refusal";
 import { recordOrder } from "./idempotency.server";
 import type { CompletedOrderNode } from "./mutations";
 import { MESSAGES, type PhoneOrderOutcome } from "./outcome";
@@ -35,8 +36,8 @@ async function completeOnce(admin: AdminApiContext, draftOrderId: string): Promi
 }
 
 function notCompletedMessage(draftName: string, error: ShopifyGraphqlError): string {
-  const detail = error instanceof ShopifyUserErrors ? ` (${error.message})` : "";
-  return `La commande n’est pas encore tout à fait enregistrée (${draftName}${detail}). Touchez à nouveau « Enregistrer la commande »\u202F: elle ne sera pas enregistrée deux fois.`;
+  const plain = error instanceof ShopifyUserErrors ? plainShopifyRefusal(error.message) : null;
+  return `La commande n’est pas encore tout à fait enregistrée (${draftName}).${plain === null ? "" : ` ${plain}`} Touchez à nouveau « Enregistrer la commande »\u202F: elle ne sera pas enregistrée deux fois.`;
 }
 
 export async function finishDraft(

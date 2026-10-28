@@ -1,6 +1,8 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import type { ReactNode } from "react";
+import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from "react-router";
+import { PlainProblemPage } from "./components/ProblemPage";
 
-export default function App() {
+export function Layout({ children }: { readonly children: ReactNode }) {
   return (
     <html lang="fr-CH">
       <head>
@@ -15,10 +17,20 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
+}
+
+export default function App() {
+  return <Outlet />;
+}
+
+// Dernier filet : une page en français plutôt que la page d'erreur anglaise de React Router.
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return <PlainProblemPage notFound={isRouteErrorResponse(error) && error.status === 404} />;
 }

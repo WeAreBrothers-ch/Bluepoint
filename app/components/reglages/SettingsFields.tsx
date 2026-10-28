@@ -1,7 +1,7 @@
 import type { SettingsFormValues } from "../../lib/reglages/form-values";
 import type { SettingsField, SettingsFieldErrors } from "../../lib/reglages/schema";
 
-/** Champs du formulaire des réglages, groupés par thème. */
+/** Champs des réglages, en mots simples et groupés par thème. Tout ce qui est ici est imprimé sur les factures. */
 
 interface FieldsProps {
   readonly values: SettingsFormValues;
@@ -31,22 +31,32 @@ function Text({ field, label, values, errors, details }: FieldsProps & { field: 
 
 export function SellerFields(props: FieldsProps) {
   return (
-    <s-section heading="Vendeur">
+    <s-section heading="1. Votre entreprise">
       <s-stack direction="block" gap="base">
-        <Text {...props} field="legalName" label="Raison sociale" />
+        <s-paragraph color="subdued">Ces informations sont imprimées en haut de chaque facture.</s-paragraph>
+        <Text {...props} field="legalName" label="Nom de l’entreprise" details="Ex. Blue Point Distribution Sàrl" />
         <s-query-container>
           <s-grid gridTemplateColumns={GRID} gap="base">
-            <Text {...props} field="street" label="Rue" />
-            <Text {...props} field="buildingNumber" label="Numéro" />
-            <Text {...props} field="postalCode" label="NPA" />
+            <Text {...props} field="street" label="Rue" details="Sans le numéro" />
+            <Text {...props} field="buildingNumber" label="Numéro de rue" />
+            <Text {...props} field="postalCode" label="NPA" details="4 chiffres, ex. 1095" />
             <Text {...props} field="city" label="Localité" />
           </s-grid>
         </s-query-container>
-        <Text {...props} field="country" label="Pays" details="CH ou LI" />
-        <Text {...props} field="vatNumber" label="Numéro TVA" details="Format CHE-123.456.789 TVA" />
+        <s-select label="Pays" name="country" value={props.values.country} {...errorProps(props.errors, "country")}>
+          <s-option value="CH">Suisse</s-option>
+          <s-option value="LI">Liechtenstein</s-option>
+        </s-select>
+        <Text {...props} field="vatNumber" label="Numéro TVA" details="Ex. CHE-123.456.789 TVA" />
         <s-query-container>
           <s-grid gridTemplateColumns={GRID} gap="base">
-            <s-email-field label="E-mail" name="email" value={props.values.email} {...errorProps(props.errors, "email")} />
+            <s-email-field
+              label="E-mail"
+              name="email"
+              value={props.values.email}
+              details="Les clients vous répondent à cette adresse."
+              {...errorProps(props.errors, "email")}
+            />
             <Text {...props} field="phone" label="Téléphone" />
           </s-grid>
         </s-query-container>
@@ -57,12 +67,19 @@ export function SellerFields(props: FieldsProps) {
 
 export function PaymentFields(props: FieldsProps) {
   return (
-    <s-section heading="Paiement">
+    <s-section heading="2. Votre compte en banque">
       <s-stack direction="block" gap="base">
-        <Text {...props} field="iban" label="IBAN" details="Compte suisse (CH) ou liechtensteinois (LI)" />
-        <Text {...props} field="qrIban" label="QR-IBAN (facultatif)" details="Avec un QR-IBAN, la facture porte une référence QR à 27 chiffres." />
+        <s-paragraph color="subdued">Le QR code de chaque facture envoie l’argent sur ce compte.</s-paragraph>
+        <Text {...props} field="iban" label="IBAN" details="Il commence par CH et se trouve sur vos relevés de banque." />
+        <Text
+          {...props}
+          field="qrIban"
+          label="QR-IBAN (seulement si votre banque vous en a donné un)"
+          details="Sinon, laissez cette case vide."
+        />
         <s-number-field
-          label="Délai de paiement (jours)"
+          label={"Combien de jours les clients ont-ils pour payer\u202F?"}
+          details="En général 30 jours."
           name="paymentTermDays"
           value={props.values.paymentTermDays}
           min={0}
@@ -77,19 +94,20 @@ export function PaymentFields(props: FieldsProps) {
 
 export function AutomationFields({ values }: Pick<FieldsProps, "values">) {
   return (
-    <s-section heading="Automatismes">
+    <s-section heading="3. Ce qui se fait tout seul">
       <s-stack direction="block" gap="base">
         <s-checkbox
           name="autoInvoiceOnDelivery"
           value="on"
-          label="Créer la facture dès qu’une expédition est créée dans Shopify"
-          details="Aussi pour les expéditions faites hors de l’app. « Marquer livrée » crée toujours la facture."
+          label="Faire la facture aussi quand une commande est expédiée directement dans Shopify"
+          details="« C’est livré » dans l’agenda fait toujours la facture, que cette case soit cochée ou non."
           {...(values.autoInvoiceOnDelivery ? { checked: true } : {})}
         />
         <s-checkbox
           name="notifyCustomerOnDelivery"
           value="on"
-          label="Envoyer au client l’e-mail d’expédition de Shopify quand l’app marque une commande livrée"
+          label="Prévenir le client par e-mail quand sa commande est livrée"
+          details="C’est l’e-mail automatique de Shopify, envoyé quand vous touchez « C’est livré »."
           {...(values.notifyCustomerOnDelivery ? { checked: true } : {})}
         />
       </s-stack>
