@@ -4,6 +4,7 @@ import { isEmailConfigured } from "../factures/email.server";
 import { invoicesByOrder, listInvoices } from "../factures/repository.server";
 import { channelsByCustomer, invoiceShortcuts } from "../factures/shortcuts.server";
 import type { IsoDate } from "../metafields/definitions";
+import { countPendingProRequests } from "../pros/repository.server";
 import { loadCompleteSettings } from "../reglages/settings.server";
 import { addDays, formatRange, swissIsoDate, weekContaining, weekFromParam } from "./dates";
 import { groupToday, groupWeek, type TodayGroups, type WeekGroups } from "./grouping";
@@ -24,6 +25,8 @@ export interface AgendaPageData {
   readonly loadError: string | null;
   readonly settingsComplete: boolean;
   readonly emailConfigured: boolean;
+  /** Demandes de compte pro reçues par le site, à valider. */
+  readonly pendingProRequests: number;
   /** Facture déjà créée, par identifiant de commande. */
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
 }
@@ -46,8 +49,20 @@ export async function loadAgendaPage(
     nextStart: addDays(week.start, 7),
   };
   const periodLabel = formatRange(view === "aujourdhui" ? { start: today, end: today } : week);
-  const [orders, settings] = await Promise.all([loadAgendaOrders(admin, week), loadCompleteSettings(shop)]);
-  const base = { view, today, periodLabel, weekNavigation, settingsComplete: settings !== null, emailConfigured: isEmailConfigured() };
+  const [orders, settings, pendingProRequests] = await Promise.all([
+    loadAgendaOrders(admin, week),
+    loadCompleteSettings(shop),
+    countPendingProRequests(shop),
+  ]);
+  const base = {
+    view,
+    today,
+    periodLabel,
+    weekNavigation,
+    settingsComplete: settings !== null,
+    emailConfigured: isEmailConfigured(),
+    pendingProRequests,
+  };
   if (!orders.ok) {
     logError("Chargement de l'agenda impossible", orders.error);
     return {

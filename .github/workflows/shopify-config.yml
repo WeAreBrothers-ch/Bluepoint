@@ -1,0 +1,47 @@
+# Publie la configuration de l'app chez Shopify (shopify.app.toml : autorisations, webhooks,
+# proxy d'app, métachamps) en créant une nouvelle version de l'app.
+# À lancer à la main après un changement de shopify.app.toml :
+#   GitHub › Actions › « Configuration Shopify » › Run workflow.
+# Prérequis (une seule fois) : secret SHOPIFY_APP_AUTOMATION_TOKEN, créé dans le Dev Dashboard
+# (app › Settings › App Automation Token) puis ajouté dans GitHub (Settings › Secrets and variables › Actions).
+# L'app elle-même (Vercel) n'est pas concernée : elle se met en ligne à chaque envoi sur main.
+name: Configuration Shopify
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Vérifier le jeton Shopify
+        env:
+          SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
+        run: |
+          if [ -z "$SHOPIFY_APP_AUTOMATION_TOKEN" ]; then
+            echo "::error::Secret SHOPIFY_APP_AUTOMATION_TOKEN manquant : créez-le dans le Dev Dashboard (app › Settings › App Automation Token), puis ajoutez-le dans GitHub (Settings › Secrets and variables › Actions)."
+            exit 1
+          fi
+
+      - name: Installer les dépendances
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Installer la CLI Shopify
+        run: npm install -g @shopify/cli@5
+
+      - name: Publier la configuration
+        env:
+          SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+        # --allow-updates : met à jour sans jamais rien supprimer (sinon l'étape échoue).
+        run: shopify app deploy --allow-updates --no-build --source-control-url "$COMMIT_URL" --message "Configuration publiée depuis GitHub"

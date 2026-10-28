@@ -37,6 +37,19 @@ function Notices({ data }: { readonly data: AgendaPageData }) {
           dans Shopify.
         </s-banner>
       ) : null}
+      {data.pendingProRequests === 0 ? null : (
+        <s-banner
+          tone="info"
+          heading={`${data.pendingProRequests} demande${data.pendingProRequests > 1 ? "s" : ""} de compte pro à valider`}
+        >
+          <s-stack direction="block" gap="small-200">
+            <s-text>Un professionnel a demandé à commander avec les prix pros.</s-text>
+            <s-stack direction="inline">
+              <s-button href="/app/pros">Voir les demandes</s-button>
+            </s-stack>
+          </s-stack>
+        </s-banner>
+      )}
       {data.settingsComplete ? null : (
         <s-banner tone="info" heading="Les factures ne peuvent pas encore être faites">
           <s-stack direction="block" gap="small-200">

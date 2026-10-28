@@ -119,3 +119,31 @@ model PhoneOrderRequest {
 
   @@index([shop, createdAt])
 }
+
+// --- Demandes de compte pro ---
+// Reçues par le formulaire « Devenir client pro » du site (proxy d'app) ou saisies dans l'app.
+// status : en_attente → acceptee (entreprise créée dans Shopify) ou refusee.
+// companyId est noté dès que l'entreprise existe : un nouvel essai reprend sans la recréer.
+model ProRequest {
+  id          String    @id @default(cuid())
+  shop        String
+  status      String    @default("en_attente")
+  source      String    @default("site")
+  companyName String
+  firstName   String
+  lastName    String
+  email       String
+  phone       String
+  street      String
+  postalCode  String
+  city        String
+  country     String    @default("CH")
+  vatNumber   String?
+  message     String?
+  companyId   String?
+  customerId  String?
+  createdAt   DateTime  @default(now())
+  decidedAt   DateTime?
+
+  @@index([shop, status, createdAt])
+}

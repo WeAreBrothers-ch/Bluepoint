@@ -6,6 +6,11 @@ Elle sert à l’équipe, pas aux clients :
 - **Agenda** : les livraisons du jour et de la semaine, à partir des commandes et de leurs dates de livraison.
 - **Nouvelle commande (téléphone)** : saisir une commande reçue par téléphone.
 - **Factures** : générer les factures PDF avec QR-facture suisse (paquet local `packages/facture-qr`).
+- **Clients pro** (`/app/pros`) : demandes reçues par le formulaire du site
+  (`https://<boutique>/apps/bon-commande/devenir-pro`, servi par le proxy d’app dans le thème) ;
+  « Accepter » crée l’entreprise (paiement à N jours), rattache la personne (rôle « Commande uniquement »),
+  pose l’étiquette `pro` et envoie l’e-mail d’invitation de Shopify. « Ajouter un client pro » fait de même
+  pour un pro qui appelle. Demandes en base (table `ProRequest`), bandeau dans l’agenda s’il y en a.
 - **Bon de commande** côté boutique : paiement normal de Shopify. Un pro rattaché à une entreprise
   dont l’emplacement a « Net 30 » valide sa commande sans payer ; elle arrive non payée, avec ses
   conditions, et l’agenda l’affiche « Facture à 30 jours ». Le proxy `https://<boutique>/apps/bon-commande`
@@ -111,6 +116,17 @@ Shopify Partner avec accès à la boutique.
    (`application_url`, `redirect_urls`, `app_proxy.url`), passer
    `automatically_update_urls_on_dev` à `false`, puis lancer **`shopify app deploy`** : cela
    publie les autorisations, les webhooks, le proxy et les métachamps.
+
+## Publier la configuration Shopify (sans ordinateur)
+
+Un changement de `shopify.app.toml` (autorisations, webhooks, proxy, métachamps) doit être publié chez
+Shopify. Le workflow GitHub **« Configuration Shopify »** le fait (`.github/workflows/shopify-config.yml`) :
+
+1. Dev Dashboard › l’app › **Settings** › **App Automation Token** : créer un jeton.
+2. GitHub › le dépôt › **Settings** › **Secrets and variables** › **Actions** › *New repository secret* :
+   nom `SHOPIFY_APP_AUTOMATION_TOKEN`, valeur = le jeton. Ne jamais le coller ailleurs.
+3. GitHub › **Actions** › « Configuration Shopify » › **Run workflow**.
+4. Ouvrir l’app dans l’admin Shopify : accepter les nouvelles autorisations si Shopify le demande.
 
 ## Commandes utiles
 
