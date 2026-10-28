@@ -39,6 +39,9 @@ Elle sert à l’équipe, pas aux clients :
   d’idempotence. Autorisation `write_inventory`. « Nouveau vin » : produit actif à variante unique
   créé par `productSet` (prix, stock au dépôt), mis en vente sur les mêmes canaux que les autres vins
   (`publishablePublish`). Autorisations `write_products`, `read_locations`, `read/write_publications`.
+  Photo du vin (« Nouveau vin », « Ajouter / Changer la photo ») : réduite dans le navigateur
+  (1600 px, JPEG), déposée via `stagedUploadsCreate`, puis rattachée par `productSet` (liste `files`
+  seule : elle remplace l’ancienne photo sans toucher au prix ni au stock). Autorisation `write_files`.
 - **Réglages** (`/app/reglages`) : vendeur, TVA, IBAN / QR-IBAN, délai de paiement, automatismes.
 - **Webhook `fulfillments/create`** : facture automatique si le réglage est activé.
 - **Nouvelle commande (téléphone)** (`/app/commande`) : recherche du client (nom, entreprise, téléphone,

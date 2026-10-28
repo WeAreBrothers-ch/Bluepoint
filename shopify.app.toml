@@ -15,7 +15,8 @@ automatically_update_urls_on_dev = true
 # write_customers : créer les comptes pro (entreprise, contact, étiquette « pro »), page « Clients pro ».
 # write_inventory : page « Stock » (bouteilles reçues, comptage). write_order_edits : modifier une commande.
 # write_products, read_locations, read/write_publications : « Nouveau vin » (créé au dépôt, mis en vente sur le site).
-scopes = "read_customers,read_draft_orders,read_fulfillments,read_inventory,read_locations,read_merchant_managed_fulfillment_orders,read_metaobjects,read_orders,read_payment_terms,read_products,read_publications,write_customers,write_draft_orders,write_fulfillments,write_inventory,write_merchant_managed_fulfillment_orders,write_metaobjects,write_order_edits,write_orders,write_payment_terms,write_products,write_publications"
+# write_files : photo d’un vin envoyée depuis l’app (envoi temporaire chez Shopify, puis rattachée au vin).
+scopes = "read_customers,read_draft_orders,read_fulfillments,read_inventory,read_locations,read_merchant_managed_fulfillment_orders,read_metaobjects,read_orders,read_payment_terms,read_products,read_publications,write_customers,write_draft_orders,write_files,write_fulfillments,write_inventory,write_merchant_managed_fulfillment_orders,write_metaobjects,write_order_edits,write_orders,write_payment_terms,write_products,write_publications"
 
 [auth]
 redirect_urls = [ "https://bluepoint-gestion.vercel.app/api/auth" ]

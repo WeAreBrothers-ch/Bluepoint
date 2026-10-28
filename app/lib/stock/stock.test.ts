@@ -15,7 +15,7 @@ function variant(title: string, quantities: { available: number; onHand: number;
     id: `gid://shopify/ProductVariant/${title.length}`,
     title: "Default Title",
     price: "45.00",
-    product: { title, hasOnlyDefaultVariant: true, featuredMedia: null },
+    product: { id: "gid://shopify/Product/5", title, hasOnlyDefaultVariant: true, featuredMedia: null },
     inventoryItem:
       quantities === null
         ? { id: "gid://shopify/InventoryItem/9", tracked: false, inventoryLevels: { nodes: [] } }

@@ -23,7 +23,7 @@ query StockVins($first: Int!, $after: String) {
       id
       title
       price
-      product { title hasOnlyDefaultVariant featuredMedia { preview { image { url altText } } } }
+      product { id title hasOnlyDefaultVariant featuredMedia { preview { image { url altText } } } }
       inventoryItem {
         id
         tracked
@@ -40,6 +40,7 @@ export interface StockVariantNode {
   readonly title: string;
   readonly price: string;
   readonly product: {
+    readonly id: string;
     readonly title: string;
     readonly hasOnlyDefaultVariant: boolean;
     readonly featuredMedia: {
@@ -76,6 +77,8 @@ export interface StockPlace {
 
 export interface StockItem {
   readonly variantId: string;
+  /** Pour changer la photo du vin. */
+  readonly productId: string;
   readonly label: string;
   readonly priceCents: number | null;
   readonly imageUrl: string | null;
@@ -106,6 +109,7 @@ export function toStockItem(node: StockVariantNode): StockItem {
   const level = node.inventoryItem?.tracked ? (node.inventoryItem.inventoryLevels.nodes[0] ?? null) : null;
   const base = {
     variantId: node.id,
+    productId: node.product.id,
     label,
     priceCents: decimalToCents(node.price),
     imageUrl: image?.url ?? null,

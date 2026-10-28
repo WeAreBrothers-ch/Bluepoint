@@ -9,6 +9,8 @@ import { StockRow } from "../components/stock/StockRow";
 import { filterStock, stockSummary, type StockActionResult, type StockSummary } from "../lib/stock/stock";
 import type { NewWineResult } from "../lib/stock/new-wine";
 import { handleNewWine } from "../lib/stock/new-wine.server";
+import type { PhotoResult } from "../lib/stock/photo";
+import { handlePhotoChange } from "../lib/stock/photo.server";
 import { handleStockAction, loadStockPage, type StockPageData } from "../lib/stock/stock.server";
 
 /** Stock : combien de bouteilles il reste de chaque vin ; ajouter du vin reçu ; corriger après un comptage ; nouveau vin. */
@@ -18,10 +20,13 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<StockPage
   return loadStockPage(admin);
 };
 
-export const action = async ({ request }: ActionFunctionArgs): Promise<StockActionResult | NewWineResult> => {
+export const action = async ({ request }: ActionFunctionArgs): Promise<StockActionResult | NewWineResult | PhotoResult> => {
   const { admin } = await authenticate.admin(request);
   const form = await request.formData();
-  return form.get("intent") === "nouveau_vin" ? handleNewWine(admin, form) : handleStockAction(admin, form);
+  const intent = form.get("intent");
+  if (intent === "nouveau_vin") return handleNewWine(admin, form);
+  if (intent === "photo") return handlePhotoChange(admin, form);
+  return handleStockAction(admin, form);
 };
 
 function SummaryBanner({ summary }: { readonly summary: StockSummary }) {
@@ -91,7 +96,7 @@ export default function StockPage() {
             {data.truncated ? <s-text color="subdued">Il y a beaucoup de vins : les premiers seulement sont affichés.</s-text> : null}
             {shown.length === 0 ? <s-text>Aucun vin ne correspond à cette recherche.</s-text> : null}
             {shown.map((item) => (
-              <StockRow key={item.variantId} item={item} canEdit={data.canEdit} />
+              <StockRow key={item.variantId} item={item} canEdit={data.canEdit} canPhoto={data.canCreateWines} />
             ))}
           </s-stack>
         </s-section>

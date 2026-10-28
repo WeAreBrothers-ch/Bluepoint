@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import { EMPTY_NEW_WINE, WINE_TYPES, type NewWineErrors, type NewWineField, type NewWineResult, type NewWineValues } from "../../lib/stock/new-wine";
+import { PhotoPicker } from "./PhotoPicker";
 
 /**
- * « Nouveau vin », en haut de la page Stock : nom, producteur, sorte, prix et bouteilles en cave.
+ * « Nouveau vin », en haut de la page Stock : nom, producteur, sorte, prix, bouteilles en cave et photo.
  * Une fois créé, le vin apparaît dans la liste, sur le site et dans « Prendre une commande ».
  */
 
@@ -27,6 +28,8 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
   const failed = result !== undefined && !result.ok ? result : undefined;
   const values: NewWineValues = failed?.values ?? EMPTY_NEW_WINE;
   const errors = failed?.errors ?? {};
+  // La photo choisie reste là si une case est à corriger : pas besoin de la choisir à nouveau.
+  const [photo, setPhoto] = useState<File | null>(null);
 
   useEffect(() => {
     if (result?.ok) onCreated(result.message);
@@ -34,7 +37,15 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
 
   return (
     <s-section heading="Nouveau vin">
-      <fetcher.Form method="post">
+      <fetcher.Form
+        method="post"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          if (photo !== null) data.set("photo", photo, "photo.jpg");
+          void fetcher.submit(data, { method: "post", encType: "multipart/form-data" });
+        }}
+      >
         <input type="hidden" name="intent" value="nouveau_vin" />
         <s-stack direction="block" gap="base">
           {/* Remonté à neuf après une erreur pour réafficher ce qui a été tapé. */}
@@ -62,6 +73,7 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
               />
             </s-grid>
           </s-query-container>
+          <PhotoPicker photo={photo} onChange={setPhoto} disabled={busy} />
           {failed === undefined ? null : <s-banner tone="critical" heading={failed.message} />}
           <s-stack direction="inline" gap="small-200">
             <s-button type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
@@ -71,7 +83,6 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
               Annuler
             </s-button>
           </s-stack>
-          <s-text color="subdued">La photo et la description pourront être ajoutées plus tard.</s-text>
         </s-stack>
       </fetcher.Form>
     </s-section>

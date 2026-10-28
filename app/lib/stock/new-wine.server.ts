@@ -3,13 +3,15 @@ import { logError, logInfo } from "../core/logger.server";
 import { normalizeSearch } from "../commande/catalog";
 import { runAdminGraphql, runAdminMutation } from "../shopify/graphql.server";
 import { createdMessage, parseNewWine, shopifyPrice, type NewWineInput, type NewWineResult } from "./new-wine";
+import { formPhoto, photoProblem } from "./photo";
+import { photoFiles, uploadPhoto } from "./photo.server";
 
 /**
  * « Nouveau vin » : crée le produit actif avec son prix et son stock au dépôt (`productSet`),
  * puis le met en vente là où sont déjà les autres vins (le site, en pratique).
  */
 
-export const NEW_WINE_SCOPES = ["write_products", "read_locations"] as const;
+export const NEW_WINE_SCOPES = ["write_products", "read_locations", "write_files"] as const;
 
 const PLACES_QUERY = `#graphql
 query OuMettreLeVin($title: String!) {
@@ -95,10 +97,11 @@ async function findPlaces(admin: AdminApiContext, title: string): Promise<Places
   };
 }
 
-function productInput(input: NewWineInput, locationId: string) {
+function productInput(input: NewWineInput, locationId: string, files: ReturnType<typeof photoFiles> | null) {
   return {
     title: input.title,
     status: "ACTIVE",
+    ...(files === null ? {} : { files }),
     ...(input.vendor === null ? {} : { vendor: input.vendor }),
     ...(input.productType === null ? {} : { productType: input.productType }),
     productOptions: [{ name: "Title", values: [{ name: "Default Title" }] }],
@@ -139,8 +142,15 @@ export async function handleNewWine(admin: AdminApiContext, form: FormData): Pro
       errors: { title: "Ce nom existe déjà." },
     };
   }
+  const photo = formPhoto(form);
+  const problem = photo === null ? null : photoProblem(photo);
+  if (problem !== null) return { ok: false, intent: "nouveau_vin", message: problem, values, errors: {} };
+  // Photo refusée par Shopify : le vin est quand même créé, la photo pourra être ajoutée ensuite.
+  const uploaded = photo === null ? null : await uploadPhoto(admin, photo, input.title);
+  if (uploaded !== null && !uploaded.ok) logError("Photo du nouveau vin non envoyée", uploaded.error, { title: input.title });
+  const files = uploaded?.ok ? photoFiles(uploaded.value, input.title) : null;
   const created = await runAdminMutation(admin, CREATE_MUTATION, (data: { readonly productSet: CreatePayload }) => data.productSet, {
-    input: productInput(input, places.locationId),
+    input: productInput(input, places.locationId, files),
   });
   if (!created.ok || created.value.product === null) {
     if (!created.ok) logError("Nouveau vin refusé", created.error, { title: input.title });
@@ -160,6 +170,7 @@ export async function handleNewWine(admin: AdminApiContext, form: FormData): Pro
     if (publish.ok) published = true;
     else logError("Nouveau vin créé mais pas mis en vente", publish.error, { productId });
   }
-  logInfo("Nouveau vin", { productId, quantity: input.quantity, published });
-  return { ok: true, intent: "nouveau_vin", message: createdMessage(input, published) };
+  logInfo("Nouveau vin", { productId, quantity: input.quantity, published, photo: files !== null });
+  const photoMissed = photo !== null && files === null ? " La photo n’a pas pu être envoyée : ajoutez-la avec « Ajouter une photo »." : "";
+  return { ok: true, intent: "nouveau_vin", message: `${createdMessage(input, published)}${photoMissed}` };
 }
