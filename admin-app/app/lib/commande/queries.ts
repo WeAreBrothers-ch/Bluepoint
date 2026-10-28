@@ -79,9 +79,10 @@ export interface CustomerSearchData {
 export const CATALOG_PAGE_SIZE = 100;
 export const CATALOG_MAX_VARIANTS = 500;
 
+/** Valeur du filtre en minuscules : avec « product_status:ACTIVE », Shopify ne renvoie aucune variante. */
 export const CATALOG_QUERY = `#graphql
 query CatalogueTelephone($first: Int!, $after: String) {
-  productVariants(first: $first, after: $after, query: "product_status:ACTIVE", sortKey: FULL_TITLE) {
+  productVariants(first: $first, after: $after, query: "product_status:active", sortKey: FULL_TITLE) {
     pageInfo { hasNextPage endCursor }
     nodes {
       id
