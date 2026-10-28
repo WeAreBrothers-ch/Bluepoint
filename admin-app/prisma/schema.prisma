@@ -1,0 +1,121 @@
+// Schéma Prisma : stockage des sessions Shopify dans PostgreSQL (Neon).
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// DATABASE_URL : connexion « pooled » (requêtes de l'app).
+// DATABASE_URL_UNPOOLED : connexion directe, requise par `prisma migrate`.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+
+  @@index([shop])
+}
+
+// --- Réglages de la boutique (vendeur affiché sur les factures) ---
+model ShopSettings {
+  shop                     String   @id
+  legalName                String
+  street                   String
+  buildingNumber           String
+  postalCode               String
+  city                     String
+  country                  String   @default("CH")
+  vatNumber                String
+  iban                     String
+  qrIban                   String?
+  paymentTermDays          Int      @default(30)
+  email                    String
+  phone                    String
+  // Facture créée automatiquement au webhook fulfillments/create.
+  autoInvoiceOnDelivery    Boolean  @default(false)
+  // Avertir le client par e-mail quand l'app crée l'expédition.
+  notifyCustomerOnDelivery Boolean  @default(false)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+// --- Factures ---
+// Numéro BP-AAAA-NNNN tiré de Counter dans la même transaction : pas de trou, pas de doublon.
+model Invoice {
+  id            String    @id @default(cuid())
+  shop          String
+  orderId       String    @unique
+  orderName     String
+  number        String    @unique
+  issueDate     String
+  dueDate       String
+  totalCents    Int
+  customerName  String
+  // Coordonnées relevées à la création (pour l'envoi), téléphone déjà au format E.164.
+  customerEmail String?
+  customerPhone String?
+  pdfKey        String
+  // Date de paiement (AAAA-MM-JJ) : renseignée pour un reçu pro (facture acquittée), sinon vide.
+  paidOn        String?
+  createdAt     DateTime  @default(now())
+  sentAt        DateTime?
+  sentTo        String?
+  sentVia       String?
+
+  @@index([shop, createdAt])
+}
+
+// Compteur de numéros de facture, une ligne par boutique et par année.
+model Counter {
+  shop  String
+  year  Int
+  value Int
+
+  @@id([shop, year])
+}
+
+// Stockage des PDF dans la base (clé = Invoice.pdfKey).
+model StoredFile {
+  key         String   @id
+  contentType String
+  bytes       Bytes
+  createdAt   DateTime @default(now())
+}
+
+// --- Commandes prises par téléphone ---
+// Une ligne par saisie : la clé est générée par le navigateur. Un double clic (ou un nouvel
+// essai après une erreur) retrouve la même ligne au lieu de créer une deuxième commande.
+// status : en_cours → a_terminer (provisoire créée) → terminee, ou brouillon (laissée provisoire).
+model PhoneOrderRequest {
+  key            String   @id
+  shop           String
+  status         String   @default("en_cours")
+  draftOrderId   String?
+  draftOrderName String?
+  orderId        String?
+  orderName      String?
+  paymentPending Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([shop, createdAt])
+}

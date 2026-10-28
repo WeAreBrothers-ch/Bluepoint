@@ -1,0 +1,75 @@
+# Configuration de l’app BluePoint Gestion.
+# Doc : https://shopify.dev/docs/apps/tools/cli/configuration
+# ⚠ `shopify app config link` réécrit ce fichier : vérifier ensuite que les webhooks, [app_proxy]
+#   et les métachamps [order.metafields.app.*] sont toujours là (voir README).
+
+client_id = "430b346e661168946e36037c5e4f9293"
+application_url = "https://bluepoint-gestion.vercel.app"
+embedded = true
+name = "bluepoint-gestion"
+
+[build]
+automatically_update_urls_on_dev = true
+
+[access_scopes]
+scopes = "read_customers,read_draft_orders,read_fulfillments,read_inventory,read_merchant_managed_fulfillment_orders,read_metaobjects,read_orders,read_payment_terms,read_products,write_draft_orders,write_fulfillments,write_merchant_managed_fulfillment_orders,write_metaobjects,write_orders,write_payment_terms"
+
+[auth]
+redirect_urls = [ "https://bluepoint-gestion.vercel.app/api/auth" ]
+
+# Même version que l’API utilisée par l’app (app/shopify.server.ts : ApiVersion.October26).
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create" ]
+  uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/paid" ]
+  uri = "/webhooks/orders/paid"
+
+  [[webhooks.subscriptions]]
+  topics = [ "fulfillments/create" ]
+  uri = "/webhooks/fulfillments/create"
+
+# Bon de commande envoyé depuis la boutique : /apps/bon-commande → /proxy/bon-commande
+[app_proxy]
+url = "https://bluepoint-gestion.vercel.app/proxy/bon-commande"
+subpath = "bon-commande"
+prefix = "apps"
+
+# Métachamps de commande « livraison », dans l’espace réservé à l’app ($app).
+# Reflétés dans app/lib/metafields/definitions.ts : modifier les deux ensemble.
+[order.metafields.app.livraison_date_souhaitee]
+name = "Date de livraison souhaitée"
+description = "Jour où le client souhaite être livré."
+type = "date"
+access.admin = "merchant_read_write"
+capabilities.admin_filterable = true
+capabilities.cart_to_order_copyable = true
+
+[order.metafields.app.livraison_date_limite]
+name = "Livrer au plus tard"
+description = "Date limite de livraison."
+type = "date"
+access.admin = "merchant_read_write"
+capabilities.admin_filterable = true
+capabilities.cart_to_order_copyable = true
+
+[order.metafields.app.livraison_mode]
+name = "Mode de livraison"
+description = "livraison (camion BluePoint), poste ou retrait sur place."
+type = "single_line_text_field"
+access.admin = "merchant_read_write"
+capabilities.admin_filterable = true
+capabilities.cart_to_order_copyable = true
+validations.choices = [ "livraison", "poste", "retrait" ]

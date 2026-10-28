@@ -1,0 +1,16 @@
+node_modules/
+/.cache
+/build
+/app/build
+/public/build/
+.react-router/
+.env
+.env.*
+!.env.example
+.shopify/
+.vercel/
+*.log
+.DS_Store
+packages/facture-qr/node_modules/
+packages/facture-qr/dist/
+/extensions/*/dist
