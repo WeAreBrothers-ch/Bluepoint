@@ -47,7 +47,9 @@ jobs:
 
       - name: Publier la configuration
         env:
+          # Même jeton sous les deux noms : la CLI lira bientôt seulement SHOPIFY_SERVICE_ACCOUNT_TOKEN.
           SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
+          SHOPIFY_SERVICE_ACCOUNT_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
         # --allow-updates : met à jour sans jamais rien supprimer (sinon l'étape échoue).
         run: shopify app deploy --allow-updates --source-control-url "$COMMIT_URL" --message "Configuration publiée depuis GitHub"
