@@ -39,6 +39,22 @@ export function toShippingAddress(node: CustomerAddressNode | null): ShippingAdd
   };
 }
 
+const REGION_NAMES = new Intl.DisplayNames(["fr-CH"], { type: "region" });
+
+/**
+ * Adresse en français, une ligne par élément (Shopify renvoie « Switzerland » dans `formatted`).
+ * Le pays n'est écrit que hors de Suisse.
+ */
+export function addressLines(address: ShippingAddress | null): string[] {
+  if (address === null) return [];
+  const town = [address.zip, address.city].filter((part) => part !== null && part.trim() !== "").join(" ");
+  const code = address.countryCode?.trim().toUpperCase() ?? "";
+  const country = code === "" || code === "CH" ? null : (REGION_NAMES.of(code) ?? code);
+  return [address.company, address.address1, address.address2, town, country]
+    .map((line) => line?.trim() ?? "")
+    .filter((line) => line !== "");
+}
+
 function toB2bOptions(profile: CompanyContactNode): B2bOption[] {
   const companyId = parseGid(profile.company.id, "Company");
   const companyContactId = parseGid(profile.id, "CompanyContact");
@@ -88,7 +104,7 @@ export function toCustomerOption(node: CustomerNode): CustomerOption | null {
     email: node.defaultEmailAddress?.emailAddress ?? null,
     phone: phone?.trim() ? phone.trim() : null,
     address: toShippingAddress(node.defaultAddress),
-    addressLines: node.defaultAddress?.formatted.filter((line) => line.trim() !== "") ?? [],
+    addressLines: addressLines(toShippingAddress(node.defaultAddress)),
     b2b,
   };
 }

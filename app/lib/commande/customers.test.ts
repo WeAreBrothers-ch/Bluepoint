@@ -16,8 +16,13 @@ describe("toCustomerOption", () => {
     const option = toCustomerOption(customerNode());
     expect(option?.phone).toBe("+41211234567");
     expect(option?.address?.countryCode).toBe("CH");
-    expect(option?.addressLines).toContain("1095 Lutry VD");
+    expect(option?.addressLines).toEqual(["La Poésia", "Rue du Lac 4", "1095 Lutry"]);
     expect(option?.b2b).toEqual([]);
+  });
+
+  it("écrit le pays en français, seulement hors de Suisse", () => {
+    const address = { ...customerNode().defaultAddress!, company: null, countryCodeV2: "LI", zip: "9490", city: "Vaduz" };
+    expect(toCustomerOption(customerNode({ defaultAddress: address }))?.addressLines).toEqual(["Rue du Lac 4", "9490 Vaduz", "Liechtenstein"]);
   });
 
   it("supporte une boutique sans B2B (profils absents)", () => {

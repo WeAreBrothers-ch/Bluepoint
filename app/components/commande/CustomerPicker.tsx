@@ -1,12 +1,9 @@
 import { longDay } from "../../lib/agenda/dates";
 import { productLabel } from "../../lib/commande/totals";
-import type { CustomerOption, PhoneOrderLine, ProductOption } from "../../lib/commande/types";
+import type { B2bOption, CustomerOption, PhoneOrderLine, ProductOption } from "../../lib/commande/types";
 import { CustomerSearch } from "./CustomerSearch";
 
 /** Client de la commande : recherche, puis fiche (adresse, téléphone, entreprise) et reprise de sa dernière commande. */
-
-/** Valeur du choix « au nom du client seul » dans la liste des entreprises. */
-const NO_B2B = "aucun";
 
 interface CustomerPickerProps {
   readonly customer: CustomerOption | null;
@@ -20,24 +17,37 @@ interface CustomerPickerProps {
 
 type CardProps = Omit<CustomerPickerProps, "customer"> & { readonly customer: CustomerOption };
 
-function B2bChoice({ customer, b2bLocationId, onSelectB2b }: CardProps) {
-  if (customer.b2b.length === 0) return null;
+function locationLabel(option: B2bOption): string {
+  return option.locationName === option.companyName ? option.companyName : `${option.companyName} — ${option.locationName}`;
+}
+
+/**
+ * Client rattaché à une entreprise : la commande est faite au nom de l'entreprise, sans question.
+ * On ne demande que l'établissement, et seulement s'il y en a plusieurs.
+ */
+function CompanyLine({ customer, b2bLocationId, onSelectB2b }: CardProps) {
+  const [first] = customer.b2b;
+  if (first === undefined) return null;
+  if (customer.b2b.length === 1) {
+    return (
+      <s-stack direction="inline" gap="small-200" alignItems="center">
+        <s-icon type="organization" />
+        <s-text>{`Commande au nom de l’entreprise ${first.companyName}`}</s-text>
+      </s-stack>
+    );
+  }
   return (
     <s-choice-list
-      label="Au nom de"
+      label={"Pour quel établissement\u202F?"}
       name="b2b"
-      values={[b2bLocationId ?? NO_B2B]}
-      onChange={(event) => {
-        const value = event.currentTarget.values[0] ?? NO_B2B;
-        onSelectB2b(value === NO_B2B ? null : value);
-      }}
+      values={[b2bLocationId ?? first.companyLocationId]}
+      onChange={(event) => onSelectB2b(event.currentTarget.values[0] ?? first.companyLocationId)}
     >
       {customer.b2b.map((option) => (
         <s-choice key={option.companyLocationId} value={option.companyLocationId}>
-          {option.locationName === option.companyName ? option.companyName : `${option.companyName} (${option.locationName})`}
+          {locationLabel(option)}
         </s-choice>
       ))}
-      <s-choice value={NO_B2B}>{`${customer.displayName}, à titre privé`}</s-choice>
     </s-choice-list>
   );
 }
@@ -92,7 +102,7 @@ function CustomerCard(props: CardProps) {
           {customer.email === null ? null : <s-text color="subdued">{customer.email}</s-text>}
         </s-stack>
       </s-box>
-      <B2bChoice {...props} />
+      <CompanyLine {...props} />
       <RepeatLastOrder {...props} />
       <s-stack direction="inline">
         <s-button onClick={() => onSelect(null)}>Choisir un autre client</s-button>
