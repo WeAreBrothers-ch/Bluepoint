@@ -32,11 +32,8 @@ export function OrderOutcomeBanner({ outcome }: { readonly outcome: PhoneOrderOu
               <s-text key={warning}>{warning}</s-text>
             ))}
             <s-text>Le formulaire est vidé, prêt pour la commande suivante.</s-text>
-            <s-stack direction="inline" gap="small-200">
+            <s-stack direction="inline">
               <s-button href="/app">Voir l’agenda</s-button>
-              <s-button href={adminLink("Order", outcome.orderId)} variant="tertiary">
-                Voir dans Shopify
-              </s-button>
             </s-stack>
           </s-stack>
         </s-banner>

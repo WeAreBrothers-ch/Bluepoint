@@ -5,7 +5,6 @@ import { bottleCountText, cardDateLine, modeLabel } from "../../lib/agenda/label
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
-import { gidToNumericId } from "../../lib/shopify/ids";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
 import { TaskBadges } from "./TaskBadges";
@@ -100,9 +99,6 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
         )}
         <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} today={today} />
         {result === undefined ? null : <ActionFeedback result={result} />}
-        <s-link href={`shopify://admin/orders/${gidToNumericId(task.orderId)}`}>
-          {`Ouvrir la commande ${task.name} dans Shopify`}
-        </s-link>
       </s-stack>
     </s-box>
   );

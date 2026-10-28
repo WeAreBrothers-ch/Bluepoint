@@ -9,7 +9,7 @@ export const AGENDA_PAGE_SIZE = 25;
 /** Plafond de commandes chargées par affichage (un avis s'affiche s'il est atteint). */
 export const AGENDA_MAX_ORDERS = 300;
 
-/** Champs d'une commande lus par l'agenda (et par le résumé de la page de commande Shopify). */
+/** Champs d'une commande lus par l'agenda. */
 const AGENDA_ORDER_FIELDS = `
       id
       name
@@ -37,13 +37,6 @@ query AgendaCommandes($first: Int!, $after: String, $query: String!) {
     pageInfo { hasNextPage endCursor }
     nodes {${AGENDA_ORDER_FIELDS}
     }
-  }
-}`;
-
-/** Une seule commande, avec les mêmes champs que l'agenda. */
-export const AGENDA_ORDER_QUERY = `#graphql
-query ResumeCommande($id: ID!) {
-  order(id: $id) {${AGENDA_ORDER_FIELDS}
   }
 }`;
 

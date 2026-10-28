@@ -10,6 +10,11 @@ name: Configuration Shopify
 
 on:
   workflow_dispatch:
+    inputs:
+      supprimer:
+        description: "Autoriser la suppression d'éléments retirés du dépôt (extension supprimée…)"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -51,5 +56,7 @@ jobs:
           SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
           SHOPIFY_SERVICE_ACCOUNT_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
-        # --allow-updates : met à jour sans jamais rien supprimer (sinon l'étape échoue).
-        run: shopify app deploy --allow-updates --source-control-url "$COMMIT_URL" --message "Configuration publiée depuis GitHub"
+          # --allow-updates : met à jour sans jamais rien supprimer (l'étape échoue s'il faudrait supprimer).
+          # --allow-deletes : seulement sur demande (lancement à la main, case « supprimer » cochée).
+          MODE: ${{ inputs.supprimer && '--allow-deletes' || '--allow-updates' }}
+        run: shopify app deploy $MODE --source-control-url "$COMMIT_URL" --message "Configuration publiée depuis GitHub"

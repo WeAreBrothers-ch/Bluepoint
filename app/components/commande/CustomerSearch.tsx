@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import { MIN_SEARCH_LENGTH } from "../../lib/commande/customers";
+import { prefillFromSearch } from "../../lib/commande/new-customer";
 import type { CustomerOption } from "../../lib/commande/types";
 import type { CustomerSearchResult } from "../../routes/app.recherche-clients";
 import { useDebouncedValue } from "../useDebouncedValue";
+import { NewCustomerForm } from "./NewCustomerForm";
 import { TouchButton } from "./TouchButton";
 
-/** Recherche d'un client (nom, entreprise, téléphone, e-mail), lancée 300 ms après la frappe. */
-
-/** Fiche client vierge dans l'admin Shopify, pour un client qui n'existe pas encore. */
-const NEW_CUSTOMER_URL = "shopify://admin/customers/new";
+/**
+ * Recherche d'un client (nom, entreprise, téléphone, e-mail), lancée 300 ms après la frappe.
+ * Un nouveau client se crée ici même, sans passer par les pages de Shopify.
+ */
 
 const SEARCH_DELAY_MS = 300;
 
@@ -25,6 +27,7 @@ function summary(customer: CustomerOption): string {
 
 export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
   const [term, setTerm] = useState("");
+  const [creating, setCreating] = useState(false);
   const debounced = useDebouncedValue(term.trim(), SEARCH_DELAY_MS);
   const fetcher = useFetcher<CustomerSearchResult>();
   const { load } = fetcher;
@@ -35,6 +38,18 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
 
   const searching = fetcher.state !== "idle";
   const data = debounced.length >= MIN_SEARCH_LENGTH ? fetcher.data : undefined;
+
+  if (creating) {
+    return <NewCustomerForm initial={prefillFromSearch(term)} onCreated={onSelect} onCancel={() => setCreating(false)} />;
+  }
+
+  const newCustomerButton = (
+    <s-stack direction="inline">
+      <s-button icon="person-add" onClick={() => setCreating(true)}>
+        Nouveau client
+      </s-button>
+    </s-stack>
+  );
 
   return (
     <s-stack direction="block" gap="small-200">
@@ -51,15 +66,7 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
       {searching ? <s-text color="subdued">Recherche…</s-text> : null}
       {data?.error ? <s-banner tone="critical" heading={data.error} /> : null}
       {data !== undefined && data.error === null && data.customers.length === 0 && !searching ? (
-        <s-stack direction="block" gap="small-200">
-          <s-text>Aucun client trouvé. Essayez son numéro de téléphone ou le nom de son entreprise.</s-text>
-          <s-text color="subdued">Si c’est un nouveau client, créez sa fiche dans Shopify, puis revenez ici.</s-text>
-          <s-stack direction="inline">
-            <s-button href={NEW_CUSTOMER_URL} icon="person-add">
-              Créer un nouveau client
-            </s-button>
-          </s-stack>
-        </s-stack>
+        <s-text>Aucun client trouvé. Essayez son numéro de téléphone ou le nom de son entreprise, ou créez sa fiche.</s-text>
       ) : null}
       {data?.customers.map((customer) => (
         <TouchButton key={customer.id} label={`Choisir ${customer.displayName}`} onPress={() => onSelect(customer)} fill>
@@ -69,6 +76,7 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
           </s-stack>
         </TouchButton>
       ))}
+      {newCustomerButton}
     </s-stack>
   );
 }

@@ -5,7 +5,7 @@
 
 export const CUSTOMER_SEARCH_LIMIT = 10;
 
-const CUSTOMER_FIELDS = `
+export const CUSTOMER_FIELDS = `
       id
       displayName
       tags

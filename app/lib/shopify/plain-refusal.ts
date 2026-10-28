@@ -6,6 +6,10 @@
 
 const RULES: readonly { readonly pattern: RegExp; readonly text: string }[] = [
   {
+    pattern: /(phone|e-?mail).*(already been taken|already exists)|has already been taken/i,
+    text: "Ce numéro ou cet e-mail appartient déjà à un client. Cherchez-le plutôt par son nom ou son numéro de téléphone.",
+  },
+  {
     pattern: /inventory|out of stock|stock insuffisant|not enough|insufficient/i,
     text: "Un des vins n’a plus assez de stock. Corrigez le stock dans Shopify (Produits) ou baissez la quantité.",
   },

@@ -66,13 +66,9 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured }: InvoiceShor
         </s-button>
       </s-stack>
       {invoice.sentLabel === null ? null : <s-text color="subdued">{invoice.sentLabel}</s-text>}
-      {invoice.whatsappUrl === null ? (
-        <s-text color="subdued">{"Pas de WhatsApp possible\u202F: ce client n’a pas de numéro de portable."}</s-text>
-      ) : null}
-      {!emailConfigured ? (
-        <s-text color="subdued">L’envoi par e-mail n’est pas encore installé.</s-text>
-      ) : invoice.customerEmail === null ? (
-        <s-text color="subdued">{"Pas d’e-mail possible\u202F: ce client n’a pas d’adresse e-mail."}</s-text>
+      {/* Ni WhatsApp ni e-mail : une seule phrase utile, pas d'explication technique. */}
+      {invoice.whatsappUrl === null && !canEmail ? (
+        <s-text color="subdued">Imprimez la facture et donnez-la avec la commande.</s-text>
       ) : null}
       <InvoiceResultBanner result={result} />
     </s-stack>

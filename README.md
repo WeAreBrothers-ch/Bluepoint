@@ -148,9 +148,6 @@ Shopify. Le workflow GitHub **« Configuration Shopify »** le fait (`.github/wo
   Les prix pros passent donc par la remise automatique « Prix pro -15 % » (segment « Clients pro »,
   étiquette `pro`) : elle s’applique au panier et au paiement, et aux commandes par téléphone
   (`acceptAutomaticDiscounts`), une seule fois, entreprise ou non.
-- **Cadre « BluePoint » sur la page de commande Shopify** (extension `extensions/commande-bluepoint`) :
-  quand livrer, comment, paiement, facture et prochaine étape, d’après `/api/resume-commande`.
-  À épingler une fois sur la page d’une commande (section des applis, en bas).
 - **Attributs de panier écrits par le thème** : de préférence lisibles, car ils s’affichent tels quels
   dans « Détails supplémentaires » : dates `03.11.2026`, mode `Livraison BluePoint`,
   `Envoi par la Poste` ou `Retrait au dépôt` (les codes `livraison` / `poste` / `retrait` restent acceptés).

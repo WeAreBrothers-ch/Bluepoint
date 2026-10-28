@@ -16,3 +16,10 @@ describe("refus de Shopify en clair", () => {
     expect(plainShopifyRefusal("Discount threshold reached")).toBeNull();
   });
 });
+
+describe("client déjà existant", () => {
+  it("renvoie vers la recherche", () => {
+    expect(plainShopifyRefusal("Phone has already been taken")).toMatch(/Cherchez-le/);
+    expect(plainShopifyRefusal("Email has already been taken")).toMatch(/Cherchez-le/);
+  });
+});
