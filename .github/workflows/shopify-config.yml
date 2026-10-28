@@ -52,8 +52,8 @@ jobs:
 
       - name: Publier la configuration
         env:
-          # Même jeton sous les deux noms : la CLI lira bientôt seulement SHOPIFY_SERVICE_ACCOUNT_TOKEN.
-          SHOPIFY_APP_AUTOMATION_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
+          # Nom de variable attendu par la CLI (l'ancien SHOPIFY_APP_AUTOMATION_TOKEN est abandonné,
+          # et les deux ensemble sont refusés). Le secret GitHub garde son nom.
           SHOPIFY_SERVICE_ACCOUNT_TOKEN: ${{ secrets.SHOPIFY_APP_AUTOMATION_TOKEN }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
           # --allow-updates : met à jour sans jamais rien supprimer (l'étape échoue s'il faudrait supprimer).
