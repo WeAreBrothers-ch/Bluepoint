@@ -103,35 +103,41 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
     </s-button>
   ) : null;
 
+  const invoiceButton = canInvoice && invoice === null && createdInvoice === null;
+  // Livrée et facturée : plus de bouton sur la ligne, seulement la facture en dessous.
+  const hasButtons = !delivered || canReschedule || invoiceButton || createdInvoice !== null;
+
   return (
     <s-stack direction="block" gap="base">
-      <s-stack direction="inline" gap="small-200">
-        {/* Sans date, choisir le jour vient en premier. */}
-        {undated ? dayButton : null}
-        {delivered ? null : (
-          <s-button
-            variant={undated ? "secondary" : "primary"}
-            icon="check"
-            onClick={() => setPanel("confirmer")}
-            accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
-            {...(pending === "livrer" ? { loading: true } : {})}
-            {...disabled}
-          >
-            {mode.doneAction}
-          </s-button>
-        )}
-        {undated ? null : dayButton}
-        {canInvoice && invoice === null && createdInvoice === null ? (
-          <s-button icon="receipt" onClick={() => submit("facturer")} {...(pending === "facturer" ? { loading: true } : {})} {...disabled}>
-            Faire la facture
-          </s-button>
-        ) : null}
-        {createdInvoice === null ? null : (
-          <s-button icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
-            {`Voir la facture ${createdInvoice.number}`}
-          </s-button>
-        )}
-      </s-stack>
+      {hasButtons ? (
+        <s-stack direction="inline" gap="small-200">
+          {/* Sans date, choisir le jour vient en premier. */}
+          {undated ? dayButton : null}
+          {delivered ? null : (
+            <s-button
+              variant={undated ? "secondary" : "primary"}
+              icon="check"
+              onClick={() => setPanel("confirmer")}
+              accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
+              {...(pending === "livrer" ? { loading: true } : {})}
+              {...disabled}
+            >
+              {mode.doneAction}
+            </s-button>
+          )}
+          {undated ? null : dayButton}
+          {invoiceButton ? (
+            <s-button icon="receipt" onClick={() => submit("facturer")} {...(pending === "facturer" ? { loading: true } : {})} {...disabled}>
+              Faire la facture
+            </s-button>
+          ) : null}
+          {createdInvoice === null ? null : (
+            <s-button icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
+              {`Voir la facture ${createdInvoice.number}`}
+            </s-button>
+          )}
+        </s-stack>
+      ) : null}
       {invoice === null ? null : (
         <s-stack direction="block" gap="small-200">
           <s-text type="strong">{`Facture ${invoice.number}`}</s-text>

@@ -10,7 +10,7 @@ export const AGENDA_PAGE_SIZE = 25;
 export const AGENDA_MAX_ORDERS = 300;
 
 /** Champs d'une commande lus par l'agenda. */
-const AGENDA_ORDER_FIELDS = `
+export const AGENDA_ORDER_FIELDS = `
       id
       name
       cancelledAt

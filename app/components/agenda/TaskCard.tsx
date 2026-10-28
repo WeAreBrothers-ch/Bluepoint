@@ -5,6 +5,7 @@ import { bottleCountText, cardDateLine, modeLabel } from "../../lib/agenda/label
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
+import { gidToNumericId } from "../../lib/shopify";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
 import { TaskBadges } from "./TaskBadges";
@@ -22,7 +23,7 @@ interface TaskCardProps {
   readonly emailConfigured: boolean;
 }
 
-function ContactButtons({ task }: { readonly task: ScheduledTask }) {
+export function ContactButtons({ task }: { readonly task: ScheduledTask }) {
   // Retrait : le client vient au dépôt, son adresse et l'itinéraire ne servent à rien.
   const pickup = task.mode === "retrait";
   const address = pickup ? null : addressText(task);
@@ -92,6 +93,11 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
         {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
         {task.status === "livree" ? null : <ContactButtons task={task} />}
         <WineList task={task} />
+        <s-stack direction="inline">
+          <s-button icon="order" href={`/app/commandes/${gidToNumericId(task.orderId)}`}>
+            Voir la commande
+          </s-button>
+        </s-stack>
         {task.note === null ? null : (
           <s-banner tone="info" heading="Remarque pour la livraison">
             {task.note}
