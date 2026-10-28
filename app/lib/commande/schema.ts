@@ -43,9 +43,9 @@ const lineSchema = z.object({
 });
 
 const b2bSchema = z.object({
-  companyId: gid("Company", "Entreprise inconnue."),
-  companyContactId: gid("CompanyContact", "Contact d’entreprise inconnu."),
-  companyLocationId: gid("CompanyLocation", "Site d’entreprise inconnu."),
+  companyId: gid("Company", "Choisissez à nouveau le client."),
+  companyContactId: gid("CompanyContact", "Choisissez à nouveau le client."),
+  companyLocationId: gid("CompanyLocation", "Choisissez à nouveau le client."),
 });
 
 const linesSchema = z
@@ -56,19 +56,19 @@ const linesSchema = z
 
 export const phoneOrderSchema = z
   .object({
-    idempotencyKey: z.uuid("Clé de commande invalide : rechargez la page."),
+    idempotencyKey: z.uuid("Rechargez la page, puis recommencez la commande."),
     customerId: gid("Customer", "Choisissez un client."),
     b2b: b2bSchema.nullable(),
     lines: linesSchema,
-    requestedDate: isoDate("Indiquez la date de livraison souhaitée."),
-    deadline: isoDate("Indiquez la date limite de livraison."),
+    requestedDate: isoDate("Choisissez le jour de livraison."),
+    deadline: isoDate("Choisissez la date limite."),
     mode: z.enum(DELIVERY_MODES, "Choisissez un mode de livraison."),
     note: z.string("Remarque invalide.").trim().max(NOTE_MAX, `${NOTE_MAX} caractères au plus.`),
-    payment: z.enum(PAYMENT_CHOICES, "Choisissez le mode de paiement."),
+    payment: z.enum(PAYMENT_CHOICES, "Choisissez comment le client paie."),
   })
   .refine((order) => order.deadline >= order.requestedDate, {
     path: ["deadline"],
-    message: "La date limite ne peut pas précéder la date souhaitée.",
+    message: "La date limite doit être le jour de livraison ou après.",
   });
 
 export type PhoneOrderField = keyof z.input<typeof phoneOrderSchema>;
@@ -98,24 +98,24 @@ export function parsePhoneOrder(raw: unknown, today: IsoDate): ParseResult<Phone
   const result = phoneOrderSchema.safeParse(raw);
   if (!result.success) return { ok: false, errors: collectErrors(result.error.issues) };
   if (result.data.requestedDate < today) {
-    return { ok: false, errors: { requestedDate: "La date souhaitée est déjà passée." } };
+    return { ok: false, errors: { requestedDate: "Ce jour est déjà passé\u202F: choisissez aujourd’hui ou plus tard." } };
   }
   return { ok: true, value: result.data };
 }
 
 const calculationSchema = z.object({
   customerId: gid("Customer", "Choisissez un client."),
-  b2b: b2bSchema,
+  b2b: b2bSchema.nullable(),
   lines: linesSchema,
 });
 
 export interface PriceCalculationInput {
   readonly customerId: PhoneOrderInput["customerId"];
-  readonly b2b: B2bPurchaser;
+  readonly b2b: B2bPurchaser | null;
   readonly lines: readonly PhoneOrderLine[];
 }
 
-/** Demande de prix B2B (catalogue du site d'entreprise). */
+/** Demande des prix de ce client (catalogue B2B de l'entreprise, remise pro automatique…). */
 export function parsePriceCalculation(raw: unknown): PriceCalculationInput | null {
   const result = calculationSchema.safeParse(raw);
   return result.success ? result.data : null;

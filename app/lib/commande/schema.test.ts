@@ -16,7 +16,7 @@ function raw(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     deadline: "2026-10-22",
     mode: "livraison",
     note: "  Livrer avant 11 h  ",
-    payment: "bon_de_commande",
+    payment: "facture",
     ...overrides,
   };
 }
@@ -37,13 +37,13 @@ describe("parsePhoneOrder", () => {
 
   it("refuse une date limite avant la date souhaitée", () => {
     const result = parsePhoneOrder(raw({ deadline: "2026-10-21", requestedDate: "2026-10-22" }), TODAY);
-    expect(!result.ok && result.errors.deadline).toBe("La date limite ne peut pas précéder la date souhaitée.");
+    expect(!result.ok && result.errors.deadline).toBe("La date limite doit être le jour de livraison ou après.");
   });
 
   it("refuse une date passée ou impossible", () => {
     expect(parsePhoneOrder(raw({ requestedDate: "2026-10-20", deadline: "2026-10-20" }), TODAY).ok).toBe(false);
     const impossible = parsePhoneOrder(raw({ requestedDate: "2026-02-30" }), TODAY);
-    expect(!impossible.ok && impossible.errors.requestedDate).toBe("Indiquez la date de livraison souhaitée.");
+    expect(!impossible.ok && impossible.errors.requestedDate).toBe("Choisissez le jour de livraison.");
   });
 
   it("refuse une quantité non entière, un doublon ou un mode inconnu", () => {
@@ -52,6 +52,12 @@ describe("parsePhoneOrder", () => {
     expect(parsePhoneOrder(raw({ lines: doubled }), TODAY).ok).toBe(false);
     const mode = parsePhoneOrder(raw({ mode: "drone" }), TODAY);
     expect(!mode.ok && mode.errors.mode).toBe("Choisissez un mode de livraison.");
+  });
+
+  it("accepte les trois façons de payer et refuse l'ancien « bon de commande »", () => {
+    for (const payment of ["facture", "a_la_livraison", "paye"]) expect(parsePhoneOrder(raw({ payment }), TODAY).ok).toBe(true);
+    const old = parsePhoneOrder(raw({ payment: "bon_de_commande" }), TODAY);
+    expect(!old.ok && old.errors.payment).toBe("Choisissez comment le client paie.");
   });
 
   it("refuse une clé d'idempotence qui n'est pas un UUID", () => {
@@ -70,7 +76,9 @@ describe("parsePhoneOrder", () => {
 });
 
 describe("parsePriceCalculation", () => {
-  it("exige une entreprise B2B", () => {
-    expect(parsePriceCalculation({ customerId: CUSTOMER, b2b: null, lines: [{ variantId: VARIANT_A, quantity: 1 }] })).toBeNull();
+  it("calcule aussi les prix d'un client sans entreprise (remise pro automatique)", () => {
+    const lines = [{ variantId: VARIANT_A, quantity: 1 }];
+    expect(parsePriceCalculation({ customerId: CUSTOMER, b2b: null, lines })).toEqual({ customerId: CUSTOMER, b2b: null, lines });
+    expect(parsePriceCalculation({ customerId: "", b2b: null, lines })).toBeNull();
   });
 });

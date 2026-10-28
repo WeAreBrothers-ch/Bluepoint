@@ -3,14 +3,13 @@ import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "re
 import { useFetcher, useLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
-import { OrderOutcomeBanner } from "../components/commande/OrderOutcomeBanner";
 import { PhoneOrderForm } from "../components/commande/PhoneOrderForm";
 import type { Submission } from "../components/commande/usePhoneOrder";
 import { handleCommandeAction, type CommandeActionResult } from "../lib/commande/action.server";
 import type { PhoneOrderOutcome } from "../lib/commande/outcome";
 import { loadCommandePage, type CommandePageData } from "../lib/commande/page-data.server";
 
-/** Saisie d'une commande reçue par téléphone : elle est créée dans Shopify et apparaît dans l'agenda. */
+/** « Prendre une commande » reçue par téléphone : elle est créée dans Shopify et apparaît dans l'agenda. */
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<CommandePageData> => {
   const { admin, session } = await authenticate.admin(request);
@@ -39,7 +38,7 @@ function useCreateOrder() {
   );
 
   useEffect(() => {
-    if (outcome?.kind === "commande" && !outcome.replayed) shopify.toast.show(`Commande ${outcome.orderName} créée`);
+    if (outcome?.kind === "commande" && !outcome.replayed) shopify.toast.show(`Commande ${outcome.orderName} enregistrée`);
   }, [outcome]);
 
   return { outcome, onSubmit, submitting: fetcher.state !== "idle" };
@@ -50,13 +49,12 @@ export default function NouvelleCommandePage() {
   const { outcome, onSubmit, submitting } = useCreateOrder();
 
   return (
-    <s-page heading="Nouvelle commande (téléphone)" inlineSize="base">
+    <s-page heading="Prendre une commande" inlineSize="base">
       <s-button slot="secondary-actions" href="/app">
-        Agenda
+        Retour à l’agenda
       </s-button>
       <s-stack direction="block" gap="base">
         {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
-        {outcome === undefined ? null : <OrderOutcomeBanner outcome={outcome} />}
         <PhoneOrderForm
           key={formKey(outcome)}
           products={data.products}

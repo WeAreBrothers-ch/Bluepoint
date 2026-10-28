@@ -1,11 +1,15 @@
 import type { DraftOrderCalculateData } from "./mutations";
 import { decimalToCents } from "./totals";
 
-/** Prix du catalogue B2B renvoyés par `draftOrderCalculate`, prêts pour le récapitulatif. */
+/**
+ * Prix de ce client calculés par Shopify (`draftOrderCalculate`) : catalogue B2B de l'entreprise
+ * et remises automatiques (ex. « Prix pro -15 % »), prêts pour le récapitulatif.
+ */
 
 export interface B2bPrices {
-  /** Prix unitaire en centimes, par identifiant de variante. */
+  /** Prix unitaire en centimes, par identifiant de variante (avant les remises sur la commande). */
   readonly unitCents: Readonly<Record<string, number>>;
+  /** Sous-total après toutes les remises, y compris les remises automatiques sur la commande. */
   readonly subtotalCents: number;
   readonly currencyCode: string;
 }

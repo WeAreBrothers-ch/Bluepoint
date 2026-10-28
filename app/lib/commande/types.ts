@@ -13,8 +13,13 @@ export type CompanyGid = ShopifyGid<"Company">;
 export type CompanyContactGid = ShopifyGid<"CompanyContact">;
 export type CompanyLocationGid = ShopifyGid<"CompanyLocation">;
 
-/** « Bon de commande » : paiement plus tard (net N jours). « Payé » : encaissé maintenant. */
-export const PAYMENT_CHOICES = ["bon_de_commande", "paye"] as const;
+/**
+ * Comment le client paie :
+ * - « facture » : sur facture, net N jours (conditions de paiement Shopify) ;
+ * - « a_la_livraison » : en livrant, cash ou TWINT (conditions « à l'expédition ») : la commande reste à payer ;
+ * - « paye » : déjà payé, la commande est enregistrée payée.
+ */
+export const PAYMENT_CHOICES = ["facture", "a_la_livraison", "paye"] as const;
 export type PaymentChoice = (typeof PAYMENT_CHOICES)[number];
 
 /** Nombre de bouteilles au plus par ligne (garde-fou contre une faute de frappe). */
@@ -67,9 +72,21 @@ export interface B2bOption extends B2bPurchaser {
   readonly locationName: string;
 }
 
+/** Dernière commande du client, pour la reprendre en un toucher. */
+export interface LastOrder {
+  /** Ex. « #1001 ». */
+  readonly name: string;
+  /** Jour suisse de la commande. */
+  readonly date: IsoDate | null;
+  readonly lines: readonly PhoneOrderLine[];
+}
+
 export interface CustomerOption {
   readonly id: CustomerGid;
   readonly displayName: string;
+  /** Client professionnel : entreprise B2B ou étiquette « pro ». */
+  readonly isPro: boolean;
+  readonly lastOrder: LastOrder | null;
   readonly email: string | null;
   readonly phone: string | null;
   readonly address: ShippingAddress | null;

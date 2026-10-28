@@ -8,6 +8,12 @@ export const CUSTOMER_SEARCH_LIMIT = 10;
 const CUSTOMER_FIELDS = `
       id
       displayName
+      tags
+      lastOrder {
+        name
+        createdAt
+        lineItems(first: 20) { nodes { currentQuantity variant { id } } }
+      }
       defaultEmailAddress { emailAddress }
       defaultPhoneNumber { phoneNumber }
       defaultAddress {
@@ -61,9 +67,17 @@ export interface CompanyContactNode {
   };
 }
 
+export interface LastOrderNode {
+  readonly name: string;
+  readonly createdAt: string;
+  readonly lineItems: { readonly nodes: readonly { readonly currentQuantity: number; readonly variant: { readonly id: string } | null }[] };
+}
+
 export interface CustomerNode {
   readonly id: string;
   readonly displayName: string;
+  readonly tags: readonly string[];
+  readonly lastOrder: LastOrderNode | null;
   readonly defaultEmailAddress: { readonly emailAddress: string } | null;
   readonly defaultPhoneNumber: { readonly phoneNumber: string } | null;
   readonly defaultAddress: CustomerAddressNode | null;
@@ -124,9 +138,10 @@ export interface CatalogData {
   };
 }
 
+/** Tous les modèles : « net N jours » pour la facture, « à l'expédition » pour le paiement à la livraison. */
 export const PAYMENT_TERMS_TEMPLATES_QUERY = `#graphql
 query ModelesConditionsPaiement {
-  paymentTermsTemplates(paymentTermsType: NET) { id name paymentTermsType dueInDays }
+  paymentTermsTemplates { id name paymentTermsType dueInDays }
 }`;
 
 export interface PaymentTermsTemplatesData {

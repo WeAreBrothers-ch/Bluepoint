@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { order } from "./fixtures";
+import { CUSTOMER, order } from "./fixtures";
 import { isPaymentTermsRefusal } from "./outcome";
-import { buildCalculationInput, buildDraftOrderInput, buildPaymentTerms, cleanAddress, pickNetTemplate } from "./payload";
+import { buildCalculationInput, buildDraftOrderInput, buildPaymentTerms, cleanAddress, pickFulfillmentTemplate, pickNetTemplate } from "./payload";
 import type { B2bPurchaser, ShippingAddress } from "./types";
 
 const ADDRESS: ShippingAddress = {
@@ -52,9 +52,24 @@ describe("buildDraftOrderInput", () => {
     });
   });
 
-  it("calcule les prix B2B sans métachamps ni étiquettes", () => {
-    const input = buildCalculationInput(B2B, [{ variantId: order().lines[0]!.variantId, quantity: 6 }]);
-    expect(input).toEqual({ purchasingEntity: { purchasingCompany: B2B }, lineItems: [{ variantId: "gid://shopify/ProductVariant/1", quantity: 6 }] });
+  it("calcule les prix du client avec les remises automatiques, sans métachamps ni étiquettes", () => {
+    const lines = [{ variantId: order().lines[0]!.variantId, quantity: 6 }];
+    expect(buildCalculationInput(CUSTOMER, B2B, lines)).toEqual({
+      purchasingEntity: { purchasingCompany: B2B },
+      acceptAutomaticDiscounts: true,
+      lineItems: [{ variantId: "gid://shopify/ProductVariant/1", quantity: 6 }],
+    });
+    expect(buildCalculationInput(CUSTOMER, null, lines).purchasingEntity).toEqual({ customerId: CUSTOMER });
+  });
+
+  it("applique les remises automatiques (prix pro) à la commande", () => {
+    expect(buildDraftOrderInput(order(), null, null).acceptAutomaticDiscounts).toBe(true);
+  });
+
+  it("pose des conditions « à l'expédition » sans échéancier", () => {
+    expect(buildPaymentTerms("gid://shopify/PaymentTermsTemplate/9", null)).toEqual({
+      paymentTermsTemplateId: "gid://shopify/PaymentTermsTemplate/9",
+    });
   });
 });
 
@@ -85,6 +100,12 @@ describe("pickNetTemplate", () => {
 
   it("renvoie null sans modèle net", () => {
     expect(pickNetTemplate([templates[0]!], 30)).toBeNull();
+  });
+
+  it("trouve le modèle « à l'expédition » pour le paiement à la livraison", () => {
+    const fulfillment = { id: "t9", name: "Due on fulfillment", paymentTermsType: "FULFILLMENT", dueInDays: null };
+    expect(pickFulfillmentTemplate([...templates, fulfillment])).toEqual({ template: fulfillment, exact: true });
+    expect(pickFulfillmentTemplate(templates)).toBeNull();
   });
 });
 

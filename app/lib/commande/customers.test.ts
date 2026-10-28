@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { filterProducts, toProductOption } from "./catalog";
-import { customerSearchQuery, toCustomerOption } from "./customers";
+import { customerSearchQuery, toCustomerOption, toLastOrder } from "./customers";
 import { customerNode, product, variantNode, VARIANT_B } from "./fixtures";
 
 describe("customerSearchQuery", () => {
@@ -72,5 +72,32 @@ describe("catalogue", () => {
     expect(filterProducts(products, "rose").map((p) => p.productTitle)).toEqual(["Rosé de Gamay"]);
     expect(filterProducts(products, "cha 75")).toHaveLength(1);
     expect(filterProducts(products, " ")).toHaveLength(2);
+  });
+});
+
+describe("toLastOrder", () => {
+  it("garde les vins encore commandés, au jour suisse de la commande", () => {
+    const last = toLastOrder({
+      name: "#1002",
+      createdAt: "2026-10-27T23:30:00Z",
+      lineItems: {
+        nodes: [
+          { currentQuantity: 2, variant: { id: "gid://shopify/ProductVariant/1" } },
+          { currentQuantity: 0, variant: { id: "gid://shopify/ProductVariant/2" } },
+          { currentQuantity: 3, variant: null },
+        ],
+      },
+    });
+    expect(last).toEqual({ name: "#1002", date: "2026-10-28", lines: [{ variantId: "gid://shopify/ProductVariant/1", quantity: 2 }] });
+  });
+
+  it("ignore une commande sans vin à reprendre", () => {
+    expect(toLastOrder(null)).toBeNull();
+    expect(toLastOrder({ name: "#1", createdAt: "2026-10-27T10:00:00Z", lineItems: { nodes: [] } })).toBeNull();
+  });
+
+  it("reconnaît un client pro par son étiquette ou son entreprise", () => {
+    expect(toCustomerOption(customerNode({ tags: [" Pro "] }))?.isPro).toBe(true);
+    expect(toCustomerOption(customerNode())?.isPro).toBe(false);
   });
 });

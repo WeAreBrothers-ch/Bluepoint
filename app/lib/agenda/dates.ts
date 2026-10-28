@@ -35,6 +35,12 @@ function weekdayIndex(date: IsoDate): number {
   return (new Date(noonUtc(date)).getUTCDay() + 6) % 7;
 }
 
+/** Prochain jour de livraison proposé : demain, sauf le dimanche (on passe alors au lundi). */
+export function nextDeliveryDay(today: IsoDate): IsoDate {
+  const tomorrow = addDays(today, 1);
+  return weekdayIndex(tomorrow) === 6 ? addDays(tomorrow, 1) : tomorrow;
+}
+
 /** Semaine du lundi au dimanche contenant `date`. */
 export function weekContaining(date: IsoDate): DateRange {
   const monday = addDays(date, -weekdayIndex(date));

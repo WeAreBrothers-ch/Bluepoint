@@ -8,6 +8,9 @@ import { TouchButton } from "./TouchButton";
 
 /** Recherche d'un client (nom, entreprise, téléphone, e-mail), lancée 300 ms après la frappe. */
 
+/** Fiche client vierge dans l'admin Shopify, pour un client qui n'existe pas encore. */
+const NEW_CUSTOMER_URL = "shopify://admin/customers/new";
+
 const SEARCH_DELAY_MS = 300;
 
 interface CustomerSearchProps {
@@ -36,21 +39,32 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
   return (
     <s-stack direction="block" gap="small-200">
       <s-search-field
-        label="Rechercher un client"
-        placeholder="Nom, entreprise, téléphone ou e-mail"
+        label="Qui commande ?"
+        placeholder="Nom, entreprise ou numéro de téléphone"
         value={term}
         onInput={(event) => setTerm(event.currentTarget.value)}
         {...(error === undefined ? {} : { error })}
       />
+      {term.trim().length > 0 && term.trim().length < MIN_SEARCH_LENGTH ? (
+        <s-text color="subdued">Tapez au moins 2 lettres ou chiffres.</s-text>
+      ) : null}
       {searching ? <s-text color="subdued">Recherche…</s-text> : null}
       {data?.error ? <s-banner tone="critical" heading={data.error} /> : null}
       {data !== undefined && data.error === null && data.customers.length === 0 && !searching ? (
-        <s-text color="subdued">Aucun client trouvé. Créez-le d’abord dans Shopify.</s-text>
+        <s-stack direction="block" gap="small-200">
+          <s-text>Aucun client trouvé. Essayez son numéro de téléphone ou le nom de son entreprise.</s-text>
+          <s-text color="subdued">Si c’est un nouveau client, créez sa fiche dans Shopify, puis revenez ici.</s-text>
+          <s-stack direction="inline">
+            <s-button href={NEW_CUSTOMER_URL} icon="person-add">
+              Créer un nouveau client
+            </s-button>
+          </s-stack>
+        </s-stack>
       ) : null}
       {data?.customers.map((customer) => (
         <TouchButton key={customer.id} label={`Choisir ${customer.displayName}`} onPress={() => onSelect(customer)} fill>
           <s-stack direction="block" gap="none">
-            <s-text type="strong">{customer.displayName}</s-text>
+            <s-text type="strong">{customer.isPro ? `${customer.displayName} · client pro` : customer.displayName}</s-text>
             <s-text color="subdued">{summary(customer)}</s-text>
           </s-stack>
         </TouchButton>

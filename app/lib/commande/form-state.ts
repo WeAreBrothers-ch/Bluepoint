@@ -1,7 +1,7 @@
-import { addDays } from "../agenda/dates";
+import { nextDeliveryDay } from "../agenda/dates";
 import type { DeliveryMode, IsoDate } from "../metafields/definitions";
 import { addQuantity, setQuantity, toLines, type Quantities } from "./cart";
-import type { B2bOption, CustomerOption, PaymentChoice, VariantGid } from "./types";
+import type { B2bOption, CustomerOption, PaymentChoice, PhoneOrderLine, VariantGid } from "./types";
 
 /** État du formulaire « Nouvelle commande » et ses transitions (logique pure, sans React). */
 
@@ -14,6 +14,8 @@ export interface PhoneOrderFormState {
   readonly deadline: string;
   /** Faux tant que la date limite suit la date souhaitée. */
   readonly deadlineEdited: boolean;
+  /** Champ « date limite » affiché (case « Le client a une date limite » cochée). */
+  readonly deadlineShown: boolean;
   readonly mode: DeliveryMode;
   readonly note: string;
   readonly payment: PaymentChoice;
@@ -26,31 +28,45 @@ export type FormAction =
   | { readonly type: "ajouter"; readonly variantId: VariantGid; readonly delta: number }
   | { readonly type: "date_souhaitee"; readonly value: string }
   | { readonly type: "date_limite"; readonly value: string }
+  | { readonly type: "limite_visible"; readonly shown: boolean }
+  /** Reprend les vins et quantités d'une commande précédente (remplace la saisie en cours). */
+  | { readonly type: "reprendre"; readonly lines: readonly PhoneOrderLine[] }
   | { readonly type: "mode"; readonly mode: DeliveryMode }
   | { readonly type: "note"; readonly value: string }
   | { readonly type: "paiement"; readonly payment: PaymentChoice }
   | { readonly type: "vider"; readonly today: IsoDate };
 
-/** Par défaut : livraison demain, date limite identique, bon de commande. */
+/** Paiement proposé : sur facture pour un professionnel, à la livraison pour un particulier. */
+export function defaultPayment(customer: CustomerOption | null): PaymentChoice {
+  return customer === null || customer.isPro ? "facture" : "a_la_livraison";
+}
+
+/** Par défaut : livraison le prochain jour ouvrable (pas le dimanche), sans date limite, sur facture. */
 export function initialFormState(today: IsoDate): PhoneOrderFormState {
-  const tomorrow = addDays(today, 1);
+  const day = nextDeliveryDay(today);
   return {
     customer: null,
     b2bLocationId: null,
     quantities: {},
-    requestedDate: tomorrow,
-    deadline: tomorrow,
+    requestedDate: day,
+    deadline: day,
     deadlineEdited: false,
+    deadlineShown: false,
     mode: "livraison",
     note: "",
-    payment: "bon_de_commande",
+    payment: "facture",
   };
 }
 
 export function formReducer(state: PhoneOrderFormState, action: FormAction): PhoneOrderFormState {
   switch (action.type) {
     case "client":
-      return { ...state, customer: action.customer, b2bLocationId: action.customer?.b2b[0]?.companyLocationId ?? null };
+      return {
+        ...state,
+        customer: action.customer,
+        b2bLocationId: action.customer?.b2b[0]?.companyLocationId ?? null,
+        payment: defaultPayment(action.customer),
+      };
     case "b2b":
       return { ...state, b2bLocationId: action.locationId };
     case "quantite":
@@ -65,6 +81,15 @@ export function formReducer(state: PhoneOrderFormState, action: FormAction): Pho
       };
     case "date_limite":
       return { ...state, deadline: action.value, deadlineEdited: action.value !== state.requestedDate };
+    case "limite_visible":
+      return action.shown
+        ? { ...state, deadlineShown: true }
+        : { ...state, deadlineShown: false, deadline: state.requestedDate, deadlineEdited: false };
+    case "reprendre":
+      return {
+        ...state,
+        quantities: action.lines.reduce<Quantities>((quantities, line) => setQuantity(quantities, line.variantId, line.quantity), {}),
+      };
     case "mode":
       return { ...state, mode: action.mode };
     case "note":
@@ -108,10 +133,9 @@ export function toSubmission(state: PhoneOrderFormState, idempotencyKey: string)
   };
 }
 
-/** Corps JSON du calcul des prix B2B, ou `null` s'il n'y a rien à calculer. */
+/** Corps JSON du calcul des prix de ce client, ou `null` s'il n'y a rien à calculer. */
 export function toPriceRequest(state: PhoneOrderFormState) {
-  const b2b = purchaser(selectedB2b(state));
   const lines = jsonLines(state);
-  if (state.customer === null || b2b === null || lines.length === 0) return null;
-  return { intent: "calculer", customerId: state.customer.id, b2b, lines };
+  if (state.customer === null || lines.length === 0) return null;
+  return { intent: "calculer", customerId: state.customer.id, b2b: purchaser(selectedB2b(state)), lines };
 }

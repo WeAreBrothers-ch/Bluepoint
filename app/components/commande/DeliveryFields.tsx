@@ -1,10 +1,14 @@
 import type { PhoneOrderErrors } from "../../lib/commande/schema";
 import { PAYMENT_CHOICES, type PaymentChoice } from "../../lib/commande/types";
-import { DELIVERY_MODES, DELIVERY_MODE_LABELS, isDeliveryMode, type DeliveryMode } from "../../lib/metafields/definitions";
+import { DELIVERY_MODES, isDeliveryMode, type DeliveryMode } from "../../lib/metafields/definitions";
 
-/** Livraison (dates, mode, remarque interne) et mode de paiement. */
+/** Livraison (jour, mode, remarque) et façon de payer, en mots de tous les jours. */
 
-const GRID = "@container (inline-size > 520px) 1fr 1fr, 1fr";
+const MODE_CHOICES: Readonly<Record<DeliveryMode, string>> = {
+  livraison: "Livraison avec le camion BluePoint",
+  poste: "Envoi par la Poste",
+  retrait: "Le client vient chercher au dépôt",
+};
 
 function errorProps(errors: PhoneOrderErrors, field: keyof PhoneOrderErrors) {
   const error = errors[field];
@@ -14,12 +18,14 @@ function errorProps(errors: PhoneOrderErrors, field: keyof PhoneOrderErrors) {
 interface DeliveryFieldsProps {
   readonly requestedDate: string;
   readonly deadline: string;
+  readonly deadlineShown: boolean;
   readonly mode: DeliveryMode;
   readonly note: string;
   readonly today: string;
   readonly errors: PhoneOrderErrors;
   readonly onRequestedDate: (value: string) => void;
   readonly onDeadline: (value: string) => void;
+  readonly onDeadlineShown: (shown: boolean) => void;
   readonly onMode: (mode: DeliveryMode) => void;
   readonly onNote: (value: string) => void;
 }
@@ -27,29 +33,32 @@ interface DeliveryFieldsProps {
 export function DeliveryFields(props: DeliveryFieldsProps) {
   const { errors } = props;
   return (
-    <s-section heading="Livraison">
+    <s-section heading="3. Livraison">
       <s-stack direction="block" gap="base">
-        <s-query-container>
-          <s-grid gridTemplateColumns={GRID} gap="base">
-            <s-date-field
-              label="Date de livraison souhaitée"
-              value={props.requestedDate}
-              allow={`${props.today}--`}
-              onChange={(event) => props.onRequestedDate(event.currentTarget.value)}
-              {...errorProps(errors, "requestedDate")}
-            />
-            <s-date-field
-              label="Livrer au plus tard"
-              details="Par défaut, le jour souhaité."
-              value={props.deadline}
-              allow={`${props.requestedDate}--`}
-              onChange={(event) => props.onDeadline(event.currentTarget.value)}
-              {...errorProps(errors, "deadline")}
-            />
-          </s-grid>
-        </s-query-container>
+        <s-date-field
+          label="Jour de livraison"
+          value={props.requestedDate}
+          allow={`${props.today}--`}
+          onChange={(event) => props.onRequestedDate(event.currentTarget.value)}
+          {...errorProps(errors, "requestedDate")}
+        />
+        <s-checkbox
+          label="Le client a une date limite"
+          details="À cocher seulement si la commande peut être livrée plus tard, mais pas après un certain jour."
+          onChange={(event) => props.onDeadlineShown(event.currentTarget.checked)}
+          {...(props.deadlineShown ? { checked: true } : {})}
+        />
+        {props.deadlineShown ? (
+          <s-date-field
+            label="À livrer au plus tard le"
+            value={props.deadline}
+            allow={`${props.requestedDate}--`}
+            onChange={(event) => props.onDeadline(event.currentTarget.value)}
+            {...errorProps(errors, "deadline")}
+          />
+        ) : null}
         <s-choice-list
-          label="Mode de livraison"
+          label="Comment la commande part-elle ?"
           name="mode"
           values={[props.mode]}
           onChange={(event) => {
@@ -60,13 +69,13 @@ export function DeliveryFields(props: DeliveryFieldsProps) {
         >
           {DELIVERY_MODES.map((mode) => (
             <s-choice key={mode} value={mode}>
-              {DELIVERY_MODE_LABELS[mode]}
+              {MODE_CHOICES[mode]}
             </s-choice>
           ))}
         </s-choice-list>
         <s-text-area
-          label="Note interne"
-          details="Visible seulement dans l’admin : accès, horaires, personne à contacter…"
+          label="Remarque pour la livraison"
+          details="Le client ne la voit pas. Exemple : code de la porte, horaires, personne à demander."
           value={props.note}
           rows={3}
           maxLength={5000}
@@ -91,10 +100,9 @@ function isPaymentChoice(value: unknown): value is PaymentChoice {
 
 export function PaymentField({ payment, paymentTermDays, error, onPayment }: PaymentFieldProps) {
   return (
-    <s-section heading="Paiement">
+    <s-section heading="4. Paiement">
       <s-choice-list
-        label="Mode de paiement"
-        labelAccessibilityVisibility="exclusive"
+        label="Comment le client paie-t-il ?"
         name="payment"
         values={[payment]}
         onChange={(event) => {
@@ -103,10 +111,9 @@ export function PaymentField({ payment, paymentTermDays, error, onPayment }: Pay
         }}
         {...(error === undefined ? {} : { error })}
       >
-        <s-choice value="bon_de_commande">
-          {`Bon de commande\u202F: paiement plus tard, net ${paymentTermDays} jours`}
-        </s-choice>
-        <s-choice value="paye">Payé ou à encaisser maintenant</s-choice>
+        <s-choice value="facture">{`Sur facture (il a ${paymentTermDays} jours pour payer)`}</s-choice>
+        <s-choice value="a_la_livraison">À la livraison (cash ou TWINT)</s-choice>
+        <s-choice value="paye">Il a déjà payé</s-choice>
       </s-choice-list>
     </s-section>
   );

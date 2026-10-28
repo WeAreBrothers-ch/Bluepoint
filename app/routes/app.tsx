@@ -26,7 +26,7 @@ export default function App() {
         <s-link href="/app">
           Agenda
         </s-link>
-        <s-link href="/app/commande">Nouvelle commande</s-link>
+        <s-link href="/app/commande">Prendre une commande</s-link>
         <s-link href="/app/factures">Factures</s-link>
         <s-link href="/app/reglages">Réglages</s-link>
       </s-app-nav>

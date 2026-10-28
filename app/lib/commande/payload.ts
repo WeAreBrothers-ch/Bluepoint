@@ -11,7 +11,8 @@ export const PHONE_ORDER_TAG = "telephone";
 
 export interface PaymentTermsInput {
   readonly paymentTermsTemplateId: string;
-  readonly paymentSchedules: readonly { readonly issuedAt: string }[];
+  /** Seulement pour « net N jours » : l'échéance se compte depuis cette date. */
+  readonly paymentSchedules?: readonly { readonly issuedAt: string }[];
 }
 
 type PurchasingEntityInput =
@@ -20,6 +21,8 @@ type PurchasingEntityInput =
 
 export interface DraftOrderInput {
   readonly purchasingEntity: PurchasingEntityInput;
+  /** Applique les remises automatiques de la boutique (ex. « Prix pro -15 % »), comme sur le site. */
+  readonly acceptAutomaticDiscounts: boolean;
   readonly lineItems: readonly { readonly variantId: string; readonly quantity: number }[];
   readonly shippingAddress?: ShippingAddress;
   readonly metafields?: readonly MetafieldValueInput[];
@@ -88,6 +91,7 @@ export function buildDraftOrderInput(
   const note = order.note.trim();
   return {
     purchasingEntity: purchasingEntity(order.customerId, order.b2b),
+    acceptAutomaticDiscounts: true,
     lineItems: lineItems(order.lines),
     ...(shipping === null ? {} : { shippingAddress: shipping }),
     metafields: livraisonMetafields(order),
@@ -97,9 +101,16 @@ export function buildDraftOrderInput(
   };
 }
 
-/** Entrée de `draftOrderCalculate` pour connaître les prix du catalogue B2B. */
-export function buildCalculationInput(b2b: B2bPurchaser, lines: readonly PhoneOrderLine[]): DraftOrderInput {
-  return { purchasingEntity: { purchasingCompany: b2b }, lineItems: lineItems(lines) };
+/**
+ * Entrée de `draftOrderCalculate` : les prix que Shopify appliquera à ce client
+ * (catalogue B2B de l'entreprise, remise pro automatique…).
+ */
+export function buildCalculationInput(
+  customerId: CustomerGid,
+  b2b: B2bPurchaser | null,
+  lines: readonly PhoneOrderLine[],
+): DraftOrderInput {
+  return { purchasingEntity: purchasingEntity(customerId, b2b), acceptAutomaticDiscounts: true, lineItems: lineItems(lines) };
 }
 
 export interface OrderMetafieldsSetInput extends MetafieldValueInput {
@@ -138,7 +149,18 @@ export function pickNetTemplate(templates: readonly PaymentTermsTemplateRef[], d
   return closest === undefined ? null : { template: closest, exact: false };
 }
 
-/** Conditions de paiement nettes : l'échéance court à partir de la création de la commande. */
-export function buildPaymentTerms(templateId: string, issuedAt: Date): PaymentTermsInput {
-  return { paymentTermsTemplateId: templateId, paymentSchedules: [{ issuedAt: issuedAt.toISOString() }] };
+/** Modèle « payable à l'expédition » : la commande reste à payer jusqu'à la livraison. */
+export function pickFulfillmentTemplate(templates: readonly PaymentTermsTemplateRef[]): ChosenTemplate | null {
+  const template = templates.find((candidate) => candidate.paymentTermsType === "FULFILLMENT");
+  return template === undefined ? null : { template, exact: true };
+}
+
+/**
+ * Conditions de paiement. Net N jours : l'échéance court à partir de la création de la commande (`issuedAt`).
+ * À l'expédition : pas d'échéancier, Shopify fixe l'échéance au moment de la livraison.
+ */
+export function buildPaymentTerms(templateId: string, issuedAt: Date | null): PaymentTermsInput {
+  return issuedAt === null
+    ? { paymentTermsTemplateId: templateId }
+    : { paymentTermsTemplateId: templateId, paymentSchedules: [{ issuedAt: issuedAt.toISOString() }] };
 }

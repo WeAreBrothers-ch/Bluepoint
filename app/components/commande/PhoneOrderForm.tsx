@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { selectedB2b } from "../../lib/commande/form-state";
 import type { PhoneOrderOutcome } from "../../lib/commande/outcome";
 import type { PhoneOrderErrors } from "../../lib/commande/schema";
 import { computeTotals, stockWarnings } from "../../lib/commande/totals";
@@ -7,11 +6,12 @@ import type { ProductOption } from "../../lib/commande/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { CustomerPicker } from "./CustomerPicker";
 import { DeliveryFields, PaymentField } from "./DeliveryFields";
+import { OrderOutcomeBanner } from "./OrderOutcomeBanner";
 import { OrderSummary, type PriceSource } from "./OrderSummary";
 import { ProductList } from "./ProductList";
 import { usePhoneOrder, type Submission } from "./usePhoneOrder";
 
-/** Formulaire de la commande par téléphone : client, bouteilles, livraison, paiement, récapitulatif. */
+/** Prendre une commande, dans l'ordre d'un appel : client, vins, livraison, paiement, récapitulatif. */
 
 interface PhoneOrderFormProps {
   readonly products: readonly ProductOption[];
@@ -29,35 +29,43 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
   const order = usePhoneOrder(props.today, props.onSubmit);
   const { state, dispatch } = order;
   const errors = props.outcome?.kind === "invalide" ? props.outcome.errors : NO_ERRORS;
-  const b2b = selectedB2b(state);
+  const prices = order.priceResult?.ok ? order.priceResult.prices : null;
 
-  const unitOverrides = useMemo(
-    () => new Map(Object.entries(order.priceResult?.ok ? order.priceResult.prices.unitCents : {})),
-    [order.priceResult],
-  );
+  const unitOverrides = useMemo(() => new Map(Object.entries(prices?.unitCents ?? {})), [prices]);
   const totals = useMemo(
-    () => computeTotals(order.lines, props.products, b2b === null ? undefined : unitOverrides),
-    [order.lines, props.products, b2b, unitOverrides],
+    () => computeTotals(order.lines, props.products, unitOverrides),
+    [order.lines, props.products, unitOverrides],
   );
   const warnings = useMemo(() => stockWarnings(order.lines, props.products), [order.lines, props.products]);
+  // Remise sur la commande (ex. « Prix pro -15 % ») : écart entre les lignes et le sous-total calculé par Shopify.
+  const discountCents = prices === null ? 0 : Math.max(0, totals.subtotalCents - prices.subtotalCents);
 
   const priceSource: PriceSource =
-    b2b === null || order.lines.length === 0
-      ? "base"
+    state.customer === null || order.lines.length === 0
+      ? "normal"
       : order.priceResult === null
-        ? "b2b_en_cours"
+        ? "calcul"
         : order.priceResult.ok
-          ? "b2b"
-          : "b2b_indisponible";
+          ? "client"
+          : "indisponible";
+
+  const missing =
+    state.customer === null
+      ? "Choisissez d’abord le client (étape 1)."
+      : order.lines.length === 0
+        ? "Ajoutez au moins un vin (étape 2)."
+        : null;
 
   return (
     <s-stack direction="block" gap="base">
       <CustomerPicker
         customer={state.customer}
         b2bLocationId={state.b2bLocationId}
+        products={props.products}
         error={errors.customerId ?? errors.b2b}
         onSelect={(customer) => dispatch({ type: "client", customer })}
         onSelectB2b={(locationId) => dispatch({ type: "b2b", locationId })}
+        onRepeat={(lines) => dispatch({ type: "reprendre", lines })}
       />
       <ProductList
         products={props.products}
@@ -69,12 +77,14 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
       <DeliveryFields
         requestedDate={state.requestedDate}
         deadline={state.deadline}
+        deadlineShown={state.deadlineShown || errors.deadline !== undefined}
         mode={state.mode}
         note={state.note}
         today={props.today}
         errors={errors}
         onRequestedDate={(value) => dispatch({ type: "date_souhaitee", value })}
         onDeadline={(value) => dispatch({ type: "date_limite", value })}
+        onDeadlineShown={(shown) => dispatch({ type: "limite_visible", shown })}
         onMode={(mode) => dispatch({ type: "mode", mode })}
         onNote={(value) => dispatch({ type: "note", value })}
       />
@@ -86,12 +96,14 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
       />
       <OrderSummary
         totals={totals}
+        discountCents={discountCents}
         warnings={warnings}
         priceSource={priceSource}
         linesError={errors.lines}
-        canSubmit={state.customer !== null && order.lines.length > 0}
+        missing={missing}
         submitting={props.submitting}
         onSubmit={order.submit}
+        outcome={props.outcome === undefined ? null : <OrderOutcomeBanner outcome={props.outcome} />}
       />
     </s-stack>
   );

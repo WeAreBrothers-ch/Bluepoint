@@ -6,7 +6,7 @@ import { runAdminGraphql } from "../shopify/graphql.server";
 import { collectPages, type Page } from "../shopify/paginate";
 import { toProductOptions } from "./catalog";
 import { toCustomerOptions, toShippingAddress } from "./customers";
-import { pickNetTemplate, type ChosenTemplate } from "./payload";
+import { pickFulfillmentTemplate, pickNetTemplate, type ChosenTemplate } from "./payload";
 import {
   CATALOG_MAX_VARIANTS,
   CATALOG_PAGE_SIZE,
@@ -72,14 +72,20 @@ export async function loadCustomerAddress(
 }
 
 /**
- * Modèle de conditions « net N jours ». `null` si la lecture est refusée
- * (autorisation `read_payment_terms` absente, offre sans conditions de paiement…).
+ * Modèle de conditions de paiement : « net N jours » (sur facture) ou « à l'expédition »
+ * (à la livraison). `null` si la lecture est refusée (autorisation `read_payment_terms`
+ * absente, offre sans conditions de paiement…).
  */
-export async function findNetTemplate(admin: AdminApiContext, days: number): Promise<ChosenTemplate | null> {
+export async function findPaymentTemplate(
+  admin: AdminApiContext,
+  payment: "facture" | "a_la_livraison",
+  days: number,
+): Promise<ChosenTemplate | null> {
   const result = await runAdminGraphql<PaymentTermsTemplatesData>(admin, PAYMENT_TERMS_TEMPLATES_QUERY);
   if (!result.ok) {
-    logError("Modèles de conditions de paiement illisibles", result.error, { days });
+    logError("Modèles de conditions de paiement illisibles", result.error, { days, payment });
     return null;
   }
-  return pickNetTemplate(result.value.paymentTermsTemplates, days);
+  const templates = result.value.paymentTermsTemplates;
+  return payment === "facture" ? pickNetTemplate(templates, days) : pickFulfillmentTemplate(templates);
 }

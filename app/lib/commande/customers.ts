@@ -1,6 +1,8 @@
+import { swissIsoDate } from "../agenda/dates";
+import { PRO_CUSTOMER_TAGS } from "../agenda/mapping";
 import { parseGid } from "../shopify/ids";
-import type { CompanyContactNode, CustomerAddressNode, CustomerNode } from "./queries";
-import type { B2bOption, CustomerOption, ShippingAddress } from "./types";
+import type { CompanyContactNode, CustomerAddressNode, CustomerNode, LastOrderNode } from "./queries";
+import type { B2bOption, CustomerOption, LastOrder, PhoneOrderLine, ShippingAddress } from "./types";
 
 /** Recherche de clients : texte saisi → filtre Shopify, et réponse GraphQL → options affichées. */
 
@@ -58,20 +60,36 @@ function uniqueLocations(options: readonly B2bOption[]): B2bOption[] {
   });
 }
 
+/** Lignes encore commandées dont la variante existe toujours ; `null` s'il n'en reste aucune. */
+export function toLastOrder(node: LastOrderNode | null): LastOrder | null {
+  if (node === null) return null;
+  const lines = node.lineItems.nodes.flatMap((line): PhoneOrderLine[] => {
+    const variantId = line.variant === null ? null : parseGid(line.variant.id, "ProductVariant");
+    return variantId === null || line.currentQuantity <= 0 ? [] : [{ variantId, quantity: line.currentQuantity }];
+  });
+  if (lines.length === 0) return null;
+  const created = new Date(node.createdAt);
+  return { name: node.name, date: Number.isNaN(created.getTime()) ? null : swissIsoDate(created), lines };
+}
+
 /** `null` si l'identifiant du client est illisible. */
 export function toCustomerOption(node: CustomerNode): CustomerOption | null {
   const id = parseGid(node.id, "Customer");
   if (id === null) return null;
   const profiles = node.companyContactProfiles ?? [];
   const phone = node.defaultPhoneNumber?.phoneNumber ?? node.defaultAddress?.phone ?? null;
+  const b2b = uniqueLocations(profiles.flatMap(toB2bOptions));
+  const tags = node.tags.map((tag) => tag.trim().toLowerCase());
   return {
     id,
     displayName: node.displayName.trim() || "Client sans nom",
+    isPro: b2b.length > 0 || tags.some((tag) => PRO_CUSTOMER_TAGS.includes(tag)),
+    lastOrder: toLastOrder(node.lastOrder),
     email: node.defaultEmailAddress?.emailAddress ?? null,
     phone: phone?.trim() ? phone.trim() : null,
     address: toShippingAddress(node.defaultAddress),
     addressLines: node.defaultAddress?.formatted.filter((line) => line.trim() !== "") ?? [],
-    b2b: uniqueLocations(profiles.flatMap(toB2bOptions)),
+    b2b,
   };
 }
 

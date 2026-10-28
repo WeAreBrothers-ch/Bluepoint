@@ -9,7 +9,7 @@ import type { PriceCalculationResult } from "./pricing";
 import { parsePhoneOrder, parsePriceCalculation } from "./schema";
 import { calculateDraftPrices } from "./writes.server";
 
-/** Actions de la page « Nouvelle commande » : calcul des prix B2B, création de la commande. */
+/** Actions de la page « Prendre une commande » : prix du client, enregistrement de la commande. */
 
 /** Délai par défaut si les réglages de facturation ne sont pas encore enregistrés. */
 export const DEFAULT_PAYMENT_TERM_DAYS = 30;
@@ -50,14 +50,14 @@ function readSignature(body: JsonRecord): string {
 async function calculate(admin: AdminApiContext, body: JsonRecord): Promise<CommandeActionResult> {
   const signature = readSignature(body);
   const input = parsePriceCalculation(body);
-  if (input === null) return { intent: "calculer", signature, result: { ok: false, message: "Demande de prix invalide." } };
-  const prices = await calculateDraftPrices(admin, buildCalculationInput(input.b2b, input.lines));
+  if (input === null) return { intent: "calculer", signature, result: { ok: false, message: "Prix non calculés." } };
+  const prices = await calculateDraftPrices(admin, buildCalculationInput(input.customerId, input.b2b, input.lines));
   if (prices.ok) return { intent: "calculer", signature, result: { ok: true, prices: prices.value } };
-  logError("Prix B2B non calculés", prices.error);
+  logError("Prix du client non calculés", prices.error);
   return {
     intent: "calculer",
     signature,
-    result: { ok: false, message: "Prix du catalogue B2B indisponibles : les prix affichés sont les prix de base." },
+    result: { ok: false, message: "Prix du client non calculés\u202F: les prix affichés sont les prix normaux." },
   };
 }
 
@@ -82,5 +82,5 @@ export async function handleCommandeAction(
   const body = await readJson(request);
   if (body?.["intent"] === "calculer") return calculate(admin, body);
   if (body?.["intent"] === "creer") return create(admin, shop, body);
-  return { intent: "creer", outcome: { kind: "erreur", message: "Demande illisible : rechargez la page." } };
+  return { intent: "creer", outcome: { kind: "erreur", message: MESSAGES.recharger } };
 }

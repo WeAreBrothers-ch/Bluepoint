@@ -6,7 +6,7 @@ import { paymentTermDaysFor } from "./action.server";
 import { loadCatalog } from "./reads.server";
 import type { ProductOption } from "./types";
 
-/** Données de la page « Nouvelle commande » : catalogue, délai de paiement, jour suisse. */
+/** Données de la page « Prendre une commande » : vins en vente, délai de paiement, jour suisse. */
 
 export interface CommandePageData {
   readonly products: readonly ProductOption[];
@@ -22,7 +22,7 @@ export async function loadCommandePage(admin: AdminApiContext, shop: string, now
   return {
     products: catalog.ok ? catalog.value.products : [],
     truncated: catalog.ok && catalog.value.truncated,
-    loadError: catalog.ok ? null : "Les produits n’ont pas pu être chargés depuis Shopify. Rechargez la page.",
+    loadError: catalog.ok ? null : "La liste des vins n’a pas pu être chargée depuis Shopify. Rechargez la page.",
     paymentTermDays,
     today: swissIsoDate(now),
   };

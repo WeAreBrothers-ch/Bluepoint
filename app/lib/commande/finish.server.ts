@@ -36,7 +36,7 @@ async function completeOnce(admin: AdminApiContext, draftOrderId: string): Promi
 
 function notCompletedMessage(draftName: string, error: ShopifyGraphqlError): string {
   const detail = error instanceof ShopifyUserErrors ? ` (${error.message})` : "";
-  return `La commande provisoire ${draftName} est créée, mais Shopify ne l’a pas encore transformée en commande${detail}. Réessayez\u202F: elle ne sera pas créée deux fois.`;
+  return `La commande n’est pas encore tout à fait enregistrée (${draftName}${detail}). Touchez à nouveau « Enregistrer la commande »\u202F: elle ne sera pas enregistrée deux fois.`;
 }
 
 export async function finishDraft(
@@ -61,6 +61,8 @@ export async function finishDraft(
     orderId: placed.id,
     orderName: placed.name,
     paymentPending: draft.paymentPending,
+    payment: order.payment,
+    requestedDate: order.requestedDate,
     warnings: metafields.ok ? warnings : [...warnings, MESSAGES.metachampsNonPoses],
     replayed: false,
   };

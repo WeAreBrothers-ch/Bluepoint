@@ -32,7 +32,7 @@ export function order(overrides: Partial<PhoneOrderInput> = {}): PhoneOrderInput
     deadline: "2026-10-24" as IsoDate,
     mode: "livraison",
     note: "Sonner à l’arrière",
-    payment: "bon_de_commande",
+    payment: "facture",
     ...overrides,
   };
 }
@@ -41,6 +41,8 @@ export function customerNode(overrides: Partial<CustomerNode> = {}): CustomerNod
   return {
     id: CUSTOMER,
     displayName: "Marco Rossi",
+    tags: [],
+    lastOrder: null,
     defaultEmailAddress: { emailAddress: "marco@example.ch" },
     defaultPhoneNumber: { phoneNumber: "+41211234567" },
     defaultAddress: {

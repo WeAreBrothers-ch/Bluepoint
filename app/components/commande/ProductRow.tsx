@@ -4,7 +4,7 @@ import type { ProductOption, VariantGid } from "../../lib/commande/types";
 import { formatChf, formatInteger } from "../../lib/format/money";
 import { QuantityStepper } from "./QuantityStepper";
 
-/** Une variante du catalogue : vignette, nom, SKU, prix, stock et quantité choisie. */
+/** Un vin : vignette, nom, prix, stock et quantité choisie. */
 
 interface ProductRowProps {
   readonly product: ProductOption;
@@ -13,8 +13,8 @@ interface ProductRowProps {
   readonly onAdd: (variantId: VariantGid, delta: number) => void;
 }
 
-function stockText(available: number | null): string {
-  if (available === null) return "Stock non suivi";
+function stockText(available: number | null): string | null {
+  if (available === null) return null;
   return available <= 0 ? "Rupture de stock" : `${formatInteger(available)} en stock`;
 }
 
@@ -34,7 +34,7 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
           <s-stack direction="block" gap="small-500">
             <s-text type="strong">{label}</s-text>
             <s-text color="subdued">
-              {[product.sku === null ? null : `SKU ${product.sku}`, formatChf(product.priceCents), stockText(product.available)]
+              {[formatChf(product.priceCents), stockText(product.available)]
                 .filter((part) => part !== null)
                 .join(" · ")}
             </s-text>
@@ -48,7 +48,7 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
         />
         {overStock ? (
           <s-text tone="caution">
-            {`Plus que le stock disponible (${formatInteger(product.available ?? 0)})\u202F: la commande reste possible.`}
+            {`C’est plus que le stock (${formatInteger(product.available ?? 0)} bouteilles)\u202F: la commande reste possible.`}
           </s-text>
         ) : null}
       </s-stack>

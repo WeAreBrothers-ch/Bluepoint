@@ -5,7 +5,7 @@ import type { ProductOption, VariantGid } from "../../lib/commande/types";
 import { CATALOG_MAX_VARIANTS } from "../../lib/commande/queries";
 import { ProductRow } from "./ProductRow";
 
-/** Catalogue des produits actifs, avec filtre rapide (nom, variante ou SKU). */
+/** Les vins en vente, avec une recherche rapide par nom (ou code). */
 
 interface ProductListProps {
   readonly products: readonly ProductOption[];
@@ -21,22 +21,22 @@ export function ProductList({ products, truncated, quantities, onSet, onAdd }: P
   const visible = useMemo(() => filterProducts(products, deferredFilter), [products, deferredFilter]);
 
   return (
-    <s-section heading="Bouteilles">
+    <s-section heading="2. Vins">
       <s-stack direction="block" gap="base">
         <s-search-field
-          label="Filtrer les produits"
-          placeholder="Nom, millésime ou SKU"
+          label="Chercher un vin"
+          placeholder="Nom du vin, par exemple « Barolo »"
           value={filter}
           onInput={(event) => setFilter(event.currentTarget.value)}
         />
         {truncated ? (
-          <s-banner tone="warning" heading="Catalogue incomplet">
-            {`Seules les ${CATALOG_MAX_VARIANTS} premières variantes actives sont affichées.`}
+          <s-banner tone="warning" heading="Certains vins ne sont pas affichés">
+            {`La liste s’arrête aux ${CATALOG_MAX_VARIANTS} premiers vins.`}
           </s-banner>
         ) : null}
         {visible.length === 0 ? (
           <s-text color="subdued">
-            {products.length === 0 ? "Aucun produit actif dans la boutique." : "Aucun produit ne correspond au filtre."}
+            {products.length === 0 ? "Aucun vin en vente dans la boutique." : "Aucun vin ne correspond. Effacez la recherche pour tout revoir."}
           </s-text>
         ) : (
           <s-stack direction="block" gap="none">

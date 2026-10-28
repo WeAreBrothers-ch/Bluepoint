@@ -1,4 +1,6 @@
+import type { IsoDate } from "../metafields/definitions";
 import type { PhoneOrderErrors } from "./schema";
+import type { PaymentChoice } from "./types";
 
 /** Résultat de « Créer la commande », tel qu'affiché par la page. */
 
@@ -11,8 +13,10 @@ export type PhoneOrderOutcome =
       readonly kind: "commande";
       readonly orderId: string;
       readonly orderName: string;
-      /** Vrai pour un bon de commande : paiement attendu plus tard. */
+      /** Vrai si la commande reste à payer (sur facture ou à la livraison). */
       readonly paymentPending: boolean;
+      readonly payment: PaymentChoice;
+      readonly requestedDate: IsoDate;
       /** Remarques non bloquantes (modèle de délai approché, métachamps à vérifier…). */
       readonly warnings: readonly string[];
       /** La commande existait déjà pour cette clé : rien n'a été recréé. */
@@ -27,18 +31,23 @@ export type PhoneOrderOutcome =
     };
 
 export const MESSAGES = {
-  invalide: "Certains champs sont à corriger.",
-  indisponible: "Shopify ne répond pas pour le moment. Réessayez : la commande ne sera pas créée deux fois.",
-  enCours: "Cette commande est déjà en cours de création. Patientez quelques secondes.",
+  invalide: "Il manque quelque chose\u202F: regardez les champs signalés en rouge.",
+  indisponible: "Shopify ne répond pas pour le moment. Réessayez\u202F: la commande ne sera pas enregistrée deux fois.",
+  enCours: "La commande est en train d’être enregistrée. Patientez quelques secondes.",
   base: "La commande n’a pas pu être enregistrée. Réessayez.",
+  recharger: "Rechargez la page, puis recommencez la commande.",
   brouillonSansConditions:
-    "Shopify n’accepte pas les conditions de paiement sur cette boutique : la commande est restée en commande provisoire, pour ne pas la marquer payée. Ouvrez-la dans Shopify pour la terminer.",
+    "La commande est enregistrée mais pas terminée\u202F: Shopify n’accepte pas encore le paiement plus tard sur cette boutique. " +
+    "Elle n’a pas été notée payée. Terminez-la dans Shopify ou appelez la personne qui s’occupe de la boutique.",
   metachampsNonPoses:
-    "Les dates et le mode de livraison n’ont pas pu être copiés sur la commande : vérifiez-les dans Shopify.",
+    "Attention\u202F: le jour de livraison n’a pas été enregistré, la commande n’apparaîtra pas dans l’agenda. " +
+    "Prévenez la personne qui s’occupe de la boutique.",
 } as const;
 
-export function netTermsWarning(requestedDays: number, templateName: string): string {
-  return `Délai de ${requestedDays} jours introuvable chez Shopify\u202F: conditions «\u202F${templateName}\u202F» appliquées.`;
+export function netTermsWarning(requestedDays: number, appliedDays: number | null): string {
+  return appliedDays === null
+    ? `Le délai de ${requestedDays} jours n’existe pas dans Shopify\u202F: un autre délai a été appliqué.`
+    : `Le délai de ${requestedDays} jours n’existe pas dans Shopify\u202F: le client aura ${appliedDays} jours pour payer.`;
 }
 
 interface UserErrorLike {
@@ -55,7 +64,7 @@ export function isPaymentTermsRefusal(userErrors: readonly UserErrorLike[]): boo
   );
 }
 
-/** Message affiché pour un refus de Shopify (les détails viennent de Shopify, en anglais parfois). */
+/** Refus de Shopify : phrase simple ; le détail brut (souvent en anglais) reste pour la personne qui assiste. */
 export function refusalMessage(detail: string): string {
-  return `Shopify a refusé la commande\u202F: ${detail}`;
+  return `Shopify n’a pas accepté la commande. Vérifiez le client et les vins, puis réessayez. Détail pour l’assistance\u202F: ${detail}`;
 }
