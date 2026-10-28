@@ -30,7 +30,7 @@ query FicheCommande($id: ID!) {
         }
       }
       detailLines: lineItems(first: 50) {
-        nodes { name currentQuantity originalUnitPriceSet { shopMoney { amount } } discountedTotalSet { shopMoney { amount } } }
+        nodes { id name currentQuantity variant { id } originalUnitPriceSet { shopMoney { amount } } discountedTotalSet { shopMoney { amount } } }
       }
   }
 }`;
@@ -51,8 +51,10 @@ export interface OrderDetailNode extends Omit<AgendaOrderNode, "customer"> {
   };
   readonly detailLines: {
     readonly nodes: readonly {
+      readonly id: string;
       readonly name: string;
       readonly currentQuantity: number;
+      readonly variant: { readonly id: string } | null;
       readonly originalUnitPriceSet: Money | null;
       readonly discountedTotalSet: Money | null;
     }[];
@@ -60,6 +62,9 @@ export interface OrderDetailNode extends Omit<AgendaOrderNode, "customer"> {
 }
 
 export interface OrderDetailLine {
+  readonly lineItemId: string;
+  /** `null` : article sans variante (ajouté à la main dans Shopify), pas modifiable ici. */
+  readonly variantId: string | null;
   readonly name: string;
   readonly quantity: number;
   readonly unitCents: number | null;
@@ -112,6 +117,8 @@ export function toOrderDetail(node: OrderDetailNode, paymentTerms: PaymentTermsI
   const lines = node.detailLines.nodes
     .filter((line) => line.currentQuantity > 0)
     .map((line) => ({
+      lineItemId: line.id,
+      variantId: line.variant?.id ?? null,
       name: line.name,
       quantity: line.currentQuantity,
       unitCents: cents(line.originalUnitPriceSet),

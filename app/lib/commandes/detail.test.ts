@@ -19,9 +19,9 @@ function detailNode(overrides: Partial<OrderDetailNode> = {}): OrderDetailNode {
     discountApplications: { nodes: [{ __typename: "AutomaticDiscountApplication", title: "Prix pro -15 %" }] },
     detailLines: {
       nodes: [
-        { name: "Passione di Re", currentQuantity: 12, originalUnitPriceSet: money("45.0"), discountedTotalSet: money("540.0") },
-        { name: "Col del Forno", currentQuantity: 6, originalUnitPriceSet: money("18.0"), discountedTotalSet: money("108.0") },
-        { name: "Vin retiré", currentQuantity: 0, originalUnitPriceSet: money("10.0"), discountedTotalSet: money("0.0") },
+        { id: "gid://shopify/LineItem/1", name: "Passione di Re", currentQuantity: 12, variant: { id: "gid://shopify/ProductVariant/11" }, originalUnitPriceSet: money("45.0"), discountedTotalSet: money("540.0") },
+        { id: "gid://shopify/LineItem/2", name: "Col del Forno", currentQuantity: 6, variant: { id: "gid://shopify/ProductVariant/12" }, originalUnitPriceSet: money("18.0"), discountedTotalSet: money("108.0") },
+        { id: "gid://shopify/LineItem/3", name: "Vin retiré", currentQuantity: 0, variant: null, originalUnitPriceSet: money("10.0"), discountedTotalSet: money("0.0") },
       ],
     },
     ...overrides,

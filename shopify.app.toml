@@ -13,7 +13,8 @@ automatically_update_urls_on_dev = true
 
 [access_scopes]
 # write_customers : créer les comptes pro (entreprise, contact, étiquette « pro »), page « Clients pro ».
-scopes = "read_customers,read_draft_orders,read_fulfillments,read_inventory,read_merchant_managed_fulfillment_orders,read_metaobjects,read_orders,read_payment_terms,read_products,write_customers,write_draft_orders,write_fulfillments,write_merchant_managed_fulfillment_orders,write_metaobjects,write_orders,write_payment_terms"
+# write_inventory : page « Stock » (bouteilles reçues, comptage). write_order_edits : modifier une commande.
+scopes = "read_customers,read_draft_orders,read_fulfillments,read_inventory,read_merchant_managed_fulfillment_orders,read_metaobjects,read_orders,read_payment_terms,read_products,write_customers,write_draft_orders,write_fulfillments,write_inventory,write_merchant_managed_fulfillment_orders,write_metaobjects,write_order_edits,write_orders,write_payment_terms"
 
 [auth]
 redirect_urls = [ "https://bluepoint-gestion.vercel.app/api/auth" ]

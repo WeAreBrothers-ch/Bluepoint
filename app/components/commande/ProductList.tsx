@@ -14,16 +14,18 @@ interface ProductListProps {
   readonly quantities: Quantities;
   readonly onSet: (variantId: VariantGid, quantity: number) => void;
   readonly onAdd: (variantId: VariantGid, delta: number) => void;
+  /** Titre de la partie ; « 2. Vins » dans « Prendre une commande ». */
+  readonly heading?: string;
 }
 
-export function ProductList({ products, truncated, quantities, onSet, onAdd }: ProductListProps) {
+export function ProductList({ products, truncated, quantities, onSet, onAdd, heading = "2. Vins" }: ProductListProps) {
   const [filter, setFilter] = useState("");
   const deferredFilter = useDeferredValue(filter);
   const visible = useMemo(() => filterProducts(products, deferredFilter), [products, deferredFilter]);
   const byId = useMemo(() => new Map(products.map((product) => [product.variantId, product])), [products]);
 
   return (
-    <s-section heading="2. Vins">
+    <s-section heading={heading}>
       <s-stack direction="block" gap="base">
         <ChosenWines products={byId} quantities={quantities} onSet={onSet} />
         <s-search-field

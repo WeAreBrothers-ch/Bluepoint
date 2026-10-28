@@ -28,6 +28,15 @@ Elle sert à l’équipe, pas aux clients :
 - **Factures** (`/app/factures`) : numéro BP-AAAA-NNNN tiré dans la même transaction que la facture
   (pas de trou, pas de doublon), PDF stocké en base (table `StoredFile`), téléchargement, envoi par
   e-mail (Resend) et par WhatsApp (lien public signé, valable 14 jours, route `/partage/<jeton>`).
+- **Fiche commande** (`/app/commandes/:id`) : vins, prix, remise, total, client, facture. Tant que la
+  commande n’est ni livrée ni facturée : « Modifier les vins » (édition de commande Shopify, remise
+  automatique recalculée, stock remis ; seulement si pas encore payée) et « Annuler la commande »
+  (stock remis, remboursement sur le moyen de paiement d’origine si déjà payée). Autorisation
+  `write_order_edits` pour la modification.
+- **Stock** (`/app/stock`) : bouteilles disponibles, en cave et réservées par vin, « Ajouter des
+  bouteilles » (`inventoryAdjustQuantities`, raison `received`) et « Corriger le nombre »
+  (`inventorySetQuantities` sur `on_hand`), avec contrôle de la quantité attendue et clé
+  d’idempotence. Autorisation `write_inventory`.
 - **Réglages** (`/app/reglages`) : vendeur, TVA, IBAN / QR-IBAN, délai de paiement, automatismes.
 - **Webhook `fulfillments/create`** : facture automatique si le réglage est activé.
 - **Nouvelle commande (téléphone)** (`/app/commande`) : recherche du client (nom, entreprise, téléphone,
