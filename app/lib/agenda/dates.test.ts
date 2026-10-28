@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, daysBetween, daysOfWeek, rangeForView, swissIsoDate, weekContaining } from "./dates";
+import { addDays, capitalize, daysBetween, daysOfWeek, longDay, rangeForView, swissIsoDate, weekContaining, weekFromParam } from "./dates";
 import { d } from "./fixtures";
 
 describe("dates de l'agenda (heure suisse)", () => {
@@ -33,5 +33,16 @@ describe("dates de l'agenda (heure suisse)", () => {
     const now = new Date("2026-10-25T23:30:00Z"); // lundi 26 à 00 h 30 en Suisse (heure d’hiver, UTC+1)
     expect(rangeForView("aujourdhui", now)).toEqual({ start: "2026-10-26", end: "2026-10-26" });
     expect(rangeForView("semaine", now)).toEqual({ start: "2026-10-26", end: "2026-11-01" });
+  });
+
+  it("écrit les jours en toutes lettres", () => {
+    expect(longDay(d("2026-10-29"))).toBe("jeudi 29 octobre");
+    expect(capitalize(longDay(d("2026-11-01")))).toBe("Dimanche 1 novembre");
+  });
+
+  it("choisit la semaine demandée, sinon celle du jour", () => {
+    expect(weekFromParam("2026-11-04", d("2026-10-28"))).toEqual({ start: "2026-11-02", end: "2026-11-08" });
+    expect(weekFromParam(null, d("2026-10-28"))).toEqual({ start: "2026-10-26", end: "2026-11-01" });
+    expect(weekFromParam("n'importe quoi", d("2026-10-28"))).toEqual({ start: "2026-10-26", end: "2026-11-01" });
   });
 });

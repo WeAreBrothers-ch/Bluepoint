@@ -23,6 +23,12 @@ export type FinancialStatus =
   | "REFUNDED"
   | "VOIDED";
 
+/** Un vin de la commande et la quantité encore commandée. */
+export interface OrderItem {
+  readonly name: string;
+  readonly quantity: number;
+}
+
 export interface DeliveryTask {
   readonly orderId: OrderGid;
   /** Numéro lisible de la commande, ex. « #1042 ». */
@@ -32,12 +38,25 @@ export interface DeliveryTask {
   readonly company: string | null;
   /** Client professionnel (restaurant, caviste…) ou particulier. */
   readonly isPro: boolean;
+  /** Rue et numéro de l'adresse de livraison (avec le complément éventuel). */
+  readonly street: string | null;
+  readonly zip: string | null;
   readonly city: string | null;
+  /** Téléphone de l'adresse de livraison, sinon celui du client. */
+  readonly phone: string | null;
+  /** Remarque saisie à la commande (code de porte, horaires…), jamais vue par le client. */
+  readonly note: string | null;
+  /** Vins à livrer (10 premières lignes de la commande). */
+  readonly items: readonly OrderItem[];
+  /** Total actuel de la commande en centimes, `null` si illisible ou pas en CHF. */
+  readonly totalCents: number | null;
   readonly requestedDate: IsoDate | null;
   readonly deadline: IsoDate | null;
   readonly dateSource: DateSource;
   readonly mode: DeliveryMode | null;
   readonly status: DeliveryStatus;
+  /** Jour (heure suisse) de la dernière expédition réussie, `null` si rien n'est encore parti. */
+  readonly deliveredOn: IsoDate | null;
   readonly financialStatus: FinancialStatus | null;
 }
 
@@ -60,6 +79,14 @@ export type AgendaView = "aujourdhui" | "semaine";
 export interface DateRange {
   readonly start: IsoDate;
   readonly end: IsoDate;
+}
+
+/** Semaine affichée et liens vers les semaines voisines (`?semaine=` du lundi). */
+export interface WeekNavigation {
+  readonly week: DateRange;
+  readonly isCurrentWeek: boolean;
+  readonly previousStart: IsoDate;
+  readonly nextStart: IsoDate;
 }
 
 /** Facture déjà créée pour une commande. */

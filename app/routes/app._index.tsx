@@ -4,20 +4,22 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { AgendaTabs } from "../components/AgendaTabs";
 import { TodayView } from "../components/agenda/TodayView";
+import { WeekNavigationButtons } from "../components/agenda/WeekNavigationButtons";
 import { WeekView } from "../components/agenda/WeekView";
 import { handleAgendaAction } from "../lib/agenda/actions.server";
 import type { AgendaActionResult } from "../lib/agenda/action-result";
+import { capitalize } from "../lib/agenda/dates";
 import { loadAgendaPage, type AgendaPageData } from "../lib/agenda/page-data.server";
-import { AGENDA_MAX_ORDERS } from "../lib/agenda/query";
 import { DEFAULT_AGENDA_VIEW, isAgendaView } from "../lib/agenda/views";
 
 /** Agenda des livraisons : page d'accueil de l'app. */
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<AgendaPageData> => {
   const { admin, session } = await authenticate.admin(request);
-  const requested = new URL(request.url).searchParams.get("vue");
+  const params = new URL(request.url).searchParams;
+  const requested = params.get("vue");
   const view = isAgendaView(requested) ? requested : DEFAULT_AGENDA_VIEW;
-  return loadAgendaPage(admin, session.shop, view, new Date());
+  return loadAgendaPage(admin, session.shop, view, new Date(), params.get("semaine"));
 };
 
 export const action = async ({ request }: ActionFunctionArgs): Promise<AgendaActionResult> => {
@@ -30,15 +32,16 @@ function Notices({ data }: { readonly data: AgendaPageData }) {
     <>
       {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
       {data.truncated ? (
-        <s-banner tone="warning" heading="Agenda incomplet">
-          {`Seules les ${AGENDA_MAX_ORDERS} premières commandes sont affichées. Expédiez ou archivez les commandes terminées dans Shopify pour voir les autres.`}
+        <s-banner tone="warning" heading="Certaines commandes ne sont pas affichées">
+          Il y a trop de commandes en cours pour toutes les montrer. Les plus anciennes déjà livrées peuvent être archivées
+          dans Shopify.
         </s-banner>
       ) : null}
       {data.settingsComplete ? null : (
-        <s-banner tone="info" heading="Une étape avant de pouvoir facturer">
+        <s-banner tone="info" heading="Les factures ne peuvent pas encore être faites">
           <s-stack direction="block" gap="small-200">
-            <s-text>Renseignez vos coordonnées et votre compte bancaire pour créer des factures.</s-text>
-            <s-button href="/app/reglages">Compléter les réglages</s-button>
+            <s-text>Il manque vos coordonnées ou votre compte bancaire.</s-text>
+            <s-button href="/app/reglages">Compléter mes coordonnées</s-button>
           </s-stack>
         </s-banner>
       )}
@@ -52,19 +55,20 @@ export default function AgendaPage() {
   return (
     <s-page heading="Agenda">
       <s-button slot="primary-action" href="/app/commande" variant="primary">
-        Nouvelle commande
+        Prendre une commande
       </s-button>
       <s-section>
         <s-stack direction="block" gap="base">
           <AgendaTabs current={data.view} />
-          <s-text color="subdued">{data.periodLabel}</s-text>
+          <s-heading>{capitalize(data.periodLabel)}</s-heading>
+          {data.view === "semaine" ? <WeekNavigationButtons navigation={data.weekNavigation} /> : null}
         </s-stack>
       </s-section>
       <Notices data={data} />
       {data.view === "aujourdhui" ? (
-        <TodayView groups={data.todayGroups} invoices={data.invoices} />
+        <TodayView groups={data.todayGroups} invoices={data.invoices} today={data.today} />
       ) : (
-        <WeekView groups={data.weekGroups} invoices={data.invoices} />
+        <WeekView groups={data.weekGroups} invoices={data.invoices} today={data.today} />
       )}
     </s-page>
   );

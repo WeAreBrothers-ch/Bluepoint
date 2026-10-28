@@ -1,44 +1,53 @@
 import type { TodayGroups } from "../../lib/agenda/grouping";
 import type { InvoiceRef } from "../../lib/agenda/types";
+import type { IsoDate } from "../../lib/metafields/definitions";
 import { EmptyState } from "../EmptyState";
 import { TaskList } from "./TaskList";
 
-/** Vue « Aujourd’hui » : retards en tête, puis livraisons du jour, sans date, déjà livrées. */
+/** Vue « Aujourd’hui » : retards, livraisons du jour, celles de demain, sans date, déjà livrées. */
 
 interface TodayViewProps {
   readonly groups: TodayGroups;
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
+  readonly today: IsoDate;
 }
 
-export function TodayView({ groups, invoices }: TodayViewProps) {
-  const lateCount = groups.due.filter((task) => task.urgency === "en_retard").length;
-  if (groups.due.length + groups.undated.length + groups.doneToday.length === 0) {
+export function TodayView({ groups, invoices, today }: TodayViewProps) {
+  const toDeliver = groups.late.length + groups.today.length;
+  const total = toDeliver + groups.tomorrow.length + groups.undated.length + groups.doneToday.length;
+  if (total === 0) {
     return (
       <EmptyState
-        heading="Rien à livrer aujourd’hui."
+        heading="Rien à livrer aujourd’hui ni demain."
         action={
           <s-stack direction="inline" gap="small-200">
             <s-button href="/app?vue=semaine" variant="primary">
               Voir la semaine
             </s-button>
-            <s-button href="/app/commande">Nouvelle commande</s-button>
+            <s-button href="/app/commande">Prendre une commande</s-button>
           </s-stack>
         }
       >
-        Les commandes à livrer apparaissent ici, les retards en premier.
+        Les commandes à livrer apparaîtront ici dès qu’elles ont une date de livraison.
       </EmptyState>
     );
   }
+  const list = { invoices, today };
   return (
     <>
-      {lateCount > 0 ? (
-        <s-banner tone="critical" heading={`${lateCount} livraison${lateCount > 1 ? "s" : ""} en retard`}>
-          Elles sont en tête de liste.
+      {groups.late.length > 0 ? (
+        <s-banner tone="critical" heading={`${groups.late.length} livraison${groups.late.length > 1 ? "s" : ""} en retard`}>
+          {"À livrer en priorité\u202F: elles sont juste en dessous."}
         </s-banner>
       ) : null}
-      <TaskList heading="À livrer aujourd’hui" tasks={groups.due} invoices={invoices} />
-      <TaskList heading="Sans date de livraison" tasks={groups.undated} invoices={invoices} />
-      <TaskList heading="Déjà livrées" tasks={groups.doneToday} invoices={invoices} />
+      {toDeliver === 0 && groups.doneToday.length === 0 ? (
+        <s-banner tone="success" heading="Rien à livrer aujourd’hui." />
+      ) : null}
+      <TaskList heading="En retard" tasks={groups.late} {...list} />
+      <TaskList heading="À livrer aujourd’hui" tasks={groups.today} {...list} />
+      <TaskList heading="Demain" tasks={groups.tomorrow} {...list} />
+      <TaskList heading="Date de livraison à fixer" tasks={groups.undated} {...list} />
+      <TaskList heading="Déjà livrées aujourd’hui" tasks={groups.doneToday} {...list} />
     </>
   );
 }

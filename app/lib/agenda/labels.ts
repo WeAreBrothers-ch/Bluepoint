@@ -1,9 +1,11 @@
-import { formatSwissDate } from "../format/dates";
-import { withColon } from "../format/typography";
-import type { DeliveryMode } from "../metafields/definitions";
-import type { DeliveryStatus, FinancialStatus, ScheduledTask, Urgency } from "./types";
+import type { DeliveryMode, IsoDate } from "../metafields/definitions";
+import { addDays, longDay } from "./dates";
+import type { DeliveryStatus, FinancialStatus, ScheduledTask } from "./types";
 
-/** Libellés et tons des badges de l'agenda (français, typographie suisse). */
+/**
+ * Libellés de l'agenda, écrits pour une personne qui n'est pas à l'aise avec l'informatique :
+ * mots de tous les jours, jours en toutes lettres, aucun terme de Shopify.
+ */
 
 export type BadgeTone = "neutral" | "info" | "success" | "caution" | "warning" | "critical";
 
@@ -18,53 +20,93 @@ export type ModeIcon = "delivery" | "package" | "store" | "question-circle";
 export interface ModeLabel {
   readonly label: string;
   readonly icon: ModeIcon;
+  /** Bouton qui confirme la remise au client : « C'est livré ». */
+  readonly doneAction: string;
+  /** Question de confirmation, ex. « La commande #1042 est-elle bien livrée ? ». */
+  readonly doneQuestion: (orderName: string) => string;
 }
 
 export const MODE_LABELS: Readonly<Record<DeliveryMode, ModeLabel>> = {
-  livraison: { label: "Livraison", icon: "delivery" },
-  poste: { label: "Poste", icon: "package" },
-  retrait: { label: "Retrait", icon: "store" },
+  livraison: {
+    label: "Livraison",
+    icon: "delivery",
+    doneAction: "C’est livré",
+    doneQuestion: (name) => `La commande ${name} est-elle bien livrée\u202F?`,
+  },
+  poste: {
+    label: "Envoi par la Poste",
+    icon: "package",
+    doneAction: "C’est envoyé",
+    doneQuestion: (name) => `La commande ${name} est-elle bien partie à la Poste\u202F?`,
+  },
+  retrait: {
+    label: "Retrait au dépôt",
+    icon: "store",
+    doneAction: "C’est retiré",
+    doneQuestion: (name) => `Le client a-t-il bien retiré la commande ${name}\u202F?`,
+  },
 };
+
+const UNKNOWN_MODE: ModeLabel = { ...MODE_LABELS.livraison, label: "Livraison (mode à vérifier)", icon: "question-circle" };
 
 export function modeLabel(mode: DeliveryMode | null): ModeLabel {
-  return mode === null ? { label: "Mode à préciser", icon: "question-circle" } : MODE_LABELS[mode];
+  return mode === null ? UNKNOWN_MODE : MODE_LABELS[mode];
 }
 
-export const URGENCY_LABELS: Readonly<Record<Urgency, BadgeLabel>> = {
-  en_retard: { label: "En retard", tone: "critical" },
-  aujourdhui: { label: "Aujourd’hui", tone: "warning" },
-  bientot: { label: "Bientôt", tone: "caution" },
-  planifiee: { label: "Planifiée", tone: "info" },
-  sans_date: { label: "Sans date", tone: "neutral" },
-};
-
 export const STATUS_LABELS: Readonly<Record<Exclude<DeliveryStatus, "a_livrer">, BadgeLabel>> = {
-  partielle: { label: "Partiellement expédiée", tone: "caution" },
-  expediee: { label: "Expédiée", tone: "info" },
+  partielle: { label: "Livrée en partie", tone: "caution" },
+  expediee: { label: "En route", tone: "info" },
   livree: { label: "Livrée", tone: "success" },
 };
 
 export const PAYMENT_LABELS: Readonly<Record<FinancialStatus, BadgeLabel>> = {
-  PENDING: { label: "Bon de commande — non payé", tone: "warning" },
+  PENDING: { label: "Pas encore payée", tone: "warning" },
   PAID: { label: "Payée", tone: "success" },
-  PARTIALLY_PAID: { label: "Partiellement payée", tone: "caution" },
-  AUTHORIZED: { label: "Paiement autorisé", tone: "info" },
-  PARTIALLY_REFUNDED: { label: "Partiellement remboursée", tone: "neutral" },
+  PARTIALLY_PAID: { label: "Payée en partie", tone: "caution" },
+  AUTHORIZED: { label: "Paiement par carte à confirmer", tone: "info" },
+  PARTIALLY_REFUNDED: { label: "Remboursée en partie", tone: "neutral" },
   REFUNDED: { label: "Remboursée", tone: "neutral" },
   VOIDED: { label: "Paiement annulé", tone: "neutral" },
-  EXPIRED: { label: "Paiement expiré", tone: "critical" },
+  EXPIRED: { label: "Paiement par carte échoué", tone: "critical" },
 };
 
-/** Ligne d'échéance d'une tâche, ex. « Au plus tard : 21.10.2026 ». */
-export function deadlineText(task: ScheduledTask): string {
-  const origin = task.dateSource === "attribut" ? " (indiquée au panier)" : "";
-  if (task.deadline !== null) return `${withColon("Au plus tard")} ${formatSwissDate(task.deadline)}${origin}`;
-  if (task.requestedDate !== null) return `${withColon("Souhaitée le")} ${formatSwissDate(task.requestedDate)}${origin}`;
-  return "Aucune date de livraison";
+/** Badge de la tâche encore à livrer : « En retard », « Aujourd’hui », « Demain »… */
+export function urgencyBadge(task: ScheduledTask, today: IsoDate): BadgeLabel {
+  switch (task.urgency) {
+    case "en_retard":
+      return { label: "En retard", tone: "critical" };
+    case "aujourdhui":
+      return { label: "Aujourd’hui", tone: "warning" };
+    case "sans_date":
+      return { label: "Date à fixer", tone: "neutral" };
+    default:
+      return task.plannedDate === addDays(today, 1)
+        ? { label: "Demain", tone: "caution" }
+        : { label: "Prévue", tone: "info" };
+  }
 }
 
-/** Date souhaitée affichée en plus quand elle diffère de la date limite. */
-export function requestedText(task: ScheduledTask): string | null {
-  if (task.requestedDate === null || task.deadline === null || task.requestedDate === task.deadline) return null;
-  return `${withColon("Souhaitée le")} ${formatSwissDate(task.requestedDate)}`;
+/** Ex. « demain (jeudi 29 octobre) », « aujourd’hui », « le samedi 31 octobre ». */
+function dayText(date: IsoDate, today: IsoDate): string {
+  if (date === today) return "aujourd’hui";
+  if (date === addDays(today, 1)) return `demain (${longDay(date)})`;
+  return `le ${longDay(date)}`;
+}
+
+/** Phrase de la date de livraison, ex. « À livrer demain (jeudi 29 octobre) ». */
+export function deliveryDateText(task: ScheduledTask, today: IsoDate): string {
+  const { plannedDate, limitDate } = task;
+  if (plannedDate === null || limitDate === null) return "Date de livraison à fixer avec le client";
+  if (task.status === "livree") return `Prévue ${dayText(plannedDate, today)}`;
+  if (task.urgency === "en_retard") return `Devait être livrée au plus tard ${dayText(limitDate, today)}`;
+  // « aujourd’hui » couvre aussi une date souhaitée passée dont la limite n'est pas encore atteinte.
+  const dueToday = task.urgency === "aujourdhui";
+  const when = dueToday ? "aujourd’hui" : dayText(plannedDate, today);
+  const sameLimit = limitDate === plannedDate || (dueToday && limitDate === today);
+  return `À livrer ${when}${sameLimit ? "" : ` (au plus tard ${dayText(limitDate, today)})`}`;
+}
+
+/** Ex. « 8 bouteilles ». */
+export function bottleCountText(count: number): string {
+  return `${count} bouteille${count > 1 ? "s" : ""}`;
 }

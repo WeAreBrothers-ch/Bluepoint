@@ -10,7 +10,7 @@ import { isAgendaIntent, type AgendaActionResult } from "./action-result";
 /** Traitement serveur des actions de l'agenda. */
 
 function invalidRequest(orderId: string): AgendaActionResult {
-  return { ok: false, orderId, message: "Demande invalide. Rechargez la page et réessayez.", details: [], settingsLink: false };
+  return { ok: false, orderId, message: "Ça n’a pas marché. Rechargez la page, puis réessayez.", details: [], settingsLink: false };
 }
 
 function invoiceFailure(orderId: string, error: InvoiceError): AgendaActionResult {
@@ -30,7 +30,7 @@ async function generate(admin: AdminApiContext, shop: string, orderId: OrderGid)
   return {
     ok: true,
     orderId,
-    message: created ? `Facture ${invoice.number} créée.` : `La facture ${invoice.number} existe déjà.`,
+    message: created ? `Facture ${invoice.number} faite.` : `La facture ${invoice.number} était déjà faite.`,
     invoice: { id: invoice.id, number: invoice.number },
     warning: null,
     warningDetails: [],
@@ -42,11 +42,11 @@ async function deliver(admin: AdminApiContext, shop: string, orderId: OrderGid):
   const settings = await loadStoredSettings(shop);
   const delivered = await markOrderDelivered(admin, orderId, { notifyCustomer: settings?.notifyCustomerOnDelivery ?? false });
   if (!delivered.ok) return { ok: false, orderId, message: delivered.error.message, details: [], settingsLink: false };
-  const message = delivered.value.alreadyDelivered ? "Cette commande était déjà livrée." : "Commande marquée livrée.";
+  const message = delivered.value.alreadyDelivered ? "Cette commande était déjà notée livrée." : "C’est noté\u202F: commande livrée.";
   const invoice = await ensureInvoice(admin, shop, orderId);
   if (invoice.ok) {
     const { number, id } = invoice.value.invoice;
-    return { ok: true, orderId, message: `${message} Facture ${number} prête.`, invoice: { id, number }, warning: null, warningDetails: [], settingsLink: false };
+    return { ok: true, orderId, message: `${message} La facture ${number} est prête.`, invoice: { id, number }, warning: null, warningDetails: [], settingsLink: false };
   }
   return {
     ok: true,
@@ -73,6 +73,6 @@ export async function handleAgendaAction(
   } catch (error) {
     if (error instanceof Response) throw error;
     logError("Action de l'agenda impossible", error, { orderId, intent });
-    return { ok: false, orderId, message: "Une erreur inattendue est survenue. Réessayez.", details: [], settingsLink: false };
+    return { ok: false, orderId, message: "Ça n’a pas marché. Réessayez dans un instant.", details: [], settingsLink: false };
   }
 }

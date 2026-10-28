@@ -16,6 +16,7 @@ import { formatInvoiceNumber, yearOfIsoDate } from "./numbering";
 import { nextInvoiceSequence } from "./numbering.server";
 import { findInvoiceByOrder, invoicePdfKey, type Invoice } from "./repository.server";
 import { fetchOrderForInvoice, type OrderForInvoice } from "./shopify-order.server";
+import { plainInvoiceProblems } from "./plain-problems";
 
 /**
  * Crée la facture d'une commande livrée, ou le reçu pro (facture acquittée) d'une commande payée,
@@ -96,7 +97,9 @@ async function createOrRecover(draft: Draft): Promise<Result<EnsuredInvoice, Inv
       if (existing !== null) return success({ invoice: existing, created: false });
     }
     if (error instanceof FactureError) {
-      return failure(new InvoiceError("donnees_invalides", error.details.length > 0 ? error.details : [error.message]));
+      const problems = error.details.length > 0 ? error.details : [error.message];
+      logInfo("Facture refusée par le moteur de facture", { orderId: draft.orderId, problems: problems.join(" | ") });
+      return failure(new InvoiceError("donnees_invalides", plainInvoiceProblems(problems)));
     }
     logError("Création de facture impossible", error, { orderId: draft.orderId });
     return failure(new InvoiceError("erreur_interne"));

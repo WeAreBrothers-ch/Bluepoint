@@ -9,12 +9,13 @@ export type DeliveryErrorCode =
   | "shopify_indisponible";
 
 const MESSAGES: Readonly<Record<DeliveryErrorCode, string>> = {
-  commande_introuvable: "Cette commande est introuvable dans Shopify.",
-  commande_annulee: "Cette commande est annulée\u202F: elle ne peut pas être livrée.",
-  rien_a_expedier: "Aucun article à expédier sur cette commande.",
+  commande_introuvable: "Cette commande n’existe plus dans Shopify (elle a peut-être été supprimée).",
+  commande_annulee: "Cette commande a été annulée\u202F: il n’y a rien à livrer.",
+  rien_a_expedier: "Il ne reste rien à livrer sur cette commande.",
   expedition_bloquee:
-    "L’expédition est en attente ou programmée dans Shopify. Libérez-la depuis la commande, puis réessayez.",
-  shopify_refus: "Shopify a refusé l’opération.",
+    "Shopify a mis cette commande en attente. Ouvrez-la dans Shopify (lien « Tous les détails » de la carte) " +
+    "pour lever l’attente, puis réessayez.",
+  shopify_refus: "Shopify n’a pas accepté de noter cette livraison.",
   shopify_indisponible: "Shopify ne répond pas pour le moment. Réessayez dans un instant.",
 };
 
@@ -25,6 +26,7 @@ export class DeliveryError extends Error {
     readonly code: DeliveryErrorCode,
     detail?: string,
   ) {
-    super(detail === undefined ? MESSAGES[code] : `${MESSAGES[code]} ${detail}`);
+    // Le détail brut de Shopify (souvent en anglais) reste visible pour la personne qui assiste l'utilisateur.
+    super(detail === undefined ? MESSAGES[code] : `${MESSAGES[code]} Détail pour l’assistance\u202F: ${detail}`);
   }
 }

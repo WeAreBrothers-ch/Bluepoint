@@ -1,4 +1,4 @@
-import type { IsoDate } from "../metafields/definitions";
+import { parseIsoDate, type IsoDate } from "../metafields/definitions";
 import type { AgendaView, DateRange } from "./types";
 
 /**
@@ -59,16 +59,24 @@ const LONG_DATE = new Intl.DateTimeFormat("fr-CH", {
   timeZone: "UTC",
 });
 
-const SHORT_WEEKDAY = new Intl.DateTimeFormat("fr-CH", { weekday: "short", timeZone: "UTC" });
+/** Jour en toutes lettres, ex. « jeudi 29 octobre ». */
+export function longDay(date: IsoDate): string {
+  return LONG_DATE.format(new Date(noonUtc(date)));
+}
+
+/** Première lettre en majuscule : « Jeudi 29 octobre ». */
+export function capitalize(text: string): string {
+  return text.charAt(0).toLocaleUpperCase("fr-CH") + text.slice(1);
+}
 
 /** Libellé lisible d'un intervalle, ex. « lundi 19 octobre – dimanche 25 octobre ». */
 export function formatRange(range: DateRange): string {
-  const start = LONG_DATE.format(new Date(noonUtc(range.start)));
+  const start = longDay(range.start);
   if (range.start === range.end) return start;
-  return `${start} – ${LONG_DATE.format(new Date(noonUtc(range.end)))}`;
+  return `${start} – ${longDay(range.end)}`;
 }
 
-/** Jour de la semaine abrégé, ex. « lun. ». */
-export function shortWeekday(date: IsoDate): string {
-  return SHORT_WEEKDAY.format(new Date(noonUtc(date)));
+/** Semaine demandée dans l'adresse (`?semaine=AAAA-MM-JJ`, n'importe quel jour), sinon celle d'aujourd'hui. */
+export function weekFromParam(value: string | null, today: IsoDate): DateRange {
+  return weekContaining(parseIsoDate(value) ?? today);
 }

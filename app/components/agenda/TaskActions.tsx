@@ -1,8 +1,14 @@
+import { useState } from "react";
 import type { FetcherWithComponents } from "react-router";
 import type { AgendaActionResult, AgendaIntent } from "../../lib/agenda/action-result";
+import { modeLabel } from "../../lib/agenda/labels";
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 
-/** Boutons d'une tâche. Tous désactivés pendant qu'une action est en cours. */
+/**
+ * Boutons d'une tâche. « C'est livré » demande une confirmation avant d'agir :
+ * l'action prévient Shopify et fait la facture, on ne la déclenche pas par un toucher malheureux.
+ * Tous les boutons sont désactivés pendant qu'une action est en cours.
+ */
 
 interface TaskActionsProps {
   readonly task: ScheduledTask;
@@ -17,13 +23,41 @@ function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): Agen
 }
 
 export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
+  const [confirming, setConfirming] = useState(false);
   const pending = pendingIntent(fetcher);
   const busy = pending !== null;
   const submit = (intent: AgendaIntent) => fetcher.submit({ intent, orderId: task.orderId }, { method: "post" });
+  const mode = modeLabel(task.mode);
   const delivered = task.status === "livree";
   const canInvoice = task.status === "livree" || task.status === "expediee";
   const createdInvoice = fetcher.data?.ok ? fetcher.data.invoice : null;
   const shownInvoice = invoice ?? createdInvoice;
+
+  if (confirming && !delivered) {
+    return (
+      <s-box padding="base" background="subdued" borderRadius="base">
+        <s-stack direction="block" gap="small-200">
+          <s-text type="strong">{mode.doneQuestion(task.name)}</s-text>
+          <s-text>La facture sera préparée tout de suite après.</s-text>
+          <s-stack direction="inline" gap="small-200">
+            <s-button
+              variant="primary"
+              icon="check"
+              onClick={() => {
+                setConfirming(false);
+                submit("livrer");
+              }}
+            >
+              {`Oui, ${mode.doneAction.charAt(0).toLocaleLowerCase("fr-CH")}${mode.doneAction.slice(1)}`}
+            </s-button>
+            <s-button icon="x" onClick={() => setConfirming(false)}>
+              Non, annuler
+            </s-button>
+          </s-stack>
+        </s-stack>
+      </s-box>
+    );
+  }
 
   return (
     <s-stack direction="inline" gap="small-200">
@@ -31,12 +65,12 @@ export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
         <s-button
           variant="primary"
           icon="check"
-          onClick={() => submit("livrer")}
-          accessibilityLabel={`Marquer livrée la commande ${task.name}`}
+          onClick={() => setConfirming(true)}
+          accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
           {...(pending === "livrer" ? { loading: true } : {})}
           {...(busy ? { disabled: true } : {})}
         >
-          Marquer livrée
+          {mode.doneAction}
         </s-button>
       )}
       {canInvoice && shownInvoice === null ? (
@@ -46,12 +80,12 @@ export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
           {...(pending === "facturer" ? { loading: true } : {})}
           {...(busy ? { disabled: true } : {})}
         >
-          Générer la facture
+          Faire la facture
         </s-button>
       ) : null}
       {shownInvoice === null ? null : (
         <s-button icon="receipt" href={`/app/factures#facture-${shownInvoice.id}`}>
-          {`Facture ${shownInvoice.number}`}
+          {`Voir la facture ${shownInvoice.number}`}
         </s-button>
       )}
     </s-stack>

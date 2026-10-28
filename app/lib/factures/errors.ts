@@ -14,17 +14,17 @@ export type InvoiceErrorCode =
   | "erreur_interne";
 
 const MESSAGES: Readonly<Record<InvoiceErrorCode, string>> = {
-  reglages_incomplets: "Les réglages de facturation sont incomplets\u202F: aucune facture n’a été créée.",
-  commande_introuvable: "Cette commande est introuvable dans Shopify.",
-  commande_non_livree: "La commande n’est pas encore expédiée\u202F: la facture doit indiquer la date de livraison.",
-  donnees_invalides: "La facture ne peut pas être créée.",
+  reglages_incomplets: "La facture n’a pas été faite\u202F: il manque vos coordonnées ou votre compte bancaire.",
+  commande_introuvable: "Cette commande n’existe plus dans Shopify (elle a peut-être été supprimée).",
+  commande_non_livree: "Appuyez d’abord sur « C’est livré »\u202F: la facture indique le jour de livraison.",
+  donnees_invalides: "La facture n’a pas pu être faite.",
   shopify_indisponible: "Shopify ne répond pas pour le moment. Réessayez dans un instant.",
-  facture_introuvable: "Cette facture est introuvable.",
-  envoi_non_configure: "L’envoi par e-mail n’est pas configuré (clé Resend et adresse d’expédition manquantes).",
-  destinataire_manquant: "Aucune adresse e-mail n’est connue pour ce client.",
-  telephone_manquant: "Aucun numéro de portable exploitable n’est connu pour ce client.",
-  envoi_echoue: "L’e-mail n’a pas pu être envoyé.",
-  erreur_interne: "Une erreur inattendue est survenue. Réessayez\u202F; si elle persiste, contactez le support.",
+  facture_introuvable: "Cette facture n’existe plus.",
+  envoi_non_configure: "L’envoi des factures par e-mail n’est pas encore installé.",
+  destinataire_manquant: "Ce client n’a pas d’adresse e-mail.",
+  telephone_manquant: "Ce client n’a pas de numéro de portable valable.",
+  envoi_echoue: "L’e-mail n’est pas parti. Vérifiez l’adresse du client, puis réessayez.",
+  erreur_interne: "Ça n’a pas marché. Réessayez dans un instant.",
 };
 
 export class InvoiceError extends Error {

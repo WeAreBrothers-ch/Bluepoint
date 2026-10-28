@@ -1,8 +1,10 @@
+import { decimalToCents } from "../commande/totals";
 import { isDeliveryMode, parseIsoDate, type DeliveryMode, type IsoDate } from "../metafields/definitions";
 import { parseGid } from "../shopify/ids";
 import { CART_ATTRIBUTE_KEYS, findAttribute, parseLooseDate } from "./attributes";
+import { swissIsoDate } from "./dates";
 import type { AgendaOrderNode } from "./query";
-import type { DateSource, DeliveryStatus, DeliveryTask, FinancialStatus } from "./types";
+import type { DateSource, DeliveryStatus, DeliveryTask, FinancialStatus, OrderItem } from "./types";
 
 /** Transforme une commande Shopify (réponse GraphQL) en tâche de livraison. */
 
@@ -37,9 +39,12 @@ function readDates(order: AgendaOrderNode): TaskDates {
   return { requestedDate: attrRequested, deadline: attrDeadline, dateSource: found ? "attribut" : "aucune" };
 }
 
+/** Métachamp de l'app, sinon attribut du panier posé par le thème. */
 function readMode(order: AgendaOrderNode): DeliveryMode | null {
   const value = order.mode?.value.trim().toLowerCase();
-  return isDeliveryMode(value) ? value : null;
+  if (isDeliveryMode(value)) return value;
+  const fromCart = findAttribute(order.customAttributes, CART_ATTRIBUTE_KEYS.mode)?.trim().toLowerCase();
+  return isDeliveryMode(fromCart) ? fromCart : null;
 }
 
 export function readDeliveryStatus(order: Pick<AgendaOrderNode, "displayFulfillmentStatus" | "fulfillments">): DeliveryStatus {
@@ -49,6 +54,17 @@ export function readDeliveryStatus(order: Pick<AgendaOrderNode, "displayFulfillm
   const active = order.fulfillments.filter((fulfillment) => fulfillment.status === "SUCCESS");
   const delivered = active.length > 0 && active.every((f) => f.displayStatus !== null && DELIVERED_DISPLAY.has(f.displayStatus));
   return delivered ? "livree" : "expediee";
+}
+
+/** Jour suisse de la dernière expédition réussie (date de remise au client ou à la Poste). */
+function readDeliveredOn(order: Pick<AgendaOrderNode, "fulfillments">): IsoDate | null {
+  const dates = order.fulfillments
+    .filter((fulfillment) => fulfillment.status === "SUCCESS")
+    .map((fulfillment) => new Date(fulfillment.createdAt))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .map((date) => swissIsoDate(date))
+    .sort();
+  return dates.at(-1) ?? null;
 }
 
 function readCompany(order: AgendaOrderNode): string | null {
@@ -64,6 +80,32 @@ function readIsPro(order: AgendaOrderNode): boolean {
   return tags.some((tag) => PRO_CUSTOMER_TAGS.includes(tag));
 }
 
+function clean(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === "" ? null : trimmed;
+}
+
+function readStreet(order: AgendaOrderNode): string | null {
+  const parts = [clean(order.shippingAddress?.address1), clean(order.shippingAddress?.address2)].filter((part) => part !== null);
+  return parts.length === 0 ? null : parts.join(", ");
+}
+
+function readPhone(order: AgendaOrderNode): string | null {
+  return clean(order.shippingAddress?.phone) ?? clean(order.customer?.defaultPhoneNumber?.phoneNumber);
+}
+
+/** Lignes retirées de la commande (quantité 0) écartées. */
+function readItems(order: AgendaOrderNode): OrderItem[] {
+  return order.lineItems.nodes
+    .filter((line) => line.currentQuantity > 0)
+    .map((line) => ({ name: line.name, quantity: line.currentQuantity }));
+}
+
+function readTotalCents(order: AgendaOrderNode): number | null {
+  const total = order.currentTotalPriceSet?.shopMoney;
+  return total === undefined || total.currencyCode !== "CHF" ? null : decimalToCents(total.amount);
+}
+
 function readCustomerName(order: AgendaOrderNode): string {
   const name = order.customer?.displayName.trim() || order.shippingAddress?.name?.trim();
   return name === undefined || name === "" ? "Client sans nom" : name;
@@ -73,17 +115,23 @@ function readCustomerName(order: AgendaOrderNode): string {
 export function orderToTask(order: AgendaOrderNode): DeliveryTask | null {
   const orderId = parseGid(order.id, "Order");
   if (orderId === null || order.cancelledAt !== null) return null;
-  const city = order.shippingAddress?.city?.trim();
   return {
     orderId,
     name: order.name,
     customerName: readCustomerName(order),
     company: readCompany(order),
     isPro: readIsPro(order),
-    city: city === undefined || city === "" ? null : city,
+    street: readStreet(order),
+    zip: clean(order.shippingAddress?.zip),
+    city: clean(order.shippingAddress?.city),
+    phone: readPhone(order),
+    note: clean(order.note),
+    items: readItems(order),
+    totalCents: readTotalCents(order),
     ...readDates(order),
     mode: readMode(order),
     status: readDeliveryStatus(order),
+    deliveredOn: readDeliveredOn(order),
     financialStatus: readFinancialStatus(order.displayFinancialStatus),
   };
 }

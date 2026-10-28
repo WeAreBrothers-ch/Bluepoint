@@ -8,6 +8,7 @@ import { parseIsoDate, type IsoDate } from "../metafields/definitions";
 export const CART_ATTRIBUTE_KEYS = {
   requestedDate: "Date de livraison souhaitée",
   deadline: "Livrer au plus tard",
+  mode: "Mode de livraison",
 } as const;
 
 export interface OrderAttribute {
