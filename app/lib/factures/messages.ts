@@ -62,3 +62,32 @@ export function emailText(data: InvoiceMessageData): string {
     data.sellerName,
   ].join("\n");
 }
+
+/** Relance WhatsApp d'une facture échue, polie et courte, avec le lien vers le PDF. */
+export function whatsappReminder(data: InvoiceMessageData, link: string): string {
+  const due = data.dueDate === null ? "" : `, échue le ${formatSwissDate(data.dueDate)}`;
+  return [
+    `Bonjour, sauf erreur de notre part, la facture ${data.number} (commande ${data.orderName}) de ${formatChf(data.totalCents)}${due}, n’est pas encore réglée.`,
+    `La voici à nouveau, avec la QR-facture pour payer depuis votre app bancaire${NNBSP}: ${link}`,
+    `Si le paiement est déjà parti, merci de ne pas tenir compte de ce message.`,
+    data.sellerName,
+  ].join("\n");
+}
+
+export function reminderEmailSubject(data: InvoiceMessageData): string {
+  return `Rappel${NNBSP}: facture ${data.number} — ${data.sellerName}`;
+}
+
+export function reminderEmailText(data: InvoiceMessageData): string {
+  const due = data.dueDate === null ? "" : `, échue le ${formatSwissDate(data.dueDate)}`;
+  return [
+    "Bonjour,",
+    "",
+    `Sauf erreur de notre part, la facture ${data.number} pour la commande ${data.orderName}, d’un montant de ${formatChf(data.totalCents)}${due}, n’est pas encore réglée.`,
+    "Vous la trouverez à nouveau en pièce jointe. La QR-facture en bas du document se paie directement depuis votre app bancaire.",
+    "Si le paiement est déjà parti, merci de ne pas tenir compte de ce message.",
+    "",
+    "Avec nos meilleures salutations,",
+    data.sellerName,
+  ].join("\n");
+}

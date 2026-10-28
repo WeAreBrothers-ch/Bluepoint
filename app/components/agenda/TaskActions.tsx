@@ -3,6 +3,8 @@ import type { FetcherWithComponents } from "react-router";
 import type { AgendaActionResult, AgendaIntent } from "../../lib/agenda/action-result";
 import { modeLabel } from "../../lib/agenda/labels";
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
+import { InvoicePaymentButtons } from "../factures/InvoicePaymentButtons";
+import { InvoiceShortcutButtons } from "../factures/InvoiceShortcutButtons";
 
 /**
  * Boutons d'une tâche. « C'est livré » demande une confirmation avant d'agir :
@@ -14,6 +16,12 @@ interface TaskActionsProps {
   readonly task: ScheduledTask;
   readonly invoice: InvoiceRef | null;
   readonly fetcher: FetcherWithComponents<AgendaActionResult>;
+  readonly emailConfigured: boolean;
+}
+
+/** La commande reste à encaisser : on propose « C'est payé » sous la facture. */
+function awaitsPayment(task: ScheduledTask): boolean {
+  return task.financialStatus === "PENDING" || task.financialStatus === "PARTIALLY_PAID" || task.financialStatus === "AUTHORIZED";
 }
 
 function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): AgendaIntent | null {
@@ -22,7 +30,7 @@ function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): Agen
   return intent === "livrer" || intent === "facturer" ? intent : null;
 }
 
-export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
+export function TaskActions({ task, invoice, fetcher, emailConfigured }: TaskActionsProps) {
   const [confirming, setConfirming] = useState(false);
   const pending = pendingIntent(fetcher);
   const busy = pending !== null;
@@ -30,8 +38,8 @@ export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
   const mode = modeLabel(task.mode);
   const delivered = task.status === "livree";
   const canInvoice = task.status === "livree" || task.status === "expediee";
-  const createdInvoice = fetcher.data?.ok ? fetcher.data.invoice : null;
-  const shownInvoice = invoice ?? createdInvoice;
+  // Juste après « C'est livré », avant le rechargement : on connaît seulement le numéro de la facture.
+  const createdInvoice = invoice === null && fetcher.data?.ok ? fetcher.data.invoice : null;
 
   if (confirming && !delivered) {
     return (
@@ -60,7 +68,8 @@ export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
   }
 
   return (
-    <s-stack direction="inline" gap="small-200">
+    <s-stack direction="block" gap="base">
+      <s-stack direction="inline" gap="small-200">
       {delivered ? null : (
         <s-button
           variant="primary"
@@ -73,7 +82,7 @@ export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
           {mode.doneAction}
         </s-button>
       )}
-      {canInvoice && shownInvoice === null ? (
+      {canInvoice && invoice === null && createdInvoice === null ? (
         <s-button
           icon="receipt"
           onClick={() => submit("facturer")}
@@ -83,10 +92,18 @@ export function TaskActions({ task, invoice, fetcher }: TaskActionsProps) {
           Faire la facture
         </s-button>
       ) : null}
-      {shownInvoice === null ? null : (
-        <s-button icon="receipt" href={`/app/factures#facture-${shownInvoice.id}`}>
-          {`Voir la facture ${shownInvoice.number}`}
+      {createdInvoice === null ? null : (
+        <s-button icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
+          {`Voir la facture ${createdInvoice.number}`}
         </s-button>
+      )}
+      </s-stack>
+      {invoice === null ? null : (
+        <s-stack direction="block" gap="small-200">
+          <s-text type="strong">{`Facture ${invoice.number}`}</s-text>
+          <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} />
+          {awaitsPayment(task) ? <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} /> : null}
+        </s-stack>
       )}
     </s-stack>
   );

@@ -13,34 +13,42 @@ interface WeekViewProps {
   readonly groups: WeekGroups;
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
   readonly today: IsoDate;
+  readonly emailConfigured: boolean;
 }
 
-function DaySection({ column, invoices, today }: { readonly column: WeekColumn } & Omit<WeekViewProps, "groups">) {
+function DaySection({ column, invoices, today, emailConfigured }: { readonly column: WeekColumn } & Omit<WeekViewProps, "groups">) {
   const heading = `${column.label}${column.isToday ? " (aujourd’hui)" : ""} — ${column.tasks.length} livraison${column.tasks.length > 1 ? "s" : ""}`;
   return (
     <s-section heading={heading}>
       <s-stack direction="block" gap="base">
         {column.tasks.map((task) => (
-          <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} />
+          <TaskCard
+            key={task.orderId}
+            task={task}
+            invoice={invoices[task.orderId] ?? null}
+            today={today}
+            emailConfigured={emailConfigured}
+          />
         ))}
       </s-stack>
     </s-section>
   );
 }
 
-export function WeekView({ groups, invoices, today }: WeekViewProps) {
+export function WeekView({ groups, invoices, today, emailConfigured }: WeekViewProps) {
   const busyDays = groups.columns.filter((column) => column.tasks.length > 0);
+  const list = { invoices, today, emailConfigured };
   return (
     <>
-      <TaskList heading="En retard (semaines passées)" tasks={groups.overdueBefore} invoices={invoices} today={today} />
+      <TaskList heading="En retard (semaines passées)" tasks={groups.overdueBefore} {...list} />
       {busyDays.length === 0 ? (
         <s-section>
           <s-paragraph>Aucune livraison prévue cette semaine-là.</s-paragraph>
         </s-section>
       ) : (
-        busyDays.map((column) => <DaySection key={column.date} column={column} invoices={invoices} today={today} />)
+        busyDays.map((column) => <DaySection key={column.date} column={column} {...list} />)
       )}
-      <TaskList heading="Date de livraison à fixer" tasks={groups.undated} invoices={invoices} today={today} />
+      <TaskList heading="Date de livraison à fixer" tasks={groups.undated} {...list} />
     </>
   );
 }

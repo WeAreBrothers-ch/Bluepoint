@@ -66,9 +66,9 @@ export default function AgendaPage() {
       </s-section>
       <Notices data={data} />
       {data.view === "aujourdhui" ? (
-        <TodayView groups={data.todayGroups} invoices={data.invoices} today={data.today} />
+        <TodayView groups={data.todayGroups} invoices={data.invoices} today={data.today} emailConfigured={data.emailConfigured} />
       ) : (
-        <WeekView groups={data.weekGroups} invoices={data.invoices} today={data.today} />
+        <WeekView groups={data.weekGroups} invoices={data.invoices} today={data.today} emailConfigured={data.emailConfigured} />
       )}
     </s-page>
   );

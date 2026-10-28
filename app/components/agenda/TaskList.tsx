@@ -9,15 +9,22 @@ interface TaskListProps {
   readonly tasks: readonly ScheduledTask[];
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
   readonly today: IsoDate;
+  readonly emailConfigured: boolean;
 }
 
-export function TaskList({ heading, tasks, invoices, today }: TaskListProps) {
+export function TaskList({ heading, tasks, invoices, today, emailConfigured }: TaskListProps) {
   if (tasks.length === 0) return null;
   return (
     <s-section heading={`${heading} (${tasks.length})`}>
       <s-stack direction="block" gap="base">
         {tasks.map((task) => (
-          <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} />
+          <TaskCard
+            key={task.orderId}
+            task={task}
+            invoice={invoices[task.orderId] ?? null}
+            today={today}
+            emailConfigured={emailConfigured}
+          />
         ))}
       </s-stack>
     </s-section>

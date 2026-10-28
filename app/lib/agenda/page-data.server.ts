@@ -1,6 +1,8 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError } from "../core/logger.server";
-import { invoicesByOrder } from "../factures/repository.server";
+import { isEmailConfigured } from "../factures/email.server";
+import { invoicesByOrder, listInvoices } from "../factures/repository.server";
+import { channelsByCustomer, invoiceShortcuts } from "../factures/shortcuts.server";
 import type { IsoDate } from "../metafields/definitions";
 import { loadCompleteSettings } from "../reglages/settings.server";
 import { addDays, formatRange, swissIsoDate, weekContaining, weekFromParam } from "./dates";
@@ -20,6 +22,7 @@ export interface AgendaPageData {
   readonly truncated: boolean;
   readonly loadError: string | null;
   readonly settingsComplete: boolean;
+  readonly emailConfigured: boolean;
   /** Facture déjà créée, par identifiant de commande. */
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
 }
@@ -43,7 +46,7 @@ export async function loadAgendaPage(
   };
   const periodLabel = formatRange(view === "aujourdhui" ? { start: today, end: today } : week);
   const [orders, settings] = await Promise.all([loadAgendaOrders(admin, week), loadCompleteSettings(shop)]);
-  const base = { view, today, periodLabel, weekNavigation, settingsComplete: settings !== null };
+  const base = { view, today, periodLabel, weekNavigation, settingsComplete: settings !== null, emailConfigured: isEmailConfigured() };
   if (!orders.ok) {
     logError("Chargement de l'agenda impossible", orders.error);
     return {
@@ -56,13 +59,17 @@ export async function loadAgendaPage(
     };
   }
   const tasks = orders.value.tasks;
-  const invoices = await invoicesByOrder(shop, tasks.map((task) => task.orderId));
+  const [invoices, recent] = await Promise.all([invoicesByOrder(shop, tasks.map((task) => task.orderId)), listInvoices(shop)]);
+  const channels = channelsByCustomer(recent);
+  const sellerName = settings?.legalName ?? null;
   return {
     ...base,
     todayGroups: groupToday(tasks, today),
     weekGroups: groupWeek(tasks, week, today),
     truncated: orders.value.truncated,
     loadError: null,
-    invoices: Object.fromEntries([...invoices].map(([orderId, invoice]) => [orderId, { id: invoice.id, number: invoice.number }])),
+    invoices: Object.fromEntries(
+      [...invoices].map(([orderId, invoice]) => [orderId, invoiceShortcuts(invoice, sellerName, channels, now)]),
+    ),
   };
 }

@@ -19,6 +19,7 @@ interface TaskCardProps {
   readonly task: ScheduledTask;
   readonly invoice: InvoiceRef | null;
   readonly today: IsoDate;
+  readonly emailConfigured: boolean;
 }
 
 function ContactButtons({ task }: { readonly task: ScheduledTask }) {
@@ -61,7 +62,7 @@ function WineList({ task }: { readonly task: ScheduledTask }) {
   );
 }
 
-export function TaskCard({ task, invoice, today }: TaskCardProps) {
+export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProps) {
   const fetcher = useFetcher<AgendaActionResult>({ key: `agenda-${task.orderId}` });
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
   const optimisticDelivered = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "livrer";
@@ -89,7 +90,7 @@ export function TaskCard({ task, invoice, today }: TaskCardProps) {
             {task.note}
           </s-banner>
         )}
-        <TaskActions task={task} invoice={invoice} fetcher={fetcher} />
+        <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} />
         {result === undefined ? null : <ActionFeedback result={result} />}
         <s-link href={`shopify://admin/orders/${gidToNumericId(task.orderId)}`}>
           {`Tous les détails de la commande ${task.name} (dans Shopify)`}

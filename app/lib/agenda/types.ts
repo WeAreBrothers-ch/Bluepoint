@@ -1,3 +1,4 @@
+import type { InvoiceShortcuts } from "../factures/list-item";
 import type { DeliveryMode, IsoDate } from "../metafields/definitions";
 import type { OrderGid } from "../shopify/ids";
 
@@ -89,8 +90,5 @@ export interface WeekNavigation {
   readonly nextStart: IsoDate;
 }
 
-/** Facture déjà créée pour une commande. */
-export interface InvoiceRef {
-  readonly id: string;
-  readonly number: string;
-}
+/** Facture déjà créée pour une commande : de quoi la voir et l'envoyer depuis l'agenda. */
+export type InvoiceRef = InvoiceShortcuts;

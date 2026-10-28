@@ -3,7 +3,15 @@ import { parseIsoDate } from "../metafields/definitions";
 import { loadCompleteSettings } from "../reglages/settings.server";
 import { sendInvoiceEmail } from "./email.server";
 import { InvoiceError } from "./errors";
-import { emailSubject, emailText, whatsappMessage, type InvoiceMessageData } from "./messages";
+import {
+  emailSubject,
+  emailText,
+  reminderEmailSubject,
+  reminderEmailText,
+  whatsappMessage,
+  whatsappReminder,
+  type InvoiceMessageData,
+} from "./messages";
 import { whatsappUrl } from "./phone";
 import { invoiceShareUrl } from "./links.server";
 import { getShopInvoice, readInvoicePdf, recordInvoiceSent, type Invoice } from "./repository.server";
@@ -25,7 +33,10 @@ function messageData(invoice: Invoice, sellerName: string): InvoiceMessageData {
   };
 }
 
-export async function emailInvoice(shop: string, invoiceId: string): Promise<Result<string, InvoiceError>> {
+/** « facture » : premier envoi ; « relance » : rappel d'une facture échue, PDF joint à nouveau. */
+export type EmailKind = "facture" | "relance";
+
+export async function emailInvoice(shop: string, invoiceId: string, kind: EmailKind = "facture"): Promise<Result<string, InvoiceError>> {
   const invoice = await getShopInvoice(shop, invoiceId);
   if (invoice === null) return failure(new InvoiceError("facture_introuvable"));
   if (invoice.customerEmail === null) return failure(new InvoiceError("destinataire_manquant"));
@@ -37,13 +48,13 @@ export async function emailInvoice(shop: string, invoiceId: string): Promise<Res
   const sent = await sendInvoiceEmail({
     to: invoice.customerEmail,
     replyTo: settings.email,
-    subject: emailSubject(data),
-    text: emailText(data),
+    subject: kind === "relance" ? reminderEmailSubject(data) : emailSubject(data),
+    text: kind === "relance" ? reminderEmailText(data) : emailText(data),
     fileName: invoiceFileName(invoice),
     pdf,
   });
   if (!sent.ok) return sent;
-  await recordInvoiceSent(invoice.id, invoice.customerEmail, "email");
+  if (kind === "facture") await recordInvoiceSent(invoice.id, invoice.customerEmail, "email");
   return success(invoice.customerEmail);
 }
 
@@ -51,6 +62,12 @@ export async function emailInvoice(shop: string, invoiceId: string): Promise<Res
 export function whatsappLinkFor(invoice: Invoice, sellerName: string, now: Date = new Date()): string | null {
   if (invoice.customerPhone === null) return null;
   return whatsappUrl(invoice.customerPhone, whatsappMessage(messageData(invoice, sellerName), invoiceShareUrl(invoice.id, now)));
+}
+
+/** Lien wa.me de relance (facture échue), ou `null` sans numéro de portable. */
+export function whatsappReminderLinkFor(invoice: Invoice, sellerName: string, now: Date = new Date()): string | null {
+  if (invoice.customerPhone === null) return null;
+  return whatsappUrl(invoice.customerPhone, whatsappReminder(messageData(invoice, sellerName), invoiceShareUrl(invoice.id, now)));
 }
 
 export async function recordWhatsappShare(shop: string, invoiceId: string): Promise<Result<true, InvoiceError>> {
