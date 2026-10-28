@@ -1,4 +1,4 @@
-import { PAYMENT_LABELS, STATUS_LABELS, modeLabel, urgencyBadge } from "../../lib/agenda/labels";
+import { STATUS_LABELS, modeLabel, paymentBadge, urgencyBadge } from "../../lib/agenda/labels";
 import type { ScheduledTask } from "../../lib/agenda/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 
@@ -18,7 +18,7 @@ function StatusBadge({ task, today, optimisticDelivered }: TaskBadgesProps) {
 }
 
 export function TaskBadges({ task, today, optimisticDelivered }: TaskBadgesProps) {
-  const payment = task.financialStatus === null ? null : PAYMENT_LABELS[task.financialStatus];
+  const payment = paymentBadge(task);
   return (
     <s-stack direction="inline" gap="small-200">
       <StatusBadge task={task} today={today} optimisticDelivered={optimisticDelivered} />

@@ -133,5 +133,6 @@ export function orderToTask(order: AgendaOrderNode): DeliveryTask | null {
     status: readDeliveryStatus(order),
     deliveredOn: readDeliveredOn(order),
     financialStatus: readFinancialStatus(order.displayFinancialStatus),
+    paymentTerms: null,
   };
 }

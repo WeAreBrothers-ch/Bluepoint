@@ -48,7 +48,7 @@ export function WeekView({ groups, invoices, today, emailConfigured }: WeekViewP
       ) : (
         busyDays.map((column) => <DaySection key={column.date} column={column} {...list} />)
       )}
-      <TaskList heading="Date de livraison à fixer" tasks={groups.undated} {...list} />
+      <TaskList heading="Jour de livraison à choisir" tasks={groups.undated} {...list} />
     </>
   );
 }

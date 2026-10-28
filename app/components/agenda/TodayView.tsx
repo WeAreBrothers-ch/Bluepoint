@@ -41,13 +41,21 @@ export function TodayView({ groups, invoices, today, emailConfigured }: TodayVie
           {"À livrer en priorité\u202F: elles sont juste en dessous."}
         </s-banner>
       ) : null}
+      {groups.undated.length > 0 ? (
+        <s-banner
+          tone="info"
+          heading={`${groups.undated.length} commande${groups.undated.length > 1 ? "s" : ""} sans jour de livraison`}
+        >
+          {"Souvent des commandes du site. Appelez le client, puis touchez « Choisir le jour » sur la commande."}
+        </s-banner>
+      ) : null}
       {toDeliver === 0 && groups.doneToday.length === 0 ? (
         <s-banner tone="success" heading="Rien à livrer aujourd’hui." />
       ) : null}
       <TaskList heading="En retard" tasks={groups.late} {...list} />
       <TaskList heading="À livrer aujourd’hui" tasks={groups.today} {...list} />
       <TaskList heading="Demain" tasks={groups.tomorrow} {...list} />
-      <TaskList heading="Date de livraison à fixer" tasks={groups.undated} {...list} />
+      <TaskList heading="Jour de livraison à choisir" tasks={groups.undated} {...list} />
       <TaskList heading="Déjà livrées aujourd’hui" tasks={groups.doneToday} {...list} />
     </>
   );

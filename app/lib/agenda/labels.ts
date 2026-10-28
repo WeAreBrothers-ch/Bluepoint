@@ -1,6 +1,6 @@
 import type { DeliveryMode, IsoDate } from "../metafields/definitions";
 import { addDays, longDay } from "./dates";
-import type { DeliveryStatus, FinancialStatus, ScheduledTask } from "./types";
+import type { DeliveryStatus, DeliveryTask, FinancialStatus, ScheduledTask } from "./types";
 
 /**
  * Libellés de l'agenda, écrits pour une personne qui n'est pas à l'aise avec l'informatique :
@@ -24,6 +24,10 @@ export interface ModeLabel {
   readonly doneAction: string;
   /** Question de confirmation, ex. « La commande #1042 est-elle bien livrée ? ». */
   readonly doneQuestion: (orderName: string) => string;
+  /** Bouton d'une commande sans date : « Choisir le jour de livraison ». */
+  readonly chooseDay: string;
+  /** Question du choix du jour, ex. « Quel jour livrer la commande #1042 ? ». */
+  readonly dayQuestion: (orderName: string) => string;
 }
 
 export const MODE_LABELS: Readonly<Record<DeliveryMode, ModeLabel>> = {
@@ -32,18 +36,24 @@ export const MODE_LABELS: Readonly<Record<DeliveryMode, ModeLabel>> = {
     icon: "delivery",
     doneAction: "C’est livré",
     doneQuestion: (name) => `La commande ${name} est-elle bien livrée\u202F?`,
+    chooseDay: "Choisir le jour de livraison",
+    dayQuestion: (name) => `Quel jour livrer la commande ${name}\u202F?`,
   },
   poste: {
     label: "Envoi par la Poste",
     icon: "package",
     doneAction: "C’est envoyé",
     doneQuestion: (name) => `La commande ${name} est-elle bien partie à la Poste\u202F?`,
+    chooseDay: "Choisir le jour d’envoi",
+    dayQuestion: (name) => `Quel jour envoyer la commande ${name}\u202F?`,
   },
   retrait: {
     label: "Retrait au dépôt",
     icon: "store",
     doneAction: "C’est retiré",
     doneQuestion: (name) => `Le client a-t-il bien retiré la commande ${name}\u202F?`,
+    chooseDay: "Choisir le jour de retrait",
+    dayQuestion: (name) => `Quel jour le client vient-il chercher la commande ${name}\u202F?`,
   },
 };
 
@@ -70,6 +80,20 @@ export const PAYMENT_LABELS: Readonly<Record<FinancialStatus, BadgeLabel>> = {
   EXPIRED: { label: "Paiement par carte échoué", tone: "critical" },
 };
 
+/**
+ * Badge de paiement. Une commande pas encore payée avec des conditions dit pourquoi :
+ * « Facture à 30 jours » (bon de commande d'un pro), « Paiement à la livraison » (à encaisser sur place).
+ */
+export function paymentBadge(task: Pick<DeliveryTask, "financialStatus" | "paymentTerms">): BadgeLabel | null {
+  if (task.financialStatus === null) return null;
+  const terms = task.paymentTerms;
+  if (task.financialStatus === "PENDING" && terms !== null) {
+    if (terms.type === "NET" && terms.dueInDays !== null) return { label: `Facture à ${terms.dueInDays} jours`, tone: "info" };
+    if (terms.type === "FULFILLMENT" || terms.type === "RECEIPT") return { label: "Paiement à la livraison", tone: "warning" };
+  }
+  return PAYMENT_LABELS[task.financialStatus];
+}
+
 /** Badge de la tâche encore à livrer : « En retard », « Aujourd’hui », « Demain »… */
 export function urgencyBadge(task: ScheduledTask, today: IsoDate): BadgeLabel {
   switch (task.urgency) {
@@ -78,7 +102,7 @@ export function urgencyBadge(task: ScheduledTask, today: IsoDate): BadgeLabel {
     case "aujourdhui":
       return { label: "Aujourd’hui", tone: "warning" };
     case "sans_date":
-      return { label: "Date à fixer", tone: "neutral" };
+      return { label: "Jour à choisir", tone: "neutral" };
     default:
       return task.plannedDate === addDays(today, 1)
         ? { label: "Demain", tone: "caution" }
@@ -96,7 +120,7 @@ function dayText(date: IsoDate, today: IsoDate): string {
 /** Phrase de la date de livraison, ex. « À livrer demain (jeudi 29 octobre) ». */
 export function deliveryDateText(task: ScheduledTask, today: IsoDate): string {
   const { plannedDate, limitDate } = task;
-  if (plannedDate === null || limitDate === null) return "Date de livraison à fixer avec le client";
+  if (plannedDate === null || limitDate === null) return "Jour de livraison à choisir avec le client";
   if (task.status === "livree") return `Prévue ${dayText(plannedDate, today)}`;
   if (task.urgency === "en_retard") return `Devait être livrée au plus tard ${dayText(limitDate, today)}`;
   // « aujourd’hui » couvre aussi une date souhaitée passée dont la limite n'est pas encore atteinte.

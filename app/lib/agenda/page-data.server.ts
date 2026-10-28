@@ -7,8 +7,9 @@ import type { IsoDate } from "../metafields/definitions";
 import { loadCompleteSettings } from "../reglages/settings.server";
 import { addDays, formatRange, swissIsoDate, weekContaining, weekFromParam } from "./dates";
 import { groupToday, groupWeek, type TodayGroups, type WeekGroups } from "./grouping";
+import { loadPaymentTerms } from "./payment-terms.server";
 import { loadAgendaOrders } from "./source.server";
-import type { AgendaView, InvoiceRef, WeekNavigation } from "./types";
+import type { AgendaView, DeliveryTask, InvoiceRef, WeekNavigation } from "./types";
 
 /** Données de la page Agenda, prêtes à afficher. */
 
@@ -58,8 +59,16 @@ export async function loadAgendaPage(
       invoices: {},
     };
   }
-  const tasks = orders.value.tasks;
-  const [invoices, recent] = await Promise.all([invoicesByOrder(shop, tasks.map((task) => task.orderId)), listInvoices(shop)]);
+  const unpaid = orders.value.tasks.filter((task) => task.financialStatus === "PENDING").map((task) => task.orderId);
+  const [invoices, recent, terms] = await Promise.all([
+    invoicesByOrder(shop, orders.value.tasks.map((task) => task.orderId)),
+    listInvoices(shop),
+    loadPaymentTerms(admin, unpaid),
+  ]);
+  const tasks: DeliveryTask[] = orders.value.tasks.map((task) => {
+    const paymentTerms = terms.get(task.orderId);
+    return paymentTerms === undefined ? task : { ...task, paymentTerms };
+  });
   const channels = channelsByCustomer(recent);
   const sellerName = settings?.legalName ?? null;
   return {

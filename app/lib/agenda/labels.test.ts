@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { d, task } from "./fixtures";
-import { bottleCountText, deliveryDateText, modeLabel, PAYMENT_LABELS, urgencyBadge } from "./labels";
+import { bottleCountText, deliveryDateText, modeLabel, PAYMENT_LABELS, paymentBadge, urgencyBadge } from "./labels";
 import { scheduleTask } from "./urgency";
 
 const today = d("2026-10-21");
@@ -30,18 +30,33 @@ describe("libellés de l'agenda", () => {
     expect(deliveryDateText(at({ requestedDate: d("2026-10-20"), deadline: d("2026-10-21") }), today)).toBe(
       "À livrer aujourd’hui",
     );
-    expect(deliveryDateText(at({}), today)).toBe("Date de livraison à fixer avec le client");
+    expect(deliveryDateText(at({}), today)).toBe("Jour de livraison à choisir avec le client");
   });
 
   it("donne un badge parlant à chaque urgence", () => {
     expect(urgencyBadge(at({ requestedDate: d("2026-10-22") }), today).label).toBe("Demain");
     expect(urgencyBadge(at({ requestedDate: d("2026-10-28") }), today).label).toBe("Prévue");
-    expect(urgencyBadge(at({}), today).label).toBe("Date à fixer");
+    expect(urgencyBadge(at({}), today).label).toBe("Jour à choisir");
     expect(urgencyBadge(at({ deadline: d("2026-10-19") }), today).label).toBe("En retard");
   });
 
   it("accorde le nombre de bouteilles", () => {
     expect(bottleCountText(1)).toBe("1 bouteille");
     expect(bottleCountText(8)).toBe("8 bouteilles");
+  });
+});
+
+describe("badge de paiement", () => {
+  it("dit pourquoi une commande n'est pas encore payée", () => {
+    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Facture à 30 jours");
+    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: { type: "FULFILLMENT", dueInDays: null } })?.label).toBe(
+      "Paiement à la livraison",
+    );
+    expect(paymentBadge({ financialStatus: "PENDING", paymentTerms: null })?.label).toBe("Pas encore payée");
+  });
+
+  it("garde le statut Shopify une fois payée", () => {
+    expect(paymentBadge({ financialStatus: "PAID", paymentTerms: { type: "NET", dueInDays: 30 } })?.label).toBe("Payée");
+    expect(paymentBadge({ financialStatus: null, paymentTerms: null })).toBeNull();
   });
 });

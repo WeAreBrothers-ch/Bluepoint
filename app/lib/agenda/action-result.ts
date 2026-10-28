@@ -1,8 +1,8 @@
-/** Réponse des actions de l'agenda (« Marquer livrée », « Générer la facture »), sérialisable. */
+/** Réponse des actions de l'agenda (« C'est livré », « Faire la facture », « Choisir le jour »), sérialisable. */
 
-export type AgendaIntent = "livrer" | "facturer";
+export type AgendaIntent = "livrer" | "facturer" | "dater";
 
-export const AGENDA_INTENTS: readonly AgendaIntent[] = ["livrer", "facturer"];
+export const AGENDA_INTENTS: readonly AgendaIntent[] = ["livrer", "facturer", "dater"];
 
 export function isAgendaIntent(value: unknown): value is AgendaIntent {
   return AGENDA_INTENTS.some((intent) => intent === value);

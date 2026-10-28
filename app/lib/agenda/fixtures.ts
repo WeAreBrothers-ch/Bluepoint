@@ -57,6 +57,7 @@ export function task(overrides: Partial<DeliveryTask> = {}): DeliveryTask {
     status: "a_livrer",
     deliveredOn: null,
     financialStatus: "PAID",
+    paymentTerms: null,
     ...overrides,
   };
 }

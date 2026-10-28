@@ -1,25 +1,19 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { redirect } from "react-router";
 import { authenticate } from "../shopify.server";
 
 /**
- * Proxy d'app : https://<boutique>/apps/bon-commande/* arrive ici.
- * La signature Shopify est vérifiée (sinon la librairie répond 400).
- * Le bon de commande n'est pas encore disponible : réponse 501.
+ * Proxy d'app : https://<boutique>/apps/bon-commande/* arrive ici (signature Shopify vérifiée).
+ * Le bon de commande passe par le paiement normal de Shopify : un pro rattaché à une entreprise
+ * avec « paiement à 30 jours » valide sa commande sans payer. Ce lien mène donc simplement au panier.
  */
-
-function notImplemented(): Response {
-  return new Response("Bon de commande bientôt disponible.", {
-    status: 501,
-    headers: { "Content-Type": "text/plain; charset=utf-8" },
-  });
-}
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<Response> => {
   await authenticate.public.appProxy(request);
-  return notImplemented();
+  return redirect("/cart");
 };
 
 export const action = async ({ request }: ActionFunctionArgs): Promise<Response> => {
   await authenticate.public.appProxy(request);
-  return notImplemented();
+  return redirect("/cart");
 };

@@ -24,6 +24,13 @@ export type FinancialStatus =
   | "REFUNDED"
   | "VOIDED";
 
+/** Conditions de paiement de la commande (bon de commande « à 30 jours », paiement à la livraison…). */
+export interface PaymentTermsInfo {
+  /** `paymentTermsType` de Shopify : NET, FULFILLMENT, RECEIPT, FIXED… */
+  readonly type: string;
+  readonly dueInDays: number | null;
+}
+
 /** Un vin de la commande et la quantité encore commandée. */
 export interface OrderItem {
   readonly name: string;
@@ -59,6 +66,8 @@ export interface DeliveryTask {
   /** Jour (heure suisse) de la dernière expédition réussie, `null` si rien n'est encore parti. */
   readonly deliveredOn: IsoDate | null;
   readonly financialStatus: FinancialStatus | null;
+  /** Lues à part (autorisation distincte) : `null` si aucune ou illisibles. */
+  readonly paymentTerms: PaymentTermsInfo | null;
 }
 
 /** Degré d'urgence d'une tâche, du plus pressant au moins pressant. */

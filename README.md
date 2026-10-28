@@ -6,7 +6,10 @@ Elle sert à l’équipe, pas aux clients :
 - **Agenda** : les livraisons du jour et de la semaine, à partir des commandes et de leurs dates de livraison.
 - **Nouvelle commande (téléphone)** : saisir une commande reçue par téléphone.
 - **Factures** : générer les factures PDF avec QR-facture suisse (paquet local `packages/facture-qr`).
-- **Bon de commande** côté boutique, via le proxy d’app `https://<boutique>/apps/bon-commande`.
+- **Bon de commande** côté boutique : paiement normal de Shopify. Un pro rattaché à une entreprise
+  dont l’emplacement a « Net 30 » valide sa commande sans payer ; elle arrive non payée, avec ses
+  conditions, et l’agenda l’affiche « Facture à 30 jours ». Le proxy `https://<boutique>/apps/bon-commande`
+  mène simplement au panier.
 
 État actuel :
 
@@ -124,8 +127,13 @@ Shopify Partner avec accès à la boutique.
 - **Conditions de paiement (bon de commande)** : les autorisations `read_payment_terms,write_payment_terms`
   sont déclarées dans `shopify.app.toml` (à recopier dans `SCOPES`). Si l’offre Shopify ne les
   permet pas, les commandes « bon de commande » restent en commande provisoire, à terminer dans Shopify.
-- **B2B** : les entreprises et leurs catalogues existent sur Basic, Grow et Advanced depuis avril 2026 (3 catalogues au plus hors Plus) ; à vérifier sur la boutique une fois l’abonnement pris.
-  Si le B2B n’est pas actif, la recherche de clients fonctionne sans la partie entreprise.
+- **B2B** : sur l’abonnement Basic, les entreprises et leurs conditions de paiement fonctionnent, mais
+  pas les catalogues attribués aux entreprises (refus `UNPERMITTED_ENTITLEMENTS_DIRECT_CATALOG_ASSIGNMENT`).
+  Les prix pros passent donc par la remise automatique « Prix pro -15 % » (segment « Clients pro »,
+  étiquette `pro`) : elle s’applique au panier et au paiement, et aux commandes par téléphone
+  (`acceptAutomaticDiscounts`), une seule fois, entreprise ou non.
+- **Commande du site sans date** : l’agenda la range dans « Jour de livraison à choisir » ; le bouton
+  « Choisir le jour » pose les métachamps `livraison_date_souhaitee` (et recopie la date limite connue).
 - **Commandes de plus de 60 jours** : il faudra l’autorisation `read_all_orders`, à demander à
   Shopify depuis le Dev Dashboard.
 - **Copie panier → commande** des métachamps (`cart_to_order_copyable`) : la valeur doit être

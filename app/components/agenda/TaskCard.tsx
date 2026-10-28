@@ -90,7 +90,7 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
             {task.note}
           </s-banner>
         )}
-        <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} />
+        <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} today={today} />
         {result === undefined ? null : <ActionFeedback result={result} />}
         <s-link href={`shopify://admin/orders/${gidToNumericId(task.orderId)}`}>
           {`Tous les détails de la commande ${task.name} (dans Shopify)`}
