@@ -91,8 +91,9 @@ Shopify Partner avec accès à la boutique.
 
 ## Mise en ligne (Vercel + Neon)
 
-1. Importer le dépôt dans Vercel, avec `admin-app` comme **Root Directory**
-   (framework détecté : React Router).
+1. Importer le dépôt dans Vercel. L'app est à la racine du dépôt : laisser **Root Directory**
+   vide (framework détecté : React Router). Le projet Vercel est relié à
+   `WeAreBrothers-ch/Bluepoint` : un envoi sur `main` met l'app en production.
 2. Dans l’onglet *Storage*, ajouter **Neon** depuis le Marketplace et le lier au projet :
    `DATABASE_URL` et `DATABASE_URL_UNPOOLED` sont ajoutées automatiquement. Choisir la région
    Francfort pour Neon et pour les fonctions Vercel (au plus près de la Suisse).
