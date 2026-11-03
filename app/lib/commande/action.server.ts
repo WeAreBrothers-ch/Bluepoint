@@ -57,7 +57,7 @@ async function calculate(admin: AdminApiContext, body: JsonRecord): Promise<Comm
   return {
     intent: "calculer",
     signature,
-    result: { ok: false, message: "Prix du catalogue B2B indisponibles : les prix affichés sont les prix de base." },
+    result: { ok: false, message: "Prix pro indisponibles pour le moment : les prix affichés sont les prix publics." },
   };
 }
 

@@ -27,20 +27,20 @@ interface DeliveryFieldsProps {
 export function DeliveryFields(props: DeliveryFieldsProps) {
   const { errors } = props;
   return (
-    <s-section heading="Livraison">
+    <s-section heading="3. Quand et comment livrer ?">
       <s-stack direction="block" gap="base">
         <s-query-container>
           <s-grid gridTemplateColumns={GRID} gap="base">
             <s-date-field
-              label="Date de livraison souhaitée"
+              label="Livrer le"
               value={props.requestedDate}
               allow={`${props.today}--`}
               onChange={(event) => props.onRequestedDate(event.currentTarget.value)}
               {...errorProps(errors, "requestedDate")}
             />
             <s-date-field
-              label="Livrer au plus tard"
-              details="Par défaut, le jour souhaité."
+              label="Au plus tard le"
+              details="Facultatif. Par défaut, la même date."
               value={props.deadline}
               allow={`${props.requestedDate}--`}
               onChange={(event) => props.onDeadline(event.currentTarget.value)}
@@ -49,7 +49,7 @@ export function DeliveryFields(props: DeliveryFieldsProps) {
           </s-grid>
         </s-query-container>
         <s-choice-list
-          label="Mode de livraison"
+          label="Comment ?"
           name="mode"
           values={[props.mode]}
           onChange={(event) => {
@@ -65,8 +65,8 @@ export function DeliveryFields(props: DeliveryFieldsProps) {
           ))}
         </s-choice-list>
         <s-text-area
-          label="Note interne"
-          details="Visible seulement dans l’admin : accès, horaires, personne à contacter…"
+          label="Note pour la livraison (facultatif)"
+          details="Vous seul la voyez : code d’accès, horaires, personne à contacter…"
           value={props.note}
           rows={3}
           maxLength={5000}
@@ -91,9 +91,9 @@ function isPaymentChoice(value: unknown): value is PaymentChoice {
 
 export function PaymentField({ payment, paymentTermDays, error, onPayment }: PaymentFieldProps) {
   return (
-    <s-section heading="Paiement">
+    <s-section heading="4. Comment le client paie-t-il ?">
       <s-choice-list
-        label="Mode de paiement"
+        label="Paiement"
         labelAccessibilityVisibility="exclusive"
         name="payment"
         values={[payment]}
@@ -104,9 +104,9 @@ export function PaymentField({ payment, paymentTermDays, error, onPayment }: Pay
         {...(error === undefined ? {} : { error })}
       >
         <s-choice value="bon_de_commande">
-          {`Bon de commande\u202F: paiement plus tard, net ${paymentTermDays} jours`}
+          {`Plus tard, sur facture (à payer sous ${paymentTermDays} jours)`}
         </s-choice>
-        <s-choice value="paye">Payé ou à encaisser maintenant</s-choice>
+        <s-choice value="paye">Déjà payé, ou payé à la livraison</s-choice>
       </s-choice-list>
     </s-section>
   );

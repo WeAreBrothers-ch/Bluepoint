@@ -29,7 +29,7 @@ export async function issueReceiptOnPayment(admin: AdminApiContext, shop: string
   }
   if (!receipt.value.created) return;
   const { invoice } = receipt.value;
-  const sent = await emailInvoice(shop, invoice.id);
+  const sent = await emailInvoice(admin, shop, invoice.id);
   if (!sent.ok) {
     logError("Reçu pro créé mais e-mail non envoyé", sent.error, { orderId, number: invoice.number, code: sent.error.code });
     return;

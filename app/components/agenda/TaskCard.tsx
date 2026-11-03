@@ -2,8 +2,8 @@ import { useFetcher } from "react-router";
 import type { AgendaActionResult } from "../../lib/agenda/action-result";
 import { deadlineText, modeLabel, requestedText } from "../../lib/agenda/labels";
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
-import { gidToNumericId } from "../../lib/shopify/ids";
 import { ActionFeedback } from "./ActionFeedback";
+import { OrderDetailModal, useOrderDetail } from "./OrderDetailModal";
 import { TaskActions } from "./TaskActions";
 import { TaskBadges } from "./TaskBadges";
 import { useToastOnce } from "../useToastOnce";
@@ -21,6 +21,7 @@ export function TaskCard({ task, invoice }: TaskCardProps) {
   const optimisticDelivered = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "livrer";
   const mode = modeLabel(task.mode);
   const requested = requestedText(task);
+  const detail = useOrderDetail(task.orderId);
   const client = task.company === null ? task.customerName : `${task.company} · ${task.customerName}`;
 
   useToastOnce(result, result?.ok ? result.message : null);
@@ -31,7 +32,14 @@ export function TaskCard({ task, invoice }: TaskCardProps) {
         <s-stack direction="inline" gap="small-200" alignItems="center">
           <s-icon type={mode.icon} />
           <s-text type="strong">{mode.label}</s-text>
-          <s-link href={`shopify://admin/orders/${gidToNumericId(task.orderId)}`}>{task.name}</s-link>
+          <s-link
+            commandFor={detail.modalId}
+            command="--show"
+            onClick={detail.load}
+            accessibilityLabel={`Voir le détail de la commande ${task.name}`}
+          >
+            {task.name}
+          </s-link>
         </s-stack>
         <s-text>{task.city === null ? client : `${client} — ${task.city}`}</s-text>
         <s-text color={task.urgency === "en_retard" && task.status !== "livree" ? "base" : "subdued"}>
@@ -39,8 +47,20 @@ export function TaskCard({ task, invoice }: TaskCardProps) {
         </s-text>
         {requested === null ? null : <s-text color="subdued">{requested}</s-text>}
         <TaskBadges task={task} optimisticDelivered={optimisticDelivered} />
-        <TaskActions task={task} invoice={invoice} fetcher={fetcher} />
+        <s-stack direction="inline" gap="small-200">
+          <TaskActions task={task} invoice={invoice} fetcher={fetcher} />
+          <s-button
+            icon="view"
+            commandFor={detail.modalId}
+            command="--show"
+            onClick={detail.load}
+            accessibilityLabel={`Voir le détail de la commande ${task.name}`}
+          >
+            Voir le détail
+          </s-button>
+        </s-stack>
         {result === undefined ? null : <ActionFeedback result={result} />}
+        <OrderDetailModal controls={detail} name={task.name} />
       </s-stack>
     </s-box>
   );

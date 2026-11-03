@@ -1,20 +1,36 @@
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { failure, success, type Result } from "../core/result";
+import { logError } from "../core/logger.server";
 import { parseIsoDate } from "../metafields/definitions";
 import { loadCompleteSettings } from "../reglages/settings.server";
+import { runAdminGraphql } from "../shopify/graphql.server";
+import { parseGid } from "../shopify/ids";
 import { sendInvoiceEmail } from "./email.server";
 import { InvoiceError } from "./errors";
-import { emailSubject, emailText, whatsappMessage, type InvoiceMessageData } from "./messages";
-import { whatsappUrl } from "./phone";
-import { invoiceShareUrl } from "./links.server";
+import type { EditedEmail } from "./message-input";
+import { emailSubject, emailText, type InvoiceMessageData, type MessageLine } from "./messages";
+import { ORDER_LINES_QUERY, toMessageLines, type OrderLinesData } from "./order-lines";
 import { getShopInvoice, readInvoicePdf, recordInvoiceSent, type Invoice } from "./repository.server";
 
-/** Envoi d'une facture au client : e-mail avec PDF joint, ou lien WhatsApp. */
+/** Envoi d'une facture au client : e-mail avec PDF joint, ou envoi WhatsApp noté. */
 
 export function invoiceFileName(invoice: Pick<Invoice, "number" | "paidOn">): string {
   return invoice.paidOn === null ? `Facture-${invoice.number}.pdf` : `Recu-pro-${invoice.number}.pdf`;
 }
 
-function messageData(invoice: Invoice, sellerName: string): InvoiceMessageData {
+/** Ce qui a été commandé, lu dans Shopify. Liste vide si Shopify ne répond pas : le message reste envoyable. */
+async function loadMessageLines(admin: AdminApiContext, invoice: Invoice): Promise<MessageLine[]> {
+  const orderId = parseGid(invoice.orderId, "Order");
+  if (orderId === null) return [];
+  const result = await runAdminGraphql<OrderLinesData>(admin, ORDER_LINES_QUERY, { id: orderId });
+  if (!result.ok) {
+    logError("Récapitulatif de commande indisponible pour le message", result.error, { orderId });
+    return [];
+  }
+  return toMessageLines(result.value.order?.lineItems.nodes ?? []);
+}
+
+export async function invoiceMessageData(admin: AdminApiContext, invoice: Invoice, sellerName: string): Promise<InvoiceMessageData> {
   return {
     number: invoice.number,
     orderName: invoice.orderName,
@@ -22,10 +38,20 @@ function messageData(invoice: Invoice, sellerName: string): InvoiceMessageData {
     sellerName,
     dueDate: parseIsoDate(invoice.dueDate),
     paidOn: invoice.paidOn === null ? null : parseIsoDate(invoice.paidOn),
+    lines: await loadMessageLines(admin, invoice),
   };
 }
 
-export async function emailInvoice(shop: string, invoiceId: string): Promise<Result<string, InvoiceError>> {
+/**
+ * Envoie la facture par e-mail. `edited` : objet et message relus (et peut-être modifiés) par l'équipe ;
+ * sans lui (reçu automatique), le texte proposé par défaut est utilisé.
+ */
+export async function emailInvoice(
+  admin: AdminApiContext,
+  shop: string,
+  invoiceId: string,
+  edited: EditedEmail | null = null,
+): Promise<Result<string, InvoiceError>> {
   const invoice = await getShopInvoice(shop, invoiceId);
   if (invoice === null) return failure(new InvoiceError("facture_introuvable"));
   if (invoice.customerEmail === null) return failure(new InvoiceError("destinataire_manquant"));
@@ -33,12 +59,12 @@ export async function emailInvoice(shop: string, invoiceId: string): Promise<Res
   if (settings === null) return failure(new InvoiceError("reglages_incomplets"));
   const pdf = await readInvoicePdf(invoice.pdfKey);
   if (pdf === null) return failure(new InvoiceError("facture_introuvable"));
-  const data = messageData(invoice, settings.legalName);
+  const message = edited ?? (await defaultEmail(admin, invoice, settings.legalName));
   const sent = await sendInvoiceEmail({
     to: invoice.customerEmail,
     replyTo: settings.email,
-    subject: emailSubject(data),
-    text: emailText(data),
+    subject: message.subject,
+    text: message.text,
     fileName: invoiceFileName(invoice),
     pdf,
   });
@@ -47,10 +73,9 @@ export async function emailInvoice(shop: string, invoiceId: string): Promise<Res
   return success(invoice.customerEmail);
 }
 
-/** Lien wa.me prérempli, ou `null` si le client n'a pas de numéro exploitable. */
-export function whatsappLinkFor(invoice: Invoice, sellerName: string, now: Date = new Date()): string | null {
-  if (invoice.customerPhone === null) return null;
-  return whatsappUrl(invoice.customerPhone, whatsappMessage(messageData(invoice, sellerName), invoiceShareUrl(invoice.id, now)));
+async function defaultEmail(admin: AdminApiContext, invoice: Invoice, sellerName: string): Promise<EditedEmail> {
+  const data = await invoiceMessageData(admin, invoice, sellerName);
+  return { subject: emailSubject(data), text: emailText(data) };
 }
 
 export async function recordWhatsappShare(shop: string, invoiceId: string): Promise<Result<true, InvoiceError>> {

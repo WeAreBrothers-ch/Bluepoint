@@ -3,8 +3,11 @@ import { useFetcher } from "react-router";
 import { downloadInvoicePdf } from "../../lib/factures/download.client";
 import type { FacturesActionResult, InvoiceListItem } from "../../lib/factures/list-item";
 import { useToastOnce } from "../useToastOnce";
+import { InvoiceEmailModal } from "./InvoiceEmailModal";
+import { InvoiceWhatsappModal } from "./InvoiceWhatsappModal";
+import { useInvoiceDrafts } from "./useInvoiceDrafts";
 
-/** Télécharger, envoyer par e-mail, envoyer par WhatsApp. */
+/** Télécharger, envoyer par e-mail, envoyer par WhatsApp (message prêt et modifiable). */
 
 interface InvoiceActionsProps {
   readonly invoice: InvoiceListItem;
@@ -29,11 +32,13 @@ function emailHint(invoice: InvoiceListItem, emailConfigured: boolean): string |
 
 export function InvoiceActions({ invoice, emailConfigured }: InvoiceActionsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-${invoice.id}` });
+  const drafts = useInvoiceDrafts(invoice.id);
   const { downloading, download } = useDownload(invoice);
   const busy = fetcher.state !== "idle";
-  const sendingEmail = busy && fetcher.formData?.get("intent") === "email";
   const hint = emailHint(invoice, emailConfigured);
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
+  const emailModalId = `envoi-email-${invoice.id}`;
+  const whatsappModalId = `envoi-whatsapp-${invoice.id}`;
 
   useToastOnce(result, result?.message ?? null, result !== undefined && !result.ok);
 
@@ -45,27 +50,28 @@ export function InvoiceActions({ invoice, emailConfigured }: InvoiceActionsProps
         </s-button>
         <s-button
           icon="email"
-          onClick={() => fetcher.submit({ intent: "email", invoiceId: invoice.id }, { method: "post" })}
-          {...(sendingEmail ? { loading: true } : {})}
+          commandFor={emailModalId}
+          command="--show"
+          onClick={drafts.load}
           {...(busy || hint !== null ? { disabled: true } : {})}
         >
           Envoyer par e-mail
         </s-button>
-        {invoice.whatsappUrl === null ? null : (
-          <s-button
-            icon="chat"
-            href={invoice.whatsappUrl}
-            target="_blank"
-            onClick={() => fetcher.submit({ intent: "whatsapp", invoiceId: invoice.id }, { method: "post" })}
-            {...(busy ? { disabled: true } : {})}
-          >
+        {invoice.whatsappAvailable ? (
+          <s-button icon="chat" commandFor={whatsappModalId} command="--show" onClick={drafts.load} {...(busy ? { disabled: true } : {})}>
             WhatsApp
           </s-button>
-        )}
+        ) : null}
       </s-stack>
       {hint === null ? null : <s-text color="subdued">{hint}</s-text>}
-      {invoice.whatsappUrl === null ? <s-text color="subdued">{"WhatsApp\u202F: aucun numéro de portable connu."}</s-text> : null}
+      {invoice.whatsappAvailable ? null : <s-text color="subdued">{"WhatsApp : aucun numéro de portable connu."}</s-text>}
       {result !== undefined && !result.ok && result.settingsLink ? <s-link href="/app/reglages">Compléter les réglages</s-link> : null}
+      <InvoiceEmailModal modalId={emailModalId} invoiceId={invoice.id} drafts={drafts} fetcher={fetcher} />
+      <InvoiceWhatsappModal
+        modalId={whatsappModalId}
+        drafts={drafts}
+        onOpened={() => fetcher.submit({ intent: "whatsapp", invoiceId: invoice.id }, { method: "post" })}
+      />
     </s-stack>
   );
 }

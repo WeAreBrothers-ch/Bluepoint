@@ -22,8 +22,8 @@ export interface InvoiceListItem {
   readonly sentTo: string | null;
   readonly sentVia: SentVia | null;
   readonly customerEmail: string | null;
-  /** Lien wa.me prérempli (lien signé valable 14 jours), ou null sans numéro de portable. */
-  readonly whatsappUrl: string | null;
+  /** Un numéro de portable est connu : l'envoi WhatsApp est possible. */
+  readonly whatsappAvailable: boolean;
 }
 
 export function readSentVia(value: string | null): SentVia | null {

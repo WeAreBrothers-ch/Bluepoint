@@ -20,7 +20,7 @@ export function OrderOutcomeBanner({ outcome }: { readonly outcome: PhoneOrderOu
           <s-stack direction="block" gap="small-200">
             <s-text>
               {outcome.paymentPending
-                ? "Bon de commande : paiement attendu selon les conditions nettes."
+                ? "Le client paiera sur facture."
                 : "Commande enregistrée comme payée."}
               {outcome.replayed ? " Elle avait déjà été créée : aucun doublon." : ""}
             </s-text>
@@ -29,9 +29,9 @@ export function OrderOutcomeBanner({ outcome }: { readonly outcome: PhoneOrderOu
             ))}
             <s-stack direction="inline" gap="small-200">
               <s-button href={adminLink("Order", outcome.orderId)} variant="primary">
-                Ouvrir la commande dans Shopify
+                Voir la commande dans Shopify
               </s-button>
-              <s-button href="/app">Voir l’agenda</s-button>
+              <s-button href="/app">Retour à l’agenda</s-button>
             </s-stack>
           </s-stack>
         </s-banner>

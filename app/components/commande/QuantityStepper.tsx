@@ -34,7 +34,7 @@ export function QuantityStepper({ productLabel, quantity, onSet, onAdd }: Quanti
       </TouchButton>
       {CARTON_SIZES.map((size) => (
         <TouchButton key={size} label={`Ajouter un carton de ${size} de ${productLabel}`} onPress={() => onAdd(size)}>
-          <s-text>{`+${size}`}</s-text>
+          <s-text>{`+ carton de ${size}`}</s-text>
         </TouchButton>
       ))}
     </s-stack>

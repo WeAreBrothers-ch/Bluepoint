@@ -34,7 +34,7 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
           <s-stack direction="block" gap="small-500">
             <s-text type="strong">{label}</s-text>
             <s-text color="subdued">
-              {[product.sku === null ? null : `SKU ${product.sku}`, formatChf(product.priceCents), stockText(product.available)]
+              {[product.sku === null ? null : `Réf. ${product.sku}`, formatChf(product.priceCents), stockText(product.available)]
                 .filter((part) => part !== null)
                 .join(" · ")}
             </s-text>

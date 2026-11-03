@@ -1,15 +1,16 @@
 import type { OrderTotals, StockWarning } from "../../lib/commande/totals";
 import { formatChf, formatInteger } from "../../lib/format/money";
+import { NBSP } from "../../lib/format/typography";
 
 /** Récapitulatif : lignes, total, alertes de stock et bouton « Créer la commande ». */
 
 export type PriceSource = "base" | "b2b" | "b2b_en_cours" | "b2b_indisponible";
 
 const PRICE_NOTES: Readonly<Record<PriceSource, string>> = {
-  base: "Prix de base des variantes. Frais de livraison et taxes calculés par Shopify à la création.",
-  b2b: "Prix du catalogue B2B de l’entreprise, calculés par Shopify.",
-  b2b_en_cours: "Calcul des prix du catalogue B2B…",
-  b2b_indisponible: "Prix du catalogue B2B indisponibles : prix de base affichés. Shopify appliquera le catalogue à la création.",
+  base: "Prix public. La livraison et la TVA sont ajoutées par Shopify à la création.",
+  b2b: "Prix pro de l’entreprise, calculés par Shopify.",
+  b2b_en_cours: "Calcul des prix pro…",
+  b2b_indisponible: "Prix pro indisponibles pour le moment : prix public affiché. Shopify appliquera le bon prix à la création.",
 };
 
 interface OrderSummaryProps {
@@ -25,10 +26,10 @@ interface OrderSummaryProps {
 export function OrderSummary(props: OrderSummaryProps) {
   const { totals, warnings } = props;
   return (
-    <s-section heading="Récapitulatif">
+    <s-section heading="5. Vérifier et créer">
       <s-stack direction="block" gap="base">
         {totals.lines.length === 0 ? (
-          <s-text color="subdued">Aucune bouteille choisie.</s-text>
+          <s-text color="subdued">Aucune bouteille choisie pour l’instant.</s-text>
         ) : (
           <s-stack direction="block" gap="small-200">
             {totals.lines.map((line) => (
@@ -39,7 +40,7 @@ export function OrderSummary(props: OrderSummaryProps) {
             ))}
             <s-divider />
             <s-stack direction="inline" justifyContent="space-between" gap="base">
-              <s-text type="strong">{`Sous-total, ${formatInteger(totals.totalQuantity)} bouteilles`}</s-text>
+              <s-text type="strong">{`Sous-total, ${formatInteger(totals.totalQuantity)}${NBSP}bouteille${totals.totalQuantity > 1 ? "s" : ""}`}</s-text>
               <s-text type="strong" fontVariantNumeric="tabular-nums">{formatChf(totals.subtotalCents)}</s-text>
             </s-stack>
           </s-stack>
@@ -58,6 +59,9 @@ export function OrderSummary(props: OrderSummaryProps) {
           </s-banner>
         )}
         {props.linesError === undefined ? null : <s-banner tone="critical" heading={props.linesError} />}
+        {props.canSubmit ? null : (
+          <s-text color="subdued">Choisissez un client et au moins une bouteille pour créer la commande.</s-text>
+        )}
         <s-stack direction="inline" justifyContent="end">
           <s-button
             variant="primary"

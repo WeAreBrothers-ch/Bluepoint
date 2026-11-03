@@ -12,12 +12,12 @@ import { loadFacturesPage, type FacturesPageData } from "../lib/factures/page-da
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<FacturesPageData> => {
   const { session } = await authenticate.admin(request);
-  return loadFacturesPage(session.shop, new Date());
+  return loadFacturesPage(session.shop);
 };
 
 export const action = async ({ request }: ActionFunctionArgs): Promise<FacturesActionResult> => {
-  const { session } = await authenticate.admin(request);
-  return handleFacturesAction(session.shop, await request.formData());
+  const { admin, session } = await authenticate.admin(request);
+  return handleFacturesAction(admin, session.shop, await request.formData());
 };
 
 export default function FacturesPage() {

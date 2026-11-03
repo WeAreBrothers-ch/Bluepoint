@@ -18,7 +18,7 @@ function B2bChoice({ customer, b2bLocationId, onSelectB2b }: Omit<CustomerPicker
   if (customer.b2b.length === 0) return null;
   return (
     <s-choice-list
-      label="Commander pour"
+      label="Au nom de"
       name="b2b"
       values={[b2bLocationId ?? NO_B2B]}
       onChange={(event) => {
@@ -28,10 +28,10 @@ function B2bChoice({ customer, b2bLocationId, onSelectB2b }: Omit<CustomerPicker
     >
       {customer.b2b.map((option) => (
         <s-choice key={option.companyLocationId} value={option.companyLocationId}>
-          {`${option.companyName} — ${option.locationName} (prix du catalogue B2B)`}
+          {`${option.companyName} — ${option.locationName} (prix pro)`}
         </s-choice>
       ))}
-      <s-choice value={NO_B2B}>{`${customer.displayName}, sans entreprise (prix de base)`}</s-choice>
+      <s-choice value={NO_B2B}>{`${customer.displayName}, à titre personnel (prix public)`}</s-choice>
     </s-choice-list>
   );
 }
@@ -62,7 +62,7 @@ function CustomerCard(props: Omit<CustomerPickerProps, "error"> & { customer: Cu
 
 export function CustomerPicker(props: CustomerPickerProps) {
   return (
-    <s-section heading="Client">
+    <s-section heading="1. Pour qui ?">
       {props.customer === null ? (
         <CustomerSearch error={props.error} onSelect={props.onSelect} />
       ) : (

@@ -21,11 +21,11 @@ export function ProductList({ products, truncated, quantities, onSet, onAdd }: P
   const visible = useMemo(() => filterProducts(products, deferredFilter), [products, deferredFilter]);
 
   return (
-    <s-section heading="Bouteilles">
+    <s-section heading="2. Quelles bouteilles ?">
       <s-stack direction="block" gap="base">
         <s-search-field
-          label="Filtrer les produits"
-          placeholder="Nom, millésime ou SKU"
+          label="Chercher une bouteille"
+          placeholder="Nom, millésime ou référence"
           value={filter}
           onInput={(event) => setFilter(event.currentTarget.value)}
         />

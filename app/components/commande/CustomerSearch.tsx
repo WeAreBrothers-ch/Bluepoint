@@ -36,8 +36,8 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
   return (
     <s-stack direction="block" gap="small-200">
       <s-search-field
-        label="Rechercher un client"
-        placeholder="Nom, entreprise, téléphone ou e-mail"
+        label="Nom du client"
+        placeholder="Tapez un nom, une entreprise ou un téléphone"
         value={term}
         onInput={(event) => setTerm(event.currentTarget.value)}
         {...(error === undefined ? {} : { error })}
@@ -45,7 +45,7 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
       {searching ? <s-text color="subdued">Recherche…</s-text> : null}
       {data?.error ? <s-banner tone="critical" heading={data.error} /> : null}
       {data !== undefined && data.error === null && data.customers.length === 0 && !searching ? (
-        <s-text color="subdued">Aucun client trouvé. Créez-le d’abord dans Shopify.</s-text>
+        <s-text color="subdued">Aucun client trouvé. Ajoutez-le d’abord dans Shopify (menu Clients), puis revenez ici.</s-text>
       ) : null}
       {data?.customers.map((customer) => (
         <TouchButton key={customer.id} label={`Choisir ${customer.displayName}`} onPress={() => onSelect(customer)} fill>

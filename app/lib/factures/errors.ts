@@ -20,7 +20,7 @@ const MESSAGES: Readonly<Record<InvoiceErrorCode, string>> = {
   donnees_invalides: "La facture ne peut pas être créée.",
   shopify_indisponible: "Shopify ne répond pas pour le moment. Réessayez dans un instant.",
   facture_introuvable: "Cette facture est introuvable.",
-  envoi_non_configure: "L’envoi par e-mail n’est pas configuré (clé Resend et adresse d’expédition manquantes).",
+  envoi_non_configure: "L’envoi par e-mail n’est pas configuré (boîte d’envoi Infomaniak et mot de passe manquants dans Vercel).",
   destinataire_manquant: "Aucune adresse e-mail n’est connue pour ce client.",
   telephone_manquant: "Aucun numéro de portable exploitable n’est connu pour ce client.",
   envoi_echoue: "L’e-mail n’a pas pu être envoyé.",

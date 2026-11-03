@@ -50,7 +50,7 @@ export default function NouvelleCommandePage() {
   const { outcome, onSubmit, submitting } = useCreateOrder();
 
   return (
-    <s-page heading="Nouvelle commande (téléphone)" inlineSize="base">
+    <s-page heading="Nouvelle commande" inlineSize="base">
       <s-button slot="secondary-actions" href="/app">
         Agenda
       </s-button>
