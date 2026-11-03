@@ -6,7 +6,6 @@ import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { gidToNumericId } from "../../lib/shopify";
-import { FILL } from "../fill";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
 import { PaymentBadges, StatusBadge } from "./TaskBadges";
@@ -36,40 +35,46 @@ export function ContactButtons({ task }: { readonly task: ScheduledTask }) {
   }
   const buttons = [
     directions === null ? null : (
-      <s-button key="route" {...FILL} href={directions} target="_blank" icon="location">
+      <s-button key="route" href={directions} target="_blank" icon="location">
         Itinéraire
       </s-button>
     ),
     call === null || task.phone === null ? null : (
-      <s-button key="call" {...FILL} href={call} target="_blank" icon="phone" accessibilityLabel={`Appeler ${phoneDisplay(task.phone)}`}>
+      <s-button key="call" href={call} target="_blank" icon="phone" accessibilityLabel={`Appeler ${phoneDisplay(task.phone)}`}>
         Appeler
       </s-button>
     ),
   ].filter((button) => button !== null);
+  // Une seule ligne : l'adresse, puis le numéro (le bouton « Appeler » le compose).
+  const line = [address, task.phone === null ? null : phoneDisplay(task.phone)].filter((part) => part !== null).join(" · ");
   return (
     <s-stack direction="block" gap="small-200">
-      {address === null ? null : <s-text>{address}</s-text>}
-      {task.phone === null ? null : <s-text color="subdued">{phoneDisplay(task.phone)}</s-text>}
+      <s-text>{line}</s-text>
       {buttons.length === 0 ? null : (
-        <s-grid gridTemplateColumns={buttons.length === 1 ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)"} gap="small-200">
+        <s-stack direction="inline" gap="small-200">
           {buttons}
-        </s-grid>
+        </s-stack>
       )}
     </s-stack>
   );
 }
 
+/** Ce qu'il y a à livrer. Une fois livrée, seul le total compte : la liste des vins ne sert plus. */
 function WineList({ task }: { readonly task: ScheduledTask }) {
-  if (task.items.length === 0) return null;
+  if (task.items.length === 0) return <PaymentBadges task={task} />;
+  const done = task.status === "livree";
   const bottles = task.items.reduce((sum, item) => sum + item.quantity, 0);
   const total = task.totalCents === null ? "" : ` · ${formatChf(task.totalCents)}`;
   return (
     <s-stack direction="block" gap="small-200">
-      <s-divider />
-      {task.items.map((item, index) => (
-        <s-text key={`${index}-${item.name}`}>{`${item.quantity} × ${item.name}`}</s-text>
-      ))}
-      <s-text type="strong">{`${bottleCountText(bottles)}${total}`}</s-text>
+      {done ? null : <s-divider />}
+      {done
+        ? null
+        : task.items.map((item, index) => <s-text key={`${index}-${item.name}`}>{`${item.quantity} × ${item.name}`}</s-text>)}
+      <s-stack direction="inline" gap="small-200" alignItems="center">
+        <s-text type="strong">{`${bottleCountText(bottles)}${total}`}</s-text>
+        <PaymentBadges task={task} />
+      </s-stack>
     </s-stack>
   );
 }
@@ -104,12 +109,8 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
         {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
         {task.status === "livree" ? null : <ContactButtons task={task} />}
         <WineList task={task} />
-        <PaymentBadges task={task} />
-        {task.note === null ? null : (
-          <s-banner tone="info" heading="Remarque pour la livraison">
-            {task.note}
-          </s-banner>
-        )}
+        {/* Une fois livrée, la remarque pour la livraison ne sert plus. */}
+        {task.note === null || task.status === "livree" ? null : <s-banner tone="info">{`Remarque : ${task.note}`}</s-banner>}
         <TaskActions
           task={task}
           invoice={invoice}

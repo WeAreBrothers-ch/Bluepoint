@@ -17,6 +17,8 @@ interface InvoiceShortcutButtonsProps {
   readonly emailConfigured: boolean;
   /** Facture en retard : on propose de relancer le client, pas de lui renvoyer la facture. */
   readonly hideSend?: boolean;
+  /** Dans une carte de l'agenda : aucun bouton foncé (il n'y en a qu'un, « J'ai livré »), et le numéro de la facture dans la phrase. */
+  readonly quiet?: boolean;
 }
 
 export function InvoiceResultBanner({ result }: { readonly result: FacturesActionResult | undefined }) {
@@ -28,7 +30,7 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
   );
 }
 
-export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = false }: InvoiceShortcutButtonsProps) {
+export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = false, quiet = false }: InvoiceShortcutButtonsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-envoi-${invoice.id}` });
   const drafts = useInvoiceDrafts(invoice.id);
   const busy = fetcher.state !== "idle";
@@ -46,7 +48,7 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = fa
       command="--show"
       onClick={drafts.load}
       accessibilityLabel="Envoyer la facture par WhatsApp"
-      variant={invoice.preferredChannel === "whatsapp" ? "primary" : "secondary"}
+      variant={!quiet && invoice.preferredChannel === "whatsapp" ? "primary" : "secondary"}
       {...(busy ? { disabled: true } : {})}
     >
       WhatsApp
@@ -61,7 +63,7 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = fa
       command="--show"
       onClick={drafts.load}
       accessibilityLabel="Envoyer la facture par e-mail"
-      variant={invoice.preferredChannel === "email" || !invoice.whatsappAvailable ? "primary" : "secondary"}
+      variant={!quiet && (invoice.preferredChannel === "email" || !invoice.whatsappAvailable) ? "primary" : "secondary"}
       {...(busy ? { disabled: true } : {})}
     >
       E-mail
@@ -76,18 +78,18 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = fa
         <s-text color="subdued">Imprimez la facture et donnez-la avec la commande.</s-text>
       ) : (
         <>
-          <s-text type="strong">{invoice.sentLabel === null ? "Envoyer la facture au client" : "Renvoyer la facture au client"}</s-text>
+          <s-text type="strong">{`${invoice.sentLabel === null ? "Envoyer" : "Renvoyer"} la facture${quiet ? ` ${invoice.number}` : ""} au client`}</s-text>
           {invoice.sentLabel === null ? null : <s-text color="subdued">{invoice.sentLabel}</s-text>}
           <s-grid gridTemplateColumns={channels.length === 1 ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)"} gap="small-200">
             {channels}
           </s-grid>
         </>
       )}
-      <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
-        <s-button {...FILL} icon="view" variant="tertiary" href={invoice.viewUrl} target="_blank">
+      <s-stack direction="inline">
+        <s-button icon="view" variant="tertiary" href={invoice.viewUrl} target="_blank">
           Voir ou imprimer la facture
         </s-button>
-      </s-grid>
+      </s-stack>
       <InvoiceResultBanner result={result} />
       {canEmail ? <InvoiceEmailModal modalId={emailModalId} invoiceId={invoice.id} drafts={drafts} fetcher={fetcher} /> : null}
       {invoice.whatsappAvailable ? (

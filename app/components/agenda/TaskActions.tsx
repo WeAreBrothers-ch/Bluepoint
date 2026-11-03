@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState, type ReactNode } from "react";
 import type { FetcherWithComponents } from "react-router";
 import type { AgendaActionResult, AgendaIntent } from "../../lib/agenda/action-result";
 import { modeLabel } from "../../lib/agenda/labels";
@@ -10,8 +10,8 @@ import { FILL } from "../fill";
 import { DayChoicePanel } from "./DeliveryDayPicker";
 
 /**
- * Boutons d'une tâche : un seul gros bouton en haut (ce qu'il faut faire maintenant), les autres en dessous,
- * plus discrets, deux par ligne. « J'ai livré la commande » demande une confirmation avant d'agir :
+ * Boutons d'une tâche : un seul gros bouton foncé (ce qu'il faut faire maintenant), les autres en simples liens
+ * dessous. « J'ai livré la commande » demande une confirmation avant d'agir :
  * l'action prévient Shopify et fait la facture, on ne la déclenche pas par un toucher malheureux.
  * Une commande sans date (souvent venue du site) propose d'abord « Choisir le jour ».
  * Tous les boutons sont désactivés pendant qu'une action est en cours.
@@ -53,7 +53,6 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today, vi
   const undated = task.plannedDate === null;
   // Juste après la livraison, avant le rechargement : on connaît seulement le numéro de la facture.
   const createdInvoice = invoice === null && fetcher.data?.ok ? fetcher.data.invoice : null;
-  const disabled = busy ? { disabled: true } : {};
 
   if (panel === "confirmer" && !delivered) {
     return (
@@ -96,89 +95,122 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today, vi
   }
 
   const invoiceButton = canInvoice && invoice === null && createdInvoice === null;
-  const dayFirst = undated; // sans date, « Choisir le jour » passe avant la livraison
 
-  const chooseDay = canReschedule ? (
-    <s-button
-      key="jour"
-      {...FILL}
-      icon="calendar"
-      variant={dayFirst ? "primary" : "secondary"}
-     
-      onClick={() => setPanel("jour")}
-      {...(pending === "dater" ? { loading: true } : {})}
-      {...disabled}
-    >
-      {undated ? mode.chooseDay : "Changer le jour"}
-    </s-button>
-  ) : null;
-  const deliver = delivered ? null : (
-    <s-button
-      key="livrer"
-      {...FILL}
-      variant={undated ? "secondary" : "primary"}
-      icon="check"
-     
-      onClick={() => setPanel("confirmer")}
-      accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
-      {...(pending === "livrer" ? { loading: true } : {})}
-      {...disabled}
-    >
-      {mode.doneAction}
-    </s-button>
-  );
-  const makeInvoice = invoiceButton ? (
-    <s-button
-      key="facturer"
-      {...FILL}
-      icon="receipt"
-      variant={delivered ? "primary" : "secondary"}
-     
-      onClick={() => submit("facturer")}
-      {...(pending === "facturer" ? { loading: true } : {})}
-      {...disabled}
-    >
-      Faire la facture
-    </s-button>
-  ) : null;
-  const seeInvoice =
-    createdInvoice === null ? null : (
-      <s-button key="voir-facture" {...FILL} icon="receipt" variant="primary" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
-        {`Voir la facture ${createdInvoice.number}`}
-      </s-button>
-    );
-  const viewOrder =
-    viewOrderHref === undefined ? null : (
-      <s-button key="commande" {...FILL} icon="order" href={viewOrderHref}>
-        Voir la commande
-      </s-button>
-    );
+  // Chaque action sait se dessiner « en gros » (le seul bouton foncé de la carte) ou « en petit » (un simple lien).
+  interface Action {
+    readonly key: string;
+    readonly render: (main: boolean) => ReactNode;
+  }
+  const chooseDay: Action | null = canReschedule
+    ? {
+        key: "jour",
+        render: (main) => (
+          <ActionButton main={main} icon="calendar" onClick={() => setPanel("jour")} loading={pending === "dater"} disabled={busy}>
+            {undated ? mode.chooseDay : "Changer le jour"}
+          </ActionButton>
+        ),
+      }
+    : null;
+  const deliver: Action | null = delivered
+    ? null
+    : {
+        key: "livrer",
+        render: (main) => (
+          <ActionButton
+            main={main}
+            icon="check"
+            onClick={() => setPanel("confirmer")}
+            label={`${mode.doneAction} : commande ${task.name}`}
+            loading={pending === "livrer"}
+            disabled={busy}
+          >
+            {mode.doneAction}
+          </ActionButton>
+        ),
+      };
+  const makeInvoice: Action | null = invoiceButton
+    ? {
+        key: "facturer",
+        render: (main) => (
+          <ActionButton main={main} icon="receipt" onClick={() => submit("facturer")} loading={pending === "facturer"} disabled={busy}>
+            Faire la facture
+          </ActionButton>
+        ),
+      }
+    : null;
+  const seeInvoice: Action | null =
+    createdInvoice === null
+      ? null
+      : {
+          key: "voir-facture",
+          render: (main) => (
+            <ActionButton main={main} icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
+              {`Voir la facture ${createdInvoice.number}`}
+            </ActionButton>
+          ),
+        };
+  const viewOrder: Action | null =
+    viewOrderHref === undefined
+      ? null
+      : { key: "commande", render: (main) => <ActionButton main={main} icon="order" href={viewOrderHref}>Voir la commande</ActionButton> };
 
-  // Le premier de la liste est LE bouton : il prend toute la largeur. Les suivants sont rangés deux par deux.
-  const buttons = [
-    ...(undated ? [chooseDay, deliver] : [deliver, chooseDay]),
-    makeInvoice,
-    seeInvoice,
-    viewOrder,
-  ].filter((button) => button !== null);
-  const [main, ...others] = buttons;
+  // Le bouton foncé est réservé à ce qu'il faut FAIRE (livrer, choisir le jour, faire la facture) : le premier de ces
+  // gestes. Tout le reste, y compris « Voir la commande » et « Voir la facture », n'est qu'un lien.
+  const todo = [...(undated ? [chooseDay, deliver] : [deliver, chooseDay]), makeInvoice].filter((action) => action !== null);
+  const links = [seeInvoice, viewOrder].filter((action) => action !== null);
+  const [main, ...secondary] = todo;
+  const smaller = [...secondary, ...links];
 
   return (
     <s-stack direction="block" gap="base">
-      {main === undefined ? null : (
-        <s-grid gridTemplateColumns="minmax(0, 1fr) minmax(0, 1fr)" gap="small-200">
-          <s-grid-item gridColumn="span 2">{main}</s-grid-item>
-          {others}
-        </s-grid>
+      {main === undefined && smaller.length === 0 ? null : (
+        <s-stack direction="block" gap="small-200">
+          {main === undefined ? null : <s-grid gridTemplateColumns="minmax(0, 1fr)">{main.render(true)}</s-grid>}
+          {smaller.length === 0 ? null : (
+            <s-stack direction="inline" gap="small-100 base" alignItems="center">
+              {smaller.map((action) => (
+                <Fragment key={action.key}>{action.render(false)}</Fragment>
+              ))}
+            </s-stack>
+          )}
+        </s-stack>
       )}
       {invoice === null ? null : (
         <s-stack direction="block" gap="small-200">
           <s-divider />
-          <s-text type="strong">{`Facture ${invoice.number}`}</s-text>
-          <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} />
+          <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} quiet />
           {awaitsPayment(task) ? <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} /> : null}
         </s-stack>
       )}
     </s-stack>
+  );
+}
+
+interface ActionButtonProps {
+  readonly main: boolean;
+  readonly icon: "calendar" | "check" | "receipt" | "order";
+  readonly children: string;
+  readonly onClick?: () => void;
+  readonly href?: string;
+  readonly label?: string;
+  readonly loading?: boolean;
+  readonly disabled?: boolean;
+}
+
+/** Bouton de carte : foncé et sur toute la largeur s'il est LE bouton, sinon un simple lien avec son icône. */
+function ActionButton({ main, icon, children, onClick, href, label, loading = false, disabled = false }: ActionButtonProps) {
+  return (
+    <s-button
+      {...(main ? FILL : {})}
+      icon={icon}
+      variant={main ? "primary" : "tertiary"}
+      {...(onClick === undefined ? {} : { onClick })}
+      {...(href === undefined ? {} : { href })}
+      {...(label === undefined ? {} : { accessibilityLabel: label })}
+      {...(loading ? { loading: true } : {})}
+      {...(disabled ? { disabled: true } : {})}
+    >
+      {children}
+    </s-button>
   );
 }
