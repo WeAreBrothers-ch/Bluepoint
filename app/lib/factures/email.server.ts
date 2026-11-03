@@ -1,26 +1,48 @@
+import { createTransport } from "nodemailer";
 import { failure, success, type Result } from "../core/result";
 import { logError } from "../core/logger.server";
 import { readOptionalEnv } from "../core/env.server";
 import { InvoiceError } from "./errors";
 
 /**
- * Envoi par e-mail via l'API REST de Resend (https://resend.com/docs/api-reference/emails/send-email).
- * RESEND_API_KEY : clé secrète ; RESEND_FROM : expéditeur d'un domaine vérifié chez Resend,
- * ex. « Blue Point Distribution <factures@bluepointdistribution.com> ».
+ * Envoi par e-mail depuis une boîte Infomaniak de BluePoint (SMTP), sans service tiers.
+ * Le domaine bluepointdistribution.com est chez Infomaniak et son SPF autorise déjà leurs serveurs.
+ * - SMTP_USER : adresse complète de la boîte d'envoi (ex. factures@bluepointdistribution.com)
+ * - SMTP_PASSWORD : son mot de passe (ou mot de passe d'application si la double authentification est active)
+ * - EMAIL_FROM_NAME (facultatif) : nom affiché, « Blue Point Distribution » par défaut
+ * - SMTP_HOST / SMTP_PORT (facultatifs) : serveur Infomaniak par défaut, connexion chiffrée (465)
+ * L'expéditeur est toujours la boîte elle-même : Infomaniak refuse un autre expéditeur.
  */
 
-const RESEND_ENDPOINT = "https://api.resend.com/emails";
-const TIMEOUT_MS = 10_000;
+const DEFAULT_HOST = "mail.infomaniak.com";
+const DEFAULT_PORT = 465;
+const DEFAULT_FROM_NAME = "Blue Point Distribution";
+const TIMEOUT_MS = 15_000;
 
 interface EmailConfig {
-  readonly apiKey: string;
-  readonly from: string;
+  readonly host: string;
+  readonly port: number;
+  readonly user: string;
+  readonly password: string;
+  readonly fromName: string;
+}
+
+function readPort(): number {
+  const port = Number(readOptionalEnv("SMTP_PORT") ?? DEFAULT_PORT);
+  return Number.isInteger(port) && port > 0 ? port : DEFAULT_PORT;
 }
 
 export function emailConfig(): EmailConfig | null {
-  const apiKey = readOptionalEnv("RESEND_API_KEY");
-  const from = readOptionalEnv("RESEND_FROM");
-  return apiKey === undefined || from === undefined ? null : { apiKey, from };
+  const user = readOptionalEnv("SMTP_USER");
+  const password = readOptionalEnv("SMTP_PASSWORD");
+  if (user === undefined || password === undefined) return null;
+  return {
+    host: readOptionalEnv("SMTP_HOST") ?? DEFAULT_HOST,
+    port: readPort(),
+    user: user.trim(),
+    password,
+    fromName: readOptionalEnv("EMAIL_FROM_NAME") ?? DEFAULT_FROM_NAME,
+  };
 }
 
 export function isEmailConfigured(): boolean {
@@ -36,28 +58,47 @@ export interface InvoiceEmail {
   readonly pdf: Uint8Array;
 }
 
+function createMailer(config: EmailConfig) {
+  return createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.port === 465,
+    requireTLS: true,
+    auth: { user: config.user, pass: config.password },
+    connectionTimeout: TIMEOUT_MS,
+    greetingTimeout: TIMEOUT_MS,
+    socketTimeout: TIMEOUT_MS,
+  });
+}
+
 export async function sendInvoiceEmail(email: InvoiceEmail): Promise<Result<true, InvoiceError>> {
   const config = emailConfig();
   if (config === null) return failure(new InvoiceError("envoi_non_configure"));
+  const mailer = createMailer(config);
   try {
-    const response = await fetch(RESEND_ENDPOINT, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: config.from,
-        to: [email.to],
-        reply_to: email.replyTo,
-        subject: email.subject,
-        text: email.text,
-        attachments: [{ filename: email.fileName, content: Buffer.from(email.pdf).toString("base64") }],
-      }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+    await mailer.sendMail({
+      from: { name: config.fromName, address: config.user },
+      to: email.to,
+      replyTo: email.replyTo,
+      subject: email.subject,
+      text: email.text,
+      attachments: [
+        { filename: email.fileName, content: Buffer.from(email.pdf), contentType: "application/pdf" },
+      ],
     });
-    if (response.ok) return success(true);
-    logError("Resend a refusé l'e-mail", new Error(`HTTP ${response.status}`), { status: response.status });
-    return failure(new InvoiceError("envoi_echoue", [`Le service d’envoi a répondu ${response.status}.`]));
+    return success(true);
   } catch (error) {
-    logError("Envoi de l'e-mail impossible", error);
-    return failure(new InvoiceError("envoi_echoue"));
+    logError("Envoi de l'e-mail impossible (SMTP Infomaniak)", error, { host: config.host, port: config.port });
+    return failure(new InvoiceError("envoi_echoue", [detailFor(error)]));
+  } finally {
+    mailer.close();
   }
+}
+
+/** Explication lisible pour l'équipe, sans détail technique ni secret. */
+function detailFor(error: unknown): string {
+  const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
+  if (code === "EAUTH") return "La boîte d’envoi a refusé la connexion : vérifiez l’adresse et le mot de passe dans les réglages Vercel.";
+  if (code === "ETIMEDOUT" || code === "ECONNECTION") return "Le serveur d’e-mail ne répond pas. Réessayez dans un instant.";
+  return "Le serveur d’e-mail a refusé l’envoi. Réessayez dans un instant.";
 }

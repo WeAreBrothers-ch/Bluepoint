@@ -1,6 +1,7 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError } from "../core/logger.server";
 import { isFacturesIntent, type FacturesActionResult } from "./list-item";
+import { parseEditedEmail, type EditedEmail } from "./message-input";
 import { isPaymentMethod, PAYMENT_METHOD_LABELS } from "./payment";
 import { loadPaymentStatuses, markOrderPaid } from "./payment.server";
 import { getShopInvoice } from "./repository.server";
@@ -30,6 +31,28 @@ async function markPaid(admin: AdminApiContext, shop: string, invoiceId: string,
   return { ok: true, invoiceId, message: `C’est noté\u202F: facture ${invoice.number} payée (${PAYMENT_METHOD_LABELS[method]}).` };
 }
 
+/**
+ * Envoi par e-mail. Pour une facture, l'objet et le message relus (et peut-être modifiés) dans la fenêtre
+ * d'envoi arrivent avec la demande ; sans eux, le texte proposé par défaut est utilisé.
+ */
+async function sendEmail(
+  admin: AdminApiContext,
+  shop: string,
+  invoiceId: string,
+  intent: "email" | "relance_email",
+  form: FormData,
+): Promise<FacturesActionResult> {
+  let edited: EditedEmail | null = null;
+  if (intent === "email" && (form.has("subject") || form.has("text"))) {
+    const parsed = parseEditedEmail(form.get("subject"), form.get("text"));
+    if (!parsed.ok) return failed(invoiceId, parsed.message);
+    edited = parsed.value;
+  }
+  const sent = await emailInvoice(admin, shop, invoiceId, intent === "email" ? "facture" : "relance", edited);
+  if (!sent.ok) return failed(invoiceId, sent.error.message, sent.error.code === "reglages_incomplets");
+  return { ok: true, invoiceId, message: intent === "email" ? `Facture envoyée à ${sent.value}.` : `Rappel envoyé à ${sent.value}.` };
+}
+
 export async function handleFacturesAction(admin: AdminApiContext, shop: string, form: FormData): Promise<FacturesActionResult> {
   const invoiceId = form.get("invoiceId");
   const intent = form.get("intent");
@@ -38,11 +61,7 @@ export async function handleFacturesAction(admin: AdminApiContext, shop: string,
   }
   try {
     if (intent === "payee") return await markPaid(admin, shop, invoiceId, form.get("method"));
-    if (intent === "email" || intent === "relance_email") {
-      const sent = await emailInvoice(shop, invoiceId, intent === "email" ? "facture" : "relance");
-      if (!sent.ok) return failed(invoiceId, sent.error.message, sent.error.code === "reglages_incomplets");
-      return { ok: true, invoiceId, message: intent === "email" ? `Facture envoyée à ${sent.value}.` : `Rappel envoyé à ${sent.value}.` };
-    }
+    if (intent === "email" || intent === "relance_email") return await sendEmail(admin, shop, invoiceId, intent, form);
     const recorded = await recordWhatsappShare(shop, invoiceId);
     return recorded.ok
       ? { ok: true, invoiceId, message: "WhatsApp est ouvert\u202F: touchez « Envoyer » dans WhatsApp pour que la facture parte." }

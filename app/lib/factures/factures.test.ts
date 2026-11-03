@@ -1,8 +1,9 @@
+import { NNBSP } from "../format/typography";
 import { describe, expect, it } from "vitest";
 import type { IsoDate } from "../metafields/definitions";
 import { contactOf, deliveryDateOf } from "./delivery-date";
 import { formatChf } from "../format/money";
-import { emailSubject, emailText, whatsappMessage } from "./messages";
+import { emailSubject, emailText, orderSummary, whatsappMessage } from "./messages";
 import { formatInvoiceNumber, yearOfIsoDate } from "./numbering";
 import { INVOICE_ORDER_QUERY } from "./order-query";
 import { firstValidPhone, normalizePhoneE164, whatsappUrl } from "./phone";
@@ -69,30 +70,60 @@ describe("date de livraison et contact", () => {
 });
 
 describe("messages", () => {
-  const data = { number: "BP-2026-0042", orderName: "#1042", totalCents: 155100, sellerName: "Blue Point Distribution Sàrl", dueDate: "2026-11-20" as IsoDate, paidOn: null };
+  const data = {
+    number: "BP-2026-0042",
+    orderName: "#1042",
+    totalCents: 155100,
+    sellerName: "Blue Point Distribution Sàrl",
+    dueDate: "2026-11-20" as IsoDate,
+    paidOn: null,
+    lines: [
+      { quantity: 12, label: "Dézaley Marsens" },
+      { quantity: 6, label: "Col del Forno" },
+    ],
+  };
 
-  it("rédige le message WhatsApp avec le lien et la typographie suisse", () => {
+  it("rédige le message WhatsApp avec le récapitulatif, le lien et la typographie suisse", () => {
     const message = whatsappMessage(data, "https://app.example/partage/x");
-    expect(message).toContain("CHF 1’551.00");
+    expect(message).toContain("voici votre facture BP-2026-0042 pour la commande #1042");
+    expect(message).toContain("– 12 × Dézaley Marsens\n– 6 × Col del Forno");
+    expect(message).toContain(formatChf(155100));
     expect(message).toContain("20.11.2026");
-    expect(message).toContain("bancaire : https://app.example/partage/x");
-    expect(message).toContain("bientôt !");
+    expect(message).toContain(`bancaire${NNBSP}: https://app.example/partage/x`);
+    expect(message).toContain(`bientôt${NNBSP}!`);
   });
 
-  it("rédige l'e-mail", () => {
-    expect(emailSubject(data)).toBe("Facture BP-2026-0042 — Blue Point Distribution Sàrl");
+  it("rédige l'e-mail avec un objet qui nomme la commande", () => {
+    expect(emailSubject(data)).toBe("Facture BP-2026-0042 — commande #1042 — Blue Point Distribution Sàrl");
+    const text = emailText(data);
+    expect(text).toContain(`Récapitulatif de la commande${NNBSP}:`);
+    expect(text).toContain("– 12 × Dézaley Marsens");
     expect(emailText({ ...data, dueDate: null })).not.toContain("régler");
   });
 
-  it("rédige le reçu pro : facture acquittée, rien à payer", () => {
+  it("reste correct sans récapitulatif (Shopify indisponible)", () => {
+    const text = emailText({ ...data, lines: [] });
+    expect(text).not.toContain("Récapitulatif");
+    expect(text).toContain(`Total${NNBSP}: ${formatChf(155100)}`);
+  });
+
+  it("rédige le reçu : facture acquittée, rien à payer", () => {
     const recu = { ...data, paidOn: "2026-10-22" as IsoDate };
-    expect(emailSubject(recu)).toBe("Reçu pro BP-2026-0042 — Blue Point Distribution Sàrl");
+    expect(emailSubject(recu)).toBe("Reçu BP-2026-0042 — commande #1042 — Blue Point Distribution Sàrl");
     const text = emailText(recu);
+    expect(text).toContain("Voici votre reçu BP-2026-0042 pour la commande #1042.");
     expect(text).toContain(formatChf(155100));
     expect(text).toContain("22.10.2026");
-    expect(text).toContain("aucun autre paiement n’est dû");
+    expect(text).toContain("Aucun autre paiement n’est dû");
     expect(text).not.toContain("QR-facture");
-    expect(whatsappMessage(recu, "https://app.example/partage/x")).toContain("reçu pro BP-2026-0042");
+    expect(whatsappMessage(recu, "https://app.example/partage/x")).toContain("reçu BP-2026-0042");
+  });
+
+  it("résume les longues commandes et renvoie au PDF", () => {
+    const lines = Array.from({ length: 14 }, (_, index) => ({ quantity: 1, label: `Vin ${index + 1}` }));
+    const summary = orderSummary(lines);
+    expect(summary).toHaveLength(13);
+    expect(summary.at(-1)).toBe("– et 2 autres produits (voir le PDF)");
   });
 });
 

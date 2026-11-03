@@ -27,7 +27,10 @@ Elle sert à l’équipe, pas aux clients :
   La facture est créée juste après, si les réglages sont complets.
 - **Factures** (`/app/factures`) : numéro BP-AAAA-NNNN tiré dans la même transaction que la facture
   (pas de trou, pas de doublon), PDF stocké en base (table `StoredFile`), téléchargement, envoi par
-  e-mail (Resend) et par WhatsApp (lien public signé, valable 14 jours, route `/partage/<jeton>`).
+  e-mail (boîte Infomaniak de BluePoint, en SMTP) et par WhatsApp (lien public signé, valable 14 jours, route `/partage/<jeton>`).
+  « Envoyer par e-mail » et « Envoyer par WhatsApp » ouvrent une fenêtre avec le message déjà rédigé
+  (vins de la commande lus dans Shopify, total, échéance) : on le relit, on le modifie, puis on envoie
+  (route `/app/factures/:id/message` pour les brouillons ; les relances restent en un toucher).
 - **Fiche commande** (`/app/commandes/:id`) : vins, prix, remise, total, client, facture. Tant que la
   commande n’est ni livrée ni facturée : « Modifier les vins » (édition de commande Shopify, remise
   automatique recalculée, stock remis ; seulement si pas encore payée) et « Annuler la commande »
@@ -113,17 +116,19 @@ Shopify Partner avec accès à la boutique.
 
 ## Mise en ligne (Vercel + Neon)
 
-1. Importer le dépôt dans Vercel. L'app est à la racine du dépôt : laisser **Root Directory**
-   vide (framework détecté : React Router). Le projet Vercel est relié à
-   `WeAreBrothers-ch/Bluepoint` : un envoi sur `main` met l'app en production.
+1. Importer le dépôt dans Vercel, avec `admin-app` comme **Root Directory**
+   (framework détecté : React Router).
 2. Dans l’onglet *Storage*, ajouter **Neon** depuis le Marketplace et le lier au projet :
    `DATABASE_URL` et `DATABASE_URL_UNPOOLED` sont ajoutées automatiquement. Choisir la région
    Francfort pour Neon et pour les fonctions Vercel (au plus près de la Suisse).
 3. Ajouter les autres variables de `.env.example` (`SHOPIFY_API_KEY`, `SHOPIFY_API_SECRET`,
    `SCOPES` (copie exacte de la ligne `scopes` de `shopify.app.toml`),
-   `SHOPIFY_APP_URL` = URL de production Vercel, `RESEND_API_KEY` et `RESEND_FROM`
-   (expéditeur d’un domaine vérifié chez Resend, ex. `Blue Point Distribution <factures@…>`).
-   Sans ces deux dernières, le bouton « Envoyer par e-mail » explique que l’envoi n’est pas configuré.
+   `SHOPIFY_APP_URL` = URL de production Vercel, `SMTP_USER` (adresse complète
+   d’une boîte Infomaniak du domaine, ex. `factures@bluepointdistribution.com`) et `SMTP_PASSWORD`
+   (son mot de passe, ou un mot de passe d’application si la double authentification est active).
+   Facultatif : `EMAIL_FROM_NAME` (nom affiché, « Blue Point Distribution » par défaut),
+   `SMTP_HOST` / `SMTP_PORT` (`mail.infomaniak.com` / `465` par défaut).
+   Sans `SMTP_USER` et `SMTP_PASSWORD`, le bouton « Envoyer par e-mail » explique que l’envoi n’est pas configuré.
 4. Déployer. Le script `vercel-build` génère Prisma, applique les migrations puis construit
    l’app avec le preset Vercel.
 5. Dans `shopify.app.toml`, remplacer `https://example.com` par l’URL Vercel

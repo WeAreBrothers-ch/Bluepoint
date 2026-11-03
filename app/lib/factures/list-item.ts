@@ -14,8 +14,8 @@ export interface InvoiceShortcuts {
   readonly number: string;
   /** Lien public signé vers le PDF (14 jours) : « Voir ou imprimer la facture » dans un nouvel onglet. */
   readonly viewUrl: string;
-  /** Lien wa.me prérempli, ou null sans numéro de portable (ou sans réglages vendeur). */
-  readonly whatsappUrl: string | null;
+  /** Un numéro de portable et les réglages vendeur sont connus : l'envoi WhatsApp est possible. */
+  readonly whatsappAvailable: boolean;
   readonly customerEmail: string | null;
   /** Canal proposé en premier : celui déjà utilisé pour ce client, sinon WhatsApp s'il a un portable. */
   readonly preferredChannel: SentVia;

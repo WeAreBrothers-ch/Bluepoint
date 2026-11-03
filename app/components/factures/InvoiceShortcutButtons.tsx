@@ -1,9 +1,14 @@
 import { useFetcher } from "react-router";
 import type { FacturesActionResult, InvoiceShortcuts } from "../../lib/factures/list-item";
+import { InvoiceEmailModal } from "./InvoiceEmailModal";
+import { InvoiceWhatsappModal } from "./InvoiceWhatsappModal";
+import { useInvoiceDrafts } from "./useInvoiceDrafts";
 
 /**
- * Voir et envoyer une facture en un toucher, depuis la liste des factures ou la carte de l'agenda.
+ * Voir et envoyer une facture, depuis la liste des factures ou la carte de l'agenda.
  * Le canal déjà utilisé pour ce client est proposé en premier (bouton principal).
+ * « Envoyer par e-mail » et « Envoyer par WhatsApp » ouvrent une fenêtre avec le message déjà rédigé
+ * (vins de la commande, total, échéance) : on le relit, on le modifie si besoin, puis on envoie.
  */
 
 interface InvoiceShortcutButtonsProps {
@@ -22,34 +27,34 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
 
 export function InvoiceShortcutButtons({ invoice, emailConfigured }: InvoiceShortcutButtonsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-envoi-${invoice.id}` });
+  const drafts = useInvoiceDrafts(invoice.id);
   const busy = fetcher.state !== "idle";
-  const sendingEmail = busy && fetcher.formData?.get("intent") === "email";
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
   const canEmail = emailConfigured && invoice.customerEmail !== null;
-  const send = (intent: "email" | "whatsapp") =>
-    fetcher.submit({ intent, invoiceId: invoice.id }, { method: "post", action: "/app/factures" });
+  const emailModalId = `envoi-email-${invoice.id}`;
+  const whatsappModalId = `envoi-whatsapp-${invoice.id}`;
 
-  const whatsapp =
-    invoice.whatsappUrl === null ? null : (
-      <s-button
-        key="whatsapp"
-        icon="chat"
-        href={invoice.whatsappUrl}
-        target="_blank"
-        variant={invoice.preferredChannel === "whatsapp" ? "primary" : "secondary"}
-        onClick={() => send("whatsapp")}
-        {...(busy ? { disabled: true } : {})}
-      >
-        Envoyer par WhatsApp
-      </s-button>
-    );
+  const whatsapp = invoice.whatsappAvailable ? (
+    <s-button
+      key="whatsapp"
+      icon="chat"
+      commandFor={whatsappModalId}
+      command="--show"
+      onClick={drafts.load}
+      variant={invoice.preferredChannel === "whatsapp" ? "primary" : "secondary"}
+      {...(busy ? { disabled: true } : {})}
+    >
+      Envoyer par WhatsApp
+    </s-button>
+  ) : null;
   const email = canEmail ? (
     <s-button
       key="email"
       icon="email"
-      variant={invoice.preferredChannel === "email" || invoice.whatsappUrl === null ? "primary" : "secondary"}
-      onClick={() => send("email")}
-      {...(sendingEmail ? { loading: true } : {})}
+      commandFor={emailModalId}
+      command="--show"
+      onClick={drafts.load}
+      variant={invoice.preferredChannel === "email" || !invoice.whatsappAvailable ? "primary" : "secondary"}
       {...(busy ? { disabled: true } : {})}
     >
       Envoyer par e-mail
@@ -67,10 +72,20 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured }: InvoiceShor
       </s-stack>
       {invoice.sentLabel === null ? null : <s-text color="subdued">{invoice.sentLabel}</s-text>}
       {/* Ni WhatsApp ni e-mail : une seule phrase utile, pas d'explication technique. */}
-      {invoice.whatsappUrl === null && !canEmail ? (
+      {!invoice.whatsappAvailable && !canEmail ? (
         <s-text color="subdued">Imprimez la facture et donnez-la avec la commande.</s-text>
       ) : null}
       <InvoiceResultBanner result={result} />
+      {canEmail ? <InvoiceEmailModal modalId={emailModalId} invoiceId={invoice.id} drafts={drafts} fetcher={fetcher} /> : null}
+      {invoice.whatsappAvailable ? (
+        <InvoiceWhatsappModal
+          modalId={whatsappModalId}
+          drafts={drafts}
+          onOpened={() =>
+            fetcher.submit({ intent: "whatsapp", invoiceId: invoice.id }, { method: "post", action: "/app/factures" })
+          }
+        />
+      ) : null}
     </s-stack>
   );
 }

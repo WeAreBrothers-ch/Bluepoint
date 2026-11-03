@@ -1,7 +1,6 @@
 import { invoiceShareUrl } from "./links.server";
 import { preferredChannel, readSentVia, sentLabel, type InvoiceShortcuts, type SentVia } from "./list-item";
 import type { Invoice } from "./repository.server";
-import { whatsappLinkFor } from "./send.server";
 
 /** Raccourcis d'une facture (voir, WhatsApp, e-mail) et canal préféré de chaque client. */
 
@@ -27,15 +26,15 @@ export function invoiceShortcuts(
   channels: ReadonlyMap<string, SentVia>,
   now: Date,
 ): InvoiceShortcuts {
-  const whatsappUrl = sellerName === null ? null : whatsappLinkFor(invoice, sellerName, now);
+  const whatsappAvailable = sellerName !== null && invoice.customerPhone !== null;
   const own = readSentVia(invoice.sentVia);
   return {
     id: invoice.id,
     number: invoice.number,
     viewUrl: invoiceShareUrl(invoice.id, now),
-    whatsappUrl,
+    whatsappAvailable,
     customerEmail: invoice.customerEmail,
-    preferredChannel: preferredChannel(own, channels.get(customerKey(invoice)) ?? null, whatsappUrl !== null),
+    preferredChannel: preferredChannel(own, channels.get(customerKey(invoice)) ?? null, whatsappAvailable),
     sentLabel: sentLabel(invoice.sentAt, own),
   };
 }
