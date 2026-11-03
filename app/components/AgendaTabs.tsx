@@ -1,3 +1,4 @@
+import { FILL } from "./fill";
 import { AGENDA_VIEWS } from "../lib/agenda/views";
 import type { AgendaView } from "../lib/agenda/types";
 
@@ -8,12 +9,13 @@ interface AgendaTabsProps {
 
 export function AgendaTabs({ current }: AgendaTabsProps) {
   return (
-    <s-stack direction="inline" gap="small-200" accessibilityLabel="Période affichée">
+    <s-grid gridTemplateColumns={`repeat(${AGENDA_VIEWS.length}, minmax(0, 1fr))`} gap="small-200">
       {AGENDA_VIEWS.map((view) => {
         const isCurrent = view.id === current;
         return (
           <s-button
             key={view.id}
+            {...FILL}
             href={`/app?vue=${view.id}`}
             variant={isCurrent ? "primary" : "secondary"}
             accessibilityLabel={isCurrent ? `${view.label}, vue affichée` : view.label}
@@ -22,6 +24,6 @@ export function AgendaTabs({ current }: AgendaTabsProps) {
           </s-button>
         );
       })}
-    </s-stack>
+    </s-grid>
   );
 }

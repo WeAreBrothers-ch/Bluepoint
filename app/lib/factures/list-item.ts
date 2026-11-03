@@ -70,10 +70,10 @@ export type FacturesActionResult =
 /** Onglets de la page Factures. */
 export type FacturesView = "a_encaisser" | "payees" | "toutes";
 
-export const FACTURES_VIEWS: readonly { readonly id: FacturesView; readonly label: string }[] = [
-  { id: "a_encaisser", label: "Pas encore payées" },
-  { id: "payees", label: "Déjà payées" },
-  { id: "toutes", label: "Toutes les factures" },
+export const FACTURES_VIEWS: readonly { readonly id: FacturesView; readonly label: string; readonly title: string }[] = [
+  { id: "a_encaisser", label: "Pas payées", title: "Pas encore payées" },
+  { id: "payees", label: "Payées", title: "Déjà payées" },
+  { id: "toutes", label: "Toutes", title: "Toutes les factures" },
 ];
 
 export function isFacturesView(value: unknown): value is FacturesView {

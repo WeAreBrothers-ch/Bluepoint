@@ -6,9 +6,10 @@ import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { gidToNumericId } from "../../lib/shopify";
+import { FILL } from "../fill";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
-import { TaskBadges } from "./TaskBadges";
+import { PaymentBadges, StatusBadge } from "./TaskBadges";
 
 /**
  * Une livraison, dans l'ordre où on en a besoin : qui, où (itinéraire, téléphone), quels vins,
@@ -27,26 +28,33 @@ export function ContactButtons({ task }: { readonly task: ScheduledTask }) {
   // Retrait : le client vient au dépôt, son adresse et l'itinéraire ne servent à rien.
   const pickup = task.mode === "retrait";
   const address = pickup ? null : addressText(task);
-  const directions = pickup ? null : directionsUrl(task);
+  // Poste : le colis part, on n'y va pas. On garde l'adresse et le téléphone, sans itinéraire.
+  const directions = pickup || task.mode === "poste" ? null : directionsUrl(task);
   const call = phoneHref(task.phone);
   if (address === null && task.phone === null) {
     return pickup ? null : <s-text color="subdued">Pas d’adresse ni de téléphone sur cette commande.</s-text>;
   }
+  const buttons = [
+    directions === null ? null : (
+      <s-button key="route" {...FILL} href={directions} target="_blank" icon="location">
+        Itinéraire
+      </s-button>
+    ),
+    call === null || task.phone === null ? null : (
+      <s-button key="call" {...FILL} href={call} target="_blank" icon="phone" accessibilityLabel={`Appeler ${phoneDisplay(task.phone)}`}>
+        Appeler
+      </s-button>
+    ),
+  ].filter((button) => button !== null);
   return (
     <s-stack direction="block" gap="small-200">
       {address === null ? null : <s-text>{address}</s-text>}
-      <s-stack direction="inline" gap="small-200">
-        {directions === null ? null : (
-          <s-button href={directions} target="_blank" icon="location">
-            Itinéraire
-          </s-button>
-        )}
-        {call === null || task.phone === null ? null : (
-          <s-button href={call} target="_blank" icon="phone">
-            {`Appeler ${phoneDisplay(task.phone)}`}
-          </s-button>
-        )}
-      </s-stack>
+      {task.phone === null ? null : <s-text color="subdued">{phoneDisplay(task.phone)}</s-text>}
+      {buttons.length === 0 ? null : (
+        <s-grid gridTemplateColumns={buttons.length === 1 ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)"} gap="small-200">
+          {buttons}
+        </s-grid>
+      )}
     </s-stack>
   );
 }
@@ -56,11 +64,12 @@ function WineList({ task }: { readonly task: ScheduledTask }) {
   const bottles = task.items.reduce((sum, item) => sum + item.quantity, 0);
   const total = task.totalCents === null ? "" : ` · ${formatChf(task.totalCents)}`;
   return (
-    <s-stack direction="block" gap="small-100">
+    <s-stack direction="block" gap="small-200">
+      <s-divider />
       {task.items.map((item, index) => (
         <s-text key={`${index}-${item.name}`}>{`${item.quantity} × ${item.name}`}</s-text>
       ))}
-      <s-text color="subdued">{`${bottleCountText(bottles)}${total}`}</s-text>
+      <s-text type="strong">{`${bottleCountText(bottles)}${total}`}</s-text>
     </s-stack>
   );
 }
@@ -78,9 +87,12 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
     <s-box padding="base" border="base" borderRadius="base" background="base">
       <s-stack direction="block" gap="base">
         <s-stack direction="block" gap="small-200">
-          <s-stack direction="inline" gap="small-200" alignItems="center">
-            <s-icon type={mode.icon} />
-            <s-heading>{task.company ?? task.customerName}</s-heading>
+          <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
+            <s-stack direction="inline" gap="small-200" alignItems="center">
+              <s-icon type={mode.icon} />
+              <s-heading>{task.company ?? task.customerName}</s-heading>
+            </s-stack>
+            <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
           </s-stack>
           <s-text color="subdued">{who}</s-text>
           {dateLine === null ? null : (
@@ -88,22 +100,24 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
               {dateLine}
             </s-text>
           )}
-          <TaskBadges task={task} optimisticDelivered={optimisticDelivered} />
         </s-stack>
         {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
         {task.status === "livree" ? null : <ContactButtons task={task} />}
         <WineList task={task} />
-        <s-stack direction="inline">
-          <s-button icon="order" href={`/app/commandes/${gidToNumericId(task.orderId)}`}>
-            Voir la commande
-          </s-button>
-        </s-stack>
+        <PaymentBadges task={task} />
         {task.note === null ? null : (
           <s-banner tone="info" heading="Remarque pour la livraison">
             {task.note}
           </s-banner>
         )}
-        <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} today={today} />
+        <TaskActions
+          task={task}
+          invoice={invoice}
+          fetcher={fetcher}
+          emailConfigured={emailConfigured}
+          today={today}
+          viewOrderHref={`/app/commandes/${gidToNumericId(task.orderId)}`}
+        />
         {result === undefined ? null : <ActionFeedback result={result} />}
       </s-stack>
     </s-box>

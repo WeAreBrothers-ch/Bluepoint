@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, capitalize, daysBetween, daysOfWeek, longDay, rangeForView, swissIsoDate, weekContaining, weekFromParam } from "./dates";
+import { addDays, capitalize, daysBetween, daysOfWeek, longDay, rangeForView, shortDay, swissIsoDate, weekContaining, weekFromParam } from "./dates";
 import { d } from "./fixtures";
 
 describe("dates de l'agenda (heure suisse)", () => {
@@ -44,5 +44,12 @@ describe("dates de l'agenda (heure suisse)", () => {
     expect(weekFromParam("2026-11-04", d("2026-10-28"))).toEqual({ start: "2026-11-02", end: "2026-11-08" });
     expect(weekFromParam(null, d("2026-10-28"))).toEqual({ start: "2026-10-26", end: "2026-11-01" });
     expect(weekFromParam("n'importe quoi", d("2026-10-28"))).toEqual({ start: "2026-10-26", end: "2026-11-01" });
+  });
+});
+
+describe("jour sans le nom du jour", () => {
+  it("écrit seulement le numéro et le mois", () => {
+    expect(shortDay(d("2026-10-22"))).toBe("22 octobre");
+    expect(shortDay(d("2026-11-27"))).toBe("27 novembre");
   });
 });

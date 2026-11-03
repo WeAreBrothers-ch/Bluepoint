@@ -70,6 +70,13 @@ export function longDay(date: IsoDate): string {
   return LONG_DATE.format(new Date(noonUtc(date)));
 }
 
+const SHORT_DATE = new Intl.DateTimeFormat("fr-CH", { day: "numeric", month: "long", timeZone: "UTC" });
+
+/** Jour sans le nom du jour, ex. « 29 octobre ». */
+export function shortDay(date: IsoDate): string {
+  return SHORT_DATE.format(new Date(noonUtc(date)));
+}
+
 /** Première lettre en majuscule : « Jeudi 29 octobre ». */
 export function capitalize(text: string): string {
   return text.charAt(0).toLocaleUpperCase("fr-CH") + text.slice(1);

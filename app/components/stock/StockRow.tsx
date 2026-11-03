@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFetcher } from "react-router";
 import { CARTON_SIZES, parseQuantity } from "../../lib/commande/cart";
-import { formatChf } from "../../lib/format/money";
+import { formatChf, formatInteger } from "../../lib/format/money";
 import type { PhotoResult } from "../../lib/stock/photo";
-import { availableText, bottles, reservedText, type StockActionResult, type StockIntent, type StockItem } from "../../lib/stock/stock";
+import { bottles, reservedText, type StockActionResult, type StockIntent, type StockItem } from "../../lib/stock/stock";
+import { FILL } from "../fill";
 import { PhotoPicker } from "./PhotoPicker";
 
 /**
@@ -157,22 +158,31 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
     setPanel("aucun");
   };
 
+  // Le vin à recommander met « Ajouter des bouteilles » en avant ; sinon, tous les boutons sont discrets.
+  const restock = item.level === "epuise" || item.level === "bas";
+  const canChange = place !== null && canEdit;
   const buttons = (
-    <s-stack direction="inline" gap="small-200">
-      {place === null || !canEdit ? null : (
-        <>
-          <s-button variant="primary" icon="plus" onClick={() => setPanel("ajouter")} {...(busy ? { loading: true } : {})}>
+    <s-stack direction="block" gap="small-200">
+      {canChange ? (
+        <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
+          <s-button {...FILL} variant={restock ? "primary" : "secondary"} icon="plus" onClick={() => setPanel("ajouter")} {...(busy ? { loading: true } : {})}>
             Ajouter des bouteilles
           </s-button>
-          <s-button icon="edit" onClick={() => setPanel("corriger")} {...(busy ? { disabled: true } : {})}>
-            Corriger le nombre
-          </s-button>
-        </>
-      )}
-      {canPhoto ? (
-        <s-button icon="image" onClick={() => setPanel("photo")} {...(sendingPhoto ? { loading: true } : {})}>
-          {imageUrl === null ? "Ajouter une photo" : "Changer la photo"}
-        </s-button>
+        </s-grid>
+      ) : null}
+      {canChange || canPhoto ? (
+        <s-grid gridTemplateColumns={canChange && canPhoto ? "minmax(0, 1fr) minmax(0, 1fr)" : "minmax(0, 1fr)"} gap="small-200">
+          {canChange ? (
+            <s-button {...FILL} icon="edit" onClick={() => setPanel("corriger")} {...(busy ? { disabled: true } : {})}>
+              Corriger le nombre
+            </s-button>
+          ) : null}
+          {canPhoto ? (
+            <s-button {...FILL} icon="image" onClick={() => setPanel("photo")} {...(sendingPhoto ? { loading: true } : {})}>
+              {imageUrl === null ? "Ajouter une photo" : "Changer la photo"}
+            </s-button>
+          ) : null}
+        </s-grid>
       ) : null}
     </s-stack>
   );
@@ -193,8 +203,9 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
           <s-stack direction="block" gap="small-200">
             <s-stack direction="inline" gap="small-200" alignItems="center">
               <s-text type="strong" {...(item.level === "epuise" ? { tone: "critical" as const } : {})}>
-                {availableText(item)}
+                <span style={{ fontSize: "32px", lineHeight: 1.1 }}>{formatInteger(Math.max(item.available, 0))}</span>
               </s-text>
+              <s-text color="subdued">{item.available === 1 ? "bouteille à vendre" : "bouteilles à vendre"}</s-text>
               <LevelBadge item={item} />
             </s-stack>
             {reserved === null ? null : <s-text color="subdued">{reserved}</s-text>}

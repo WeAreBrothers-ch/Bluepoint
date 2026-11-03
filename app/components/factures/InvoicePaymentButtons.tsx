@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
+import { FILL } from "../fill";
 import type { FacturesActionResult } from "../../lib/factures/list-item";
 import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS } from "../../lib/factures/payment";
 import { InvoiceResultBanner } from "./InvoiceShortcutButtons";
@@ -24,11 +25,11 @@ export function InvoicePaymentButtons({ invoiceId, invoiceNumber }: InvoicePayme
   if (!choosing) {
     return (
       <s-stack direction="block" gap="small-200">
-        <s-stack direction="inline">
-          <s-button icon="cash-dollar" onClick={() => setChoosing(true)} {...(busy ? { loading: true } : {})}>
+        <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
+          <s-button {...FILL} icon="cash-dollar" onClick={() => setChoosing(true)} {...(busy ? { loading: true } : {})}>
             Le client a payé
           </s-button>
-        </s-stack>
+        </s-grid>
         <InvoiceResultBanner result={result} />
       </s-stack>
     );

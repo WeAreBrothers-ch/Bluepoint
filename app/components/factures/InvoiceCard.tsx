@@ -1,8 +1,9 @@
 import { useFetcher } from "react-router";
-import { longDay } from "../../lib/agenda/dates";
+import { shortDay } from "../../lib/agenda/dates";
 import type { FacturesActionResult, InvoiceListItem } from "../../lib/factures/list-item";
 import { formatChf } from "../../lib/format/money";
 import { parseIsoDate } from "../../lib/metafields/definitions";
+import { FILL } from "../fill";
 import { InvoicePaymentButtons } from "./InvoicePaymentButtons";
 import { InvoiceResultBanner, InvoiceShortcutButtons } from "./InvoiceShortcutButtons";
 
@@ -15,7 +16,7 @@ interface InvoiceCardProps {
 
 function day(value: string): string {
   const date = parseIsoDate(value);
-  return date === null ? value : longDay(date);
+  return date === null ? value : shortDay(date);
 }
 
 function StatusBadge({ invoice }: { readonly invoice: InvoiceListItem }) {
@@ -26,41 +27,51 @@ function StatusBadge({ invoice }: { readonly invoice: InvoiceListItem }) {
   return <s-badge tone="warning">Pas encore payée</s-badge>;
 }
 
-/** Relance d'une facture en retard : WhatsApp prérempli, ou e-mail avec le PDF. */
+/** Facture en retard, et au moins un moyen de relancer le client. */
+function canRemind({ invoice, emailConfigured }: InvoiceCardProps): boolean {
+  return invoice.paymentState === "en_retard" && (invoice.reminderWhatsappUrl !== null || (emailConfigured && invoice.customerEmail !== null));
+}
+
+/** Relance d'une facture en retard : même principe que l'envoi, une ligne et deux choix. */
 function Reminders({ invoice, emailConfigured }: InvoiceCardProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-relance-${invoice.id}` });
   const busy = fetcher.state !== "idle";
   const canEmail = emailConfigured && invoice.customerEmail !== null;
-  if (invoice.paymentState !== "en_retard" || (invoice.reminderWhatsappUrl === null && !canEmail)) return null;
+  if (!canRemind({ invoice, emailConfigured })) return null;
+  const buttons = [
+    invoice.reminderWhatsappUrl === null ? null : (
+      <s-button key="wa" {...FILL} icon="chat" href={invoice.reminderWhatsappUrl} target="_blank" tone="critical" accessibilityLabel="Relancer par WhatsApp">
+        WhatsApp
+      </s-button>
+    ),
+    canEmail ? (
+      <s-button
+        key="mail"
+        {...FILL}
+        icon="email"
+        tone="critical"
+        accessibilityLabel="Relancer par e-mail"
+        onClick={() => fetcher.submit({ intent: "relance_email", invoiceId: invoice.id }, { method: "post", action: "/app/factures" })}
+        {...(busy ? { loading: true } : {})}
+      >
+        E-mail
+      </s-button>
+    ) : null,
+  ].filter((button) => button !== null);
   return (
     <s-stack direction="block" gap="small-200">
-      <s-stack direction="inline" gap="small-200">
-        {invoice.reminderWhatsappUrl === null ? null : (
-          <s-button icon="chat" href={invoice.reminderWhatsappUrl} target="_blank" tone="critical">
-            Relancer par WhatsApp
-          </s-button>
-        )}
-        {canEmail ? (
-          <s-button
-            icon="email"
-            tone="critical"
-            onClick={() => fetcher.submit({ intent: "relance_email", invoiceId: invoice.id }, { method: "post", action: "/app/factures" })}
-            {...(busy ? { loading: true } : {})}
-          >
-            Relancer par e-mail
-          </s-button>
-        ) : null}
-      </s-stack>
+      <s-text type="strong">Relancer le client (paiement en retard)</s-text>
+      <s-grid gridTemplateColumns={buttons.length === 1 ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)"} gap="small-200">
+        {buttons}
+      </s-grid>
       <InvoiceResultBanner result={fetcher.state === "idle" ? fetcher.data : undefined} />
     </s-stack>
   );
 }
 
 export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
-  const dates =
-    invoice.paidOn !== null
-      ? `Reçu remis le ${day(invoice.paidOn)} (déjà payée)`
-      : `Faite le ${day(invoice.issueDate)} · à payer avant le ${day(invoice.dueDate)}`;
+  const late = invoice.paymentState === "en_retard";
+  const reminding = canRemind({ invoice, emailConfigured });
   return (
     <s-box padding="base" border="base" borderRadius="base" background="base" id={`facture-${invoice.id}`}>
       <s-stack direction="block" gap="base">
@@ -69,21 +80,23 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
             <s-heading>{invoice.customerName}</s-heading>
             <s-text type="strong">{formatChf(invoice.totalCents)}</s-text>
           </s-stack>
-          <s-text color="subdued">{`Facture ${invoice.number} · commande ${invoice.orderName}`}</s-text>
-          <s-text>{dates}</s-text>
+          <s-text color="subdued">{`Facture ${invoice.number}`}</s-text>
+          {invoice.orderPath === null ? null : <s-link href={invoice.orderPath}>{`Voir la commande ${invoice.orderName}`}</s-link>}
           <s-stack direction="inline" gap="small-200">
             <StatusBadge invoice={invoice} />
           </s-stack>
+          {invoice.paidOn !== null ? (
+            <s-text color="subdued">{`Reçu remis le ${day(invoice.paidOn)}`}</s-text>
+          ) : (
+            <>
+              <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
+              <s-text color="subdued">{`Facture faite le ${day(invoice.issueDate)}`}</s-text>
+            </>
+          )}
         </s-stack>
-        {invoice.orderPath === null ? null : (
-          <s-stack direction="inline">
-            <s-button icon="order" href={invoice.orderPath}>
-              {`Voir la commande ${invoice.orderName}`}
-            </s-button>
-          </s-stack>
-        )}
-        <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} />
+        {/* En retard : relancer d'abord ; sinon, envoyer la facture. */}
         <Reminders invoice={invoice} emailConfigured={emailConfigured} />
+        <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} hideSend={reminding} />
         {invoice.paymentState === "payee" ? null : <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />}
       </s-stack>
     </s-box>

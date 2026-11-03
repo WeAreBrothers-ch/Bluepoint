@@ -141,6 +141,16 @@ export function stockSummary(items: readonly StockItem[]): StockSummary {
   };
 }
 
+const LEVEL_ORDER: Readonly<Record<StockLevel, number>> = { epuise: 0, bas: 1, ok: 2, non_suivi: 3 };
+
+/** Les vins à recommander d'abord (plus en stock, puis bientôt épuisés) ; à égalité, l'ordre d'origine est gardé. */
+export function sortByUrgency(items: readonly StockItem[]): StockItem[] {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => LEVEL_ORDER[a.item.level] - LEVEL_ORDER[b.item.level] || a.index - b.index)
+    .map(({ item }) => item);
+}
+
 /** Chaque mot tapé doit apparaître dans le nom du vin (sans tenir compte des accents). */
 export function filterStock(items: readonly StockItem[], raw: string): readonly StockItem[] {
   const words = normalizeSearch(raw).split(/\s+/).filter((word) => word !== "");

@@ -6,10 +6,12 @@ import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { InvoicePaymentButtons } from "../factures/InvoicePaymentButtons";
 import { InvoiceShortcutButtons } from "../factures/InvoiceShortcutButtons";
+import { FILL } from "../fill";
 import { DayChoicePanel } from "./DeliveryDayPicker";
 
 /**
- * Boutons d'une tâche, sur une seule ligne. « J'ai livré la commande » demande une confirmation avant d'agir :
+ * Boutons d'une tâche : un seul gros bouton en haut (ce qu'il faut faire maintenant), les autres en dessous,
+ * plus discrets, deux par ligne. « J'ai livré la commande » demande une confirmation avant d'agir :
  * l'action prévient Shopify et fait la facture, on ne la déclenche pas par un toucher malheureux.
  * Une commande sans date (souvent venue du site) propose d'abord « Choisir le jour ».
  * Tous les boutons sont désactivés pendant qu'une action est en cours.
@@ -21,6 +23,8 @@ interface TaskActionsProps {
   readonly fetcher: FetcherWithComponents<AgendaActionResult>;
   readonly emailConfigured: boolean;
   readonly today: IsoDate;
+  /** Lien « Voir la commande », sur la carte de l'agenda seulement (sur la fiche commande, on y est déjà). */
+  readonly viewOrderHref?: string;
 }
 
 /** Panneau ouvert à la place des boutons : confirmation de la livraison ou choix du jour. */
@@ -37,7 +41,7 @@ function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): Agen
   return intent === "livrer" || intent === "facturer" || intent === "dater" ? intent : null;
 }
 
-export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: TaskActionsProps) {
+export function TaskActions({ task, invoice, fetcher, emailConfigured, today, viewOrderHref }: TaskActionsProps) {
   const [panel, setPanel] = useState<Panel>("aucun");
   const pending = pendingIntent(fetcher);
   const busy = pending !== null;
@@ -91,10 +95,16 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
     );
   }
 
-  const dayButton = canReschedule ? (
+  const invoiceButton = canInvoice && invoice === null && createdInvoice === null;
+  const dayFirst = undated; // sans date, « Choisir le jour » passe avant la livraison
+
+  const chooseDay = canReschedule ? (
     <s-button
+      key="jour"
+      {...FILL}
       icon="calendar"
-      variant={undated ? "primary" : "secondary"}
+      variant={dayFirst ? "primary" : "secondary"}
+     
       onClick={() => setPanel("jour")}
       {...(pending === "dater" ? { loading: true } : {})}
       {...disabled}
@@ -102,44 +112,68 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today }: 
       {undated ? mode.chooseDay : "Changer le jour"}
     </s-button>
   ) : null;
+  const deliver = delivered ? null : (
+    <s-button
+      key="livrer"
+      {...FILL}
+      variant={undated ? "secondary" : "primary"}
+      icon="check"
+     
+      onClick={() => setPanel("confirmer")}
+      accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
+      {...(pending === "livrer" ? { loading: true } : {})}
+      {...disabled}
+    >
+      {mode.doneAction}
+    </s-button>
+  );
+  const makeInvoice = invoiceButton ? (
+    <s-button
+      key="facturer"
+      {...FILL}
+      icon="receipt"
+      variant={delivered ? "primary" : "secondary"}
+     
+      onClick={() => submit("facturer")}
+      {...(pending === "facturer" ? { loading: true } : {})}
+      {...disabled}
+    >
+      Faire la facture
+    </s-button>
+  ) : null;
+  const seeInvoice =
+    createdInvoice === null ? null : (
+      <s-button key="voir-facture" {...FILL} icon="receipt" variant="primary" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
+        {`Voir la facture ${createdInvoice.number}`}
+      </s-button>
+    );
+  const viewOrder =
+    viewOrderHref === undefined ? null : (
+      <s-button key="commande" {...FILL} icon="order" href={viewOrderHref}>
+        Voir la commande
+      </s-button>
+    );
 
-  const invoiceButton = canInvoice && invoice === null && createdInvoice === null;
-  // Livrée et facturée : plus de bouton sur la ligne, seulement la facture en dessous.
-  const hasButtons = !delivered || canReschedule || invoiceButton || createdInvoice !== null;
+  // Le premier de la liste est LE bouton : il prend toute la largeur. Les suivants sont rangés deux par deux.
+  const buttons = [
+    ...(undated ? [chooseDay, deliver] : [deliver, chooseDay]),
+    makeInvoice,
+    seeInvoice,
+    viewOrder,
+  ].filter((button) => button !== null);
+  const [main, ...others] = buttons;
 
   return (
     <s-stack direction="block" gap="base">
-      {hasButtons ? (
-        <s-stack direction="inline" gap="small-200">
-          {/* Sans date, choisir le jour vient en premier. */}
-          {undated ? dayButton : null}
-          {delivered ? null : (
-            <s-button
-              variant={undated ? "secondary" : "primary"}
-              icon="check"
-              onClick={() => setPanel("confirmer")}
-              accessibilityLabel={`${mode.doneAction} : commande ${task.name}`}
-              {...(pending === "livrer" ? { loading: true } : {})}
-              {...disabled}
-            >
-              {mode.doneAction}
-            </s-button>
-          )}
-          {undated ? null : dayButton}
-          {invoiceButton ? (
-            <s-button icon="receipt" onClick={() => submit("facturer")} {...(pending === "facturer" ? { loading: true } : {})} {...disabled}>
-              Faire la facture
-            </s-button>
-          ) : null}
-          {createdInvoice === null ? null : (
-            <s-button icon="receipt" href={`/app/factures?vue=toutes#facture-${createdInvoice.id}`}>
-              {`Voir la facture ${createdInvoice.number}`}
-            </s-button>
-          )}
-        </s-stack>
-      ) : null}
+      {main === undefined ? null : (
+        <s-grid gridTemplateColumns="minmax(0, 1fr) minmax(0, 1fr)" gap="small-200">
+          <s-grid-item gridColumn="span 2">{main}</s-grid-item>
+          {others}
+        </s-grid>
+      )}
       {invoice === null ? null : (
         <s-stack direction="block" gap="small-200">
+          <s-divider />
           <s-text type="strong">{`Facture ${invoice.number}`}</s-text>
           <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} />
           {awaitsPayment(task) ? <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} /> : null}

@@ -1,4 +1,5 @@
 import { useFetcher } from "react-router";
+import { FILL } from "../fill";
 import type { FacturesActionResult, InvoiceShortcuts } from "../../lib/factures/list-item";
 import { InvoiceEmailModal } from "./InvoiceEmailModal";
 import { InvoiceWhatsappModal } from "./InvoiceWhatsappModal";
@@ -14,6 +15,8 @@ import { useInvoiceDrafts } from "./useInvoiceDrafts";
 interface InvoiceShortcutButtonsProps {
   readonly invoice: InvoiceShortcuts;
   readonly emailConfigured: boolean;
+  /** Facture en retard : on propose de relancer le client, pas de lui renvoyer la facture. */
+  readonly hideSend?: boolean;
 }
 
 export function InvoiceResultBanner({ result }: { readonly result: FacturesActionResult | undefined }) {
@@ -25,7 +28,7 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
   );
 }
 
-export function InvoiceShortcutButtons({ invoice, emailConfigured }: InvoiceShortcutButtonsProps) {
+export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = false }: InvoiceShortcutButtonsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-envoi-${invoice.id}` });
   const drafts = useInvoiceDrafts(invoice.id);
   const busy = fetcher.state !== "idle";
@@ -37,44 +40,54 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured }: InvoiceShor
   const whatsapp = invoice.whatsappAvailable ? (
     <s-button
       key="whatsapp"
+      {...FILL}
       icon="chat"
       commandFor={whatsappModalId}
       command="--show"
       onClick={drafts.load}
+      accessibilityLabel="Envoyer la facture par WhatsApp"
       variant={invoice.preferredChannel === "whatsapp" ? "primary" : "secondary"}
       {...(busy ? { disabled: true } : {})}
     >
-      Envoyer par WhatsApp
+      WhatsApp
     </s-button>
   ) : null;
   const email = canEmail ? (
     <s-button
       key="email"
+      {...FILL}
       icon="email"
       commandFor={emailModalId}
       command="--show"
       onClick={drafts.load}
+      accessibilityLabel="Envoyer la facture par e-mail"
       variant={invoice.preferredChannel === "email" || !invoice.whatsappAvailable ? "primary" : "secondary"}
       {...(busy ? { disabled: true } : {})}
     >
-      Envoyer par e-mail
+      E-mail
     </s-button>
   ) : null;
-  const ordered = invoice.preferredChannel === "email" ? [email, whatsapp] : [whatsapp, email];
+  const channels = (invoice.preferredChannel === "email" ? [email, whatsapp] : [whatsapp, email]).filter((button) => button !== null);
 
   return (
     <s-stack direction="block" gap="small-200">
-      <s-stack direction="inline" gap="small-200">
-        {ordered}
-        <s-button icon="view" href={invoice.viewUrl} target="_blank">
+      {hideSend ? null : channels.length === 0 ? (
+        /* Ni WhatsApp ni e-mail : une seule phrase utile, pas d'explication technique. */
+        <s-text color="subdued">Imprimez la facture et donnez-la avec la commande.</s-text>
+      ) : (
+        <>
+          <s-text type="strong">{invoice.sentLabel === null ? "Envoyer la facture au client" : "Renvoyer la facture au client"}</s-text>
+          {invoice.sentLabel === null ? null : <s-text color="subdued">{invoice.sentLabel}</s-text>}
+          <s-grid gridTemplateColumns={channels.length === 1 ? "minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)"} gap="small-200">
+            {channels}
+          </s-grid>
+        </>
+      )}
+      <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
+        <s-button {...FILL} icon="view" variant="tertiary" href={invoice.viewUrl} target="_blank">
           Voir ou imprimer la facture
         </s-button>
-      </s-stack>
-      {invoice.sentLabel === null ? null : <s-text color="subdued">{invoice.sentLabel}</s-text>}
-      {/* Ni WhatsApp ni e-mail : une seule phrase utile, pas d'explication technique. */}
-      {!invoice.whatsappAvailable && !canEmail ? (
-        <s-text color="subdued">Imprimez la facture et donnez-la avec la commande.</s-text>
-      ) : null}
+      </s-grid>
       <InvoiceResultBanner result={result} />
       {canEmail ? <InvoiceEmailModal modalId={emailModalId} invoiceId={invoice.id} drafts={drafts} fetcher={fetcher} /> : null}
       {invoice.whatsappAvailable ? (

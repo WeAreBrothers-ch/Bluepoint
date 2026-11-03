@@ -4,6 +4,7 @@ import {
   filterStock,
   parseStockChange,
   reservedText,
+  sortByUrgency,
   stockChangeMessage,
   stockSummary,
   toStockItem,
@@ -99,5 +100,27 @@ describe("changement de stock", () => {
     );
     expect(stockChangeMessage({ intent: "ajouter", quantity: 1 }, null)).toBe("C’est noté\u202F: 1 bouteille ajoutée.");
     expect(stockChangeMessage({ intent: "corriger", quantity: 24 }, 24)).toBe("C’est noté\u202F: 24 bouteilles en cave.");
+  });
+});
+
+describe("ordre de la page Stock", () => {
+  const item = (title: string, quantities: { available: number; onHand: number; committed: number } | null) =>
+    toStockItem(variant(title, quantities));
+
+  it("met les vins à recommander en premier, puis garde l'ordre d'origine", () => {
+    const items = [
+      item("Gamay", { available: 42, onHand: 42, committed: 0 }),
+      item("Pinot", { available: 5, onHand: 12, committed: 7 }),
+      item("Chasselas", { available: 96, onHand: 120, committed: 24 }),
+      item("Dézaley", { available: 0, onHand: 6, committed: 6 }),
+      item("Rosé", null),
+    ];
+    expect(sortByUrgency(items).map((i) => i.label)).toEqual(["Dézaley", "Pinot", "Gamay", "Chasselas", "Rosé"]);
+  });
+
+  it("ne modifie pas la liste d'origine", () => {
+    const items = [item("A", { available: 50, onHand: 50, committed: 0 }), item("B", { available: 0, onHand: 0, committed: 0 })];
+    sortByUrgency(items);
+    expect(items.map((i) => i.label)).toEqual(["A", "B"]);
   });
 });
