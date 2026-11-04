@@ -1,3 +1,4 @@
+import { TITRES } from "../../lib/titres";
 import { useCallback, useMemo, useState } from "react";
 import { filterStock, sortByUrgency, stockSummary, type StockSummary } from "../../lib/stock/stock";
 import type { StockPageData } from "../../lib/stock/stock.server";
@@ -34,7 +35,7 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
   const authorized = data.canEdit && data.canCreateWines;
 
   return (
-    <s-page heading="Mes vins en cave" inlineSize="base">
+    <s-page heading={TITRES.vins} inlineSize="base">
       {data.canCreateWines && !creating ? (
         <s-button
           slot="primary-action"

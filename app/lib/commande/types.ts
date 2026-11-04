@@ -22,6 +22,12 @@ export type CompanyLocationGid = ShopifyGid<"CompanyLocation">;
 export const PAYMENT_CHOICES = ["facture", "a_la_livraison", "paye"] as const;
 export type PaymentChoice = (typeof PAYMENT_CHOICES)[number];
 
+/**
+ * Les vins se vendent par cartons de 6 bouteilles, au minimum un carton : 6, 12, 18…
+ * (règle du caviste ; le site fait de même, voir README, « Vente par cartons »).
+ */
+export const CARTON_SIZE = 6;
+
 /** Nombre de bouteilles au plus par ligne (garde-fou contre une faute de frappe). */
 export const MAX_LINE_QUANTITY = 9999;
 

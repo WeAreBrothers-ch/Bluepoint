@@ -36,16 +36,16 @@ export function TodayView({ groups, invoices, today, emailConfigured }: TodayVie
   const list = { invoices, today, emailConfigured };
   return (
     <>
-      <TaskList heading="En retard" hint="À livrer en premier." tasks={groups.late} {...list} />
+      <TaskList heading="Livraisons en retard" hint="À livrer en premier." tasks={groups.late} {...list} />
       <TaskList heading="À livrer aujourd’hui" tasks={groups.today} {...list} />
-      <TaskList heading="Demain" tasks={groups.tomorrow} {...list} />
+      <TaskList heading="À livrer demain" tasks={groups.tomorrow} {...list} />
       <TaskList
-        heading="Jour de livraison à choisir"
+        heading="Commandes sans jour de livraison"
         hint="Souvent des commandes du site. Appelez le client, puis touchez « Choisir le jour »."
         tasks={groups.undated}
         {...list}
       />
-      <TaskList heading="Déjà livrées aujourd’hui" tasks={groups.doneToday} {...list} />
+      <TaskList heading="Livrées aujourd’hui" tasks={groups.doneToday} {...list} />
     </>
   );
 }

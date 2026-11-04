@@ -39,11 +39,11 @@ export default function CommandePage() {
   return (
     <s-page heading={detail === null ? "Commande" : `Commande ${detail.task.name}`} inlineSize="base">
       <s-button slot="secondary-actions" href="/app">
-        Retour à mes livraisons
+        Retour aux livraisons
       </s-button>
       {detail === null ? (
         <s-banner tone="warning" heading={data.problem ?? "Cette commande n’existe pas."}>
-          <s-button href="/app">Retour à mes livraisons</s-button>
+          <s-button href="/app">Retour aux livraisons</s-button>
         </s-banner>
       ) : (
         <>

@@ -1,3 +1,4 @@
+import { TITRES } from "../../lib/titres";
 import { useCallback, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { phoneDisplay, phoneHref } from "../../lib/agenda/contact";
@@ -82,7 +83,7 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
   const none = data.items.length === 0;
 
   return (
-    <s-page heading="Mes clients" inlineSize="base">
+    <s-page heading={TITRES.clients} inlineSize="base">
       {creating ? null : (
         <s-button slot="primary-action" variant="primary" icon="plus" onClick={() => setCreating(true)}>
           Nouveau client

@@ -1,3 +1,4 @@
+import { TITRES } from "../lib/titres";
 import { useEffect } from "react";
 import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
@@ -50,7 +51,7 @@ export default function ReglagesPage() {
   }, [result]);
 
   return (
-    <s-page heading="Mes coordonnées" inlineSize="base">
+    <s-page heading={TITRES.entreprise} inlineSize="base">
       {result?.ok ? <s-banner tone="success" heading="C’est enregistré." /> : null}
       {result !== undefined && !result.ok ? <s-banner tone="critical" heading={result.message} /> : null}
       {!complete && result === undefined ? (

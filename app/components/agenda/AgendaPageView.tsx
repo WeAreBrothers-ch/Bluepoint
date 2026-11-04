@@ -1,3 +1,4 @@
+import { TITRES } from "../../lib/titres";
 import { AgendaTabs } from "../AgendaTabs";
 import { capitalize } from "../../lib/agenda/dates";
 import type { AgendaPageData } from "../../lib/agenda/page-data.server";
@@ -51,7 +52,7 @@ function TodaySummary({ groups }: { readonly groups: AgendaPageData["todayGroups
 
 export function AgendaPageView({ data }: { readonly data: AgendaPageData }) {
   return (
-    <s-page heading="Mes livraisons" inlineSize="base">
+    <s-page heading={TITRES.livraisons} inlineSize="base">
       <s-button slot="primary-action" href="/app/commande" variant="primary">
         Prendre une commande
       </s-button>

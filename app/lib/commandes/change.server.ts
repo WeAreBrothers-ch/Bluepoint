@@ -1,3 +1,4 @@
+import { isFullCartons } from "../commande/cart";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
 import { failure, type Result } from "../core/result";
@@ -202,6 +203,11 @@ async function editOrder(admin: AdminApiContext, orderId: string, form: FormData
   const plan = planOrderEdit(lines, wanted);
   if (isEmptyPlan(plan)) return { ok: true, intent: "modifier", message: NOTHING_CHANGED_MESSAGE };
   if (bottlesAfter(lines, plan) <= 0) return refusal("modifier", EMPTY_ORDER_MESSAGE);
+  // Une ligne qu'on change doit être un nombre entier de cartons de 6 (une ancienne ligne laissée telle quelle reste permise).
+  const changedQuantities = [...plan.set.map((entry) => entry.quantity), ...plan.add.map((entry) => entry.quantity)];
+  if (changedQuantities.some((quantity) => quantity > 0 && !isFullCartons(quantity))) {
+    return refusal("modifier", "Les vins se vendent par cartons de 6 bouteilles (6, 12, 18…). Corrigez la quantité, puis réessayez.");
+  }
   const committed = await applyEdit(admin, orderId, plan);
   if (!committed.ok) {
     logError("Commande non modifiée", committed.error, { orderId });

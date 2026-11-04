@@ -4,6 +4,8 @@
  * des étapes numérotées courtes, et un bouton pour aller directement au bon endroit.
  */
 
+import { entreGuillemets, TITRES } from "../../lib/titres";
+
 interface Recipe {
   readonly situation: string;
   readonly steps: readonly string[];
@@ -17,7 +19,7 @@ const RECIPES: readonly Recipe[] = [
     steps: [
       "Touchez « Prendre une commande ».",
       "Écrivez le nom du client, puis touchez son nom dans la liste. Un nouveau client ? Touchez « Nouveau client ».",
-      "Choisissez les vins : touchez « Ajouter 1 bouteille » (ou un carton) pour chaque vin demandé.",
+      "Choisissez les vins : touchez « Ajouter un carton de 6 » pour chaque vin demandé. Pour deux cartons, touchez « + ».",
       "Choisissez le jour de livraison, puis touchez « Enregistrer la commande ».",
     ],
     href: "/app/commande",
@@ -26,68 +28,68 @@ const RECIPES: readonly Recipe[] = [
   {
     situation: "J’ai livré une commande",
     steps: [
-      "Touchez « Mes livraisons ».",
+      `Touchez ${entreGuillemets(TITRES.livraisons)}.`,
       "Trouvez la commande, puis touchez le bouton foncé « J’ai livré la commande ».",
       "L’application vous demande de confirmer : touchez « Oui ». La facture se fait toute seule.",
     ],
     href: "/app",
-    button: "Voir mes livraisons",
+    button: "Voir les livraisons",
   },
   {
     situation: "Envoyer une facture à un client",
     steps: [
-      "Touchez « Mes factures ».",
+      `Touchez ${entreGuillemets(TITRES.factures)}.`,
       "Trouvez la facture du client.",
       "Touchez « WhatsApp » ou « E-mail ». Le message est déjà écrit : relisez-le.",
       "Touchez le bouton d’envoi dans la fenêtre.",
     ],
     href: "/app/factures",
-    button: "Voir mes factures",
+    button: "Voir les factures",
   },
   {
     situation: "Un client m’a payé",
     steps: [
-      "Touchez « Mes factures ».",
+      `Touchez ${entreGuillemets(TITRES.factures)}.`,
       "Sur la facture, touchez « Le client a payé ».",
       "Dites comment il a payé (virement, argent liquide ou TWINT). C’est terminé : la facture passe dans « Payées ».",
     ],
     href: "/app/factures",
-    button: "Voir mes factures",
+    button: "Voir les factures",
   },
   {
     situation: "Je reçois de nouvelles bouteilles",
     steps: [
-      "Touchez « Mes vins ».",
+      `Touchez ${entreGuillemets(TITRES.vins)}.`,
       "Trouvez le vin, puis touchez « Ajouter des bouteilles ».",
       "Écrivez combien de bouteilles vous avez reçues, puis touchez le bouton pour enregistrer.",
     ],
     href: "/app/stock",
-    button: "Voir mes vins",
+    button: "Voir les vins en cave",
   },
   {
     situation: "Je veux ajouter un nouveau vin à vendre",
     steps: [
-      "Touchez « Mes vins », puis « Nouveau vin ».",
+      `Touchez ${entreGuillemets(TITRES.vins)}, puis « Nouveau vin ».`,
       "Remplissez le nom, le prix et le nombre de bouteilles.",
       "Touchez « Créer le vin ». Il apparaît tout de suite sur le site.",
     ],
     href: "/app/stock",
-    button: "Voir mes vins",
+    button: "Voir les vins en cave",
   },
   {
     situation: "Un client n’est pas là le jour prévu",
     steps: [
-      "Touchez « Mes livraisons ».",
+      `Touchez ${entreGuillemets(TITRES.livraisons)}.`,
       "Sur la commande, touchez « Changer le jour ».",
       "Choisissez le nouveau jour, puis touchez « Valider ce jour ».",
     ],
     href: "/app",
-    button: "Voir mes livraisons",
+    button: "Voir les livraisons",
   },
   {
     situation: "Un professionnel demande un compte",
     steps: [
-      "Une bande bleue « demande de compte pro à valider » apparaît en haut de « Mes livraisons » et de « Mes clients ».",
+      `Une bande bleue « demande de compte pro à valider » apparaît en haut de ${entreGuillemets(TITRES.livraisons)} et de ${entreGuillemets(TITRES.clients)}.`,
       "Touchez « Voir les demandes ».",
       "Touchez « Accepter » pour lui donner les prix pros, ou « Refuser ».",
     ],
@@ -97,7 +99,7 @@ const RECIPES: readonly Recipe[] = [
   {
     situation: "Retrouver une ancienne commande ou un client",
     steps: [
-      "Touchez « Toutes les commandes » (ou « Mes clients »).",
+      `Touchez ${entreGuillemets(TITRES.commandes)} (ou ${entreGuillemets(TITRES.clients)}).`,
       "Écrivez un nom, une ville ou un numéro dans la case en haut, puis touchez « Chercher ».",
     ],
     href: "/app/commandes",
@@ -105,9 +107,12 @@ const RECIPES: readonly Recipe[] = [
   },
   {
     situation: "Changer mon adresse ou mon compte en banque",
-    steps: ["Touchez « Mes coordonnées ».", "Corrigez ce qui a changé, puis touchez « Enregistrer »."],
+    steps: [
+      `Touchez ${entreGuillemets(TITRES.entreprise)}.`,
+      "Corrigez ce qui a changé, puis touchez « Enregistrer ».",
+    ],
     href: "/app/reglages",
-    button: "Voir mes coordonnées",
+    button: "Voir les informations de l’entreprise",
   },
 ];
 
@@ -134,7 +139,7 @@ export function AidePageView() {
       <s-banner tone="info" heading="Vous êtes perdu(e) ?">
         <s-stack direction="block" gap="small-200">
           <s-text>Pas de panique : rien ne se fait sans que l’application vous demande de confirmer.</s-text>
-          <s-text>Pour revenir au début, touchez « Mes livraisons » dans le menu.</s-text>
+          <s-text>{`Pour revenir au début, touchez ${entreGuillemets(TITRES.livraisons)} dans le menu.`}</s-text>
         </s-stack>
       </s-banner>
       <s-section>

@@ -1,3 +1,4 @@
+import { TITRES } from "../../lib/titres";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { bottleCountText, modeLabel, type BadgeLabel } from "../../lib/agenda/labels";
@@ -76,7 +77,7 @@ export function OrdersPageView({ data }: { readonly data: OrdersPageData }) {
   const first = data.items.length === 0;
 
   return (
-    <s-page heading="Toutes les commandes" inlineSize="base">
+    <s-page heading={TITRES.commandes} inlineSize="base">
       <s-button slot="primary-action" variant="primary" icon="plus" href="/app/commande">
         Prendre une commande
       </s-button>

@@ -46,9 +46,17 @@ describe("parsePhoneOrder", () => {
     expect(!impossible.ok && impossible.errors.requestedDate).toBe("Choisissez le jour de livraison.");
   });
 
+  it("refuse ce qui n'est pas un carton complet de 6 bouteilles", () => {
+    for (const quantity of [1, 3, 7, 13]) {
+      const result = parsePhoneOrder(raw({ lines: [{ variantId: VARIANT_A, quantity }] }), TODAY);
+      expect(result.ok).toBe(false);
+    }
+    expect(parsePhoneOrder(raw({ lines: [{ variantId: VARIANT_A, quantity: 18 }] }), TODAY).ok).toBe(true);
+  });
+
   it("refuse une quantité non entière, un doublon ou un mode inconnu", () => {
-    expect(parsePhoneOrder(raw({ lines: [{ variantId: VARIANT_A, quantity: 1.5 }] }), TODAY).ok).toBe(false);
-    const doubled = [{ variantId: VARIANT_A, quantity: 1 }, { variantId: VARIANT_A, quantity: 2 }];
+    expect(parsePhoneOrder(raw({ lines: [{ variantId: VARIANT_A, quantity: 7.5 }] }), TODAY).ok).toBe(false);
+    const doubled = [{ variantId: VARIANT_A, quantity: 6 }, { variantId: VARIANT_A, quantity: 12 }];
     expect(parsePhoneOrder(raw({ lines: doubled }), TODAY).ok).toBe(false);
     const mode = parsePhoneOrder(raw({ mode: "drone" }), TODAY);
     expect(!mode.ok && mode.errors.mode).toBe("Choisissez un mode de livraison.");
@@ -77,7 +85,7 @@ describe("parsePhoneOrder", () => {
 
 describe("parsePriceCalculation", () => {
   it("calcule aussi les prix d'un client sans entreprise (remise pro automatique)", () => {
-    const lines = [{ variantId: VARIANT_A, quantity: 1 }];
+    const lines = [{ variantId: VARIANT_A, quantity: 6 }];
     expect(parsePriceCalculation({ customerId: CUSTOMER, b2b: null, lines })).toEqual({ customerId: CUSTOMER, b2b: null, lines });
     expect(parsePriceCalculation({ customerId: "", b2b: null, lines })).toBeNull();
   });

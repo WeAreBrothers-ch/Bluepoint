@@ -1,3 +1,4 @@
+import { TITRES } from "../lib/titres";
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { isRouteErrorResponse, Outlet, useLoaderData, useRouteError, useRouteLoaderData } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
@@ -21,14 +22,14 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<AppLoader
 function AppNav() {
   return (
     <s-app-nav>
-      <s-link href="/app">Mes livraisons</s-link>
-      <s-link href="/app/commande">Prendre une commande</s-link>
-      <s-link href="/app/factures">Mes factures</s-link>
-      <s-link href="/app/stock">Mes vins</s-link>
-      <s-link href="/app/clients">Mes clients</s-link>
-      <s-link href="/app/commandes">Toutes les commandes</s-link>
-      <s-link href="/app/reglages">Mes coordonnées</s-link>
-      <s-link href="/app/aide">Aide</s-link>
+      <s-link href="/app">{TITRES.livraisons}</s-link>
+      <s-link href="/app/commande">{TITRES.nouvelleCommande}</s-link>
+      <s-link href="/app/factures">{TITRES.factures}</s-link>
+      <s-link href="/app/stock">{TITRES.vins}</s-link>
+      <s-link href="/app/clients">{TITRES.clients}</s-link>
+      <s-link href="/app/commandes">{TITRES.commandes}</s-link>
+      <s-link href="/app/reglages">{TITRES.entreprise}</s-link>
+      <s-link href="/app/aide">{TITRES.aide}</s-link>
     </s-app-nav>
   );
 }

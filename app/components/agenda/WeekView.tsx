@@ -34,7 +34,7 @@ export function WeekView({ groups, invoices, today, emailConfigured }: WeekViewP
   const list = { invoices, today, emailConfigured };
   return (
     <>
-      <TaskList heading="En retard (semaines passées)" hint="À livrer en premier." tasks={groups.overdueBefore} {...list} />
+      <TaskList heading="Livraisons en retard (semaines passées)" hint="À livrer en premier." tasks={groups.overdueBefore} {...list} />
       {busyDays.length === 0 ? (
         <s-section>
           <s-paragraph>Aucune livraison prévue cette semaine-là.</s-paragraph>
@@ -43,7 +43,7 @@ export function WeekView({ groups, invoices, today, emailConfigured }: WeekViewP
         busyDays.map((column) => <DaySection key={column.date} column={column} {...list} />)
       )}
       <TaskList
-        heading="Jour de livraison à choisir"
+        heading="Commandes sans jour de livraison"
         hint="Souvent des commandes du site. Appelez le client, puis touchez « Choisir le jour »."
         tasks={groups.undated}
         {...list}

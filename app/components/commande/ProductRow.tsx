@@ -1,6 +1,7 @@
 import { memo } from "react";
+import { cartonsOf, isFullCartons } from "../../lib/commande/cart";
 import { isOverStock, productLabel } from "../../lib/commande/totals";
-import type { ProductOption, VariantGid } from "../../lib/commande/types";
+import { CARTON_SIZE, type ProductOption, type VariantGid } from "../../lib/commande/types";
 import { formatChf, formatInteger } from "../../lib/format/money";
 import { QuantityStepper } from "./QuantityStepper";
 
@@ -25,6 +26,13 @@ export function bottlesText(quantity: number): string {
   return `${formatInteger(quantity)} bouteille${quantity > 1 ? "s" : ""}`;
 }
 
+/** « 2 cartons (12 bouteilles) » : le nombre de cartons d'abord, car c'est ainsi qu'on commande. */
+export function cartonsText(quantity: number): string {
+  if (!isFullCartons(quantity)) return bottlesText(quantity);
+  const cartons = cartonsOf(quantity);
+  return `${cartons} carton${cartons > 1 ? "s" : ""} (${bottlesText(quantity)})`;
+}
+
 function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
   const label = productLabel(product);
   const overStock = isOverStock(product, quantity);
@@ -42,14 +50,14 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
           <s-stack direction="block" gap="small-500">
             <s-text type="strong">{label}</s-text>
             <s-text color="subdued">
-              {[formatChf(product.priceCents), stockText(product.available)]
+              {[`${formatChf(product.priceCents)} la bouteille`, `carton de ${CARTON_SIZE}\u202F: ${formatChf(product.priceCents * CARTON_SIZE)}`, stockText(product.available)]
                 .filter((part) => part !== null)
                 .join(" · ")}
             </s-text>
           </s-stack>
           {chosen ? (
             <s-badge tone="success" icon="check" size="large">
-              {`${bottlesText(quantity)} dans la commande`}
+              {`${cartonsText(quantity)} dans la commande`}
             </s-badge>
           ) : null}
         </s-stack>

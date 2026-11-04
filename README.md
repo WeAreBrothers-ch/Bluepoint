@@ -67,6 +67,22 @@ Elle sert à l’équipe, pas aux clients :
   « Livrer au plus tard » (par défaut = date souhaitée) et « Mode de livraison » dans les
   métachamps `$app`. Valeurs illisibles ignorées et journalisées ; métachamp déjà posé jamais réécrit.
 
+## Vente par cartons de 6
+
+Les vins se vendent **par cartons de 6 bouteilles, au minimum un carton** (6, 12, 18…), pour chaque vin.
+
+- **Application** : « Prendre une commande » et « Modifier les vins » comptent en cartons (`app/lib/commande/cart.ts`,
+  constante `CARTON_SIZE` dans `types.ts`) ; le serveur refuse toute quantité qui n’est pas un carton complet. Une
+  ancienne ligne d’une commande du site (par exemple 3 bouteilles) reste telle quelle tant qu’on n’y touche pas.
+- **Site** (thème) : l’ajout se fait par 6, le panier avance de 6 en 6, et « Commander » reste bloqué tant qu’une ligne
+  n’est pas un carton complet. Shopify n’impose pas cette règle sur l’abonnement Basic : elle vit dans le thème.
+
+## Noms des pages
+
+Les noms du menu et des titres viennent d’une seule liste, `app/lib/titres.ts` : Livraisons, Prendre une commande,
+Factures, Vins en cave, Clients, Toutes les commandes, Informations de l’entreprise, Aide. Les phrases d’aide les
+reprennent, pour que tout le monde (le patron comme un employé) lise toujours les mêmes mots.
+
 ## Rabais carte (2 % pour un paiement par carte tout de suite)
 
 Règle du caviste : **2 % de rabais en plus du prix pro, seulement si le client paie par carte au moment de la

@@ -31,7 +31,7 @@ function Text({ field, label, values, errors, details }: FieldsProps & { field: 
 
 export function SellerFields(props: FieldsProps) {
   return (
-    <s-section heading="1. Votre entreprise">
+    <s-section heading="1. L’entreprise (nom et adresse sur les factures)">
       <s-stack direction="block" gap="base">
         <s-paragraph color="subdued">Ces informations sont imprimées en haut de chaque facture.</s-paragraph>
         <Text {...props} field="legalName" label="Nom de l’entreprise" details="Ex. Blue Point Distribution Sàrl" />
@@ -67,7 +67,7 @@ export function SellerFields(props: FieldsProps) {
 
 export function PaymentFields(props: FieldsProps) {
   return (
-    <s-section heading="2. Votre compte en banque">
+    <s-section heading="2. Le compte en banque (pour être payé)">
       <s-stack direction="block" gap="base">
         <s-paragraph color="subdued">Le QR code de chaque facture envoie l’argent sur ce compte.</s-paragraph>
         <Text {...props} field="iban" label="IBAN" details="Il commence par CH et se trouve sur vos relevés de banque." />
@@ -94,13 +94,13 @@ export function PaymentFields(props: FieldsProps) {
 
 export function AutomationFields({ values }: Pick<FieldsProps, "values">) {
   return (
-    <s-section heading="3. Ce qui se fait tout seul">
+    <s-section heading="3. Ce que l’application fait toute seule">
       <s-stack direction="block" gap="base">
         <s-checkbox
           name="autoInvoiceOnDelivery"
           value="on"
           label="Faire la facture aussi quand une commande est expédiée directement dans Shopify"
-          details="« J’ai livré la commande » dans « Mes livraisons » fait toujours la facture, que cette case soit cochée ou non."
+          details="« J’ai livré la commande » dans « Livraisons » fait toujours la facture, que cette case soit cochée ou non."
           {...(values.autoInvoiceOnDelivery ? { checked: true } : {})}
         />
         <s-checkbox

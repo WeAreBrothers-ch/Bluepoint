@@ -41,7 +41,7 @@ export const MESSAGES = {
     "La commande est enregistrée mais pas terminée\u202F: Shopify n’accepte pas encore le paiement plus tard sur cette boutique. " +
     "Elle n’a pas été notée payée. Terminez-la dans Shopify ou appelez la personne qui s’occupe de la boutique.",
   metachampsNonPoses:
-    "Attention\u202F: le jour de livraison n’a pas été enregistré, la commande n’apparaîtra pas dans vos livraisons. " +
+    "Attention\u202F: le jour de livraison n’a pas été enregistré, la commande n’apparaîtra pas dans « Livraisons ». " +
     "Prévenez la personne qui s’occupe de la boutique.",
 } as const;
 

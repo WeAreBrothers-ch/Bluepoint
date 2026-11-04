@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DELIVERY_MODES, parseIsoDate, type IsoDate } from "../metafields/definitions";
 import { parseGid } from "../shopify/ids";
+import { isFullCartons } from "./cart";
 import { MAX_LINE_QUANTITY, PAYMENT_CHOICES, type B2bPurchaser, type PhoneOrderInput, type PhoneOrderLine } from "./types";
 
 /**
@@ -38,8 +39,9 @@ const lineSchema = z.object({
   quantity: z
     .number("Quantité invalide.")
     .int("Quantité entière attendue.")
-    .min(1, "Au moins 1 bouteille par ligne.")
-    .max(MAX_LINE_QUANTITY, `${MAX_LINE_QUANTITY} bouteilles au plus par ligne.`),
+    .min(1, "Au moins un carton de 6 bouteilles par vin.")
+    .max(MAX_LINE_QUANTITY, `${MAX_LINE_QUANTITY} bouteilles au plus par ligne.`)
+    .refine(isFullCartons, "Les vins se commandent par cartons de 6 bouteilles (6, 12, 18…)."),
 });
 
 const b2bSchema = z.object({

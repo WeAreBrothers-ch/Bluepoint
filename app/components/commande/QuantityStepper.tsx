@@ -1,9 +1,9 @@
-import { CARTON_SIZES, parseQuantity } from "../../lib/commande/cart";
-import { MAX_LINE_QUANTITY } from "../../lib/commande/types";
+import { cartonsOf, isFullCartons, nextCartonQuantity, previousCartonQuantity, quantityFromCartons } from "../../lib/commande/cart";
+import { CARTON_SIZE, MAX_LINE_QUANTITY } from "../../lib/commande/types";
 
 /**
- * Boutons de quantité d'un vin, sur une seule ligne.
- * Pas encore choisi : « Ajouter 1 bouteille » et les cartons. Déjà choisi : −, la quantité, +, cartons, « Retirer ».
+ * Quantité d'un vin, en cartons de 6 bouteilles (le caviste ne vend pas à l'unité).
+ * Pas encore choisi : un seul bouton, « Ajouter un carton de 6 ». Déjà choisi : −, le nombre de cartons, +, « Retirer ».
  */
 
 interface QuantityStepperProps {
@@ -13,46 +13,34 @@ interface QuantityStepperProps {
   readonly onAdd: (delta: number) => void;
 }
 
-function CartonButtons({ productLabel, onAdd }: Pick<QuantityStepperProps, "productLabel" | "onAdd">) {
-  return (
-    <>
-      {CARTON_SIZES.map((size) => (
-        <s-button key={size} accessibilityLabel={`Ajouter un carton de ${size} de ${productLabel}`} onClick={() => onAdd(size)}>
-          {`+ carton de ${size}`}
-        </s-button>
-      ))}
-    </>
-  );
-}
-
-export function QuantityStepper({ productLabel, quantity, onSet, onAdd }: QuantityStepperProps) {
+export function QuantityStepper({ productLabel, quantity, onSet }: QuantityStepperProps) {
   if (quantity === 0) {
     return (
       <s-stack direction="inline" gap="small-200" alignItems="center">
-        <s-button icon="plus" accessibilityLabel={`Ajouter une bouteille de ${productLabel}`} onClick={() => onAdd(1)}>
-          Ajouter 1 bouteille
+        <s-button icon="plus" accessibilityLabel={`Ajouter un carton de ${CARTON_SIZE} bouteilles de ${productLabel}`} onClick={() => onSet(CARTON_SIZE)}>
+          {`Ajouter un carton de ${CARTON_SIZE}`}
         </s-button>
-        <CartonButtons productLabel={productLabel} onAdd={onAdd} />
       </s-stack>
     );
   }
   return (
     <s-stack direction="inline" gap="small-200" alignItems="center">
-      <s-button icon="minus" accessibilityLabel={`Retirer une bouteille de ${productLabel}`} onClick={() => onAdd(-1)} />
-      <s-box inlineSize="80px">
+      <s-button icon="minus" accessibilityLabel={`Retirer un carton de ${productLabel}`} onClick={() => onSet(previousCartonQuantity(quantity))} />
+      <s-box inlineSize="90px">
         <s-number-field
-          label={`Nombre de bouteilles de ${productLabel}`}
+          label={`Nombre de cartons de ${CARTON_SIZE} bouteilles de ${productLabel}`}
           labelAccessibilityVisibility="exclusive"
-          value={String(quantity)}
+          value={String(cartonsOf(quantity))}
           min={0}
-          max={MAX_LINE_QUANTITY}
+          max={Math.floor(MAX_LINE_QUANTITY / CARTON_SIZE)}
           step={1}
           inputMode="numeric"
-          onInput={(event) => onSet(parseQuantity(event.currentTarget.value))}
+          onInput={(event) => onSet(quantityFromCartons(event.currentTarget.value))}
         />
       </s-box>
-      <s-button icon="plus" accessibilityLabel={`Ajouter une bouteille de ${productLabel}`} onClick={() => onAdd(1)} />
-      <CartonButtons productLabel={productLabel} onAdd={onAdd} />
+      <s-button icon="plus" accessibilityLabel={`Ajouter un carton de ${productLabel}`} onClick={() => onSet(nextCartonQuantity(quantity))} />
+      <s-text>{cartonsOf(quantity) > 1 ? "cartons" : "carton"}</s-text>
+      {isFullCartons(quantity) ? null : <s-text tone="caution">Ce n’est pas un carton complet.</s-text>}
       <s-button icon="delete" variant="tertiary" tone="critical" accessibilityLabel={`Retirer ${productLabel} de la commande`} onClick={() => onSet(0)}>
         Retirer
       </s-button>
