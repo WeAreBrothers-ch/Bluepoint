@@ -3,7 +3,7 @@ import { useFetcher } from "react-router";
 import { toLines } from "../../lib/commande/cart";
 import { formReducer, initialFormState, toPriceRequest, toSubmission } from "../../lib/commande/form-state";
 import type { PriceCalculationResult } from "../../lib/commande/pricing";
-import type { VariantGid } from "../../lib/commande/types";
+import type { CustomerOption, VariantGid } from "../../lib/commande/types";
 import type { CommandeActionResult } from "../../lib/commande/action.server";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { useDebouncedValue } from "../useDebouncedValue";
@@ -23,8 +23,11 @@ function newKey(): string {
   return crypto.randomUUID();
 }
 
-export function usePhoneOrder(today: IsoDate, onSubmit: (submission: Submission) => void) {
-  const [state, dispatch] = useReducer(formReducer, today, initialFormState);
+export function usePhoneOrder(today: IsoDate, onSubmit: (submission: Submission) => void, initialCustomer: CustomerOption | null = null) {
+  const [state, dispatch] = useReducer(formReducer, null, () => {
+    const start = initialFormState(today);
+    return initialCustomer === null ? start : formReducer(start, { type: "client", customer: initialCustomer });
+  });
   const keyRef = useRef<string | null>(null);
   const priceFetcher = useFetcher<CommandeActionResult>({ key: "commande-prix" });
 

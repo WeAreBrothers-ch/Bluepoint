@@ -7,7 +7,7 @@ import { normalizePhoneE164 } from "../factures/phone";
  * Logique pure, testée sans Shopify.
  */
 
-export const NEW_CUSTOMER_FIELDS = ["firstName", "lastName", "phone", "email", "street", "postalCode", "city"] as const;
+export const NEW_CUSTOMER_FIELDS = ["firstName", "lastName", "company", "phone", "email", "street", "postalCode", "city"] as const;
 
 export type NewCustomerField = (typeof NEW_CUSTOMER_FIELDS)[number];
 export type NewCustomerValues = Readonly<Record<NewCustomerField, string>>;
@@ -16,6 +16,7 @@ export type NewCustomerErrors = Partial<Record<NewCustomerField, string>>;
 export const EMPTY_NEW_CUSTOMER: NewCustomerValues = {
   firstName: "",
   lastName: "",
+  company: "",
   phone: "",
   email: "",
   street: "",
@@ -29,6 +30,7 @@ const schema = z
   .object({
     firstName: required("Le prénom"),
     lastName: required("Le nom"),
+    company: z.string().trim().max(60, "60 caractères au plus."),
     phone: z.string().transform((raw, ctx) => {
       const phone = normalizePhoneE164(raw);
       if (phone === null) {
@@ -113,6 +115,7 @@ export function toCustomerInput(input: NewCustomerInput) {
             {
               firstName: input.firstName,
               lastName: input.lastName,
+              ...(input.company === "" ? {} : { company: input.company }),
               address1: input.street,
               zip: input.postalCode,
               city: input.city,

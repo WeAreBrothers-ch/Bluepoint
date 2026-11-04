@@ -25,9 +25,10 @@ function AppNav() {
         Agenda
       </s-link>
       <s-link href="/app/commande">Prendre une commande</s-link>
+      <s-link href="/app/commandes">Commandes</s-link>
       <s-link href="/app/factures">Factures</s-link>
       <s-link href="/app/stock">Stock</s-link>
-      <s-link href="/app/pros">Clients pro</s-link>
+      <s-link href="/app/clients">Clients</s-link>
       <s-link href="/app/reglages">Réglages</s-link>
     </s-app-nav>
   );

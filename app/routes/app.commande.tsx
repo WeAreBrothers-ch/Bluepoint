@@ -14,7 +14,7 @@ import { loadCommandePage, type CommandePageData } from "../lib/commande/page-da
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<CommandePageData> => {
   const { admin, session } = await authenticate.admin(request);
-  return loadCommandePage(admin, session.shop, new Date());
+  return loadCommandePage(admin, session.shop, new Date(), new URL(request.url).searchParams.get("client"));
 };
 
 export const action = async ({ request }: ActionFunctionArgs): Promise<CommandeActionResult> => {
@@ -69,6 +69,7 @@ export default function NouvelleCommandePage() {
           truncated={data.truncated}
           paymentTermDays={data.paymentTermDays}
           today={data.today}
+          initialCustomer={data.initialCustomer}
           outcome={isDone(outcome) ? undefined : outcome}
           submitting={submitting}
           onSubmit={onSubmit}

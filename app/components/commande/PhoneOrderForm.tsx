@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { PhoneOrderOutcome } from "../../lib/commande/outcome";
 import type { PhoneOrderErrors } from "../../lib/commande/schema";
 import { computeTotals, stockWarnings } from "../../lib/commande/totals";
-import type { ProductOption } from "../../lib/commande/types";
+import type { CustomerOption, ProductOption } from "../../lib/commande/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { CustomerPicker } from "./CustomerPicker";
 import { DeliveryFields, PaymentField } from "./DeliveryFields";
@@ -18,6 +18,8 @@ interface PhoneOrderFormProps {
   readonly truncated: boolean;
   readonly paymentTermDays: number;
   readonly today: IsoDate;
+  /** Client déjà choisi (venu de sa fiche), ou null. */
+  readonly initialCustomer: CustomerOption | null;
   readonly outcome: PhoneOrderOutcome | undefined;
   readonly submitting: boolean;
   readonly onSubmit: (submission: Submission) => void;
@@ -26,7 +28,7 @@ interface PhoneOrderFormProps {
 const NO_ERRORS: PhoneOrderErrors = {};
 
 export function PhoneOrderForm(props: PhoneOrderFormProps) {
-  const order = usePhoneOrder(props.today, props.onSubmit);
+  const order = usePhoneOrder(props.today, props.onSubmit, props.initialCustomer);
   const { state, dispatch } = order;
   const errors = props.outcome?.kind === "invalide" ? props.outcome.errors : NO_ERRORS;
   const prices = order.priceResult?.ok ? order.priceResult.prices : null;

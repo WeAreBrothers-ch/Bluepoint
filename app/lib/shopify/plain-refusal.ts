@@ -11,7 +11,7 @@ const RULES: readonly { readonly pattern: RegExp; readonly text: string }[] = [
   },
   {
     pattern: /inventory|out of stock|stock insuffisant|not enough|insufficient/i,
-    text: "Un des vins n’a plus assez de stock. Corrigez le stock dans Shopify (Produits) ou baissez la quantité.",
+    text: "Un des vins n’a plus assez de stock. Corrigez-le dans l’onglet Stock, ou baissez la quantité.",
   },
   {
     pattern: /variant.*(does not exist|not found|deleted|unavailable|not available)|product.*(not available|unavailable|archived)/i,
@@ -19,31 +19,31 @@ const RULES: readonly { readonly pattern: RegExp; readonly text: string }[] = [
   },
   {
     pattern: /customer.*(does not exist|not found|deleted)|purchasing entity|company location/i,
-    text: "Ce client n’existe plus ou a changé dans Shopify. Rechargez la page et choisissez-le à nouveau.",
+    text: "Ce client n’existe plus ou a changé. Rechargez la page et choisissez-le à nouveau.",
   },
   {
     pattern: /(zip|postal|province|country|address).*(invalid|blank|required|not valid)/i,
-    text: "L’adresse du client est incomplète. Corrigez-la dans sa fiche client Shopify, puis réessayez.",
+    text: "L’adresse du client est incomplète. Complétez-la (nom, rue et numéro, NPA, localité), puis réessayez.",
   },
   {
     pattern: /e-?mail.*(invalid|not valid)|phone.*(invalid|not valid)/i,
-    text: "L’e-mail ou le téléphone du client n’est pas valable. Corrigez-le dans sa fiche client Shopify.",
+    text: "L’e-mail ou le téléphone du client n’est pas valable. Corrigez-le dans l’onglet Clients (« Modifier les coordonnées »).",
   },
   {
     pattern: /\bon hold\b|\bheld\b/i,
-    text: "Shopify a mis cette commande en attente. Ouvrez-la dans Shopify pour lever l’attente, puis réessayez.",
+    text: "Cette commande est en attente. Demandez à la personne qui s’occupe de la boutique de la débloquer, puis réessayez.",
   },
   {
     pattern: /(already|has been) (fulfilled|paid|completed|closed)|cannot be marked as paid/i,
-    text: "C’était déjà fait dans Shopify. Rechargez la page pour voir la situation à jour.",
+    text: "C’était déjà fait. Rechargez la page pour voir la situation à jour.",
   },
   {
     pattern: /\bcancell?ed\b/i,
-    text: "Cette commande a été annulée dans Shopify.",
+    text: "Cette commande a été annulée.",
   },
   {
     pattern: /access denied|not authorized|permission|scope/i,
-    text: "L’application n’a pas le droit de faire cela dans Shopify. Contactez la personne qui l’a installée.",
+    text: "L’application n’a pas le droit de faire cela. Contactez la personne qui l’a installée.",
   },
 ];
 

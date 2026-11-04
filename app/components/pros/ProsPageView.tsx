@@ -1,4 +1,5 @@
 import type { ProsPageData } from "../../lib/pros/page-data.server";
+import { GroupTitle } from "../GroupTitle";
 import { AddProForm } from "./AddProForm";
 import { ProRequestCard } from "./ProRequestCard";
 
@@ -6,24 +7,28 @@ import { ProRequestCard } from "./ProRequestCard";
 
 export function ProsPageView({ data }: { readonly data: ProsPageData }) {
   return (
-    <s-page heading="Clients pro" inlineSize="base">
+    <s-page heading="Comptes pro" inlineSize="base">
+      <s-button slot="secondary-actions" href="/app/clients">
+        Retour aux clients
+      </s-button>
       {data.canCreate ? null : (
         <s-banner tone="warning" heading="Une étape d’autorisation reste à faire">
           Les demandes arrivent déjà ici, mais l’app ne peut pas encore créer les comptes pro dans Shopify. La personne qui
           s’occupe du site doit l’autoriser une seule fois ; ensuite, le bouton « Accepter » fonctionnera.
         </s-banner>
       )}
-      <s-section heading={`Demandes à valider (${data.pending.length})`}>
-        {data.pending.length === 0 ? (
+      {data.pending.length === 0 ? (
+        <s-section heading="Demandes à valider (0)">
           <s-paragraph>Aucune demande à valider. Les demandes envoyées depuis le site apparaissent ici.</s-paragraph>
-        ) : (
-          <s-stack direction="block" gap="base">
-            {data.pending.map((request) => (
-              <ProRequestCard key={request.id} request={request} canCreate={data.canCreate} />
-            ))}
-          </s-stack>
-        )}
-      </s-section>
+        </s-section>
+      ) : (
+        <>
+          <GroupTitle title={`Demandes à valider (${data.pending.length})`} />
+          {data.pending.map((request) => (
+            <ProRequestCard key={request.id} request={request} canCreate={data.canCreate} />
+          ))}
+        </>
+      )}
       <s-section heading="Ajouter un client pro">
         <s-stack direction="block" gap="base">
           <s-paragraph>Un pro vous appelle pour ouvrir un compte ? Créez-le ici directement, sans passer par le site.</s-paragraph>

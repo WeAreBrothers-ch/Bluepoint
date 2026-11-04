@@ -1,6 +1,7 @@
 import type { WeekColumn, WeekGroups } from "../../lib/agenda/grouping";
 import type { InvoiceRef } from "../../lib/agenda/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
+import { GroupTitle } from "../GroupTitle";
 import { TaskCard } from "./TaskCard";
 import { TaskList } from "./TaskList";
 
@@ -17,21 +18,14 @@ interface WeekViewProps {
 }
 
 function DaySection({ column, invoices, today, emailConfigured }: { readonly column: WeekColumn } & Omit<WeekViewProps, "groups">) {
-  const heading = `${column.label}${column.isToday ? " (aujourd’hui)" : ""} — ${column.tasks.length} livraison${column.tasks.length > 1 ? "s" : ""}`;
+  const title = `${column.label}${column.isToday ? " (aujourd’hui)" : ""} — ${column.tasks.length} livraison${column.tasks.length > 1 ? "s" : ""}`;
   return (
-    <s-section heading={heading}>
-      <s-stack direction="block" gap="base">
-        {column.tasks.map((task) => (
-          <TaskCard
-            key={task.orderId}
-            task={task}
-            invoice={invoices[task.orderId] ?? null}
-            today={today}
-            emailConfigured={emailConfigured}
-          />
-        ))}
-      </s-stack>
-    </s-section>
+    <>
+      <GroupTitle title={title} />
+      {column.tasks.map((task) => (
+        <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} emailConfigured={emailConfigured} />
+      ))}
+    </>
   );
 }
 

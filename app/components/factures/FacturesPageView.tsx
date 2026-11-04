@@ -7,6 +7,7 @@ import {
 } from "../../lib/factures/list-item";
 import type { FacturesPageData } from "../../lib/factures/page-data.server";
 import { EmptyState } from "../EmptyState";
+import { GroupTitle } from "../GroupTitle";
 import { FILL } from "../fill";
 import { InvoiceCard } from "./InvoiceCard";
 
@@ -74,16 +75,15 @@ export function FacturesPageView({ data }: { readonly data: FacturesPageData }) 
           <s-paragraph>{EMPTY_TEXT[data.view]}</s-paragraph>
         </s-section>
       ) : (
-        <s-section heading={`${FACTURES_VIEWS.find((view) => view.id === data.view)?.title ?? ""} (${data.invoices.length})`}>
-          <s-stack direction="block" gap="base">
-            {data.invoices.map((invoice) => (
-              <InvoiceCard key={invoice.id} invoice={invoice} emailConfigured={data.emailConfigured} />
-            ))}
-            {data.totalCount === INVOICE_LIST_LIMIT ? (
-              <s-text color="subdued">{`Seules les ${INVOICE_LIST_LIMIT} dernières factures sont prises en compte.`}</s-text>
-            ) : null}
-          </s-stack>
-        </s-section>
+        <>
+          <GroupTitle title={`${FACTURES_VIEWS.find((view) => view.id === data.view)?.title ?? ""} (${data.invoices.length})`} />
+          {data.invoices.map((invoice) => (
+            <InvoiceCard key={invoice.id} invoice={invoice} emailConfigured={data.emailConfigured} />
+          ))}
+          {data.totalCount === INVOICE_LIST_LIMIT ? (
+            <s-text color="subdued">{`Seules les ${INVOICE_LIST_LIMIT} dernières factures sont prises en compte.`}</s-text>
+          ) : null}
+        </>
       )}
     </s-page>
   );

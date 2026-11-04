@@ -3,7 +3,9 @@ import { useFetcher } from "react-router";
 import { CARTON_SIZES, parseQuantity } from "../../lib/commande/cart";
 import { formatChf, formatInteger } from "../../lib/format/money";
 import type { PhotoResult } from "../../lib/stock/photo";
+import type { PriceResult } from "../../lib/stock/price";
 import { bottles, reservedText, type StockActionResult, type StockIntent, type StockItem } from "../../lib/stock/stock";
+import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { PhotoPicker } from "./PhotoPicker";
 
@@ -21,7 +23,7 @@ interface StockRowProps {
   readonly canPhoto: boolean;
 }
 
-type Panel = "aucun" | StockIntent | "photo";
+type Panel = "aucun" | StockIntent | "photo" | "prix";
 
 function LevelBadge({ item }: { readonly item: StockItem }) {
   if (item.level === "epuise") return <s-badge tone="critical">Plus en stock</s-badge>;
@@ -115,10 +117,50 @@ function PhotoPanel({ item, busy, onSubmit, onCancel }: PhotoPanelProps) {
   );
 }
 
+interface PricePanelProps {
+  readonly item: StockItem;
+  readonly busy: boolean;
+  readonly onSubmit: (price: string) => void;
+  readonly onCancel: () => void;
+}
+
+/** « Modifier le prix » : le prix de vente d'une bouteille, en francs. */
+function PricePanel({ item, busy, onSubmit, onCancel }: PricePanelProps) {
+  const [price, setPrice] = useState(item.priceCents === null ? "" : (item.priceCents / 100).toFixed(2));
+  return (
+    <s-box padding="base" background="subdued" borderRadius="base">
+      <s-stack direction="block" gap="small-200">
+        <s-text-field
+          label="Prix d’une bouteille (CHF)"
+          details="Ex. 55 ou 55.50. Le prix change tout de suite sur le site et dans « Prendre une commande »."
+          value={price}
+          onInput={(event) => setPrice(event.currentTarget.value)}
+        />
+        <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
+          <s-button
+            {...FILL}
+            variant="primary"
+            icon="check"
+            onClick={() => onSubmit(price)}
+            {...(busy ? { loading: true } : {})}
+            {...(price.trim() === "" ? { disabled: true } : {})}
+          >
+            Enregistrer le prix
+          </s-button>
+          <s-button {...FILL} icon="x" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+            Annuler
+          </s-button>
+        </s-grid>
+      </s-stack>
+    </s-box>
+  );
+}
+
 export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
   const [panel, setPanel] = useState<Panel>("aucun");
   const fetcher = useFetcher<StockActionResult>({ key: `stock-${item.variantId}` });
   const photoFetcher = useFetcher<PhotoResult>({ key: `photo-${item.productId}` });
+  const priceFetcher = useFetcher<PriceResult>({ key: `prix-${item.variantId}` });
   // Shopify prépare la photo quelques secondes : en attendant, on montre celle qui vient d'être envoyée.
   const [sentPhoto, setSentPhoto] = useState<File | null>(null);
   const sentUrl = useMemo(() => (sentPhoto === null ? null : URL.createObjectURL(sentPhoto)), [sentPhoto]);
@@ -127,6 +169,8 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
   const sendingPhoto = photoFetcher.state !== "idle";
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
   const photoResult = photoFetcher.state === "idle" ? photoFetcher.data : undefined;
+  const savingPrice = priceFetcher.state !== "idle";
+  const priceResult = priceFetcher.state === "idle" ? priceFetcher.data : undefined;
   const imageUrl = item.imageUrl ?? (photoResult?.ok ? sentUrl : null);
   const reserved = reservedText(item);
   const place = item.place;
@@ -147,6 +191,11 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
     setPanel("aucun");
   };
 
+  const sendPrice = (price: string) => {
+    void priceFetcher.submit({ intent: "prix", productId: item.productId, variantId: item.variantId, price }, { method: "post" });
+    setPanel("aucun");
+  };
+
   const sendPhoto = (photo: File) => {
     const data = new FormData();
     data.set("intent", "photo");
@@ -161,6 +210,7 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
   // Le vin à recommander met « Ajouter des bouteilles » en avant ; sinon, tous les boutons sont discrets.
   const restock = item.level === "epuise" || item.level === "bas";
   const canChange = place !== null && canEdit;
+  const canPrice = canPhoto; // même autorisation que « Nouveau vin » et la photo (écrire les produits)
   const buttons = (
     <s-stack direction="block" gap="small-200">
       {canChange ? (
@@ -184,19 +234,28 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
           ) : null}
         </s-grid>
       ) : null}
+      {canPrice ? (
+        <s-stack direction="inline">
+          <s-button variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
+            Modifier le prix
+          </s-button>
+        </s-stack>
+      ) : null}
     </s-stack>
   );
 
   return (
-    <s-box padding="base" border="base" borderRadius="base" background="base">
-      <s-stack direction="block" gap="base">
+    <ClientCard
+      header={
         <s-stack direction="inline" gap="small-200" alignItems="center">
           {imageUrl === null ? <s-thumbnail alt="" size="small" /> : <s-thumbnail src={imageUrl} alt={item.imageAlt} size="small" />}
           <s-stack direction="block" gap="small-500">
-            <s-text type="strong">{item.label}</s-text>
+            <s-heading>{item.label}</s-heading>
             {item.priceCents === null ? null : <s-text color="subdued">{formatChf(item.priceCents)}</s-text>}
           </s-stack>
         </s-stack>
+      }
+    >
         {place === null ? (
           <s-text color="subdued">Le stock de ce vin n’est pas compté.</s-text>
         ) : (
@@ -213,6 +272,8 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
         )}
         {panel === "aucun" ? (
           buttons
+        ) : panel === "prix" ? (
+          <PricePanel item={item} busy={savingPrice} onSubmit={sendPrice} onCancel={() => setPanel("aucun")} />
         ) : panel === "photo" ? (
           <PhotoPanel item={item} busy={sendingPhoto} onSubmit={sendPhoto} onCancel={() => setPanel("aucun")} />
         ) : (
@@ -225,8 +286,8 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
           />
         )}
         {result === undefined ? null : <s-banner tone={result.ok ? "success" : "critical"} heading={result.message} />}
+        {priceResult === undefined ? null : <s-banner tone={priceResult.ok ? "success" : "critical"} heading={priceResult.message} />}
         {photoResult === undefined ? null : <s-banner tone={photoResult.ok ? "success" : "critical"} heading={photoResult.message} />}
-      </s-stack>
-    </s-box>
+    </ClientCard>
   );
 }

@@ -13,8 +13,7 @@ function Notices({ data }: { readonly data: AgendaPageData }) {
       {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
       {data.truncated ? (
         <s-banner tone="warning" heading="Certaines commandes ne sont pas affichées">
-          Il y a trop de commandes en cours pour toutes les montrer. Les plus anciennes déjà livrées peuvent être archivées
-          dans Shopify.
+          Il y a trop de commandes en cours pour toutes les montrer. Terminez les livraisons en retard pour alléger la liste.
         </s-banner>
       ) : null}
       {data.pendingProRequests === 0 ? null : (

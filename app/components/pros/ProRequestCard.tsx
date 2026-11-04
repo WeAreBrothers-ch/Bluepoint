@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useFetcher } from "react-router";
 import type { ProRequestView, ProsActionResult } from "../../lib/pros/view";
+import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 
 /**
@@ -21,16 +22,18 @@ export function ProRequestCard({ request, canCreate }: { readonly request: ProRe
   const submit = (intent: "accepter" | "refuser") => fetcher.submit({ intent, requestId: request.id }, { method: "post" });
 
   return (
-    <s-box padding="base" border="base" borderRadius="base" background="base">
-      <s-stack direction="block" gap="base">
-        <s-stack direction="block" gap="small-200">
+    <ClientCard
+      header={
+        <>
           <s-stack direction="inline" gap="small-200" alignItems="center">
             <s-icon type="organization" />
             <s-heading>{request.companyName}</s-heading>
           </s-stack>
           <s-text>{request.personName}</s-text>
           <s-text color="subdued">{request.receivedLabel}</s-text>
-        </s-stack>
+        </>
+      }
+    >
         <s-stack direction="block" gap="small-100">
           {request.addressLines.length === 0 ? null : <s-text>{request.addressLines.join(", ")}</s-text>}
           <s-text>{`${request.email} · ${request.phone}`}</s-text>
@@ -82,7 +85,6 @@ export function ProRequestCard({ request, canCreate }: { readonly request: ProRe
           </s-grid>
         )}
         <ResultBanner result={fetcher.state === "idle" ? fetcher.data : undefined} />
-      </s-stack>
-    </s-box>
+    </ClientCard>
   );
 }

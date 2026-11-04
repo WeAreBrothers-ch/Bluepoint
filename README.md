@@ -36,10 +36,18 @@ Elle sert à l’équipe, pas aux clients :
   automatique recalculée, stock remis ; seulement si pas encore payée) et « Annuler la commande »
   (stock remis, remboursement sur le moyen de paiement d’origine si déjà payée). Autorisation
   `write_order_edits` pour la modification.
+- **Commandes** (`/app/commandes`) : toutes les commandes, les plus récentes d’abord, avec recherche (client,
+  entreprise, ville, numéro) et onglets Toutes / À livrer / Livrées / Annulées ; chaque ligne ouvre la fiche
+  commande de l’app. Shopify ne donne que les 60 derniers jours sans l’autorisation `read_all_orders`.
+- **Clients** (`/app/clients`, `/app/clients/:id`) : liste et recherche (onglet Pros), fiche avec adresse,
+  téléphone, e-mail, nombre de commandes et dernières commandes ; « Modifier les coordonnées »
+  (`customerUpdate`, puis `customerAddressUpdate` / `customerAddressCreate`) ; « Prendre une commande »
+  ouvre le formulaire avec le client déjà choisi (`/app/commande?client=…`). « Comptes pro » (`/app/pros`) est
+  atteint depuis la page Clients.
 - **Stock** (`/app/stock`) : bouteilles disponibles, en cave et réservées par vin, « Ajouter des
   bouteilles » (`inventoryAdjustQuantities`, raison `received`) et « Corriger le nombre »
   (`inventorySetQuantities` sur `on_hand`), avec contrôle de la quantité attendue et clé
-  d’idempotence. Autorisation `write_inventory`. « Nouveau vin » : produit actif à variante unique
+  d’idempotence. Autorisation `write_inventory`. « Modifier le prix » (`productVariantsBulkUpdate`). « Nouveau vin » : produit actif à variante unique
   créé par `productSet` (prix, stock au dépôt), mis en vente sur les mêmes canaux que les autres vins
   (`publishablePublish`). Autorisations `write_products`, `read_locations`, `read/write_publications`.
   Photo du vin (« Nouveau vin », « Ajouter / Changer la photo ») : réduite dans le navigateur

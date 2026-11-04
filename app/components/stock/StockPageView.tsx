@@ -58,25 +58,27 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
       {created === null ? null : <s-banner tone="success" heading={created} />}
       {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
       {data.loadError === null && data.items.length === 0 ? (
-        <EmptyState heading="Aucun vin pour l’instant">Les vins mis en vente dans Shopify apparaîtront ici.</EmptyState>
+        <EmptyState heading="Aucun vin pour l’instant">Ajoutez votre premier vin avec « Nouveau vin », en haut de la page.</EmptyState>
       ) : null}
       {data.items.length === 0 ? null : (
-        <s-section>
-          <s-stack direction="block" gap="base">
-            <SummaryBanner summary={summary} />
-            <s-search-field
-              label="Chercher un vin"
-              placeholder="Nom du vin"
-              value={search}
-              onInput={(event) => setSearch(event.currentTarget.value)}
-            />
-            {data.truncated ? <s-text color="subdued">Il y a beaucoup de vins : les premiers seulement sont affichés.</s-text> : null}
-            {shown.length === 0 ? <s-text>Aucun vin ne correspond à cette recherche.</s-text> : null}
-            {shown.map((item) => (
-              <StockRow key={item.variantId} item={item} canEdit={data.canEdit} canPhoto={data.canCreateWines} />
-            ))}
-          </s-stack>
-        </s-section>
+        <>
+          <s-section>
+            <s-stack direction="block" gap="base">
+              <SummaryBanner summary={summary} />
+              <s-search-field
+                label="Chercher un vin"
+                placeholder="Nom du vin"
+                value={search}
+                onInput={(event) => setSearch(event.currentTarget.value)}
+              />
+              {data.truncated ? <s-text color="subdued">Il y a beaucoup de vins : les premiers seulement sont affichés.</s-text> : null}
+              {shown.length === 0 ? <s-text>Aucun vin ne correspond à cette recherche.</s-text> : null}
+            </s-stack>
+          </s-section>
+          {shown.map((item) => (
+            <StockRow key={item.variantId} item={item} canEdit={data.canEdit} canPhoto={data.canCreateWines} />
+          ))}
+        </>
       )}
     </s-page>
   );

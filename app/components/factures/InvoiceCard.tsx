@@ -3,6 +3,7 @@ import { shortDay } from "../../lib/agenda/dates";
 import type { FacturesActionResult, InvoiceListItem } from "../../lib/factures/list-item";
 import { formatChf } from "../../lib/format/money";
 import { parseIsoDate } from "../../lib/metafields/definitions";
+import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { InvoicePaymentButtons } from "./InvoicePaymentButtons";
 import { InvoiceResultBanner, InvoiceShortcutButtons } from "./InvoiceShortcutButtons";
@@ -73,32 +74,36 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
   const late = invoice.paymentState === "en_retard";
   const reminding = canRemind({ invoice, emailConfigured });
   return (
-    <s-box padding="base" border="base" borderRadius="base" background="base" id={`facture-${invoice.id}`}>
-      <s-stack direction="block" gap="base">
-        <s-stack direction="block" gap="small-200">
+    <ClientCard
+      id={`facture-${invoice.id}`}
+      header={
+        <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
             <s-heading>{invoice.customerName}</s-heading>
             <s-text type="strong">{formatChf(invoice.totalCents)}</s-text>
           </s-stack>
           <s-text color="subdued">{`Facture ${invoice.number}`}</s-text>
-          {invoice.orderPath === null ? null : <s-link href={invoice.orderPath}>{`Voir la commande ${invoice.orderName}`}</s-link>}
           <s-stack direction="inline" gap="small-200">
             <StatusBadge invoice={invoice} />
           </s-stack>
-          {invoice.paidOn !== null ? (
-            <s-text color="subdued">{`Reçu remis le ${day(invoice.paidOn)}`}</s-text>
-          ) : (
-            <>
-              <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
-              <s-text color="subdued">{`Facture faite le ${day(invoice.issueDate)}`}</s-text>
-            </>
-          )}
-        </s-stack>
+        </>
+      }
+    >
+      <s-stack direction="block" gap="small-200">
+        {invoice.orderPath === null ? null : <s-link href={invoice.orderPath}>{`Voir la commande ${invoice.orderName}`}</s-link>}
+        {invoice.paidOn !== null ? (
+          <s-text color="subdued">{`Reçu remis le ${day(invoice.paidOn)}`}</s-text>
+        ) : (
+          <>
+            <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
+            <s-text color="subdued">{`Facture faite le ${day(invoice.issueDate)}`}</s-text>
+          </>
+        )}
+      </s-stack>
         {/* En retard : relancer d'abord ; sinon, envoyer la facture. */}
         <Reminders invoice={invoice} emailConfigured={emailConfigured} />
         <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} hideSend={reminding} />
         {invoice.paymentState === "payee" ? null : <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />}
-      </s-stack>
-    </s-box>
+    </ClientCard>
   );
 }

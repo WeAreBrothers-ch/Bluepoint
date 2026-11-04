@@ -6,6 +6,7 @@ import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { gidToNumericId } from "../../lib/shopify";
+import { ClientCard } from "../ClientCard";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
 import { PaymentBadges, StatusBadge } from "./TaskBadges";
@@ -89,9 +90,9 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
   const who = task.company === null ? `Commande ${task.name}` : `${task.customerName} · commande ${task.name}`;
 
   return (
-    <s-box padding="base" border="base" borderRadius="base" background="base">
-      <s-stack direction="block" gap="base">
-        <s-stack direction="block" gap="small-200">
+    <ClientCard
+      header={
+        <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
             <s-stack direction="inline" gap="small-200" alignItems="center">
               <s-icon type={mode.icon} />
@@ -105,7 +106,9 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
               {dateLine}
             </s-text>
           )}
-        </s-stack>
+        </>
+      }
+    >
         {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
         {task.status === "livree" ? null : <ContactButtons task={task} />}
         <WineList task={task} />
@@ -120,7 +123,6 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
           viewOrderHref={`/app/commandes/${gidToNumericId(task.orderId)}`}
         />
         {result === undefined ? null : <ActionFeedback result={result} />}
-      </s-stack>
-    </s-box>
+    </ClientCard>
   );
 }
