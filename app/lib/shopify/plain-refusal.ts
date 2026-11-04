@@ -11,7 +11,7 @@ const RULES: readonly { readonly pattern: RegExp; readonly text: string }[] = [
   },
   {
     pattern: /inventory|out of stock|stock insuffisant|not enough|insufficient/i,
-    text: "Un des vins n’a plus assez de stock. Corrigez-le dans l’onglet Stock, ou baissez la quantité.",
+    text: "Un des vins n’a plus assez de bouteilles. Corrigez leur nombre dans « Mes vins », ou baissez la quantité.",
   },
   {
     pattern: /variant.*(does not exist|not found|deleted|unavailable|not available)|product.*(not available|unavailable|archived)/i,
@@ -27,7 +27,7 @@ const RULES: readonly { readonly pattern: RegExp; readonly text: string }[] = [
   },
   {
     pattern: /e-?mail.*(invalid|not valid)|phone.*(invalid|not valid)/i,
-    text: "L’e-mail ou le téléphone du client n’est pas valable. Corrigez-le dans l’onglet Clients (« Modifier les coordonnées »).",
+    text: "L’e-mail ou le téléphone du client n’est pas valable. Corrigez-le dans « Mes clients » (bouton « Modifier les coordonnées »).",
   },
   {
     pattern: /\bon hold\b|\bheld\b/i,

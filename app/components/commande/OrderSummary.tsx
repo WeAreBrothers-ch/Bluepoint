@@ -61,11 +61,11 @@ export function OrderSummary(props: OrderSummaryProps) {
         )}
         <s-text color="subdued">{PRICE_NOTES[props.priceSource]}</s-text>
         {warnings.length === 0 ? null : (
-          <s-banner tone="warning" heading="Pas assez de stock pour certains vins">
+          <s-banner tone="warning" heading="Pas assez de bouteilles pour certains vins">
             <s-stack direction="block" gap="small-300">
               {warnings.map((warning) => (
                 <s-text key={warning.variantId}>
-                  {`${warning.label}\u202F: ${formatInteger(warning.requested)} demandées, ${formatInteger(warning.available)} en stock.`}
+                  {`${warning.label}\u202F: ${formatInteger(warning.requested)} demandées, ${formatInteger(warning.available)} en cave.`}
                 </s-text>
               ))}
               <s-text>Vous pouvez quand même enregistrer la commande.</s-text>

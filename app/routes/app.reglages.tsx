@@ -50,7 +50,7 @@ export default function ReglagesPage() {
   }, [result]);
 
   return (
-    <s-page heading="Réglages" inlineSize="base">
+    <s-page heading="Mes coordonnées" inlineSize="base">
       {result?.ok ? <s-banner tone="success" heading="C’est enregistré." /> : null}
       {result !== undefined && !result.ok ? <s-banner tone="critical" heading={result.message} /> : null}
       {!complete && result === undefined ? (

@@ -26,7 +26,7 @@ interface StockRowProps {
 type Panel = "aucun" | StockIntent | "photo" | "prix";
 
 function LevelBadge({ item }: { readonly item: StockItem }) {
-  if (item.level === "epuise") return <s-badge tone="critical">Plus en stock</s-badge>;
+  if (item.level === "epuise") return <s-badge tone="critical">Plus de bouteilles</s-badge>;
   if (item.level === "bas") return <s-badge tone="warning">Bientôt épuisé</s-badge>;
   return null;
 }
@@ -257,7 +257,7 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
       }
     >
         {place === null ? (
-          <s-text color="subdued">Le stock de ce vin n’est pas compté.</s-text>
+          <s-text color="subdued">Les bouteilles de ce vin ne sont pas comptées.</s-text>
         ) : (
           <s-stack direction="block" gap="small-200">
             <s-stack direction="inline" gap="small-200" alignItems="center">

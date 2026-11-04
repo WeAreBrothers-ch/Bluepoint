@@ -76,7 +76,7 @@ export function OrdersPageView({ data }: { readonly data: OrdersPageData }) {
   const first = data.items.length === 0;
 
   return (
-    <s-page heading="Commandes" inlineSize="base">
+    <s-page heading="Toutes les commandes" inlineSize="base">
       <s-button slot="primary-action" variant="primary" icon="plus" href="/app/commande">
         Prendre une commande
       </s-button>

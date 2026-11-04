@@ -24,7 +24,7 @@ interface OrderChangeSectionProps {
 function ResultBanner({ result }: { readonly result: OrderChangeResult }) {
   return (
     <s-banner tone={result.ok ? "success" : "critical"} heading={result.message}>
-      {result.ok && result.intent === "annuler" ? <s-button href="/app">Retour à l’agenda</s-button> : null}
+      {result.ok && result.intent === "annuler" ? <s-button href="/app">Retour à mes livraisons</s-button> : null}
     </s-banner>
   );
 }
@@ -52,7 +52,7 @@ export function OrderChangeSection({ detail, rules, onEdit }: OrderChangeSection
           <s-box padding="base" background="subdued" borderRadius="base">
             <s-stack direction="block" gap="small-200">
               <s-text type="strong">{`Annuler la commande ${detail.task.name}\u202F?`}</s-text>
-              <s-text>Les bouteilles retournent dans le stock, et la commande disparaît de l’agenda.</s-text>
+              <s-text>Les bouteilles retournent en cave, et la commande disparaît de vos livraisons.</s-text>
               {rules.paid ? <s-text>{`Le client a déjà payé${total}\u202F: il sera remboursé.`}</s-text> : null}
               <s-stack direction="inline" gap="small-200">
                 <s-button

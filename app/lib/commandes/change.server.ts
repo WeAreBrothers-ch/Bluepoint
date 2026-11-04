@@ -246,7 +246,7 @@ async function cancelOrder(admin: AdminApiContext, orderId: string): Promise<Ord
   const totalCents = decimalToCents(node.currentTotalPriceSet?.shopMoney.amount);
   logInfo("Commande annulée", { orderId, refunded: rules.paid });
   const refund = rules.paid ? ` Le client sera remboursé${totalCents === null ? "" : ` de ${formatChf(totalCents)}`}.` : "";
-  return { ok: true, intent: "annuler", message: `Commande ${node.name} annulée. Les bouteilles sont remises en stock.${refund}` };
+  return { ok: true, intent: "annuler", message: `Commande ${node.name} annulée. Les bouteilles sont remises en cave.${refund}` };
 }
 
 export async function handleOrderChange(admin: AdminApiContext, form: FormData): Promise<OrderChangeResult> {

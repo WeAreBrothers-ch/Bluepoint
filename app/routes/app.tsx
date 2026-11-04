@@ -21,15 +21,14 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<AppLoader
 function AppNav() {
   return (
     <s-app-nav>
-      <s-link href="/app">
-        Agenda
-      </s-link>
+      <s-link href="/app">Mes livraisons</s-link>
       <s-link href="/app/commande">Prendre une commande</s-link>
-      <s-link href="/app/commandes">Commandes</s-link>
-      <s-link href="/app/factures">Factures</s-link>
-      <s-link href="/app/stock">Stock</s-link>
-      <s-link href="/app/clients">Clients</s-link>
-      <s-link href="/app/reglages">Réglages</s-link>
+      <s-link href="/app/factures">Mes factures</s-link>
+      <s-link href="/app/stock">Mes vins</s-link>
+      <s-link href="/app/clients">Mes clients</s-link>
+      <s-link href="/app/commandes">Toutes les commandes</s-link>
+      <s-link href="/app/reglages">Mes coordonnées</s-link>
+      <s-link href="/app/aide">Aide</s-link>
     </s-app-nav>
   );
 }

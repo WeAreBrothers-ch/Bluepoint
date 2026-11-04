@@ -53,7 +53,7 @@ const EMPTY_TEXT: Readonly<Record<FacturesView, string>> = {
 
 export function FacturesPageView({ data }: { readonly data: FacturesPageData }) {
   return (
-    <s-page heading="Factures" inlineSize="base">
+    <s-page heading="Mes factures" inlineSize="base">
       {data.settingsComplete ? null : (
         <s-banner tone="warning" heading="Les nouvelles factures ne peuvent pas être faites">
           Il manque vos coordonnées ou votre compte bancaire. <s-link href="/app/reglages">Compléter mes coordonnées</s-link>
@@ -67,8 +67,8 @@ export function FacturesPageView({ data }: { readonly data: FacturesPageData }) 
         </s-stack>
       </s-section>
       {data.totalCount === 0 ? (
-        <EmptyState heading="Aucune facture pour l’instant" action={<s-button href="/app">Aller à l’agenda</s-button>}>
-          Les factures se font toutes seules quand vous touchez « J’ai livré la commande » dans l’agenda.
+        <EmptyState heading="Aucune facture pour l’instant" action={<s-button href="/app">Aller à mes livraisons</s-button>}>
+          Les factures se font toutes seules quand vous touchez « J’ai livré la commande » dans « Mes livraisons ».
         </EmptyState>
       ) : data.invoices.length === 0 ? (
         <s-section>

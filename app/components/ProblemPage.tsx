@@ -12,7 +12,7 @@ export function problemText(notFound: boolean): ProblemText {
   return notFound
     ? {
         heading: "Cette page n’existe pas",
-        body: "Le lien est peut-être ancien. Revenez à l’agenda, ou choisissez une page dans le menu de l’application.",
+        body: "Le lien est peut-être ancien. Revenez à « Mes livraisons », ou choisissez une page dans le menu de l’application.",
       }
     : {
         heading: "Cette page n’a pas pu s’afficher",
@@ -41,7 +41,7 @@ export function ProblemPanel({ notFound }: { readonly notFound: boolean }) {
               </s-button>
             )}
             <s-button href="/app" {...(notFound ? { variant: "primary" } : {})}>
-              Retour à l’agenda
+              Retour à mes livraisons
             </s-button>
           </s-stack>
         </s-stack>

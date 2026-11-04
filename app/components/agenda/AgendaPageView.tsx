@@ -51,7 +51,7 @@ function TodaySummary({ groups }: { readonly groups: AgendaPageData["todayGroups
 
 export function AgendaPageView({ data }: { readonly data: AgendaPageData }) {
   return (
-    <s-page heading="Agenda" inlineSize="base">
+    <s-page heading="Mes livraisons" inlineSize="base">
       <s-button slot="primary-action" href="/app/commande" variant="primary">
         Prendre une commande
       </s-button>
@@ -69,6 +69,11 @@ export function AgendaPageView({ data }: { readonly data: AgendaPageData }) {
       ) : (
         <WeekView groups={data.weekGroups} invoices={data.invoices} today={data.today} emailConfigured={data.emailConfigured} />
       )}
+      <s-section>
+        <s-text>
+          Besoin d’aide\u202F? <s-link href="/app/aide">Voir les explications pas à pas</s-link>
+        </s-text>
+      </s-section>
     </s-page>
   );
 }

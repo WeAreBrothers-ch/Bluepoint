@@ -26,14 +26,14 @@ export function OrderOutcomeBanner({ outcome }: { readonly outcome: PhoneOrderOu
       return (
         <s-banner tone="success" heading={`Commande ${outcome.orderName} enregistrée`}>
           <s-stack direction="block" gap="small-200">
-            <s-text>{`${capitalize(longDay(outcome.requestedDate))}\u202F: elle est dans l’agenda. ${PAYMENT_TEXT[outcome.payment]}`}</s-text>
+            <s-text>{`${capitalize(longDay(outcome.requestedDate))}\u202F: elle est dans vos livraisons. ${PAYMENT_TEXT[outcome.payment]}`}</s-text>
             {outcome.replayed ? <s-text>{"Elle avait déjà été enregistrée\u202F: aucun doublon."}</s-text> : null}
             {outcome.warnings.map((warning) => (
               <s-text key={warning}>{warning}</s-text>
             ))}
             <s-text>Le formulaire est vidé, prêt pour la commande suivante.</s-text>
             <s-stack direction="inline">
-              <s-button href="/app">Voir l’agenda</s-button>
+              <s-button href="/app">Voir mes livraisons</s-button>
             </s-stack>
           </s-stack>
         </s-banner>

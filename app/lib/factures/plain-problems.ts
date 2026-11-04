@@ -8,7 +8,7 @@ const VAT =
   "La TVA n’a pas été calculée sur cette commande. Demandez à la personne qui s’occupe de la boutique d’activer la TVA suisse " +
   "(Paramètres › Taxes et droits de douane, une seule fois)\u202F: les commandes suivantes l’auront.";
 const BUYER_ADDRESS =
-  "L’adresse du client est incomplète (nom, rue et numéro, NPA, localité). Complétez-la dans sa fiche (onglet Clients), " +
+  "L’adresse du client est incomplète (nom, rue et numéro, NPA, localité). Complétez-la dans sa fiche (« Mes clients »), " +
   "puis demandez à la personne qui s’occupe de la boutique de corriger celle de cette commande.";
 const SELLER = "Vos coordonnées sont incomplètes ou incorrectes\u202F: vérifiez-les dans les Réglages.";
 const QR = "Le QR code de paiement n’a pas pu être créé\u202F: vérifiez votre numéro de compte (IBAN) dans les Réglages.";

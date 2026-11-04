@@ -18,7 +18,7 @@ interface ProductRowProps {
 
 function stockText(available: number | null): string | null {
   if (available === null) return null;
-  return available <= 0 ? "Rupture de stock" : `${formatInteger(available)} en stock`;
+  return available <= 0 ? "Plus de bouteilles" : `${formatInteger(available)} en cave`;
 }
 
 export function bottlesText(quantity: number): string {
@@ -61,7 +61,7 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
         />
         {overStock ? (
           <s-text tone="caution">
-            {`C’est plus que le stock (${formatInteger(product.available ?? 0)} bouteilles)\u202F: la commande reste possible.`}
+            {`Vous en avez ${formatInteger(product.available ?? 0)} en cave\u202F: la commande reste possible.`}
           </s-text>
         ) : null}
       </s-stack>

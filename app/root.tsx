@@ -13,6 +13,8 @@ export function Layout({ children }: { readonly children: ReactNode }) {
           rel="stylesheet"
           href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
         />
+        {/* Texte et boutons plus grands : l'application est lue et touchée par des personnes peu à l'aise avec l'informatique. */}
+        <style>{"body{zoom:1.15}"}</style>
         <Meta />
         <Links />
       </head>

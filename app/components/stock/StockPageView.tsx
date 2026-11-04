@@ -9,12 +9,12 @@ import { StockRow } from "./StockRow";
 
 function SummaryBanner({ summary }: { readonly summary: StockSummary }) {
   if (summary.soldOut.length === 0 && summary.low.length === 0) {
-    return <s-banner tone="success" heading="Tous les vins sont en stock." />;
+    return <s-banner tone="success" heading="Tous les vins sont en cave." />;
   }
   return (
     <s-banner tone={summary.soldOut.length > 0 ? "critical" : "warning"} heading="Des vins sont à recommander">
       <s-stack direction="block" gap="small-200">
-        {summary.soldOut.length === 0 ? null : <s-text>{`Plus en stock\u202F: ${summary.soldOut.join(", ")}`}</s-text>}
+        {summary.soldOut.length === 0 ? null : <s-text>{`Plus de bouteilles\u202F: ${summary.soldOut.join(", ")}`}</s-text>}
         {summary.low.length === 0 ? null : <s-text>{`Bientôt épuisés (un carton ou moins)\u202F: ${summary.low.join(", ")}`}</s-text>}
       </s-stack>
     </s-banner>
@@ -34,7 +34,7 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
   const authorized = data.canEdit && data.canCreateWines;
 
   return (
-    <s-page heading="Stock" inlineSize="base">
+    <s-page heading="Mes vins en cave" inlineSize="base">
       {data.canCreateWines && !creating ? (
         <s-button
           slot="primary-action"
@@ -50,7 +50,7 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
       ) : null}
       {authorized ? null : (
         <s-banner tone="warning" heading="Une étape d’autorisation reste à faire">
-          Le stock s’affiche, mais l’app ne peut pas encore le changer ni créer de vin. La personne qui s’occupe du site doit
+          Vos vins s’affichent, mais l’app ne peut pas encore changer leur nombre ni créer de vin. La personne qui s’occupe du site doit
           l’autoriser une seule fois dans Shopify ; ensuite, les boutons apparaîtront.
         </s-banner>
       )}
