@@ -1,3 +1,4 @@
+import { CARD_DISCOUNT_CODE } from "../rabais/carte";
 import { decimalToCents } from "../commande/totals";
 import { isDeliveryMode, parseIsoDate, type DeliveryMode, type IsoDate } from "../metafields/definitions";
 import { parseGid } from "../shopify/ids";
@@ -112,6 +113,16 @@ function readCustomerName(order: AgendaOrderNode): string {
   return name === undefined || name === "" ? "Client sans nom" : name;
 }
 
+/**
+ * Le code « paiement par carte tout de suite » donne 2 % seulement si la commande est payée par carte au moment de
+ * la commande. Une commande qui l'utilise sans être payée (facture, virement…) est signalée à la personne qui livre.
+ */
+function readCardDiscountToCheck(order: AgendaOrderNode): boolean {
+  const usedCode = order.discountCodes.some((code) => code.trim().toUpperCase() === CARD_DISCOUNT_CODE);
+  const status = order.displayFinancialStatus;
+  return usedCode && (status === "PENDING" || status === "PARTIALLY_PAID");
+}
+
 /** `null` si la commande est annulée ou si son identifiant est illisible. */
 export function orderToTask(order: AgendaOrderNode): DeliveryTask | null {
   const orderId = parseGid(order.id, "Order");
@@ -134,6 +145,7 @@ export function orderToTask(order: AgendaOrderNode): DeliveryTask | null {
     status: readDeliveryStatus(order),
     deliveredOn: readDeliveredOn(order),
     financialStatus: readFinancialStatus(order.displayFinancialStatus),
+    cardDiscountToCheck: readCardDiscountToCheck(order),
     paymentTerms: null,
   };
 }

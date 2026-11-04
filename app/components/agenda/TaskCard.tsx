@@ -114,6 +114,12 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
         <WineList task={task} />
         {/* Une fois livrée, la remarque pour la livraison ne sert plus. */}
         {task.note === null || task.status === "livree" ? null : <s-banner tone="info">{`Remarque : ${task.note}`}</s-banner>}
+        {task.cardDiscountToCheck ? (
+          <s-banner tone="warning" heading="Rabais carte à vérifier">
+            Ce client a utilisé le code CARTE2 (2 % si l’on paie par carte tout de suite), mais la commande n’est pas payée par carte. Le rabais
+            n’est pas dû : appelez le client pour le lui expliquer.
+          </s-banner>
+        ) : null}
         <TaskActions
           task={task}
           invoice={invoice}

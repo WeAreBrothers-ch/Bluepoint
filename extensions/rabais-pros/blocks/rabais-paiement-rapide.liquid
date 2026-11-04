@@ -1,7 +1,7 @@
 {%- comment -%}
-  Bandeau « Pros : 2 % de rabais en plus si vous payez votre facture dans les 10 jours ».
+  Bandeau « Pros : 2 % de rabais en plus si vous payez par carte tout de suite, au moment de la commande ».
   Bloc d'application (app embed) : à activer une fois dans l'éditeur du thème
-  (Paramètres du thème › Intégrations d'applications › « Rabais paiement rapide »).
+  (Paramètres du thème › Intégrations d'applications › « Rabais paiement par carte »).
   Visible par les clients pro connectés (étiquette « pro ») et sur la page « Devenir pro » ;
   le texte et le public se règlent dans l'éditeur du thème.
 {%- endcomment -%}
@@ -39,7 +39,7 @@
 
 {% schema %}
 {
-  "name": "Rabais paiement rapide",
+  "name": "Rabais paiement par carte",
   "target": "body",
   "stylesheet": "rabais-pros.css",
   "javascript": "rabais-pros.js",
@@ -54,7 +54,7 @@
       "type": "textarea",
       "id": "texte",
       "label": "Texte",
-      "default": "Payez votre facture dans les 10 jours et profitez de 2 % de rabais en plus de votre prix pro."
+      "default": "Payez par carte tout de suite, au moment de la commande, et profitez de 2 % de rabais en plus de votre prix pro. Pas de rabais pour une commande sur facture."
     },
     {
       "type": "select",

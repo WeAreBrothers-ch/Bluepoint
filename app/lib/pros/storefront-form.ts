@@ -1,4 +1,4 @@
-import { EARLY_PAYMENT_DAYS, EARLY_PAYMENT_PERCENT } from "../escompte/early-payment";
+import { CARD_DISCOUNT_PERCENT } from "../rabais/carte";
 import { HONEYPOT_FIELD, PRO_COUNTRIES, type ProRequestErrors, type ProRequestField, type ProRequestValues } from "./request";
 
 /**
@@ -77,7 +77,7 @@ export function proFormPage(values: ProRequestValues, errors: ProRequestErrors, 
 <div class="bp-pro">
 <h1>Devenir client pro</h1>
 <p>Restaurants, bars, cavistes et entreprises : demandez votre compte pro. Une fois votre demande acceptée, vous voyez vos prix pros et pouvez commander sur facture, payable à 30 jours.</p>
-<p class="bp-bonus"><strong>${EARLY_PAYMENT_PERCENT} % de rabais en plus</strong> si vous payez votre facture dans les ${EARLY_PAYMENT_DAYS} jours.</p>
+<p class="bp-bonus"><strong>${CARD_DISCOUNT_PERCENT} % de rabais en plus</strong> si vous payez par carte tout de suite, au moment de la commande sur le site (pas pour une commande sur facture).</p>
 ${hasErrors ? `<p class="bp-alert" role="alert">Certaines informations sont à corriger : elles sont signalées en rouge ci-dessous.</p>` : ""}
 <form method="post" action="${PRO_FORM_ACTION}" novalidate>
 <fieldset><legend>Votre entreprise</legend>

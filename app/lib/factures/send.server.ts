@@ -1,8 +1,6 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { failure, success, type Result } from "../core/result";
 import { logError } from "../core/logger.server";
-import { swissIsoDate } from "../agenda/dates";
-import { earlyPaymentOffer } from "../escompte/early-payment";
 import { parseIsoDate } from "../metafields/definitions";
 import { loadCompleteSettings } from "../reglages/settings.server";
 import { runAdminGraphql } from "../shopify/graphql.server";
@@ -31,9 +29,8 @@ export function invoiceFileName(invoice: Pick<Invoice, "number" | "paidOn">): st
 }
 
 /** Données du message sans le récapitulatif des vins (relances) : aucun appel à Shopify. */
-function messageData(invoice: Invoice, sellerName: string, now: Date = new Date()): InvoiceMessageData {
+function messageData(invoice: Invoice, sellerName: string): InvoiceMessageData {
   return {
-    earlyPayment: earlyPaymentOffer(invoice, swissIsoDate(now)),
     number: invoice.number,
     orderName: invoice.orderName,
     totalCents: invoice.totalCents,

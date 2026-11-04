@@ -136,6 +136,22 @@ describe("orderToTask", () => {
   });
 });
 
+describe("rabais carte à vérifier", () => {
+  const task = (overrides: Parameters<typeof orderNode>[0]) => orderToTask(orderNode(overrides))?.cardDiscountToCheck;
+
+  it("signale le code carte sur une commande pas encore payée", () => {
+    expect(task({ discountCodes: ["CARTE2"], displayFinancialStatus: "PENDING" })).toBe(true);
+    expect(task({ discountCodes: ["carte2"], displayFinancialStatus: "PARTIALLY_PAID" })).toBe(true);
+  });
+
+  it("ne dit rien quand la commande est payée (par carte, à la commande) ou sans le code", () => {
+    expect(task({ discountCodes: ["CARTE2"], displayFinancialStatus: "PAID" })).toBe(false);
+    expect(task({ discountCodes: ["CARTE2"], displayFinancialStatus: "AUTHORIZED" })).toBe(false);
+    expect(task({ discountCodes: [], displayFinancialStatus: "PENDING" })).toBe(false);
+    expect(task({ discountCodes: ["AUTRE"], displayFinancialStatus: "PENDING" })).toBe(false);
+  });
+});
+
 describe("readDeliveryStatus", () => {
   it("distingue expédiée et livrée", () => {
     const fulfilled = { displayFulfillmentStatus: "FULFILLED" };

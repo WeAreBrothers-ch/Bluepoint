@@ -3,7 +3,6 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { FactureError, mapShopifyOrderToInvoiceInput, renderInvoicePdf } from "@bluepoint/facture-qr";
 import prisma from "../../db.server";
 import { swissIsoDate } from "../agenda/dates";
-import { earlyPaymentOffer } from "../escompte/early-payment";
 import { failure, success, type Result } from "../core/result";
 import { logError, logInfo } from "../core/logger.server";
 import type { IsoDate } from "../metafields/definitions";
@@ -60,11 +59,7 @@ async function createInvoice(draft: Draft): Promise<Invoice> {
       ...(draft.paidOn === null ? {} : { paidOn: draft.paidOn }),
       ...(terms === undefined || draft.paidOn !== null ? {} : { paymentTerms: terms }),
     });
-    // Facture à payer plus tard : on y propose le rabais de paiement rapide (2 % sous 10 jours).
-    const offer = earlyPaymentOffer({ issueDate: input.issueDate, dueDate: input.dueDate, totalCents: input.totalCents, paidOn: draft.paidOn }, draft.issueDate);
-    const pdf = await renderInvoicePdf(
-      offer === null ? input : { ...input, earlyPayment: { percent: offer.percent, deadline: offer.deadline, amountCents: offer.amountCents } },
-    );
+    const pdf = await renderInvoicePdf(input);
     const pdfKey = invoicePdfKey(draft.shop, number);
     await tx.storedFile.create({ data: { key: pdfKey, contentType: "application/pdf", bytes: new Uint8Array(pdf) } });
     const contact = contactOf(draft.source.contact);

@@ -66,6 +66,8 @@ export interface DeliveryTask {
   /** Jour (heure suisse) de la dernière expédition réussie, `null` si rien n'est encore parti. */
   readonly deliveredOn: IsoDate | null;
   readonly financialStatus: FinancialStatus | null;
+  /** Le client a utilisé le code « paiement par carte » mais la commande n'est pas payée : le rabais n'est pas dû. */
+  readonly cardDiscountToCheck: boolean;
   /** Lues à part (autorisation distincte) : `null` si aucune ou illisibles. */
   readonly paymentTerms: PaymentTermsInfo | null;
 }

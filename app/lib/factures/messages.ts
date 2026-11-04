@@ -1,7 +1,6 @@
 import { formatChf, formatInteger } from "../format/money";
 import { formatSwissDate } from "../format/dates";
 import { NNBSP } from "../format/typography";
-import type { EarlyPaymentOffer } from "../escompte/early-payment";
 import type { IsoDate } from "../metafields/definitions";
 
 /** Textes proposés au client avec sa facture ou son reçu (WhatsApp et e-mail), modifiables avant l'envoi. */
@@ -21,8 +20,6 @@ export interface InvoiceMessageData {
   readonly paidOn: IsoDate | null;
   /** Ce qui a été commandé ; vide si Shopify n'a pas pu le donner (le message reste correct). */
   readonly lines: readonly MessageLine[];
-  /** Rabais de paiement rapide encore valable, ou null (reçu, délai passé, relance). */
-  readonly earlyPayment?: EarlyPaymentOffer | null;
 }
 
 /** Au-delà, le récapitulatif renvoie au PDF pour ne pas noyer le message. */
@@ -51,16 +48,6 @@ function totalLine(data: InvoiceMessageData): string {
   return `Total${NNBSP}: ${formatChf(data.totalCents)}${due}.`;
 }
 
-/** « Rabais de 2 % si vous payez jusqu'au 14.11.2026 : CHF 764.40 au lieu de CHF 780.00. » ; aucune ligne sans rabais. */
-function earlyPaymentLine(data: InvoiceMessageData): string[] {
-  const offer = data.earlyPayment;
-  if (data.paidOn !== null || offer === undefined || offer === null) return [];
-  const percent = String(offer.percent).replace(".", ",");
-  return [
-    `Rabais de ${percent}${NNBSP}% si vous payez jusqu’au ${formatSwissDate(offer.deadline)}${NNBSP}: ${formatChf(offer.amountCents)} au lieu de ${formatChf(data.totalCents)}.`,
-  ];
-}
-
 export function emailSubject(data: InvoiceMessageData): string {
   const kind = data.paidOn === null ? "Facture" : "Reçu";
   return `${kind} ${data.number} — commande ${data.orderName} — ${data.sellerName}`;
@@ -77,7 +64,6 @@ export function emailText(data: InvoiceMessageData): string {
     "",
     ...summaryBlock(data),
     totalLine(data),
-    ...earlyPaymentLine(data),
     attachment,
     "",
     "Avec nos meilleures salutations,",
@@ -92,7 +78,6 @@ export function whatsappMessage(data: InvoiceMessageData, link: string): string 
     "",
     ...summaryBlock(data),
     totalLine(data),
-    ...earlyPaymentLine(data),
     `${linkLabel}${NNBSP}: ${link}`,
     "",
     `Merci et à bientôt${NNBSP}!`,

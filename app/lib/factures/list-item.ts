@@ -1,5 +1,4 @@
 import { longDay, swissIsoDate } from "../agenda/dates";
-import type { EarlyPaymentOffer } from "../escompte/early-payment";
 import type { PaymentState } from "./payment";
 
 /** Nombre maximal de factures affichées dans la liste (les plus récentes). */
@@ -22,8 +21,6 @@ export interface InvoiceShortcuts {
   readonly preferredChannel: SentVia;
   /** Ex. « Envoyée par WhatsApp le jeudi 29 octobre », ou null si jamais envoyée. */
   readonly sentLabel: string | null;
-  /** Rabais de paiement rapide encore valable aujourd'hui (selon les dates seulement : l'écran masque si c'est déjà payé), ou null. */
-  readonly earlyPayment: EarlyPaymentOffer | null;
 }
 
 export interface InvoiceListItem extends InvoiceShortcuts {

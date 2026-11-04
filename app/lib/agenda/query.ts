@@ -17,6 +17,7 @@ export const AGENDA_ORDER_FIELDS = `
       note
       displayFulfillmentStatus
       displayFinancialStatus
+      discountCodes
       currentTotalPriceSet { shopMoney { amount currencyCode } }
       customer { displayName tags defaultPhoneNumber { phoneNumber } }
       purchasingEntity {
@@ -51,6 +52,8 @@ export interface AgendaOrderNode {
   readonly note: string | null;
   readonly displayFulfillmentStatus: string;
   readonly displayFinancialStatus: string | null;
+  /** Codes de réduction utilisés par le client (ex. « CARTE2 »). */
+  readonly discountCodes: readonly string[];
   readonly currentTotalPriceSet: { readonly shopMoney: { readonly amount: string; readonly currencyCode: string } } | null;
   readonly customer: {
     readonly displayName: string;

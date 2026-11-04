@@ -5,7 +5,6 @@ import { parseEditedEmail, type EditedEmail } from "./message-input";
 import { isPaymentMethod, PAYMENT_METHOD_LABELS } from "./payment";
 import { loadPaymentStatuses, markOrderPaid } from "./payment.server";
 import { getShopInvoice } from "./repository.server";
-import { payWithEarlyDiscount } from "./early-payment.server";
 import { emailInvoice, recordWhatsappShare } from "./send.server";
 
 /** Actions sur une facture : envoi par e-mail, envoi WhatsApp, relance par e-mail, « Le client a payé ». */
@@ -19,16 +18,10 @@ async function alreadyPaid(admin: AdminApiContext, orderId: string): Promise<boo
   return statuses.ok && statuses.value.get(orderId) === "PAID";
 }
 
-async function markPaid(admin: AdminApiContext, shop: string, invoiceId: string, method: unknown, withDiscount: boolean): Promise<FacturesActionResult> {
+async function markPaid(admin: AdminApiContext, shop: string, invoiceId: string, method: unknown): Promise<FacturesActionResult> {
   if (!isPaymentMethod(method)) return failed(invoiceId, "Choisissez comment le client a payé.");
   const invoice = await getShopInvoice(shop, invoiceId);
   if (invoice === null) return failed(invoiceId, "Cette facture n’existe plus.");
-  if (withDiscount) {
-    const paidWithDiscount = await payWithEarlyDiscount(admin, invoice, method, new Date());
-    return paidWithDiscount.ok
-      ? { ok: true, invoiceId, message: paidWithDiscount.value.message }
-      : failed(invoiceId, paidWithDiscount.error.message);
-  }
   const paid = await markOrderPaid(admin, invoice.orderId, method);
   // Deux personnes touchent « Le client a payé » en même temps : Shopify refuse la seconde, mais c'est bien payé.
   if (!paid.ok && !(await alreadyPaid(admin, invoice.orderId))) {
@@ -67,7 +60,7 @@ export async function handleFacturesAction(admin: AdminApiContext, shop: string,
     return failed("", "Ça n’a pas marché. Rechargez la page, puis réessayez.");
   }
   try {
-    if (intent === "payee") return await markPaid(admin, shop, invoiceId, form.get("method"), form.get("rabais") === "1");
+    if (intent === "payee") return await markPaid(admin, shop, invoiceId, form.get("method"));
     if (intent === "email" || intent === "relance_email") return await sendEmail(admin, shop, invoiceId, intent, form);
     const recorded = await recordWhatsappShare(shop, invoiceId);
     return recorded.ok

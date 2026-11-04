@@ -19,6 +19,7 @@ export function orderNode(overrides: Partial<AgendaOrderNode> = {}): AgendaOrder
     note: null,
     displayFulfillmentStatus: "UNFULFILLED",
     displayFinancialStatus: "PAID",
+    discountCodes: [],
     currentTotalPriceSet: null,
     customer: { displayName: "Claire Monnier", tags: [], defaultPhoneNumber: null },
     purchasingEntity: null,
@@ -58,6 +59,7 @@ export function task(overrides: Partial<DeliveryTask> = {}): DeliveryTask {
     deliveredOn: null,
     financialStatus: "PAID",
     paymentTerms: null,
+    cardDiscountToCheck: false,
     ...overrides,
   };
 }
