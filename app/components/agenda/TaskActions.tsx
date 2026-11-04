@@ -178,8 +178,8 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today, vi
       {invoice === null ? null : (
         <s-stack direction="block" gap="small-200">
           <s-divider />
-          <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} quiet />
-          {awaitsPayment(task) ? <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} /> : null}
+          <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} quiet earlyPayment={awaitsPayment(task) ? invoice.earlyPayment : null} />
+          {awaitsPayment(task) ? <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} earlyPayment={invoice.earlyPayment} /> : null}
         </s-stack>
       )}
     </s-stack>

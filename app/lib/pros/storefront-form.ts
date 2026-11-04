@@ -1,3 +1,4 @@
+import { EARLY_PAYMENT_DAYS, EARLY_PAYMENT_PERCENT } from "../escompte/early-payment";
 import { HONEYPOT_FIELD, PRO_COUNTRIES, type ProRequestErrors, type ProRequestField, type ProRequestValues } from "./request";
 
 /**
@@ -25,6 +26,7 @@ export function escapeForLiquid(text: string): string {
 const STYLE = `<style>
 .bp-pro{max-width:40rem;margin:2rem auto;padding:0 1rem;font-size:1.0625rem;line-height:1.5}
 .bp-pro h1{margin:0 0 .75rem}
+.bp-pro .bp-bonus{padding:.6rem .8rem;border-left:4px solid currentColor;background:rgba(0,0,0,.04)}
 .bp-pro fieldset{border:0;padding:0;margin:0 0 1.5rem}
 .bp-pro legend{font-weight:700;font-size:1.125rem;margin-bottom:.5rem}
 .bp-pro label{display:block;font-weight:600;margin:.75rem 0 .25rem}
@@ -75,6 +77,7 @@ export function proFormPage(values: ProRequestValues, errors: ProRequestErrors, 
 <div class="bp-pro">
 <h1>Devenir client pro</h1>
 <p>Restaurants, bars, cavistes et entreprises : demandez votre compte pro. Une fois votre demande acceptée, vous voyez vos prix pros et pouvez commander sur facture, payable à 30 jours.</p>
+<p class="bp-bonus"><strong>${EARLY_PAYMENT_PERCENT} % de rabais en plus</strong> si vous payez votre facture dans les ${EARLY_PAYMENT_DAYS} jours.</p>
 ${hasErrors ? `<p class="bp-alert" role="alert">Certaines informations sont à corriger : elles sont signalées en rouge ci-dessous.</p>` : ""}
 <form method="post" action="${PRO_FORM_ACTION}" novalidate>
 <fieldset><legend>Votre entreprise</legend>

@@ -1,6 +1,8 @@
 import { useFetcher } from "react-router";
+import type { EarlyPaymentOffer } from "../../lib/escompte/early-payment";
 import { FILL } from "../fill";
 import type { FacturesActionResult, InvoiceShortcuts } from "../../lib/factures/list-item";
+import { EarlyPaymentNote } from "./EarlyPaymentNote";
 import { InvoiceEmailModal } from "./InvoiceEmailModal";
 import { InvoiceWhatsappModal } from "./InvoiceWhatsappModal";
 import { useInvoiceDrafts } from "./useInvoiceDrafts";
@@ -19,6 +21,8 @@ interface InvoiceShortcutButtonsProps {
   readonly hideSend?: boolean;
   /** Dans une carte de l'agenda : aucun bouton foncé (il n'y en a qu'un, « J'ai livré »), et le numéro de la facture dans la phrase. */
   readonly quiet?: boolean;
+  /** Rabais de paiement rapide à montrer (facture pas encore payée), ou null. */
+  readonly earlyPayment?: EarlyPaymentOffer | null;
 }
 
 export function InvoiceResultBanner({ result }: { readonly result: FacturesActionResult | undefined }) {
@@ -30,7 +34,7 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
   );
 }
 
-export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = false, quiet = false }: InvoiceShortcutButtonsProps) {
+export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = false, quiet = false, earlyPayment = null }: InvoiceShortcutButtonsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-envoi-${invoice.id}` });
   const drafts = useInvoiceDrafts(invoice.id);
   const busy = fetcher.state !== "idle";
@@ -73,6 +77,7 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = fa
 
   return (
     <s-stack direction="block" gap="small-200">
+      {earlyPayment === null ? null : <EarlyPaymentNote offer={earlyPayment} />}
       {hideSend ? null : channels.length === 0 ? (
         /* Ni WhatsApp ni e-mail : une seule phrase utile, pas d'explication technique. */
         <s-text color="subdued">Imprimez la facture et donnez-la avec la commande.</s-text>

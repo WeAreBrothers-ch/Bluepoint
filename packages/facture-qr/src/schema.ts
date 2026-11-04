@@ -100,8 +100,30 @@ export const invoiceSchema = z
     poNumber: texte(40).optional(),
     /** Date de paiement : la facture est alors une facture acquittée (reçu), sans bulletin QR. */
     paidOn: dateIso.optional(),
+    /**
+     * Rabais de paiement rapide (escompte) : « 2 % si payée jusqu'au … ». Seulement une mention : le bulletin
+     * QR garde le montant complet, le client indique le montant réduit dans son e-banking.
+     */
+    earlyPayment: z
+      .object({
+        percent: z.number().gt(0, "Pourcentage de rabais invalide.").lte(20, "Rabais de plus de 20 %."),
+        /** Dernier jour pour profiter du rabais (inclus). */
+        deadline: dateIso,
+        /** Montant à payer avec le rabais, en centimes. */
+        amountCents: centimes.min(1, "Le montant avec rabais doit être supérieur à zéro."),
+      })
+      .optional(),
   })
-  .superRefine(verifierCoherence);
+  .superRefine(verifierCoherence)
+  .superRefine((f, ctx) => {
+    if (f.earlyPayment === undefined) return;
+    if (f.earlyPayment.amountCents >= f.totalCents) {
+      ctx.addIssue({ code: "custom", path: ["earlyPayment", "amountCents"], message: "Le montant avec rabais doit être inférieur au total." });
+    }
+    if (f.earlyPayment.deadline < f.issueDate) {
+      ctx.addIssue({ code: "custom", path: ["earlyPayment", "deadline"], message: "Le délai du rabais est antérieur à la date de facture." });
+    }
+  });
 
 /** Données brutes acceptées (avant valeurs par défaut et normalisation). */
 export type InvoiceInputRaw = z.input<typeof invoiceSchema>;

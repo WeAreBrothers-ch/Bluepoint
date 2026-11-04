@@ -1,6 +1,7 @@
 import { formatIBAN, formatReference } from "swissqrbill/utils";
 import type { FactureCalculee } from "../calcul";
 import { formaterDate } from "../dates";
+import { formaterCHF } from "../montants";
 import { libelleValeur, typographier } from "../typographie";
 import {
   assurerEspace,
@@ -15,6 +16,19 @@ import {
 } from "./mise-en-page";
 import { ESPACES, TAILLES } from "./styles";
 
+/** Le rabais de paiement rapide, en une phrase ; rien si la facture n'en propose pas. */
+function ligneRabais(f: FactureCalculee): string[] {
+  const { earlyPayment, totalCents } = f.facture;
+  if (earlyPayment === undefined) return [];
+  const pourcent = String(earlyPayment.percent).replace(".", ",");
+  return [
+    typographier(
+      `Rabais de ${pourcent} % si la facture est payée jusqu'au ${formaterDate(earlyPayment.deadline)} : ` +
+        `${formaterCHF(earlyPayment.amountCents)} au lieu de ${formaterCHF(totalCents)} (indiquez ce montant dans votre e-banking).`,
+    ),
+  ];
+}
+
 function lignesPaiement(f: FactureCalculee): string[] {
   const { facture } = f;
   if (facture.paidOn !== undefined) {
@@ -22,6 +36,7 @@ function lignesPaiement(f: FactureCalculee): string[] {
   }
   return [
     `${typographier(facture.paymentTerms)}, au plus tard le ${formaterDate(facture.dueDate)}, par QR-facture ou virement.`,
+    ...ligneRabais(f),
     libelleValeur(f.reference.type === "QRR" ? "QR-IBAN" : "IBAN", formatIBAN(f.compte)),
     libelleValeur("Référence", formatReference(f.reference.valeur)),
   ];

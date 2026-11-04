@@ -1,0 +1,71 @@
+{%- comment -%}
+  Bandeau « Pros : 2 % de rabais en plus si vous payez votre facture dans les 10 jours ».
+  Bloc d'application (app embed) : à activer une fois dans l'éditeur du thème
+  (Paramètres du thème › Intégrations d'applications › « Rabais paiement rapide »).
+  Visible par les clients pro connectés (étiquette « pro ») et sur la page « Devenir pro » ;
+  le texte et le public se règlent dans l'éditeur du thème.
+{%- endcomment -%}
+{%- liquid
+  assign est_pro = false
+  if customer
+    for etiquette in customer.tags
+      assign minuscule = etiquette | downcase
+      if minuscule == 'pro' or minuscule == 'professionnel' or minuscule == 'b2b'
+        assign est_pro = true
+      endif
+    endfor
+  endif
+
+  assign page_pro = false
+  if request.path contains 'devenir-pro'
+    assign page_pro = true
+  endif
+
+  assign montrer = false
+  if block.settings.public == 'tous' or est_pro or page_pro
+    assign montrer = true
+  endif
+-%}
+
+{%- if montrer -%}
+  <aside class="bp-rabais" role="note" data-bp-rabais>
+    <p class="bp-rabais__texte">
+      <strong>{{ block.settings.titre }}</strong>
+      {{ block.settings.texte }}
+    </p>
+    <button type="button" class="bp-rabais__fermer" aria-label="Fermer le bandeau" data-bp-rabais-fermer>&times;</button>
+  </aside>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Rabais paiement rapide",
+  "target": "body",
+  "stylesheet": "rabais-pros.css",
+  "javascript": "rabais-pros.js",
+  "settings": [
+    {
+      "type": "text",
+      "id": "titre",
+      "label": "Titre",
+      "default": "Pros : 2 % de rabais en plus"
+    },
+    {
+      "type": "textarea",
+      "id": "texte",
+      "label": "Texte",
+      "default": "Payez votre facture dans les 10 jours et profitez de 2 % de rabais en plus de votre prix pro."
+    },
+    {
+      "type": "select",
+      "id": "public",
+      "label": "Qui voit le bandeau ?",
+      "default": "pros",
+      "options": [
+        { "value": "pros", "label": "Les clients pro connectés et la page « Devenir pro »" },
+        { "value": "tous", "label": "Tous les visiteurs" }
+      ]
+    }
+  ]
+}
+{% endschema %}

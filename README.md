@@ -31,6 +31,18 @@ Elle sert à l’équipe, pas aux clients :
   « Envoyer par e-mail » et « Envoyer par WhatsApp » ouvrent une fenêtre avec le message déjà rédigé
   (vins de la commande lus dans Shopify, total, échéance) : on le relit, on le modifie, puis on envoie
   (route `/app/factures/:id/message` pour les brouillons ; les relances restent en un toucher).
+- **Rabais de paiement rapide** : 2 % si la facture est payée dans les 10 jours qui suivent sa date (seulement
+  si l’échéance est plus lointaine ; valeurs dans `app/lib/escompte/early-payment.ts`). Le PDF le mentionne (le
+  QR-facture garde le montant complet : le client indique le montant réduit dans son e-banking), l’e-mail et le
+  message WhatsApp aussi, et un encadré vert l’affiche dans Factures et dans l’agenda. « Le client a payé » demande
+  d’abord le montant : avec le rabais, la commande Shopify est ajustée (remise de 2 % sur chaque ligne,
+  `orderEditCommit`, TVA recalculée par Shopify, étiquette `rabais-paiement-rapide` qui évite un second rabais)
+  puis marquée payée du nouveau montant.
+- **Bandeau du site** (`extensions/rabais-pros`, bloc d’application) : « Pros : 2 % de rabais en plus si vous payez
+  votre facture dans les 10 jours », pour les clients pro connectés (étiquette `pro`) et sur la page « Devenir pro »
+  (qui reprend aussi la phrase). Il se publie avec la configuration (workflow « Configuration Shopify »), puis
+  s’active **une seule fois** dans l’éditeur du thème : Paramètres du thème › Intégrations d’applications.
+  Titre, texte et public (pros ou tous) se règlent là aussi.
 - **Fiche commande** (`/app/commandes/:id`) : vins, prix, remise, total, client, facture. Tant que la
   commande n’est ni livrée ni facturée : « Modifier les vins » (édition de commande Shopify, remise
   automatique recalculée, stock remis ; seulement si pas encore payée) et « Annuler la commande »

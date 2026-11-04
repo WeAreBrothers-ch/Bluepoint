@@ -1,3 +1,5 @@
+import { swissIsoDate } from "../agenda/dates";
+import { earlyPaymentOffer } from "../escompte/early-payment";
 import { invoiceShareUrl } from "./links.server";
 import { preferredChannel, readSentVia, sentLabel, type InvoiceShortcuts, type SentVia } from "./list-item";
 import type { Invoice } from "./repository.server";
@@ -36,5 +38,6 @@ export function invoiceShortcuts(
     customerEmail: invoice.customerEmail,
     preferredChannel: preferredChannel(own, channels.get(customerKey(invoice)) ?? null, whatsappAvailable),
     sentLabel: sentLabel(invoice.sentAt, own),
+    earlyPayment: earlyPaymentOffer(invoice, swissIsoDate(now)),
   };
 }

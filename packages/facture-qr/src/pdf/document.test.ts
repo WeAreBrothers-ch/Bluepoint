@@ -4,6 +4,7 @@ import { FACTURE_EXEMPLE } from "../fixtures/facture";
 import { QR_IBAN_EXEMPLE } from "../fixtures/vendeur";
 import type { InvoiceInput } from "../schema";
 import { validateInvoiceInput } from "../validation";
+import { ajouterJours as ajouterJoursIso } from "../dates";
 import { renderInvoicePdf } from "./document";
 
 const facture = validateInvoiceInput(FACTURE_EXEMPLE);
@@ -44,6 +45,23 @@ describe("renderInvoicePdf", () => {
       vatLines: [{ ratePercent: 8.1, amountCents: 4496 }],
     });
     expect(nombreDePages(await renderInvoicePdf(longue))).toBeGreaterThan(1);
+  });
+
+  it("ajoute la mention du rabais de paiement rapide sans changer le nombre de pages", async () => {
+    const total = facture.totalCents;
+    const avecRabais = validateInvoiceInput({
+      ...FACTURE_EXEMPLE,
+      earlyPayment: { percent: 2, deadline: ajouterJoursIso(FACTURE_EXEMPLE.issueDate, 10), amountCents: Math.round(total * 0.98) },
+    });
+    const pdf = await renderInvoicePdf(avecRabais);
+    expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    expect(nombreDePages(pdf)).toBe(1);
+  });
+
+  it("refuse un rabais qui n'en est pas un, ou dont le délai précède la facture", () => {
+    const total = facture.totalCents;
+    expect(() => validateInvoiceInput({ ...FACTURE_EXEMPLE, earlyPayment: { percent: 2, deadline: FACTURE_EXEMPLE.issueDate, amountCents: total } })).toThrow(FactureError);
+    expect(() => validateInvoiceInput({ ...FACTURE_EXEMPLE, earlyPayment: { percent: 2, deadline: "2000-01-01", amountCents: total - 1 } })).toThrow(FactureError);
   });
 
   it("revalide les données et rejette une facture modifiée après validation", async () => {
