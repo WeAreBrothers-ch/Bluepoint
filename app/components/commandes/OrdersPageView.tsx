@@ -7,6 +7,7 @@ import type { OrdersPageData } from "../../lib/commandes/list.server";
 import { formatChf } from "../../lib/format/money";
 import { gidToNumericId } from "../../lib/shopify";
 import { ClientCard } from "../ClientCard";
+import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { EmptyState } from "../EmptyState";
 import { FILL } from "../fill";
 import { GroupTitle } from "../GroupTitle";
@@ -32,6 +33,7 @@ export function OrderCard({ item }: { readonly item: OrderListItem }) {
   const late = !item.cancelled && task.urgency === "en_retard" && task.status !== "livree";
   return (
     <ClientCard
+      kind={clientKind(task.isPro)}
       header={
         <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
@@ -39,7 +41,10 @@ export function OrderCard({ item }: { readonly item: OrderListItem }) {
               {task.mode === null ? null : <s-icon type={mode.icon} />}
               <s-heading>{task.company ?? task.customerName}</s-heading>
             </s-stack>
-            <s-badge tone={badge.tone}>{badge.label}</s-badge>
+            <s-stack direction="inline" gap="small-200" alignItems="center">
+              <ClientKindBadge isPro={task.isPro} {...(task.mode === null ? {} : { detail: mode.label })} />
+              <s-badge tone={badge.tone}>{badge.label}</s-badge>
+            </s-stack>
           </s-stack>
           <s-text color="subdued">{task.company === null ? `Commande ${task.name}` : `${task.customerName} · commande ${task.name}`}</s-text>
         </>

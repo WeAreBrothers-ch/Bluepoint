@@ -1,6 +1,7 @@
 import { longDay } from "../../lib/agenda/dates";
 import { productLabel } from "../../lib/commande/totals";
 import type { B2bOption, CustomerOption, PhoneOrderLine, ProductOption } from "../../lib/commande/types";
+import { ClientKindBadge } from "../ClientKindBadge";
 import { CustomerSearch } from "./CustomerSearch";
 
 /** Client de la commande : recherche, puis fiche (adresse, téléphone, entreprise) et reprise de sa dernière commande. */
@@ -89,7 +90,7 @@ function CustomerCard(props: CardProps) {
         <s-stack direction="block" gap="small-300">
           <s-stack direction="inline" gap="small-200" alignItems="center">
             <s-text type="strong">{customer.displayName}</s-text>
-            {customer.isPro ? <s-badge tone="info">Client pro</s-badge> : null}
+            <ClientKindBadge isPro={customer.isPro} />
           </s-stack>
           {customer.addressLines.length === 0 ? (
             <s-text tone="caution">

@@ -6,6 +6,7 @@ import type { ClientPageData } from "../../lib/clients/detail.server";
 import type { NewCustomerValues } from "../../lib/commande/new-customer";
 import type { ClientEditResult } from "../../routes/app.clients.$id";
 import { ClientCard } from "../ClientCard";
+import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { OrderCard } from "../commandes/OrdersPageView";
 import { CustomerFields } from "../commande/CustomerFields";
 import { FILL } from "../fill";
@@ -117,11 +118,12 @@ export function ClientPageView({ data, numericId }: { readonly data: ClientPageD
         <ClientEditForm data={data} numericId={numericId} onDone={done} onCancel={() => setEditing(false)} />
       ) : (
         <ClientCard
+          kind={clientKind(customer.isPro)}
           header={
             <>
               <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
                 <s-heading>{company ?? customer.displayName}</s-heading>
-                {customer.isPro ? <s-badge tone="info">Client pro</s-badge> : null}
+                <ClientKindBadge isPro={customer.isPro} />
               </s-stack>
               {company === null ? null : <s-text color="subdued">{customer.displayName}</s-text>}
               <s-text type="strong">{clientStats(client)}</s-text>

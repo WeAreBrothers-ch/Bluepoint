@@ -9,6 +9,7 @@ import type { CustomerOption } from "../../lib/commande/types";
 import { formatChf } from "../../lib/format/money";
 import { gidToNumericId } from "../../lib/shopify";
 import { ClientCard } from "../ClientCard";
+import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { NewCustomerForm } from "../commande/NewCustomerForm";
 import { EmptyState } from "../EmptyState";
 import { FILL } from "../fill";
@@ -34,11 +35,12 @@ function ClientRow({ item }: { readonly item: ClientListItem }) {
   const place = customer.addressLines.filter((line) => line !== company).join(", ") || null;
   return (
     <ClientCard
+      kind={clientKind(customer.isPro)}
       header={
         <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
             <s-heading>{company ?? customer.displayName}</s-heading>
-            {customer.isPro ? <s-badge tone="info">Client pro</s-badge> : null}
+            <ClientKindBadge isPro={customer.isPro} />
           </s-stack>
           {company === null ? null : <s-text color="subdued">{customer.displayName}</s-text>}
         </>

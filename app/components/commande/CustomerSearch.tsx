@@ -4,6 +4,7 @@ import { MIN_SEARCH_LENGTH } from "../../lib/commande/customers";
 import { prefillFromSearch } from "../../lib/commande/new-customer";
 import type { CustomerOption } from "../../lib/commande/types";
 import type { CustomerSearchResult } from "../../routes/app.recherche-clients";
+import { ClientKindBadge } from "../ClientKindBadge";
 import { useDebouncedValue } from "../useDebouncedValue";
 import { NewCustomerForm } from "./NewCustomerForm";
 import { TouchButton } from "./TouchButton";
@@ -71,7 +72,10 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
       {data?.customers.map((customer) => (
         <TouchButton key={customer.id} label={`Choisir ${customer.displayName}`} onPress={() => onSelect(customer)} fill>
           <s-stack direction="block" gap="none">
-            <s-text type="strong">{customer.isPro ? `${customer.displayName} · client pro` : customer.displayName}</s-text>
+            <s-stack direction="inline" gap="small-200" alignItems="center">
+              <s-text type="strong">{customer.displayName}</s-text>
+              <ClientKindBadge isPro={customer.isPro} />
+            </s-stack>
             <s-text color="subdued">{summary(customer)}</s-text>
           </s-stack>
         </TouchButton>

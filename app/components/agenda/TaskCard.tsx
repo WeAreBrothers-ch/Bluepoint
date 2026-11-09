@@ -7,6 +7,7 @@ import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { gidToNumericId } from "../../lib/shopify";
 import { ClientCard } from "../ClientCard";
+import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
 import { PaymentBadges, StatusBadge } from "./TaskBadges";
@@ -91,6 +92,7 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
 
   return (
     <ClientCard
+      kind={clientKind(task.isPro)}
       header={
         <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
@@ -98,7 +100,10 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
               <s-icon type={mode.icon} />
               <s-heading>{task.company ?? task.customerName}</s-heading>
             </s-stack>
-            <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
+            <s-stack direction="inline" gap="small-200" alignItems="center">
+              <ClientKindBadge isPro={task.isPro} detail={mode.label} />
+              <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
+            </s-stack>
           </s-stack>
           <s-text color="subdued">{who}</s-text>
           {dateLine === null ? null : (
