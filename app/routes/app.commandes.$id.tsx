@@ -47,7 +47,7 @@ export default function CommandePage() {
         </s-banner>
       ) : (
         <>
-          <OrderSummary detail={detail} invoice={data.invoice} today={data.today} emailConfigured={data.emailConfigured} />
+          <OrderSummary detail={detail} invoice={data.invoice} today={data.today} />
           {editing && canEdit && change !== null ? (
             <OrderEditor detail={detail} products={change.products} truncated={change.truncated} onClose={closeEditor} />
           ) : (

@@ -14,24 +14,23 @@ interface WeekViewProps {
   readonly groups: WeekGroups;
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
   readonly today: IsoDate;
-  readonly emailConfigured: boolean;
 }
 
-function DaySection({ column, invoices, today, emailConfigured }: { readonly column: WeekColumn } & Omit<WeekViewProps, "groups">) {
+function DaySection({ column, invoices, today }: { readonly column: WeekColumn } & Omit<WeekViewProps, "groups">) {
   const title = `${column.label}${column.isToday ? " (aujourd’hui)" : ""} — ${column.tasks.length} livraison${column.tasks.length > 1 ? "s" : ""}`;
   return (
     <>
       <GroupTitle title={title} />
       {column.tasks.map((task) => (
-        <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} emailConfigured={emailConfigured} />
+        <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} />
       ))}
     </>
   );
 }
 
-export function WeekView({ groups, invoices, today, emailConfigured }: WeekViewProps) {
+export function WeekView({ groups, invoices, today }: WeekViewProps) {
   const busyDays = groups.columns.filter((column) => column.tasks.length > 0);
-  const list = { invoices, today, emailConfigured };
+  const list = { invoices, today };
   return (
     <>
       <TaskList heading="Livraisons en retard (semaines passées)" hint="À livrer en premier." tasks={groups.overdueBefore} {...list} />

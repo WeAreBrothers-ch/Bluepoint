@@ -108,6 +108,15 @@ export function whatsappReminderLinkFor(invoice: Invoice, sellerName: string, no
   return whatsappUrl(invoice.customerPhone, whatsappReminder(messageData(invoice, sellerName), invoiceShareUrl(invoice.id, now)));
 }
 
+/** Note dans l'historique que la facture a été préparée dans la messagerie de l'équipe (sans envoi automatique). */
+export async function recordEmailShare(shop: string, invoiceId: string): Promise<Result<true, InvoiceError>> {
+  const invoice = await getShopInvoice(shop, invoiceId);
+  if (invoice === null) return failure(new InvoiceError("facture_introuvable"));
+  if (invoice.customerEmail === null) return failure(new InvoiceError("destinataire_manquant"));
+  await recordInvoiceSent(invoice.id, invoice.customerEmail, "email");
+  return success(true);
+}
+
 export async function recordWhatsappShare(shop: string, invoiceId: string): Promise<Result<true, InvoiceError>> {
   const invoice = await getShopInvoice(shop, invoiceId);
   if (invoice === null) return failure(new InvoiceError("facture_introuvable"));

@@ -12,16 +12,15 @@ interface TaskListProps {
   readonly tasks: readonly ScheduledTask[];
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
   readonly today: IsoDate;
-  readonly emailConfigured: boolean;
 }
 
-export function TaskList({ heading, hint, tasks, invoices, today, emailConfigured }: TaskListProps) {
+export function TaskList({ heading, hint, tasks, invoices, today }: TaskListProps) {
   if (tasks.length === 0) return null;
   return (
     <>
       <GroupTitle title={`${heading} (${tasks.length})`} {...(hint === undefined ? {} : { hint })} />
       {tasks.map((task) => (
-        <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} emailConfigured={emailConfigured} />
+        <TaskCard key={task.orderId} task={task} invoice={invoices[task.orderId] ?? null} today={today} />
       ))}
     </>
   );

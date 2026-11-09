@@ -55,9 +55,9 @@ export function preferredChannel(own: SentVia | null, previous: SentVia | null, 
   return own ?? previous ?? (hasWhatsapp ? "whatsapp" : "email");
 }
 
-export type FacturesIntent = "email" | "whatsapp" | "relance_email" | "payee";
+export type FacturesIntent = "email" | "email_ouvert" | "whatsapp" | "relance_email" | "payee";
 
-const INTENTS: readonly FacturesIntent[] = ["email", "whatsapp", "relance_email", "payee"];
+const INTENTS: readonly FacturesIntent[] = ["email", "email_ouvert", "whatsapp", "relance_email", "payee"];
 
 export function isFacturesIntent(value: unknown): value is FacturesIntent {
   return INTENTS.some((intent) => intent === value);

@@ -1,6 +1,5 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError } from "../core/logger.server";
-import { isEmailConfigured } from "../factures/email.server";
 import { invoicesByOrder, listInvoices } from "../factures/repository.server";
 import { channelsByCustomer, invoiceShortcuts } from "../factures/shortcuts.server";
 import type { IsoDate } from "../metafields/definitions";
@@ -24,7 +23,6 @@ export interface AgendaPageData {
   readonly truncated: boolean;
   readonly loadError: string | null;
   readonly settingsComplete: boolean;
-  readonly emailConfigured: boolean;
   /** Demandes de compte pro reçues par le site, à valider. */
   readonly pendingProRequests: number;
   /** Facture déjà créée, par identifiant de commande. */
@@ -60,7 +58,6 @@ export async function loadAgendaPage(
     periodLabel,
     weekNavigation,
     settingsComplete: settings !== null,
-    emailConfigured: isEmailConfigured(),
     pendingProRequests,
   };
   if (!orders.ok) {

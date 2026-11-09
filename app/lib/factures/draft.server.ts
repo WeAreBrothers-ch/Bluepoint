@@ -9,8 +9,19 @@ import { invoiceMessageData } from "./send.server";
 
 /** Brouillons proposés dans les fenêtres d'envoi (e-mail et WhatsApp), à relire avant l'envoi. */
 
+/**
+ * `auto` : l'app envoie l'e-mail elle-même, PDF joint. `messagerie` : l'envoi automatique n'est pas configuré,
+ * l'e-mail s'écrit dans la messagerie de l'équipe et porte le lien du PDF.
+ */
+export interface EmailDraft {
+  readonly to: string;
+  readonly subject: string;
+  readonly text: string;
+  readonly mode: "auto" | "messagerie";
+}
+
 export interface InvoiceDrafts {
-  readonly email: { readonly to: string; readonly subject: string; readonly text: string } | null;
+  readonly email: EmailDraft | null;
   readonly whatsapp: { readonly phone: string; readonly text: string } | null;
 }
 
@@ -30,13 +41,18 @@ export async function loadInvoiceDrafts(
     const settings = await loadCompleteSettings(shop);
     if (settings === null) return { ok: false, message: "Complétez les réglages de facturation pour envoyer la facture." };
     const data = await invoiceMessageData(admin, invoice, settings.legalName);
-    const canEmail = invoice.customerEmail !== null && isEmailConfigured();
+    const auto = isEmailConfigured();
     return {
       ok: true,
       drafts: {
-        email: canEmail && invoice.customerEmail !== null
-          ? { to: invoice.customerEmail, subject: emailSubject(data), text: emailText(data) }
-          : null,
+        email: invoice.customerEmail === null
+          ? null
+          : {
+              to: invoice.customerEmail,
+              subject: emailSubject(data),
+              text: emailText(data, auto ? null : invoiceShareUrl(invoice.id, now)),
+              mode: auto ? "auto" : "messagerie",
+            },
         whatsapp: invoice.customerPhone === null
           ? null
           : { phone: invoice.customerPhone, text: whatsappMessage(data, invoiceShareUrl(invoice.id, now)) },

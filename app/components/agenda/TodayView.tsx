@@ -10,10 +10,9 @@ interface TodayViewProps {
   readonly groups: TodayGroups;
   readonly invoices: Readonly<Record<string, InvoiceRef>>;
   readonly today: IsoDate;
-  readonly emailConfigured: boolean;
 }
 
-export function TodayView({ groups, invoices, today, emailConfigured }: TodayViewProps) {
+export function TodayView({ groups, invoices, today }: TodayViewProps) {
   const toDeliver = groups.late.length + groups.today.length;
   const total = toDeliver + groups.tomorrow.length + groups.undated.length + groups.doneToday.length;
   if (total === 0) {
@@ -33,7 +32,7 @@ export function TodayView({ groups, invoices, today, emailConfigured }: TodayVie
       </EmptyState>
     );
   }
-  const list = { invoices, today, emailConfigured };
+  const list = { invoices, today };
   return (
     <>
       <TaskList heading="Livraisons en retard" hint="À livrer en premier." tasks={groups.late} {...list} />

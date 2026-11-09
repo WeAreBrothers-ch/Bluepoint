@@ -3,7 +3,6 @@ import { swissIsoDate } from "../agenda/dates";
 import { loadPaymentTerms } from "../agenda/payment-terms.server";
 import type { InvoiceRef } from "../agenda/types";
 import { logError } from "../core/logger.server";
-import { isEmailConfigured } from "../factures/email.server";
 import { findInvoiceByOrder, listInvoices } from "../factures/repository.server";
 import { channelsByCustomer, invoiceShortcuts } from "../factures/shortcuts.server";
 import type { IsoDate } from "../metafields/definitions";
@@ -31,14 +30,13 @@ export interface OrderPageData {
   readonly change: OrderChangeData | null;
   readonly invoice: InvoiceRef | null;
   readonly today: IsoDate;
-  readonly emailConfigured: boolean;
   /** Message simple si la commande n'a pas pu être lue. */
   readonly problem: string | null;
 }
 
 export async function loadOrderPage(admin: AdminApiContext, shop: string, numericId: string, now: Date): Promise<OrderPageData> {
   const today = swissIsoDate(now);
-  const base = { today, emailConfigured: isEmailConfigured(), change: null };
+  const base = { today, change: null };
   if (!/^\d+$/.test(numericId)) return { ...base, detail: null, invoice: null, problem: "Cette commande n’existe pas." };
   const orderId = `gid://shopify/Order/${numericId}`;
   const result = await runAdminGraphql<{ readonly order: OrderDetailNode | null }>(admin, ORDER_DETAIL_QUERY, { id: orderId });

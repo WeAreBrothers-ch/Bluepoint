@@ -17,10 +17,9 @@ interface OrderSummaryProps {
   readonly detail: OrderDetail;
   readonly invoice: InvoiceRef | null;
   readonly today: IsoDate;
-  readonly emailConfigured: boolean;
 }
 
-export function OrderSummary({ detail, invoice, today, emailConfigured }: OrderSummaryProps) {
+export function OrderSummary({ detail, invoice, today }: OrderSummaryProps) {
   const { task } = detail;
   // Même clé que la carte de l'agenda : l'action en cours se voit des deux côtés.
   const fetcher = useFetcher<AgendaActionResult>({ key: `agenda-${task.orderId}` });
@@ -49,7 +48,7 @@ export function OrderSummary({ detail, invoice, today, emailConfigured }: OrderS
             {task.note}
           </s-banner>
         )}
-        <TaskActions task={task} invoice={invoice} fetcher={fetcher} emailConfigured={emailConfigured} today={today} />
+        <TaskActions task={task} invoice={invoice} fetcher={fetcher} today={today} />
         {result === undefined ? null : <ActionFeedback result={result} />}
         {invoice === null && beforeDelivery ? (
           <s-text color="subdued">{`La facture se fait toute seule quand vous touchez «\u00A0${mode.doneAction}\u00A0».`}</s-text>

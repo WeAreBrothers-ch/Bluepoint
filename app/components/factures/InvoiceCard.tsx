@@ -102,7 +102,7 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
       </s-stack>
         {/* En retard : relancer d'abord ; sinon, envoyer la facture. */}
         <Reminders invoice={invoice} emailConfigured={emailConfigured} />
-        <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} hideSend={reminding} />
+        <InvoiceShortcutButtons invoice={invoice} hideSend={reminding} />
         {invoice.paymentState === "payee" ? null : <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />}
     </ClientCard>
   );

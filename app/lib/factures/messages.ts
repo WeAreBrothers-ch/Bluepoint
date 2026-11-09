@@ -53,10 +53,22 @@ export function emailSubject(data: InvoiceMessageData): string {
   return `${kind} ${data.number} — commande ${data.orderName} — ${data.sellerName}`;
 }
 
-export function emailText(data: InvoiceMessageData): string {
-  const attachment = data.paidOn === null
-    ? "Le PDF est en pièce jointe. La QR-facture en bas du document se paie directement depuis votre app bancaire."
-    : "Le reçu (facture acquittée) est en pièce jointe.";
+/** Le lien vers le PDF, tel qu'il est écrit dans un message WhatsApp ou dans un e-mail sans pièce jointe. */
+function pdfLinkLine(data: InvoiceMessageData, link: string): string {
+  const label = data.paidOn === null ? "Le PDF, avec la QR-facture pour payer depuis votre app bancaire" : "Le reçu en PDF";
+  return `${label}${NNBSP}: ${link}`;
+}
+
+/**
+ * Texte de l'e-mail. `shareLink` : quand l'envoi automatique n'est pas possible, l'e-mail part de la messagerie
+ * de l'équipe, sans pièce jointe : le message porte alors le lien du PDF.
+ */
+export function emailText(data: InvoiceMessageData, shareLink: string | null = null): string {
+  const attachment = shareLink !== null
+    ? pdfLinkLine(data, shareLink)
+    : data.paidOn === null
+      ? "Le PDF est en pièce jointe. La QR-facture en bas du document se paie directement depuis votre app bancaire."
+      : "Le reçu (facture acquittée) est en pièce jointe.";
   return [
     "Bonjour,",
     "",
@@ -72,13 +84,12 @@ export function emailText(data: InvoiceMessageData): string {
 }
 
 export function whatsappMessage(data: InvoiceMessageData, link: string): string {
-  const linkLabel = data.paidOn === null ? "Le PDF, avec la QR-facture pour payer depuis votre app bancaire" : "Le reçu en PDF";
   return [
     `Bonjour, voici ${documentName(data)} pour la commande ${data.orderName}.`,
     "",
     ...summaryBlock(data),
     totalLine(data),
-    `${linkLabel}${NNBSP}: ${link}`,
+    pdfLinkLine(data, link),
     "",
     `Merci et à bientôt${NNBSP}!`,
     data.sellerName,

@@ -14,7 +14,6 @@ import { useInvoiceDrafts } from "./useInvoiceDrafts";
 
 interface InvoiceShortcutButtonsProps {
   readonly invoice: InvoiceShortcuts;
-  readonly emailConfigured: boolean;
   /** Facture en retard : on propose de relancer le client, pas de lui renvoyer la facture. */
   readonly hideSend?: boolean;
   /** Dans une carte de l'agenda : aucun bouton foncé (il n'y en a qu'un, « J'ai livré »), et le numéro de la facture dans la phrase. */
@@ -30,12 +29,12 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
   );
 }
 
-export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = false, quiet = false }: InvoiceShortcutButtonsProps) {
+export function InvoiceShortcutButtons({ invoice, hideSend = false, quiet = false }: InvoiceShortcutButtonsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-envoi-${invoice.id}` });
   const drafts = useInvoiceDrafts(invoice.id);
   const busy = fetcher.state !== "idle";
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
-  const canEmail = emailConfigured && invoice.customerEmail !== null;
+  const canEmail = invoice.customerEmail !== null;
   const emailModalId = `envoi-email-${invoice.id}`;
   const whatsappModalId = `envoi-whatsapp-${invoice.id}`;
 
@@ -91,7 +90,17 @@ export function InvoiceShortcutButtons({ invoice, emailConfigured, hideSend = fa
         </s-button>
       </s-stack>
       <InvoiceResultBanner result={result} />
-      {canEmail ? <InvoiceEmailModal modalId={emailModalId} invoiceId={invoice.id} drafts={drafts} fetcher={fetcher} /> : null}
+      {canEmail ? (
+        <InvoiceEmailModal
+          modalId={emailModalId}
+          invoiceId={invoice.id}
+          drafts={drafts}
+          fetcher={fetcher}
+          onMailboxOpened={() =>
+            fetcher.submit({ intent: "email_ouvert", invoiceId: invoice.id }, { method: "post", action: "/app/factures" })
+          }
+        />
+      ) : null}
       {invoice.whatsappAvailable ? (
         <InvoiceWhatsappModal
           modalId={whatsappModalId}

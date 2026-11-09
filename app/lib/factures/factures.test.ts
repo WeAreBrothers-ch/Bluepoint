@@ -101,6 +101,14 @@ describe("messages", () => {
     expect(emailText({ ...data, dueDate: null })).not.toContain("régler");
   });
 
+  it("remplace la pièce jointe par le lien du PDF quand l'e-mail part de la messagerie", () => {
+    const text = emailText(data, "https://app.example/partage/abc");
+    expect(text).toContain(`QR-facture pour payer depuis votre app bancaire${NNBSP}: https://app.example/partage/abc`);
+    expect(text).not.toContain("pièce jointe");
+    const recu = emailText({ ...data, paidOn: "2026-10-22" as IsoDate }, "https://app.example/partage/abc");
+    expect(recu).toContain(`Le reçu en PDF${NNBSP}: https://app.example/partage/abc`);
+  });
+
   it("reste correct sans récapitulatif (Shopify indisponible)", () => {
     const text = emailText({ ...data, lines: [] });
     expect(text).not.toContain("Récapitulatif");

@@ -21,7 +21,6 @@ interface TaskActionsProps {
   readonly task: ScheduledTask;
   readonly invoice: InvoiceRef | null;
   readonly fetcher: FetcherWithComponents<AgendaActionResult>;
-  readonly emailConfigured: boolean;
   readonly today: IsoDate;
   /** Lien « Voir la commande », sur la carte de l'agenda seulement (sur la fiche commande, on y est déjà). */
   readonly viewOrderHref?: string;
@@ -41,7 +40,7 @@ function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): Agen
   return intent === "livrer" || intent === "facturer" || intent === "dater" ? intent : null;
 }
 
-export function TaskActions({ task, invoice, fetcher, emailConfigured, today, viewOrderHref }: TaskActionsProps) {
+export function TaskActions({ task, invoice, fetcher, today, viewOrderHref }: TaskActionsProps) {
   const [panel, setPanel] = useState<Panel>("aucun");
   const pending = pendingIntent(fetcher);
   const busy = pending !== null;
@@ -178,7 +177,7 @@ export function TaskActions({ task, invoice, fetcher, emailConfigured, today, vi
       {invoice === null ? null : (
         <s-stack direction="block" gap="small-200">
           <s-divider />
-          <InvoiceShortcutButtons invoice={invoice} emailConfigured={emailConfigured} quiet />
+          <InvoiceShortcutButtons invoice={invoice} quiet />
           {awaitsPayment(task) ? <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} /> : null}
         </s-stack>
       )}

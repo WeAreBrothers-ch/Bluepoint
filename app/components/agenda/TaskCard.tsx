@@ -22,7 +22,6 @@ interface TaskCardProps {
   readonly task: ScheduledTask;
   readonly invoice: InvoiceRef | null;
   readonly today: IsoDate;
-  readonly emailConfigured: boolean;
 }
 
 export function ContactButtons({ task }: { readonly task: ScheduledTask }) {
@@ -81,7 +80,7 @@ function WineList({ task }: { readonly task: ScheduledTask }) {
   );
 }
 
-export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProps) {
+export function TaskCard({ task, invoice, today }: TaskCardProps) {
   const fetcher = useFetcher<AgendaActionResult>({ key: `agenda-${task.orderId}` });
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
   const optimisticDelivered = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "livrer";
@@ -129,7 +128,6 @@ export function TaskCard({ task, invoice, today, emailConfigured }: TaskCardProp
           task={task}
           invoice={invoice}
           fetcher={fetcher}
-          emailConfigured={emailConfigured}
           today={today}
           viewOrderHref={`/app/commandes/${gidToNumericId(task.orderId)}`}
         />

@@ -5,7 +5,7 @@ import { parseEditedEmail, type EditedEmail } from "./message-input";
 import { isPaymentMethod, PAYMENT_METHOD_LABELS } from "./payment";
 import { loadPaymentStatuses, markOrderPaid } from "./payment.server";
 import { getShopInvoice } from "./repository.server";
-import { emailInvoice, recordWhatsappShare } from "./send.server";
+import { emailInvoice, recordEmailShare, recordWhatsappShare } from "./send.server";
 
 /** Actions sur une facture : envoi par e-mail, envoi WhatsApp, relance par e-mail, « Le client a payé ». */
 
@@ -62,6 +62,12 @@ export async function handleFacturesAction(admin: AdminApiContext, shop: string,
   try {
     if (intent === "payee") return await markPaid(admin, shop, invoiceId, form.get("method"));
     if (intent === "email" || intent === "relance_email") return await sendEmail(admin, shop, invoiceId, intent, form);
+    if (intent === "email_ouvert") {
+      const opened = await recordEmailShare(shop, invoiceId);
+      return opened.ok
+        ? { ok: true, invoiceId, message: "Votre messagerie est ouverte\u202F: envoyez le message pour que la facture parte." }
+        : failed(invoiceId, opened.error.message);
+    }
     const recorded = await recordWhatsappShare(shop, invoiceId);
     return recorded.ok
       ? { ok: true, invoiceId, message: "WhatsApp est ouvert\u202F: touchez « Envoyer » dans WhatsApp pour que la facture parte." }
