@@ -1,6 +1,6 @@
 import { formatSwissDateTime } from "../../lib/format/dates";
 import { NNBSP } from "../../lib/format/typography";
-import { TRIAL_CLIENT_NAME } from "../../lib/abaninja/trial-fixtures";
+import { trialClientName } from "../../lib/abaninja/trial-fixtures";
 import type { LastTrialSummary, TrialPageStatus } from "../../lib/abaninja/trial-types";
 import { frenchTypography } from "../../lib/abaninja/trial-typography";
 import { ResolveTrial } from "./ResolveTrial";
@@ -12,7 +12,7 @@ import { issueText, stateText } from "./trial-labels";
 function CleanupReminder({ trial }: { readonly trial: LastTrialSummary }) {
   if (trial.cleanupIssue === null) return null;
   const heading = trial.cleanupIssue === "non_brouillon" ? "À vérifier dans AbaNinja" : "À supprimer à la main dans AbaNinja";
-  const what = frenchTypography(`La facture de référence ${trial.reference}, puis le client « ${TRIAL_CLIENT_NAME} ».`);
+  const what = frenchTypography(`La facture de référence ${trial.reference}, puis le client « ${trialClientName(trial.reference)} ».`);
   return (
     <s-banner tone="warning" heading={frenchTypography(heading)}>
       <s-paragraph>{what}</s-paragraph>

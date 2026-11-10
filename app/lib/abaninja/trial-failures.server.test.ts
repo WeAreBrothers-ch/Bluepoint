@@ -89,9 +89,9 @@ describe("refus ou incertitude à la création de la facture", () => {
 });
 
 describe("refus ou incertitude à la création du client", () => {
-  it("client d'essai déjà là (409) : demande de le supprimer à la main, verrou « refusee »", async () => {
+  it("client pris pour un doublon (409) : demande de chercher et supprimer un client d'essai, verrou « refusee »", async () => {
     const { result } = await run(withStep(1, emptyResponse(409), false));
-    expect(reportOf(result).steps[3]?.message).toContain("existe déjà");
+    expect(reportOf(result).steps[3]?.message).toContain("pris le client d’essai pour un doublon");
     expect([...rows.values()][0]?.state).toBe("refusee");
   });
 

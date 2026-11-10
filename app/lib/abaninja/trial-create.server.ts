@@ -23,8 +23,8 @@ export interface CreatedDocuments {
 
 const NOTHING: CreatedDocuments = { companyUuid: null, invoiceUuid: null, invoiceNumber: null, uncertain: false, clientMaybeCreated: false };
 
-const DUPLICATE_HELP = `Un client d’essai existe déjà dans AbaNinja (reste d’un essai précédent). Supprimez le client « ${TRIAL_CLIENT_NAME} » dans AbaNinja, puis réessayez.`;
-const CLIENT_UNCERTAIN = `Le client fictif a peut-être été créé : le résultat est incertain. Cherchez le client « ${TRIAL_CLIENT_NAME} » dans AbaNinja et supprimez-le s’il existe.`;
+const DUPLICATE_HELP = `AbaNinja a pris le client d’essai pour un doublon. Cherchez dans AbaNinja un client dont le nom commence par « ${TRIAL_CLIENT_NAME} » (archives et corbeille comprises), supprimez-le, puis réessayez.`;
+const CLIENT_UNCERTAIN = `Le client fictif a peut-être été créé : le résultat est incertain. Cherchez dans AbaNinja un client dont le nom commence par « ${TRIAL_CLIENT_NAME} » et supprimez-le s’il existe.`;
 
 type ClientStep = { readonly receiver: InvoiceReceiver } | { readonly stop: CreatedDocuments };
 
@@ -48,7 +48,7 @@ async function stopAfterClientFailure(ctx: TrialContext, log: TrialLog, error: A
 }
 
 async function createTrialClient(ctx: TrialContext, log: TrialLog): Promise<ClientStep> {
-  const address = await createAddress(ctx.config, trialAddress(), ctx.call);
+  const address = await createAddress(ctx.config, trialAddress(ctx.reference), ctx.call);
   return address.ok ? { receiver: address.value } : stopAfterClientFailure(ctx, log, address.error);
 }
 
