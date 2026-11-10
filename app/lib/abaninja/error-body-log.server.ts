@@ -4,7 +4,7 @@ import { logInfo } from "../core/logger.server";
  * Journal serveur du corps d'une réponse d'erreur AbaNinja, pour comprendre
  * un refus sans jamais exposer de donnée client. On n'écrit QUE : le `type`
  * d'erreur, le `requestUuid`, le `status` du corps, les NOMS des champs de
- * `detail` et, pour l'API Adresses, le code `error`. Jamais les valeurs, jamais
+ * `detail`, la forme du corps (chemins de clés) et, pour l'API Adresses, le code `error`. Jamais les valeurs, jamais
  * le corps brut. Rien de tout cela n'entre dans un message d'erreur.
  */
 
@@ -33,6 +33,18 @@ function fieldNames(detail: unknown): string | undefined {
   return names.length === 0 ? undefined : names.join(",");
 }
 
+const MAX_PATHS = 30;
+const MAX_DEPTH = 3;
+
+/** Chemins des clés du corps (« errors.language »), sans aucune valeur : montre quel champ est refusé. */
+function keyPaths(value: unknown, prefix = "", depth = 0): string[] {
+  if (!isRecord(value) || depth >= MAX_DEPTH) return [];
+  return Object.entries(value).flatMap(([key, child]) => {
+    const path = `${prefix}${key.replace(FIELD_NAME_PATTERN, "?").slice(0, 60)}`;
+    return [path, ...keyPaths(child, `${path}.`, depth + 1)];
+  });
+}
+
 function parseBody(bytes: Uint8Array): unknown {
   try {
     return JSON.parse(new TextDecoder().decode(bytes));
@@ -53,6 +65,8 @@ function summarize(body: unknown): Readonly<Record<string, LogValue>> {
   if (typeof body["status"] === "number") summary["statutCorps"] = body["status"];
   if (code !== undefined) summary["codeErreur"] = code;
   if (fields !== undefined) summary["champs"] = fields;
+  const shape = keyPaths(body).slice(0, MAX_PATHS);
+  if (shape.length > 0) summary["forme"] = shape.join(",");
   return summary;
 }
 

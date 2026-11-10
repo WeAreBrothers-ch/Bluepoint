@@ -46,6 +46,17 @@ describe("abaNinjaRequest : journal du détail d'un refus", () => {
     expect(written).not.toContain("Dupont");
   });
 
+  it("journalise la forme du corps (chemins de clés), jamais les valeurs", async () => {
+    const body = { message: "Texte libre de Jean Dupont", errors: { language: ["valeur secrète"], "tags.0": ["x"] } };
+    const { options } = baseOptions([jsonResponse(body, 422)]);
+    await abaNinjaRequest({ ...options, schema });
+    const written = JSON.stringify(logs.info.mock.calls);
+    expect(written).toContain("errors.language");
+    expect(written).toContain("errors.tags.0");
+    expect(written).not.toContain("Dupont");
+    expect(written).not.toContain("secrète");
+  });
+
   it("un corps d'erreur illisible ou trop gros ne casse rien", async () => {
     const huge = new Response("x".repeat(20 * 1024), { status: 400 });
     const { options } = baseOptions([huge]);
