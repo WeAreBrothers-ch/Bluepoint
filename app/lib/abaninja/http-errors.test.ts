@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { abaNinjaRequest } from "./http.server";
-import { jsonResponse, scriptedRequestOptions as baseOptions } from "./test-support";
+import { jsonResponse, OTHER_UUID, scriptedRequestOptions as baseOptions } from "./test-support";
 
 const logs = vi.hoisted(() => ({ info: vi.fn(), error: vi.fn() }));
 vi.mock("../core/logger.server", () => ({ logInfo: logs.info, logError: logs.error }));
@@ -55,6 +55,21 @@ describe("abaNinjaRequest : journal du détail d'un refus", () => {
     expect(written).toContain("errors.tags.0");
     expect(written).not.toContain("Dupont");
     expect(written).not.toContain("secrète");
+  });
+
+  it("pour une action sur un document, journalise aussi le message du service", async () => {
+    const body = { message: "Le document est un brouillon", detail: "Pas de PDF avant envoi", type: "invalid_request" };
+    const { options } = baseOptions([jsonResponse(body, 400)], { path: ["invoices", { uuid: OTHER_UUID }, "actions", "downloadPdf"] });
+    await abaNinjaRequest({ ...options, schema });
+    const written = JSON.stringify(logs.info.mock.calls);
+    expect(written).toContain("Le document est un brouillon");
+    expect(written).toContain("Pas de PDF avant envoi");
+  });
+
+  it("hors action, le message libre n'est jamais journalisé", async () => {
+    const { options } = baseOptions([jsonResponse({ message: "Jean Dupont est invalide" }, 422)]);
+    await abaNinjaRequest({ ...options, schema });
+    expect(JSON.stringify(logs.info.mock.calls)).not.toContain("Dupont");
   });
 
   it("un corps d'erreur illisible ou trop gros ne casse rien", async () => {

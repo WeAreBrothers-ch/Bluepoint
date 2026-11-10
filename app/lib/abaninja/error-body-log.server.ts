@@ -13,6 +13,10 @@ const MAX_FIELD_NAMES = 20;
 const MAX_TEXT_LENGTH = 100;
 const FIELD_NAME_PATTERN = /[^A-Za-z0-9_.[\]-]/g;
 const SAFE_TEXT_PATTERN = /[^A-Za-z0-9_.:/#-]/g;
+const SENTENCE_PATTERN = /[^\p{L}\p{N} _.,:;'’()/#-]/gu;
+const MAX_SENTENCE_LENGTH = 200;
+/** Une action sur un document (`/actions/…`) n'envoie aucune donnée client : son message d'erreur est un texte fixe du service. */
+const ACTION_PATH = "/actions/";
 
 type LogValue = string | number | boolean | null;
 
@@ -23,6 +27,11 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 function safeText(value: unknown): string | undefined {
   if (typeof value !== "string" || value === "") return undefined;
   return value.replace(SAFE_TEXT_PATTERN, "?").slice(0, MAX_TEXT_LENGTH);
+}
+
+function sentence(value: unknown): string | undefined {
+  if (typeof value !== "string" || value === "") return undefined;
+  return value.replace(SENTENCE_PATTERN, "?").slice(0, MAX_SENTENCE_LENGTH);
 }
 
 function fieldNames(detail: unknown): string | undefined {
@@ -53,7 +62,7 @@ function parseBody(bytes: Uint8Array): unknown {
   }
 }
 
-function summarize(body: unknown): Readonly<Record<string, LogValue>> {
+function summarize(body: unknown, path: string): Readonly<Record<string, LogValue>> {
   if (!isRecord(body)) return {};
   const summary: Record<string, LogValue> = {};
   const type = safeText(body["type"]);
@@ -65,12 +74,20 @@ function summarize(body: unknown): Readonly<Record<string, LogValue>> {
   if (typeof body["status"] === "number") summary["statutCorps"] = body["status"];
   if (code !== undefined) summary["codeErreur"] = code;
   if (fields !== undefined) summary["champs"] = fields;
+  if (path.includes(ACTION_PATH)) addActionTexts(summary, body);
   const shape = keyPaths(body).slice(0, MAX_PATHS);
   if (shape.length > 0) summary["forme"] = shape.join(",");
   return summary;
 }
 
+function addActionTexts(summary: Record<string, LogValue>, body: Readonly<Record<string, unknown>>): void {
+  const message = sentence(body["message"]);
+  const detail = sentence(body["detail"]);
+  if (message !== undefined) summary["message"] = message;
+  if (detail !== undefined) summary["detail"] = detail;
+}
+
 /** Journalise le résumé sûr d'une réponse d'erreur (un corps illisible donne simplement un journal sans détail). */
 export function logErrorBody(status: number, path: string, bytes: Uint8Array): void {
-  logInfo("AbaNinja : détail du refus", { statut: status, path, ...summarize(parseBody(bytes)) });
+  logInfo("AbaNinja : détail du refus", { statut: status, path, ...summarize(parseBody(bytes), path) });
 }
