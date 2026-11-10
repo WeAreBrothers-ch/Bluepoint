@@ -147,3 +147,34 @@ model ProRequest {
 
   @@index([shop, status, createdAt])
 }
+
+// --- Factures AbaNinja ---
+// AbaNinja n'a aucune protection contre les doublons : cette ligne sert de verrou AVANT tout appel.
+// orderId est unique (une commande = une seule facture AbaNinja), reference aussi.
+// state :
+//   en_cours   = verrou pris, envoi en cours ou interrompu (jamais rejoué automatiquement)
+//   creee      = facture confirmée par AbaNinja (invoiceUuid renseigné)
+//   incertaine = résultat d'envoi inconnu : un humain vérifie dans AbaNinja, jamais de rejeu automatique
+//   refusee    = refus net d'AbaNinja, rien n'a été créé : peut être réarmée explicitement
+// status : dernier statut lu chez AbaNinja (brouillon, envoyee, payee, partiellement_payee, en_retard, annulee, inconnu).
+// lastErrorCode : code court uniquement, jamais de donnée client.
+model AbaNinjaInvoice {
+  id                  String    @id @default(cuid())
+  shop                String
+  orderId             String    @unique
+  orderName           String
+  state               String    @default("en_cours")
+  isTest              Boolean   @default(false)
+  reference           String    @unique
+  invoiceUuid         String?
+  systemInvoiceNumber String?
+  status              String?
+  openAmountCents     Int?
+  statusCheckedAt     DateTime?
+  lastErrorCode       String?
+  attempts            Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([shop, state])
+}

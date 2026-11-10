@@ -4,6 +4,7 @@ import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "re
 import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import { FILL } from "../components/fill";
 import { AutomationFields, PaymentFields, SellerFields } from "../components/reglages/SettingsFields";
 import { logError } from "../lib/core/logger.server";
 import { toFormValues, type SettingsActionResult, type SettingsFormValues } from "../lib/reglages/form-values";
@@ -69,6 +70,14 @@ export default function ReglagesPage() {
           </s-button>
         </s-stack>
       </Form>
+      <s-section>
+        <s-stack direction="block" gap="small-200">
+          <s-text color="subdued">Pour la personne qui s’occupe de l’application</s-text>
+          <s-button href="/app/abaninja" {...FILL}>
+            {TITRES.abaninja}
+          </s-button>
+        </s-stack>
+      </s-section>
     </s-page>
   );
 }

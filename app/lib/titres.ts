@@ -13,6 +13,7 @@ export const TITRES = {
   commandes: "Toutes les commandes",
   entreprise: "Informations de l’entreprise",
   aide: "Aide",
+  abaninja: "Connexion AbaNinja",
 } as const;
 
 /** « Livraisons » entre guillemets français, pour les phrases (« Touchez « Livraisons » »). */
