@@ -75,6 +75,15 @@ describe("createAddress : cas nominaux", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("sans l'option force, l'adresse du client n'envoie jamais force ; avec, elle l'ajoute en paramètre", async () => {
+    const normal = scriptedFetch([jsonResponse(created, 201)]);
+    await createAddress(testConfig(), company, { fetchImpl: normal.fetchImpl });
+    expect(normal.calls[0]?.url).not.toContain("force");
+    const forced = scriptedFetch([jsonResponse(created, 201)]);
+    await createAddress(testConfig(), company, { fetchImpl: forced.fetchImpl, force: true });
+    expect(forced.calls[0]?.url).toContain("addresses?force=true");
+  });
+
   it("crée une personne et renvoie personUuid", async () => {
     const { fetchImpl, calls } = scriptedFetch([jsonResponse(created, 201)]);
     const result = await createAddress(testConfig(), person, { fetchImpl });

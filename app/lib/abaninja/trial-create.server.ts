@@ -48,7 +48,7 @@ async function stopAfterClientFailure(ctx: TrialContext, log: TrialLog, error: A
 }
 
 async function createTrialClient(ctx: TrialContext, log: TrialLog): Promise<ClientStep> {
-  const address = await createAddress(ctx.config, trialAddress(ctx.reference), ctx.call);
+  const address = await createAddress(ctx.config, trialAddress(ctx.reference), { ...ctx.call, force: true });
   return address.ok ? { receiver: address.value } : stopAfterClientFailure(ctx, log, address.error);
 }
 

@@ -83,19 +83,29 @@ function mapError(error: AbaNinjaError): AbaNinjaError {
   return error.status === 409 ? new DuplicateAddressError() : error;
 }
 
+export interface CreateAddressOptions extends CallOptions {
+  /**
+   * Enregistre même si AbaNinja y voit un doublon. Réservé au client FICTIF de l'essai ;
+   * pour un vrai client, un doublon doit toujours remonter (jamais de `force`).
+   */
+  readonly force?: boolean;
+}
+
 /** Crée le client et renvoie le destinataire à utiliser sur la facture. */
 export async function createAddress(
   config: AbaNinjaConfig,
   input: AddressInput,
-  options: CallOptions = {},
+  options: CreateAddressOptions = {},
 ): Promise<Result<InvoiceReceiver, AbaNinjaError>> {
   const valid = validateInput(addressInputSchema, input, "Création du client AbaNinja");
   if (!valid.ok) return valid;
+  const { force, ...callOptions } = options;
   const result = await abaNinjaRequest({
-    ...options,
+    ...callOptions,
     config,
     method: "POST",
     path: ["accounts", { uuid: config.accountUuid }, "addresses", "v2", "addresses"],
+    ...(force === true ? { query: { force: true } } : {}),
     body: buildBody(valid.value),
     schema: createAddressResponseSchema,
   });
