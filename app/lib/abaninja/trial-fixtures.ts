@@ -21,6 +21,7 @@ export function trialAddress(): AddressInput {
     street: "Rue de l’Essai",
     streetNumber: "1",
     zipCode: "1000",
+    state: "VD",
     city: "Lausanne",
     email: "essai@example.com",
     language: "fr",

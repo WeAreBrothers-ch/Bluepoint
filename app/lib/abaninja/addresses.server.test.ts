@@ -16,6 +16,7 @@ const company: AddressInput = {
   street: "Rue du Lac",
   streetNumber: "12",
   zipCode: "1800",
+  state: "VD",
   city: "Vevey",
   email: "contact@cave-dupont.ch",
   phone: "+41 21 555 12 34",
@@ -30,6 +31,7 @@ const person: AddressInput = {
   salutation: "Ms",
   street: "Chemin Vert",
   zipCode: "1000",
+  state: "VD",
   city: "Lausanne",
   email: "marie@example.ch",
   language: "de",
@@ -56,13 +58,21 @@ describe("createAddress : cas nominaux", () => {
       vat_number: "CHE-123.456.789 TVA",
       language: "fr",
       tags: ["bluepoint-app"],
-      addresses: [{ address: "Rue du Lac", street_number: "12", zip_code: "1800", city: "Vevey", country_code: "CH" }],
+      addresses: [{ address: "Rue du Lac", street_number: "12", zip_code: "1800", state: "VD", city: "Vevey", country_code: "CH" }],
       contacts: [
         { type: "email", value: "contact@cave-dupont.ch", primary: true },
         { type: "phone", value: "+41 21 555 12 34", primary: true },
       ],
     });
     expect(JSON.stringify(body)).not.toContain("force");
+  });
+
+  it("refuse une adresse sans canton avant tout appel réseau (AbaNinja le réclame)", async () => {
+    const { fetchImpl, calls } = scriptedFetch([jsonResponse(created, 201)]);
+    const { state: _canton, ...withoutState } = company;
+    const result = await createAddress(testConfig(), withoutState as typeof company, { fetchImpl });
+    expect(result.ok).toBe(false);
+    expect(calls).toHaveLength(0);
   });
 
   it("crée une personne et renvoie personUuid", async () => {

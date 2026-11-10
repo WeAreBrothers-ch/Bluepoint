@@ -34,6 +34,7 @@ function buildPostalAddress(input: ValidAddressInput): object {
     address: input.street,
     ...(input.streetNumber === undefined ? {} : { street_number: input.streetNumber }),
     zip_code: input.zipCode,
+    state: input.state,
     city: input.city,
     country_code: input.countryCode,
   };

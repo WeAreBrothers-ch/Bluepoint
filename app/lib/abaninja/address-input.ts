@@ -14,6 +14,8 @@ const common = {
   street: singleLine(100),
   streetNumber: singleLine(20).optional(),
   zipCode: singleLine(10),
+  /** Canton (« VD ») : AbaNinja refuse une adresse sans `state`, même si sa spécification le dit optionnel. */
+  state: singleLine(40),
   city: singleLine(100),
   email: singleLine(254).pipe(z.email()),
   phone: singleLine(30)
