@@ -9,6 +9,7 @@ export const TITRES = {
   nouvelleCommande: "Prendre une commande",
   factures: "Factures",
   vins: "Vins en cave",
+  litres: "Litres vendus",
   clients: "Clients",
   commandes: "Toutes les commandes",
   entreprise: "Informations de l’entreprise",

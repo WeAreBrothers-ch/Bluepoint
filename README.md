@@ -100,6 +100,27 @@ commande sur le site.** Un paiement plus tard (facture à 30 jours, virement, es
 - **Garde-fou** : Shopify ne peut pas limiter une remise à un moyen de paiement. Si une commande utilise `CARTE2` sans
   être payée (statut « en attente »), la carte de l’agenda affiche « Rabais carte à vérifier » : le rabais n’est pas dû.
 
+## Litres vendus
+
+Page « Litres vendus » (`/app/litres`) : combien de litres de vin ont été vendus dans l’année, par sorte (rouge, blanc, rosé,
+champagne…) et par pays (France, Italie, Suisse), vin par vin et mois par mois, avec une **feuille à imprimer** (A4,
+`/app/litres/feuille`). Le Contrôle suisse du commerce des vins (CSCV) demande à toute entreprise qu’il suit de déclarer le volume
+d’affaires en litres de l’année civile avant le 31 janvier, et d’avoir sous la main le détail par produit ; les bouteilles se
+convertissent en litres avec leur contenance (guide CSCV « Comptabilité de cave pour le commerce de bouteilles »). Dire si BluePoint
+est suivi par le CSCV revient à la fiduciaire.
+
+- **Calcul** (`app/lib/litres/`) : bouteilles vendues × contenance, en millilitres entiers. Commandes annulées et d’essai exclues ;
+  une ligne retirée d’une commande modifiée n’est pas comptée ; les remboursements ne sont pas déduits. Les spiritueux sont comptés à
+  part, hors du total du vin. Le champagne (sorte « Champagne » du formulaire, rangée avec les effervescents, ou appellation
+  « Champagne ») est toujours compté comme venant de France.
+- **Où sont les données** : dans les étiquettes Shopify du vin, comme `pays:` et `region:` pour le menu du site :
+  `contenance:75` (en cl, `37.5` pour une demi), `millesime:2022`, `appellation:Dézaley AOC`. « Nouveau vin » (page Vins en cave) demande
+  le pays et la contenance et écrit ces étiquettes. Un vin sans contenance est compté à 75 cl et signalé ; un vin sans pays est classé
+  « Pays non renseigné ». La page propose de les compléter vin par vin (écrit dans Shopify, autorisation `write_products`).
+- **Limite importante** : sans l’autorisation `read_all_orders`, Shopify ne donne que les 60 derniers jours de commandes. La page
+  l’affiche en rouge et la feuille le répète : les chiffres ne sont alors pas utilisables pour une déclaration. L’autorisation est
+  à demander à Shopify, puis à ajouter à `scopes` dans `shopify.app.toml` une fois accordée (la déclarer avant fait échouer le déploiement).
+
 ## Technique
 
 | Élément | Choix |

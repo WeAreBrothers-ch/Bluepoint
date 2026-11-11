@@ -26,6 +26,7 @@ function AppNav() {
       <s-link href="/app/commande">{TITRES.nouvelleCommande}</s-link>
       <s-link href="/app/factures">{TITRES.factures}</s-link>
       <s-link href="/app/stock">{TITRES.vins}</s-link>
+      <s-link href="/app/litres">{TITRES.litres}</s-link>
       <s-link href="/app/clients">{TITRES.clients}</s-link>
       <s-link href="/app/commandes">{TITRES.commandes}</s-link>
       <s-link href="/app/reglages">{TITRES.entreprise}</s-link>
