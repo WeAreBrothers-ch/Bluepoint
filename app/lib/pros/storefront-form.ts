@@ -11,6 +11,13 @@ import { HONEYPOT_FIELD, PRO_COUNTRIES, type ProRequestErrors, type ProRequestFi
 
 export const PRO_FORM_ACTION = "/apps/bon-commande/devenir-pro";
 
+/**
+ * L'envoi passe par Shopify puis par l'app : il peut prendre quelques secondes. Le bouton se bloque et dit
+ * « Envoi en cours… » : on ne clique pas quatre fois en croyant que rien ne se passe.
+ */
+export const ONE_SUBMIT =
+  "var b=this.querySelector('button[type=submit],button:not([type])');if(b){if(b.disabled)return false;b.disabled=true;b.textContent='Envoi en cours…';}";
+
 export function escapeForLiquid(text: string): string {
   return text
     .replaceAll("&", "&amp;")
@@ -24,7 +31,8 @@ export function escapeForLiquid(text: string): string {
 }
 
 const STYLE = `<style>
-.bp-pro{max-width:40rem;margin:2rem auto;padding:0 1rem;font-size:1.0625rem;line-height:1.5}
+.bp-pro{max-width:40rem;margin:0 auto 3rem;padding:calc(var(--hauteur-entete, 0px) + 2.5rem) 1rem 0;font-size:1.0625rem;line-height:1.5}
+.bp-pro button[disabled]{opacity:.7;cursor:progress}
 .bp-pro h1{margin:0 0 .75rem}
 .bp-pro .bp-bonus{padding:.6rem .8rem;border-left:4px solid currentColor;background:rgba(0,0,0,.04)}
 .bp-pro fieldset{border:0;padding:0;margin:0 0 1.5rem}
@@ -79,7 +87,7 @@ export function proFormPage(values: ProRequestValues, errors: ProRequestErrors, 
 <p>Restaurants, bars, cavistes et entreprises : demandez votre compte pro. Une fois votre demande acceptée, vous voyez vos prix pros et pouvez commander sur facture, payable à 30 jours.</p>
 <p class="bp-bonus"><strong>${CARD_DISCOUNT_PERCENT} % de rabais en plus</strong> si vous payez par carte tout de suite, au moment de la commande sur le site (pas pour une commande sur facture).</p>
 ${hasErrors ? `<p class="bp-alert" role="alert">Certaines informations sont à corriger : elles sont signalées en rouge ci-dessous.</p>` : ""}
-<form method="post" action="${PRO_FORM_ACTION}" novalidate>
+<form method="post" action="${PRO_FORM_ACTION}" novalidate onsubmit="${ONE_SUBMIT}">
 <fieldset><legend>Votre entreprise</legend>
 ${field({ field: "companyName", label: "Nom de l’entreprise", autocomplete: "organization" })}
 ${field({ field: "vatNumber", label: "Numéro TVA (facultatif)", autocomplete: "off", help: "Exemple : CHE-123.456.789 TVA" })}
@@ -113,7 +121,7 @@ export function proThanksPage(): string {
 <div class="bp-pro">
 <div class="bp-ok" role="status">
 <h1>Merci, votre demande est bien arrivée</h1>
-<p>Nous la vérifions. Dès que votre compte pro est prêt, vous recevrez un e-mail de {{ shop.name }} pour vous connecter et voir vos prix pros.</p>
+<p>Nous la vérifions. Dès que votre compte pro est prêt, vous recevrez un e-mail de notre part pour vous connecter et voir vos prix pros.</p>
 </div>
 <a class="bp-button" href="/">Retour à la boutique</a>
 </div>`;
