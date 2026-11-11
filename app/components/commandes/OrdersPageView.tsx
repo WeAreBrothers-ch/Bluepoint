@@ -1,3 +1,4 @@
+import { orderHref } from "../../lib/navigation";
 import { TITRES } from "../../lib/titres";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
@@ -24,7 +25,7 @@ function stateBadge(item: OrderListItem): BadgeLabel {
   return task.urgency === "en_retard" ? { label: "En retard", tone: "critical" } : { label: "À livrer", tone: "neutral" };
 }
 
-export function OrderCard({ item }: { readonly item: OrderListItem }) {
+export function OrderCard({ item, clientId = null }: { readonly item: OrderListItem; readonly clientId?: string | null }) {
   const { task } = item;
   const badge = stateBadge(item);
   const mode = modeLabel(task.mode);
@@ -63,7 +64,7 @@ export function OrderCard({ item }: { readonly item: OrderListItem }) {
         )}
       </s-stack>
       <s-grid gridTemplateColumns="minmax(0, 1fr)">
-        <s-button {...FILL} variant="primary" icon="order" href={`/app/commandes/${gidToNumericId(task.orderId)}`}>
+        <s-button {...FILL} icon="order" href={clientId === null ? orderHref(gidToNumericId(task.orderId), "commandes") : orderHref(gidToNumericId(task.orderId), "client", clientId)}>
           Voir la commande
         </s-button>
       </s-grid>
@@ -105,7 +106,7 @@ export function OrdersPageView({ data }: { readonly data: OrdersPageData }) {
           </form>
           <s-grid gridTemplateColumns={`repeat(${ORDERS_TABS.length}, minmax(0, 1fr))`} gap="small-200">
             {ORDERS_TABS.map((tab) => (
-              <s-button key={tab.id} {...FILL} href={ordersHref(tab.id, data.term)} variant={tab.id === data.tab ? "primary" : "secondary"}>
+              <s-button key={tab.id} {...FILL} href={ordersHref(tab.id, data.term)} variant="secondary" {...(tab.id === data.tab ? { icon: "check" as const } : {})}>
                 {tab.label}
               </s-button>
             ))}

@@ -35,9 +35,9 @@ async function completeOnce(admin: AdminApiContext, draftOrderId: string): Promi
   return completeDraftOrder(admin, draftOrderId);
 }
 
-function notCompletedMessage(draftName: string, error: ShopifyGraphqlError): string {
+function notCompletedMessage(error: ShopifyGraphqlError): string {
   const plain = error instanceof ShopifyUserErrors ? plainShopifyRefusal(error.message) : null;
-  return `La commande n’est pas encore tout à fait enregistrée (${draftName}).${plain === null ? "" : ` ${plain}`} Touchez à nouveau « Enregistrer la commande »\u202F: elle ne sera pas enregistrée deux fois.`;
+  return `La commande n’est pas encore tout à fait enregistrée.${plain === null ? "" : ` ${plain}`} Touchez à nouveau « Enregistrer la commande »\u202F: elle ne sera pas enregistrée deux fois.`;
 }
 
 export async function finishDraft(
@@ -49,7 +49,7 @@ export async function finishDraft(
   const completed = await completeOnce(admin, draft.draftOrderId);
   if (!completed.ok) {
     logError("Commande provisoire non terminée", completed.error, { draftOrderId: draft.draftOrderId });
-    return { kind: "erreur", message: notCompletedMessage(draft.draftOrderName, completed.error) };
+    return { kind: "erreur", message: notCompletedMessage(completed.error) };
   }
   const placed = completed.value;
   await recordOrder(order.idempotencyKey, { orderId: placed.id, orderName: placed.name });

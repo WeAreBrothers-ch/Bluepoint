@@ -40,7 +40,7 @@ async function createDraft(
   if (first.ok) return success({ draft: first.value, termsApplied: terms !== null });
   const refusedTerms = terms !== null && first.error instanceof ShopifyUserErrors && isPaymentTermsRefusal(first.error.userErrors);
   if (!refusedTerms) return first;
-  logError("Conditions de paiement refusées par Shopify : commande laissée provisoire", first.error);
+  logError("Conditions de paiement refusées par Shopify\u202F: commande laissée provisoire", first.error);
   const retry = await createDraftOrder(admin, buildDraftOrderInput(order, address, null));
   return retry.ok ? success({ draft: retry.value, termsApplied: false }) : retry;
 }
@@ -64,7 +64,7 @@ async function createFresh(
   if (!customer.ok || !customer.value.found) {
     await releaseRequest(key);
     return customer.ok
-      ? { kind: "invalide", message: MESSAGES.invalide, errors: { customerId: "Ce client n’existe plus dans Shopify\u202F: choisissez-le à nouveau." } }
+      ? { kind: "invalide", message: MESSAGES.invalide, errors: { customerId: "Ce client a été supprimé\u202F: choisissez-le à nouveau." } }
       : { kind: "erreur", message: MESSAGES.indisponible };
   }
   const { terms, warnings } = await paymentTermsFor(admin, order, paymentTermDays);

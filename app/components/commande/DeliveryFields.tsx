@@ -112,7 +112,7 @@ export function PaymentField({ payment, paymentTermDays, error, onPayment }: Pay
         {...(error === undefined ? {} : { error })}
       >
         <s-choice value="facture">{`Sur facture (il a ${paymentTermDays} jours pour payer)`}</s-choice>
-        <s-choice value="a_la_livraison">À la livraison (cash ou TWINT)</s-choice>
+        <s-choice value="a_la_livraison">À la livraison (espèces ou TWINT)</s-choice>
         <s-choice value="paye">Il a déjà payé</s-choice>
       </s-choice-list>
     </s-section>

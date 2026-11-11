@@ -1,3 +1,4 @@
+import { PAS_ENCORE_ACTIVE } from "../titres";
 import { isFullCartons } from "../commande/cart";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
@@ -143,7 +144,7 @@ async function loadOrder(admin: AdminApiContext, orderId: string): Promise<Loade
     return { ok: false, message: RETRY };
   }
   const node = result.value.order;
-  if (node === null) return { ok: false, message: "Cette commande n’existe plus dans Shopify." };
+  if (node === null) return { ok: false, message: "Cette commande n’existe plus." };
   const invoice = await findInvoiceByOrder(orderId);
   const rules = changeRules({
     cancelled: node.cancelledAt !== null,
@@ -157,7 +158,7 @@ async function loadOrder(admin: AdminApiContext, orderId: string): Promise<Loade
 
 function plainError(error: ShopifyGraphqlError): string {
   if (/access denied|access scope/i.test(error.message)) {
-    return "L’app n’a pas encore le droit de modifier les commandes. Il faut d’abord faire l’étape d’autorisation dans Shopify.";
+    return PAS_ENCORE_ACTIVE;
   }
   const detail = error instanceof ShopifyUserErrors ? plainShopifyRefusal(error.message) : null;
   return detail ?? RETRY;
@@ -251,7 +252,11 @@ async function cancelOrder(admin: AdminApiContext, orderId: string): Promise<Ord
   if (payload.job !== null && !payload.job.done) await waitForJob(admin, payload.job.id);
   const totalCents = decimalToCents(node.currentTotalPriceSet?.shopMoney.amount);
   logInfo("Commande annulée", { orderId, refunded: rules.paid });
-  const refund = rules.paid ? ` Le client sera remboursé${totalCents === null ? "" : ` de ${formatChf(totalCents)}`}.` : "";
+  // Shopify ne rend l'argent tout seul que pour un paiement par carte ; un virement, des espèces ou TWINT se rendent à la main.
+  const amount = totalCents === null ? "" : ` (${formatChf(totalCents)})`;
+  const refund = rules.paid
+    ? ` Le client avait payé${amount} : par carte sur le site, l’argent lui revient tout seul ; par virement, en espèces ou par TWINT, rendez-le-lui vous-même.`
+    : "";
   return { ok: true, intent: "annuler", message: `Commande ${node.name} annulée. Les bouteilles sont remises en cave.${refund}` };
 }
 

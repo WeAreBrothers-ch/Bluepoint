@@ -39,7 +39,7 @@ export async function loadInvoiceDrafts(
     const invoice = await getShopInvoice(shop, invoiceId);
     if (invoice === null) return { ok: false, message: "Facture introuvable. Rechargez la page." };
     const settings = await loadCompleteSettings(shop);
-    if (settings === null) return { ok: false, message: "Complétez les réglages de facturation pour envoyer la facture." };
+    if (settings === null) return { ok: false, message: "Complétez d’abord « Informations de l’entreprise » pour envoyer la facture." };
     const data = await invoiceMessageData(admin, invoice, settings.legalName);
     const auto = isEmailConfigured();
     return {

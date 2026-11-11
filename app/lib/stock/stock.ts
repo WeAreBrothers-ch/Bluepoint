@@ -251,3 +251,22 @@ export function stockChangeMessage(change: Pick<StockChange, "intent" | "quantit
 
 export const STALE_STOCK_MESSAGE =
   "Le stock de ce vin a changé entre-temps (une commande vient peut-être d’arriver). Rechargez la page, puis recommencez.";
+
+/** Au-delà, un ajout de bouteilles est confirmé (10 cartons) : une faute de frappe (600 au lieu de 60) se voit. */
+export const LARGE_ADDITION = 60;
+
+/**
+ * Faut-il redemander avant d'enregistrer ? Pour un comptage : passer à 0 ou changer de plus d'un carton.
+ * Pour un ajout : plus de 10 cartons d'un coup. Renvoie la question à poser, ou null.
+ */
+export function confirmationQuestion(intent: StockIntent, onHand: number, quantity: number): string | null {
+  if (intent === "ajouter") {
+    return quantity > LARGE_ADDITION ? `Vous ajoutez ${bottles(quantity)} d’un coup. C’est bien ça\u202F?` : null;
+  }
+  const current = Math.max(onHand, 0);
+  if (quantity === current) return null;
+  if (quantity === 0 || Math.abs(quantity - current) > 6) {
+    return `Vous passez de ${bottles(current)} à ${bottles(quantity)} en cave. C’est bien ça\u202F?`;
+  }
+  return null;
+}

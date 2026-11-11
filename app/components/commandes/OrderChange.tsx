@@ -53,7 +53,9 @@ export function OrderChangeSection({ detail, rules, onEdit }: OrderChangeSection
             <s-stack direction="block" gap="small-200">
               <s-text type="strong">{`Annuler la commande ${detail.task.name}\u202F?`}</s-text>
               <s-text>Les bouteilles retournent en cave, et la commande disparaît de « Livraisons ».</s-text>
-              {rules.paid ? <s-text>{`Le client a déjà payé${total}\u202F: il sera remboursé.`}</s-text> : null}
+              {rules.paid ? (
+                <s-text>{`Le client a déjà payé${total}. S’il a payé par carte sur le site, l’argent lui revient tout seul. S’il a payé par virement, en espèces ou par TWINT, rendez-lui l’argent vous-même.`}</s-text>
+              ) : null}
               <s-stack direction="inline" gap="small-200">
                 <s-button
                   variant="primary"

@@ -1,3 +1,4 @@
+import { PAS_ENCORE_ACTIVE } from "../titres";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
 import { normalizeSearch } from "../commande/catalog";
@@ -151,7 +152,7 @@ export async function handleNewWine(admin: AdminApiContext, form: FormData): Pro
     if (!created.ok) logError("Nouveau vin refusé", created.error, { title: input.title });
     const denied = !created.ok && /access denied|access scope/i.test(created.error.message);
     const message = denied
-      ? "L’app n’a pas encore le droit de créer des vins. Il faut d’abord faire l’étape d’autorisation (cadre jaune en haut de la page)."
+      ? PAS_ENCORE_ACTIVE
       : "Shopify n’a pas pu créer ce vin. Réessayez dans un instant.";
     return { ok: false, intent: "nouveau_vin", message, values, errors: {} };
   }

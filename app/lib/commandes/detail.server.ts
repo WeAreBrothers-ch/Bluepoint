@@ -45,7 +45,7 @@ export async function loadOrderPage(admin: AdminApiContext, shop: string, numeri
     return { ...base, detail: null, invoice: null, problem: "Shopify ne répond pas pour le moment. Rechargez la page dans un instant." };
   }
   const node = result.value.order;
-  if (node === null) return { ...base, detail: null, invoice: null, problem: "Cette commande n’existe plus dans Shopify." };
+  if (node === null) return { ...base, detail: null, invoice: null, problem: "Cette commande n’existe plus." };
 
   const [terms, stored, settings] = await Promise.all([
     node.displayFinancialStatus === "PENDING" ? loadPaymentTerms(admin, [orderId]) : Promise.resolve(new Map()),
@@ -72,7 +72,7 @@ async function changeData(admin: AdminApiContext, rules: ChangeRules): Promise<O
   if (!rules.canEdit) return { rules, products: [], truncated: false };
   const [catalog, scopes] = await Promise.all([loadCatalog(admin), grantedScopes(admin)]);
   if (scopes !== null && !scopes.has(ORDER_EDIT_SCOPE)) {
-    const editBlocked = "Une étape d’autorisation reste à faire dans Shopify avant de pouvoir modifier les vins ici. L’annulation, elle, marche déjà.";
+    const editBlocked = "Changer les vins n’est pas encore activé. Appelez la personne qui s’occupe de l’application. Annuler la commande, en revanche, marche déjà.";
     return { rules: { ...rules, canEdit: false, editBlocked }, products: [], truncated: false };
   }
   if (!catalog.ok) {

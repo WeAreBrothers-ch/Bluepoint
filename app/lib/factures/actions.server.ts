@@ -26,7 +26,7 @@ async function markPaid(admin: AdminApiContext, shop: string, invoiceId: string,
   // Deux personnes touchent « Le client a payé » en même temps : Shopify refuse la seconde, mais c'est bien payé.
   if (!paid.ok && !(await alreadyPaid(admin, invoice.orderId))) {
     logError("Paiement non enregistré dans Shopify", paid.error, { invoiceId });
-    return failed(invoiceId, "Le paiement n’a pas pu être noté dans Shopify. Réessayez dans un instant.");
+    return failed(invoiceId, "Le paiement n’a pas pu être noté. Réessayez dans un instant.");
   }
   return { ok: true, invoiceId, message: `C’est noté\u202F: facture ${invoice.number} payée (${PAYMENT_METHOD_LABELS[method]}).` };
 }

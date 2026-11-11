@@ -1,6 +1,7 @@
 import { useFetcher } from "react-router";
 import { shortDay } from "../../lib/agenda/dates";
 import type { FacturesActionResult, InvoiceListItem } from "../../lib/factures/list-item";
+import { paymentBadge } from "../../lib/factures/payment";
 import { formatChf } from "../../lib/format/money";
 import { parseIsoDate } from "../../lib/metafields/definitions";
 import { ClientCard } from "../ClientCard";
@@ -21,11 +22,8 @@ function day(value: string): string {
 }
 
 function StatusBadge({ invoice }: { readonly invoice: InvoiceListItem }) {
-  if (invoice.paymentState === "payee") return <s-badge tone="success">Le client a déjà payé</s-badge>;
-  if (invoice.paymentState === "en_retard") {
-    return <s-badge tone="critical">{`Paiement en retard de ${invoice.overdueDays} jour${invoice.overdueDays > 1 ? "s" : ""}`}</s-badge>;
-  }
-  return <s-badge tone="warning">Pas encore payée</s-badge>;
+  const badge = paymentBadge(invoice.paymentState, invoice.overdueDays);
+  return <s-badge tone={badge.tone}>{badge.label}</s-badge>;
 }
 
 /** Facture en retard, et au moins un moyen de relancer le client. */
@@ -92,7 +90,7 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
       <s-stack direction="block" gap="small-200">
         {invoice.orderPath === null ? null : <s-link href={invoice.orderPath}>{`Voir la commande ${invoice.orderName}`}</s-link>}
         {invoice.paidOn !== null ? (
-          <s-text color="subdued">{`Reçu remis le ${day(invoice.paidOn)}`}</s-text>
+          <s-text color="subdued">{`Payée le ${day(invoice.paidOn)} (reçu remis au client)`}</s-text>
         ) : (
           <>
             <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>

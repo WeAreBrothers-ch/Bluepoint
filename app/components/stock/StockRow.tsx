@@ -4,7 +4,7 @@ import { CARTON_SIZES, parseQuantity } from "../../lib/commande/cart";
 import { formatChf, formatInteger } from "../../lib/format/money";
 import type { PhotoResult } from "../../lib/stock/photo";
 import type { PriceResult } from "../../lib/stock/price";
-import { bottles, reservedText, type StockActionResult, type StockIntent, type StockItem } from "../../lib/stock/stock";
+import { bottles, confirmationQuestion, reservedText, type StockActionResult, type StockIntent, type StockItem } from "../../lib/stock/stock";
 import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { PhotoPicker } from "./PhotoPicker";
@@ -42,7 +42,31 @@ interface ChangePanelProps {
 function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProps) {
   const adding = intent === "ajouter";
   const [quantity, setQuantity] = useState(adding ? 0 : Math.max(item.onHand, 0));
+  // Une faute de frappe (0, ou 600 au lieu de 60) part dans Shopify : on redemande avant.
+  const [asking, setAsking] = useState<string | null>(null);
   const ready = adding ? quantity > 0 : true;
+  const submit = () => {
+    const question = confirmationQuestion(intent, item.onHand, quantity);
+    if (question === null || asking !== null) onSubmit(quantity);
+    else setAsking(question);
+  };
+  if (asking !== null) {
+    return (
+      <s-box padding="base" background="subdued" borderRadius="base">
+        <s-stack direction="block" gap="small-200">
+          <s-text type="strong">{asking}</s-text>
+          <s-stack direction="inline" gap="small-200">
+            <s-button variant="primary" icon="check" onClick={submit} {...(busy ? { loading: true } : {})}>
+              Oui, enregistrer
+            </s-button>
+            <s-button icon="arrow-left" onClick={() => setAsking(null)} {...(busy ? { disabled: true } : {})}>
+              Non, corriger le nombre
+            </s-button>
+          </s-stack>
+        </s-stack>
+      </s-box>
+    );
+  }
   return (
     <s-box padding="base" background="subdued" borderRadius="base">
       <s-stack direction="block" gap="small-200">
@@ -70,7 +94,7 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
           <s-button
             variant="primary"
             icon="check"
-            onClick={() => onSubmit(quantity)}
+            onClick={submit}
             {...(busy ? { loading: true } : {})}
             {...(ready ? {} : { disabled: true })}
           >

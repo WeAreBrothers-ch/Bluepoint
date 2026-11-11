@@ -1,3 +1,4 @@
+import { orderHref } from "../navigation";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { swissIsoDate } from "../agenda/dates";
 import { logError } from "../core/logger.server";
@@ -27,7 +28,7 @@ export interface FacturesPageData {
 
 function orderPath(orderId: string): string | null {
   const gid = parseGid(orderId, "Order");
-  return gid === null ? null : `/app/commandes/${gidToNumericId(gid)}`;
+  return gid === null ? null : orderHref(gidToNumericId(gid), "factures");
 }
 
 function toListItem(

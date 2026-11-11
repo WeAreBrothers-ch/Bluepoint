@@ -1,3 +1,5 @@
+import { paymentSituation, type PaymentState } from "../factures/payment";
+import { invoicesByOrder } from "../factures/repository.server";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { swissIsoDate } from "../agenda/dates";
 import { AGENDA_ORDER_FIELDS } from "../agenda/query";
@@ -33,6 +35,15 @@ interface ClientData {
   readonly customer: ClientNode | null;
 }
 
+export interface ClientInvoice {
+  readonly id: string;
+  readonly number: string;
+  readonly orderName: string;
+  readonly totalCents: number;
+  readonly state: PaymentState;
+  readonly overdueDays: number;
+}
+
 export interface ClientPageData {
   readonly client: ClientListItem | null;
   /** Identifiant de l'adresse par défaut, pour la modifier. */
@@ -40,6 +51,8 @@ export interface ClientPageData {
   readonly firstName: string;
   readonly lastName: string;
   readonly orders: readonly OrderListItem[];
+  /** Factures de ses dernières commandes, avec ce qui reste à payer. */
+  readonly invoices: readonly ClientInvoice[];
   /** Message si le client n'a pas pu être lu. */
   readonly problem: string | null;
 }
@@ -47,10 +60,10 @@ export interface ClientPageData {
 const NOT_FOUND = "Ce client n’existe plus ou n’a pas pu être ouvert.";
 
 function empty(problem: string): ClientPageData {
-  return { client: null, addressId: null, firstName: "", lastName: "", orders: [], problem };
+  return { client: null, addressId: null, firstName: "", lastName: "", orders: [], invoices: [], problem };
 }
 
-export async function loadClientPage(admin: AdminApiContext, numericId: string, now: Date): Promise<ClientPageData> {
+export async function loadClientPage(admin: AdminApiContext, shop: string, numericId: string, now: Date): Promise<ClientPageData> {
   if (!/^\d{1,20}$/.test(numericId)) return empty(NOT_FOUND);
   const result = await runAdminGraphql<ClientData>(admin, CLIENT_QUERY, { id: `gid://shopify/Customer/${numericId}` });
   if (!result.ok) {
@@ -62,12 +75,21 @@ export async function loadClientPage(admin: AdminApiContext, numericId: string, 
   const client = toClientListItem(node);
   if (client === null) return empty(NOT_FOUND);
   const today = swissIsoDate(now);
+  const orders = node.orders.nodes;
+  const invoices = await invoicesByOrder(shop, orders.map((order) => order.id));
+  const clientInvoices = orders.flatMap((order): ClientInvoice[] => {
+    const invoice = invoices.get(order.id);
+    if (invoice === undefined) return [];
+    const situation = paymentSituation(invoice, order.displayFinancialStatus ?? null, today);
+    return [{ id: invoice.id, number: invoice.number, orderName: invoice.orderName, totalCents: invoice.totalCents, state: situation.state, overdueDays: situation.overdueDays }];
+  });
   return {
     client,
     addressId: node.defaultAddress?.id ?? null,
     firstName: node.firstName ?? "",
     lastName: node.lastName ?? "",
-    orders: node.orders.nodes.flatMap((order) => toOrderListItem(order, today) ?? []),
+    orders: orders.flatMap((order) => toOrderListItem(order, today) ?? []),
+    invoices: clientInvoices,
     problem: null,
   };
 }

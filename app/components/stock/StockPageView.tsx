@@ -10,7 +10,7 @@ import { StockRow } from "./StockRow";
 
 function SummaryBanner({ summary }: { readonly summary: StockSummary }) {
   if (summary.soldOut.length === 0 && summary.low.length === 0) {
-    return <s-banner tone="success" heading="Tous les vins sont en cave." />;
+    return <s-banner tone="success" heading="Aucun vin à recommander pour l’instant." />;
   }
   return (
     <s-banner tone={summary.soldOut.length > 0 ? "critical" : "warning"} heading="Des vins sont à recommander">
@@ -50,9 +50,9 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
         </s-button>
       ) : null}
       {authorized ? null : (
-        <s-banner tone="warning" heading="Une étape d’autorisation reste à faire">
-          Vos vins s’affichent, mais l’app ne peut pas encore changer leur nombre ni créer de vin. La personne qui s’occupe du site doit
-          l’autoriser une seule fois dans Shopify ; ensuite, les boutons apparaîtront.
+        <s-banner tone="warning" heading="Certaines fonctions ne sont pas encore activées">
+          Vos vins s’affichent, mais changer le nombre de bouteilles ou créer un vin n’est pas encore possible. Appelez la personne qui
+          s’occupe de l’application : elle l’active une seule fois, ensuite les boutons apparaissent.
         </s-banner>
       )}
       {creating ? <NewWineForm onCreated={onCreated} onCancel={() => setCreating(false)} /> : null}

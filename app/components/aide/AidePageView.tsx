@@ -61,7 +61,19 @@ const RECIPES: readonly Recipe[] = [
     steps: [
       `Touchez ${entreGuillemets(TITRES.vins)}.`,
       "Trouvez le vin, puis touchez « Ajouter des bouteilles ».",
-      "Écrivez combien de bouteilles vous avez reçues, puis touchez le bouton pour enregistrer.",
+      "Écrivez combien de bouteilles vous avez reçues (ou touchez « 1 carton »), puis touchez le bouton foncé « Ajouter … bouteilles ».",
+      "C’est tout : le stock est mis à jour partout, sur le site et dans « Prendre une commande ».",
+    ],
+    href: "/app/stock",
+    button: "Voir les vins en cave",
+  },
+  {
+    situation: "J’ai compté ma cave",
+    steps: [
+      `Touchez ${entreGuillemets(TITRES.vins)}.`,
+      "Trouvez le vin, puis touchez « Corriger le nombre ».",
+      "Écrivez combien de bouteilles vous avez vraiment, en comptant aussi celles des commandes pas encore livrées.",
+      "Touchez « Enregistrer ». Si le nombre change beaucoup, l’application vous redemande : touchez « Oui, enregistrer ».",
     ],
     href: "/app/stock",
     button: "Voir les vins en cave",
@@ -70,8 +82,8 @@ const RECIPES: readonly Recipe[] = [
     situation: "Je veux ajouter un nouveau vin à vendre",
     steps: [
       `Touchez ${entreGuillemets(TITRES.vins)}, puis « Nouveau vin ».`,
-      "Remplissez le nom, le prix et le nombre de bouteilles.",
-      "Touchez « Créer le vin ». Il apparaît tout de suite sur le site.",
+      "Remplissez le nom, la sorte, le pays, la contenance de la bouteille, le prix et le nombre de bouteilles.",
+      "Touchez « Créer le vin ». Il est tout de suite dans « Prendre une commande », et sur le site.",
     ],
     href: "/app/stock",
     button: "Voir les vins en cave",
@@ -89,7 +101,7 @@ const RECIPES: readonly Recipe[] = [
   {
     situation: "Un professionnel demande un compte",
     steps: [
-      `Une bande bleue « demande de compte pro à valider » apparaît en haut de ${entreGuillemets(TITRES.livraisons)} et de ${entreGuillemets(TITRES.clients)}.`,
+      `Une bande bleue « demande pour devenir client pro » apparaît en haut de ${entreGuillemets(TITRES.livraisons)} et de ${entreGuillemets(TITRES.clients)}.`,
       "Touchez « Voir les demandes ».",
       "Touchez « Accepter » pour lui donner les prix pros, ou « Refuser ».",
     ],
@@ -135,10 +147,10 @@ function RecipeBlock({ recipe }: { readonly recipe: Recipe }) {
 
 export function AidePageView() {
   return (
-    <s-page heading="Aide" inlineSize="base">
+    <s-page heading={TITRES.aide} inlineSize="base">
       <s-banner tone="info" heading="Vous êtes perdu(e) ?">
         <s-stack direction="block" gap="small-200">
-          <s-text>Pas de panique : rien ne se fait sans que l’application vous demande de confirmer.</s-text>
+          <s-text>Pas de panique : pour livrer, annuler une commande, noter un paiement ou corriger le nombre de bouteilles, l’application vous demande toujours de confirmer.</s-text>
           <s-text>{`Pour revenir au début, touchez ${entreGuillemets(TITRES.livraisons)} dans le menu.`}</s-text>
         </s-stack>
       </s-banner>

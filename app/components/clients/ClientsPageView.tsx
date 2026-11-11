@@ -1,4 +1,4 @@
-import { TITRES } from "../../lib/titres";
+import { proRequestsHeading, TITRES } from "../../lib/titres";
 import { useCallback, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { phoneDisplay, phoneHref } from "../../lib/agenda/contact";
@@ -53,7 +53,7 @@ function ClientRow({ item }: { readonly item: ClientListItem }) {
       </s-stack>
       <s-stack direction="block" gap="small-200">
         <s-grid gridTemplateColumns="minmax(0, 1fr)">
-          <s-button {...FILL} variant="primary" icon="person" href={clientHref(customer)}>
+          <s-button {...FILL} icon="person" href={clientHref(customer)}>
             Voir la fiche
           </s-button>
         </s-grid>
@@ -92,10 +92,10 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
         </s-button>
       )}
       <s-button slot="secondary-actions" href="/app/pros">
-        Comptes pro
+        {TITRES.clientsPro}
       </s-button>
       {data.pendingProRequests === 0 ? null : (
-        <s-banner tone="info" heading={`${data.pendingProRequests} demande${data.pendingProRequests > 1 ? "s" : ""} de compte pro à valider`}>
+        <s-banner tone="info" heading={proRequestsHeading(data.pendingProRequests)}>
           <s-button href="/app/pros">Voir les demandes</s-button>
         </s-banner>
       )}
@@ -119,7 +119,7 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
           </form>
           <s-grid gridTemplateColumns={`repeat(${CLIENTS_TABS.length}, minmax(0, 1fr))`} gap="small-200">
             {CLIENTS_TABS.map((tab) => (
-              <s-button key={tab.id} {...FILL} href={clientsHref(tab.id, data.term)} variant={tab.id === data.tab ? "primary" : "secondary"}>
+              <s-button key={tab.id} {...FILL} href={clientsHref(tab.id, data.term)} variant="secondary" {...(tab.id === data.tab ? { icon: "check" as const } : {})}>
                 {tab.label}
               </s-button>
             ))}

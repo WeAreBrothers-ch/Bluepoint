@@ -10,8 +10,8 @@ const VAT =
 const BUYER_ADDRESS =
   "L’adresse du client est incomplète (nom, rue et numéro, NPA, localité). Complétez-la dans sa fiche (« Clients »), " +
   "puis demandez à la personne qui s’occupe de la boutique de corriger celle de cette commande.";
-const SELLER = "Vos coordonnées sont incomplètes ou incorrectes\u202F: vérifiez-les dans les Réglages.";
-const QR = "Le QR code de paiement n’a pas pu être créé\u202F: vérifiez votre numéro de compte (IBAN) dans les Réglages.";
+const SELLER = "Vos coordonnées sont incomplètes ou incorrectes\u202F: vérifiez-les dans « Informations de l’entreprise ».";
+const QR = "Le QR code de paiement n’a pas pu être créé\u202F: vérifiez votre numéro de compte (IBAN) dans « Informations de l’entreprise ».";
 const AMOUNTS = "Les montants de la commande ne concordent pas\u202F: cette facture doit être faite à la main.";
 const CURRENCY = "La commande n’est pas en francs suisses\u202F: la facture ne peut pas être faite automatiquement.";
 const OTHER = "Un détail de la commande empêche de faire la facture.";

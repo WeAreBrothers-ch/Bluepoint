@@ -38,17 +38,17 @@ export const MESSAGES = {
   base: "La commande n’a pas pu être enregistrée. Réessayez.",
   recharger: "Rechargez la page, puis recommencez la commande.",
   brouillonSansConditions:
-    "La commande est enregistrée mais pas terminée\u202F: Shopify n’accepte pas encore le paiement plus tard sur cette boutique. " +
-    "Elle n’a pas été notée payée. Terminez-la dans Shopify ou appelez la personne qui s’occupe de la boutique.",
+    "La commande est enregistrée, mais pas terminée : le paiement plus tard n’est pas encore activé sur la boutique. " +
+    "Ne la refaites pas : appelez la personne qui s’occupe de l’application, elle la terminera.",
   metachampsNonPoses:
-    "Attention\u202F: le jour de livraison n’a pas été enregistré, la commande n’apparaîtra pas dans « Livraisons ». " +
-    "Prévenez la personne qui s’occupe de la boutique.",
+    "Attention\u202F: le jour de livraison n’a pas été enregistré. Dans « Livraisons », la commande est rangée dans « Commandes sans jour de livraison » : " +
+    "touchez « Choisir le jour » sur cette commande.",
 } as const;
 
 export function netTermsWarning(requestedDays: number, appliedDays: number | null): string {
   return appliedDays === null
-    ? `Le délai de ${requestedDays} jours n’existe pas dans Shopify\u202F: un autre délai a été appliqué.`
-    : `Le délai de ${requestedDays} jours n’existe pas dans Shopify\u202F: le client aura ${appliedDays} jours pour payer.`;
+    ? `Le délai de ${requestedDays} jours n’a pas pu être appliqué\u202F: un autre délai a été mis.`
+    : `Le client aura ${appliedDays} jours pour payer au lieu de ${requestedDays}.`;
 }
 
 interface UserErrorLike {

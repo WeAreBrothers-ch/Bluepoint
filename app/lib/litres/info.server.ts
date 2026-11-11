@@ -40,7 +40,7 @@ export async function handleWineInfo(admin: AdminApiContext, form: FormData): Pr
     logError("Infos du vin : étiquettes illisibles", current.error, { productId });
     return { ok: false, productId, message: "Shopify ne répond pas pour le moment. Réessayez dans un instant." };
   }
-  if (current.value.product === null) return { ok: false, productId, message: "Ce vin n’existe plus dans Shopify." };
+  if (current.value.product === null) return { ok: false, productId, message: "Ce vin n’existe plus." };
   const { title, tags } = current.value.product;
   const updated = await runAdminMutation(admin, UPDATE_MUTATION, (data: UpdateData) => data.productUpdate, {
     product: { id: productId, tags: withWineTags(tags, changes) },

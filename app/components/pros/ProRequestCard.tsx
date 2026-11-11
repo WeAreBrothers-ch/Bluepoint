@@ -48,7 +48,7 @@ export function ProRequestCard({ request, canCreate }: { readonly request: ProRe
           <s-box padding="base" background="subdued" borderRadius="base">
             <s-stack direction="block" gap="small-200">
               <s-text type="strong">{`Refuser la demande de ${request.companyName}\u202F?`}</s-text>
-              <s-text>Rien ne sera créé dans Shopify. Pensez à prévenir la personne si besoin.</s-text>
+              <s-text>Rien ne sera créé. Pensez à prévenir la personne si besoin.</s-text>
               <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
                 <s-button
                   {...FILL}

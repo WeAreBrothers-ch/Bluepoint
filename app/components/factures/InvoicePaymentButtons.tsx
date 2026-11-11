@@ -6,7 +6,7 @@ import { PAYMENT_METHOD_LABELS, PAYMENT_METHODS } from "../../lib/factures/payme
 import { InvoiceResultBanner } from "./InvoiceShortcutButtons";
 
 /**
- * « Le client a payé » : un toucher, puis « comment ? » (virement, cash, TWINT). Le paiement est noté
+ * « Le client a payé » : un toucher, puis « comment ? » (virement, espèces, TWINT). Le paiement est noté
  * dans Shopify ; la facture passe dans « Payées » et la commande devient « Payée » dans l'agenda.
  */
 

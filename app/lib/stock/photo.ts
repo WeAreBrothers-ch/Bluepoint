@@ -19,7 +19,7 @@ export interface PhotoFile {
 
 /** `null` si la photo convient, sinon le message à afficher. */
 export function photoProblem(file: PhotoFile): string | null {
-  if (!ACCEPTED_TYPES.has(file.type)) return "Ce fichier n’est pas une photo que Shopify accepte (JPEG, PNG ou WebP).";
+  if (!ACCEPTED_TYPES.has(file.type)) return "Ce fichier n’est pas une photo. Choisissez une photo prise avec l’appareil (JPEG, PNG ou WebP).";
   if (file.size <= 0) return "Cette photo est vide. Choisissez-en une autre.";
   if (file.size > MAX_PHOTO_BYTES) return "Cette photo est trop lourde. Choisissez-en une autre.";
   return null;

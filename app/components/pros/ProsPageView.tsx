@@ -1,3 +1,4 @@
+import { TITRES } from "../../lib/titres";
 import type { ProsPageData } from "../../lib/pros/page-data.server";
 import { GroupTitle } from "../GroupTitle";
 import { AddProForm } from "./AddProForm";
@@ -7,14 +8,14 @@ import { ProRequestCard } from "./ProRequestCard";
 
 export function ProsPageView({ data }: { readonly data: ProsPageData }) {
   return (
-    <s-page heading="Comptes pro" inlineSize="base">
+    <s-page heading={TITRES.clientsPro} inlineSize="base">
       <s-button slot="secondary-actions" href="/app/clients">
         Retour aux clients
       </s-button>
       {data.canCreate ? null : (
-        <s-banner tone="warning" heading="Une étape d’autorisation reste à faire">
-          Les demandes arrivent déjà ici, mais l’app ne peut pas encore créer les comptes pro dans Shopify. La personne qui
-          s’occupe du site doit l’autoriser une seule fois ; ensuite, le bouton « Accepter » fonctionnera.
+        <s-banner tone="warning" heading="Accepter une demande n’est pas encore activé">
+          Les demandes arrivent déjà ici. Pour pouvoir les accepter, appelez la personne qui s’occupe de l’application : elle l’active une
+          seule fois.
         </s-banner>
       )}
       {data.pending.length === 0 ? (

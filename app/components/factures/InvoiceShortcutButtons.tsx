@@ -1,3 +1,4 @@
+import { COMPLETER_ENTREPRISE } from "../../lib/titres";
 import { useFetcher } from "react-router";
 import { FILL } from "../fill";
 import type { FacturesActionResult, InvoiceShortcuts } from "../../lib/factures/list-item";
@@ -24,7 +25,7 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
   if (result === undefined) return null;
   return (
     <s-banner tone={result.ok ? "success" : "critical"} heading={result.message}>
-      {!result.ok && result.settingsLink ? <s-link href="/app/reglages">Compléter mes coordonnées</s-link> : null}
+      {!result.ok && result.settingsLink ? <s-link href="/app/reglages">{COMPLETER_ENTREPRISE}</s-link> : null}
     </s-banner>
   );
 }

@@ -1,4 +1,4 @@
-import { TITRES } from "../../lib/titres";
+import { COMPLETER_ENTREPRISE, proRequestsHeading, TITRES } from "../../lib/titres";
 import { AgendaTabs } from "../AgendaTabs";
 import { capitalize } from "../../lib/agenda/dates";
 import type { AgendaPageData } from "../../lib/agenda/page-data.server";
@@ -20,7 +20,7 @@ function Notices({ data }: { readonly data: AgendaPageData }) {
       {data.pendingProRequests === 0 ? null : (
         <s-banner
           tone="info"
-          heading={`${data.pendingProRequests} demande${data.pendingProRequests > 1 ? "s" : ""} de compte pro à valider`}
+          heading={proRequestsHeading(data.pendingProRequests)}
         >
           <s-button href="/app/pros">Voir les demandes</s-button>
         </s-banner>
@@ -29,7 +29,7 @@ function Notices({ data }: { readonly data: AgendaPageData }) {
         <s-banner tone="info" heading="Les factures ne peuvent pas encore être faites">
           <s-stack direction="block" gap="small-200">
             <s-text>Il manque vos coordonnées ou votre compte bancaire.</s-text>
-            <s-button href="/app/reglages">Compléter mes coordonnées</s-button>
+            <s-button href="/app/reglages">{COMPLETER_ENTREPRISE}</s-button>
           </s-stack>
         </s-banner>
       )}
