@@ -1,4 +1,5 @@
 import { CARTON_SIZE } from "../commande/types";
+import { publicCentsFromPro } from "../prix/pro";
 import { PAS_ENCORE_ACTIVE } from "../titres";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
@@ -111,7 +112,8 @@ function productInput(input: NewWineInput, locationId: string, files: ReturnType
     variants: [
       {
         optionValues: [{ optionName: "Title", name: "Default Title" }],
-        price: shopifyPrice(input.priceCents),
+        // Le prix saisi est le prix pro ; Shopify garde le prix particulier (+ 15 %).
+        price: shopifyPrice(publicCentsFromPro(input.priceCents)),
         inventoryItem: { tracked: true },
         inventoryQuantities: [{ locationId, name: "available", quantity: input.quantity }],
       },

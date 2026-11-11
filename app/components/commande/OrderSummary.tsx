@@ -16,7 +16,7 @@ const PRICE_NOTES: Readonly<Record<PriceSource, string>> = {
 
 interface OrderSummaryProps {
   readonly totals: OrderTotals;
-  /** Remise sur la commande (ex. « Prix pro -15 % ») calculée par Shopify, en centimes. */
+  /** Remise sur la commande (ex. « Prix pro ») calculée par Shopify, en centimes. */
   readonly discountCents: number;
   readonly warnings: readonly StockWarning[];
   readonly priceSource: PriceSource;

@@ -3,7 +3,7 @@ import { decimalToCents } from "./totals";
 
 /**
  * Prix de ce client calculés par Shopify (`draftOrderCalculate`) : catalogue B2B de l'entreprise
- * et remises automatiques (ex. « Prix pro -15 % »), prêts pour le récapitulatif.
+ * et remises automatiques (ex. « Prix pro »), prêts pour le récapitulatif.
  */
 
 export interface B2bPrices {

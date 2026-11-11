@@ -3,6 +3,7 @@ import { cartonsOf, isFullCartons } from "../../lib/commande/cart";
 import { isOverStock, productLabel } from "../../lib/commande/totals";
 import { CARTON_SIZE, type ProductOption, type VariantGid } from "../../lib/commande/types";
 import { formatChf, formatInteger } from "../../lib/format/money";
+import { proCentsFromPublic } from "../../lib/prix/pro";
 import { QuantityStepper } from "./QuantityStepper";
 
 /**
@@ -50,7 +51,12 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
           <s-stack direction="block" gap="small-500">
             <s-text type="strong">{label}</s-text>
             <s-text color="subdued">
-              {[`${formatChf(product.priceCents)} la bouteille`, `carton de ${CARTON_SIZE}\u202F: ${formatChf(product.priceCents * CARTON_SIZE)}`, stockText(product.available)]
+              {[
+                // Shopify garde le prix particulier ; le prix pro (sans les 15 %) est celui que le patron connaît.
+                `Bouteille : ${formatChf(proCentsFromPublic(product.priceCents))} pro, ${formatChf(product.priceCents)} particulier`,
+                `carton de ${CARTON_SIZE}\u202F: ${formatChf(proCentsFromPublic(product.priceCents) * CARTON_SIZE)} pro`,
+                stockText(product.available),
+              ]
                 .filter((part) => part !== null)
                 .join(" · ")}
             </s-text>

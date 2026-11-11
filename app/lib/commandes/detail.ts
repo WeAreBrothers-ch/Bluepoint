@@ -87,7 +87,7 @@ export interface OrderDetail {
   /** Somme des lignes, avant la remise sur la commande. */
   readonly winesCents: number | null;
   readonly discountCents: number;
-  /** Ex. « Prix pro -15 % », « Remise ». */
+  /** Ex. « Prix pro », « Remise ». */
   readonly discountLabel: string;
   readonly shippingCents: number;
   readonly taxCents: number | null;

@@ -21,7 +21,7 @@ type PurchasingEntityInput =
 
 export interface DraftOrderInput {
   readonly purchasingEntity: PurchasingEntityInput;
-  /** Applique les remises automatiques de la boutique (ex. « Prix pro -15 % »), comme sur le site. */
+  /** Applique les remises automatiques de la boutique (ex. « Prix pro »), comme sur le site. */
   readonly acceptAutomaticDiscounts: boolean;
   readonly lineItems: readonly { readonly variantId: string; readonly quantity: number }[];
   readonly shippingAddress?: ShippingAddress;
