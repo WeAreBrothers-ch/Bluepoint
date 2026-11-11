@@ -39,6 +39,11 @@ describe("nouveau vin", () => {
     expect(other.ok && other.input.tags).toEqual([]);
   });
 
+  it("compte en cartons de 6 bouteilles", () => {
+    const parsed = parseNewWine(form({ title: "Gamay", type: "Rouge", country: "Suisse", size: "75", price: "20", quantity: "10" }));
+    expect(parsed.ok && parsed.input.quantity).toBe(60);
+  });
+
   it("note l'année, la région et l'appellation dans les étiquettes", () => {
     const parsed = parseNewWine(
       form({ title: "Barolo", type: "Rouge", country: "Italie", size: "75", vintage: "2019", appellation: "Barolo DOCG", region: "Piémont", price: "60", quantity: "6" }),
@@ -71,7 +76,7 @@ describe("nouveau vin", () => {
       errors: {
         title: "Écrivez le nom du vin.",
         price: "Écrivez le prix d’une bouteille, par exemple 25.50.",
-        quantity: "Écrivez le nombre de bouteilles (0 s’il n’y en a pas encore).",
+        quantity: "Écrivez le nombre de cartons (0 s’il n’y en a pas encore).",
       },
     });
     expect(parseNewWine(form({ title: "Merlot", vendor: "", type: "Violet", price: "20", quantity: "1" })).ok).toBe(false);
@@ -79,10 +84,10 @@ describe("nouveau vin", () => {
 
   it("annonce le vin créé", () => {
     expect(createdMessage({ title: "Chasselas 2025", priceCents: 1800, quantity: 24 }, true)).toBe(
-      "Le vin « Chasselas 2025 » est créé, à CHF\u00A018.00, avec 24 bouteilles en cave. Il est en vente sur le site et dans « Prendre une commande ».",
+      "Le vin « Chasselas 2025 » est créé, à CHF\u00A018.00, avec 4 cartons en cave. Il est en vente sur le site et dans « Prendre une commande ».",
     );
     expect(createdMessage({ title: "Merlot", priceCents: 2000, quantity: 0 }, false)).toContain(
-      "sans bouteille en cave pour l’instant. Il est dans « Prendre une commande », mais pas encore visible sur le site.",
+      "sans carton en cave pour l’instant. Il est dans « Prendre une commande », mais pas encore visible sur le site.",
     );
   });
 });

@@ -1,3 +1,4 @@
+import { CARTON_SIZE } from "../commande/types";
 import { normalizeSearch } from "../commande/catalog";
 import { decimalToCents } from "../commande/totals";
 import { formatInteger } from "../format/money";
@@ -5,7 +6,7 @@ import { parseGid } from "../shopify/ids";
 
 /**
  * Stock des vins : ce qui reste à vendre, ce qui est réservé pour des commandes pas encore livrées,
- * et les changements demandés (« Ajouter des bouteilles », « Corriger le nombre »). Logique pure.
+ * et les changements demandés (« Ajouter des cartons », « Corriger le nombre »). Logique pure.
  * La boutique a un seul dépôt : on lit et on change le stock du premier emplacement de chaque vin.
  */
 
@@ -175,7 +176,7 @@ export function availableText(item: Pick<StockItem, "available">): string {
 export function reservedText(item: Pick<StockItem, "onHand" | "committed">): string | null {
   if (item.committed <= 0) return null;
   const reserved = item.committed > 1 ? "réservées" : "réservée";
-  return `${formatInteger(item.onHand)} en cave, dont ${formatInteger(item.committed)} ${reserved} pour des commandes pas encore livrées`;
+  return `En cave\u202F: ${cartonsText(item.onHand)}, dont ${bottles(item.committed)} ${reserved} pour des commandes pas encore livrées`;
 }
 
 // --- Changements demandés depuis la page ---
@@ -241,19 +242,55 @@ export function parseStockChange(form: FormData): ParsedStockChange {
 /** Message de réussite, avec la nouvelle quantité si Shopify l'a donnée. */
 export function stockChangeMessage(change: Pick<StockChange, "intent" | "quantity">, after: number | null): string {
   if (change.intent === "ajouter") {
-    const added = `C’est noté\u202F: ${bottles(change.quantity)} ajoutée${change.quantity > 1 ? "s" : ""}.`;
+    const added = `C’est noté\u202F: ${cartonsText(change.quantity)} ajouté${change.quantity > CARTON_SIZE ? "s" : ""}.`;
     if (after === null) return added;
     if (after <= 0) return `${added} Des commandes attendent encore ce vin\u202F: rien n’est disponible à la vente.`;
-    return `${added} Il y en a maintenant ${bottles(after)} disponible${after > 1 ? "s" : ""}.`;
+    return `${added} Il y a maintenant ${cartonsText(after)} à vendre.`;
   }
-  return `C’est noté\u202F: ${bottles(after ?? change.quantity)} en cave.`;
+  return `C’est noté\u202F: ${cartonsText(after ?? change.quantity)} en cave.`;
 }
 
 export const STALE_STOCK_MESSAGE =
   "Le stock de ce vin a changé entre-temps (une commande vient peut-être d’arriver). Rechargez la page, puis recommencez.";
 
-/** Au-delà, un ajout de bouteilles est confirmé (10 cartons) : une faute de frappe (600 au lieu de 60) se voit. */
-export const LARGE_ADDITION = 60;
+// --- Cartons et palettes : la cave se compte en cartons de 6, pas bouteille par bouteille ---
+
+/**
+ * Cartons d'une palette, pour le bouton « + 1 palette ». Valeur courante pour des cartons de 6 bouteilles
+ * de 75 cl sur une palette standard : à ajuster ici si les palettes reçues sont différentes.
+ */
+export const PALLET_CARTONS = 100;
+
+/** Plus grand nombre de cartons qu'on peut écrire d'un coup. */
+export const MAX_CARTONS = Math.floor(MAX_STOCK_CHANGE / CARTON_SIZE);
+
+/** « 12 » → 12 ; vide ou illisible → 0 ; jamais négatif, jamais au-delà de `max`. */
+export function parseCount(raw: string, max: number): number {
+  const value = Number.parseInt(raw.trim(), 10);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(value, max);
+}
+
+/** 446 bouteilles → 74 cartons pleins et 2 bouteilles seules. */
+export function splitCartons(count: number): { readonly cartons: number; readonly loose: number } {
+  const total = Math.max(count, 0);
+  return { cartons: Math.floor(total / CARTON_SIZE), loose: total % CARTON_SIZE };
+}
+
+export function cartons(count: number): string {
+  return `${formatInteger(count)} carton${count > 1 ? "s" : ""}`;
+}
+
+/** « 74 cartons et 2 bouteilles », « 1 carton », « 4 bouteilles », « aucune bouteille ». */
+export function cartonsText(count: number): string {
+  const { cartons: full, loose } = splitCartons(count);
+  if (full === 0 && loose === 0) return "aucune bouteille";
+  if (full === 0) return bottles(loose);
+  return loose === 0 ? cartons(full) : `${cartons(full)} et ${bottles(loose)}`;
+}
+
+/** Au-delà de 10 cartons d'un coup, l'ajout est confirmé : une faute de frappe (100 au lieu de 10) se voit. */
+export const LARGE_ADDITION = 10 * CARTON_SIZE;
 
 /**
  * Faut-il redemander avant d'enregistrer ? Pour un comptage : passer à 0 ou changer de plus d'un carton.
@@ -261,12 +298,12 @@ export const LARGE_ADDITION = 60;
  */
 export function confirmationQuestion(intent: StockIntent, onHand: number, quantity: number): string | null {
   if (intent === "ajouter") {
-    return quantity > LARGE_ADDITION ? `Vous ajoutez ${bottles(quantity)} d’un coup. C’est bien ça\u202F?` : null;
+    return quantity > LARGE_ADDITION ? `Vous ajoutez ${cartonsText(quantity)} (${bottles(quantity)}) d’un coup. C’est bien ça\u202F?` : null;
   }
   const current = Math.max(onHand, 0);
   if (quantity === current) return null;
-  if (quantity === 0 || Math.abs(quantity - current) > 6) {
-    return `Vous passez de ${bottles(current)} à ${bottles(quantity)} en cave. C’est bien ça\u202F?`;
+  if (quantity === 0 || Math.abs(quantity - current) > CARTON_SIZE) {
+    return `Vous passez de ${cartonsText(current)} à ${cartonsText(quantity)} en cave. C’est bien ça\u202F?`;
   }
   return null;
 }

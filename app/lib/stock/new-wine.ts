@@ -1,6 +1,7 @@
 import { formatChf } from "../format/money";
 import { BOTTLE_SIZES_CL, DEFAULT_BOTTLE_CL, parseBottleSize, plain, sizeTagValue, TAG_PREFIXES, WINE_COUNTRIES } from "../litres/wine-info";
-import { bottles, MAX_STOCK_CHANGE } from "./stock";
+import { CARTON_SIZE } from "../commande/types";
+import { cartonsText, MAX_CARTONS } from "./stock";
 
 /**
  * « Nouveau vin » depuis la page Stock : nom, producteur, sorte, pays, contenance, prix et bouteilles en cave.
@@ -117,8 +118,10 @@ export function parseNewWine(form: FormData): ParsedNewWine {
   const priceCents = parsePrice(values.price);
   if (priceCents === null || priceCents <= 0) errors.price = "Écrivez le prix d’une bouteille, par exemple 25.50.";
   else if (priceCents > MAX_PRICE_CENTS) errors.price = "Ce prix semble trop élevé.";
-  const quantity = /^\d{1,6}$/.test(values.quantity) ? Number(values.quantity) : null;
-  if (quantity === null || quantity > MAX_STOCK_CHANGE) errors.quantity = "Écrivez le nombre de bouteilles (0 s’il n’y en a pas encore).";
+  // Le formulaire demande des cartons de 6 ; Shopify compte des bouteilles.
+  const cartonCount = /^\d{1,6}$/.test(values.quantity) ? Number(values.quantity) : null;
+  if (cartonCount === null || cartonCount > MAX_CARTONS) errors.quantity = "Écrivez le nombre de cartons (0 s’il n’y en a pas encore).";
+  const quantity = cartonCount === null ? null : cartonCount * CARTON_SIZE;
   if (Object.keys(errors).length > 0 || priceCents === null || quantity === null) return { ok: false, values, errors };
   const productType = isOther ? null : champagne ? "Effervescent" : values.type;
   const appellation = champagne ? "Champagne" : values.appellation;
@@ -151,7 +154,7 @@ export function shopifyPrice(cents: number): string {
 
 /** Ex. « Le vin « Chasselas 2025 » est créé, à CHF 18.00, avec 24 bouteilles en cave. » */
 export function createdMessage(input: Pick<NewWineInput, "title" | "priceCents" | "quantity">, published: boolean): string {
-  const stock = input.quantity === 0 ? "sans bouteille en cave pour l’instant" : `avec ${bottles(input.quantity)} en cave`;
+  const stock = input.quantity === 0 ? "sans carton en cave pour l’instant" : `avec ${cartonsText(input.quantity)} en cave`;
   const where = published
     ? "Il est en vente sur le site et dans « Prendre une commande »."
     : "Il est dans « Prendre une commande », mais pas encore visible sur le site.";

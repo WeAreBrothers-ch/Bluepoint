@@ -53,7 +53,7 @@ describe("stock des vins", () => {
     expect(item).toMatchObject({ label: "Passione di Re", priceCents: 4500, available: 5, onHand: 11, committed: 6, level: "bas" });
     expect(item.place).toEqual({ inventoryItemId: "gid://shopify/InventoryItem/7", locationId: "gid://shopify/Location/3" });
     expect(availableText(item)).toBe("5 bouteilles disponibles");
-    expect(reservedText(item)).toBe("11 en cave, dont 6 réservées pour des commandes pas encore livrées");
+    expect(reservedText(item)).toBe("En cave\u202F: 1 carton et 5 bouteilles, dont 6 bouteilles réservées pour des commandes pas encore livrées");
   });
 
   it("signale les vins épuisés et bientôt épuisés, ignore ceux qui ne sont pas comptés", () => {
@@ -96,10 +96,10 @@ describe("changement de stock", () => {
 
   it("dit ce qui a changé", () => {
     expect(stockChangeMessage({ intent: "ajouter", quantity: 12 }, 17)).toBe(
-      "C’est noté\u202F: 12 bouteilles ajoutées. Il y en a maintenant 17 bouteilles disponibles.",
+      "C’est noté\u202F: 2 cartons ajoutés. Il y a maintenant 2 cartons et 5 bouteilles à vendre.",
     );
-    expect(stockChangeMessage({ intent: "ajouter", quantity: 1 }, null)).toBe("C’est noté\u202F: 1 bouteille ajoutée.");
-    expect(stockChangeMessage({ intent: "corriger", quantity: 24 }, 24)).toBe("C’est noté\u202F: 24 bouteilles en cave.");
+    expect(stockChangeMessage({ intent: "ajouter", quantity: 6 }, null)).toBe("C’est noté\u202F: 1 carton ajouté.");
+    expect(stockChangeMessage({ intent: "corriger", quantity: 24 }, 24)).toBe("C’est noté\u202F: 4 cartons en cave.");
   });
 });
 
@@ -125,18 +125,36 @@ describe("ordre de la page Stock", () => {
   });
 });
 
-import { confirmationQuestion } from "./stock";
+import { cartonsText, confirmationQuestion, parseCount, splitCartons } from "./stock";
+
+describe("cartons", () => {
+  it("compte la cave en cartons de 6", () => {
+    expect(splitCartons(446)).toEqual({ cartons: 74, loose: 2 });
+    expect(cartonsText(446)).toBe("74 cartons et 2 bouteilles");
+    expect(cartonsText(6)).toBe("1 carton");
+    expect(cartonsText(4)).toBe("4 bouteilles");
+    expect(cartonsText(0)).toBe("aucune bouteille");
+    expect(cartonsText(-3)).toBe("aucune bouteille");
+  });
+
+  it("lit un nombre tapé, sans négatif ni excès", () => {
+    expect(parseCount("12", 100)).toBe(12);
+    expect(parseCount("", 100)).toBe(0);
+    expect(parseCount("-4", 100)).toBe(0);
+    expect(parseCount("5000", 100)).toBe(100);
+  });
+});
 
 describe("confirmation avant d'enregistrer le stock", () => {
-  it("redemande quand le comptage change beaucoup ou tombe à zéro", () => {
-    expect(confirmationQuestion("corriger", 48, 0)).toBe("Vous passez de 48 bouteilles à 0 bouteille en cave. C’est bien ça ?");
+  it("redemande quand le comptage change de plus d'un carton ou tombe à zéro", () => {
+    expect(confirmationQuestion("corriger", 48, 0)).toBe("Vous passez de 8 cartons à aucune bouteille en cave. C’est bien ça\u202F?");
     expect(confirmationQuestion("corriger", 60, 600)).not.toBeNull();
     expect(confirmationQuestion("corriger", 48, 45)).toBeNull();
     expect(confirmationQuestion("corriger", 48, 48)).toBeNull();
   });
 
-  it("redemande pour un très gros ajout seulement", () => {
-    expect(confirmationQuestion("ajouter", 10, 12)).toBeNull();
-    expect(confirmationQuestion("ajouter", 10, 600)).toBe("Vous ajoutez 600 bouteilles d’un coup. C’est bien ça ?");
+  it("redemande pour plus de 10 cartons d'un coup, en cartons", () => {
+    expect(confirmationQuestion("ajouter", 10, 60)).toBeNull();
+    expect(confirmationQuestion("ajouter", 10, 600)).toBe("Vous ajoutez 100 cartons (600 bouteilles) d’un coup. C’est bien ça\u202F?");
   });
 });
