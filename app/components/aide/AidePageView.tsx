@@ -57,11 +57,11 @@ const RECIPES: readonly Recipe[] = [
     button: "Voir les factures",
   },
   {
-    situation: "Je reçois de nouvelles bouteilles",
+    situation: "Je reçois du vin (cartons ou palette)",
     steps: [
       `Touchez ${entreGuillemets(TITRES.vins)}.`,
-      "Trouvez le vin, puis touchez « Ajouter des bouteilles ».",
-      "Écrivez combien de bouteilles vous avez reçues (ou touchez « 1 carton »), puis touchez le bouton foncé « Ajouter … bouteilles ».",
+      "Trouvez le vin, puis touchez « Ajouter des cartons ».",
+      "Écrivez combien de cartons vous avez reçus, ou touchez « + 1 carton », « + 10 cartons » ou « + 1 palette ». Puis touchez le bouton foncé « Ajouter … cartons ».",
       "C’est tout : le stock est mis à jour partout, sur le site et dans « Prendre une commande ».",
     ],
     href: "/app/stock",
@@ -72,8 +72,8 @@ const RECIPES: readonly Recipe[] = [
     steps: [
       `Touchez ${entreGuillemets(TITRES.vins)}.`,
       "Trouvez le vin, puis touchez « Corriger le nombre ».",
-      "Écrivez combien de bouteilles vous avez vraiment, en comptant aussi celles des commandes pas encore livrées.",
-      "Touchez « Enregistrer ». Si le nombre change beaucoup, l’application vous redemande : touchez « Oui, enregistrer ».",
+      "Écrivez le nombre de cartons pleins, puis les bouteilles des cartons entamés. Comptez aussi les cartons des commandes pas encore livrées.",
+      "Touchez « Enregistrer ce comptage ». Si le nombre change beaucoup, l’application vous redemande : touchez « Oui, enregistrer ».",
     ],
     href: "/app/stock",
     button: "Voir le stock",
@@ -82,7 +82,7 @@ const RECIPES: readonly Recipe[] = [
     situation: "Je veux ajouter un nouveau vin à vendre",
     steps: [
       `Touchez ${entreGuillemets(TITRES.vins)}, puis « Nouveau vin ».`,
-      "Remplissez le nom, la sorte, le pays, la contenance de la bouteille, le prix et le nombre de bouteilles.",
+      "Remplissez le nom, la sorte, le pays, la contenance de la bouteille, le prix et le nombre de cartons.",
       "Touchez « Créer le vin ». Il est tout de suite dans « Prendre une commande », et sur le site.",
     ],
     href: "/app/stock",

@@ -1,3 +1,4 @@
+import { CARTON_SIZE } from "../commande/types";
 import { PAS_ENCORE_ACTIVE } from "../titres";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
@@ -124,7 +125,7 @@ export async function handleNewWine(admin: AdminApiContext, form: FormData): Pro
     return { ok: false, intent: "nouveau_vin", message: "Il manque quelque chose : regardez les cases en rouge.", values: parsed.values, errors: parsed.errors };
   }
   const { input } = parsed;
-  const values = { ...input.values, price: shopifyPrice(input.priceCents), quantity: String(input.quantity) };
+  const values = { ...input.values, price: shopifyPrice(input.priceCents), quantity: String(input.quantity / CARTON_SIZE) };
   const places = await findPlaces(admin, input.title);
   if (places === null || places.locationId === null) {
     return { ok: false, intent: "nouveau_vin", message: "Shopify ne répond pas pour le moment. Réessayez dans un instant : rien n’a été créé.", values, errors: {} };

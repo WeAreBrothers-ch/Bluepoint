@@ -88,13 +88,13 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
               <s-text-field label="Région (facultatif)" name="region" value={values.region} details="Ex. Piémont, Lavaux" {...errorProps(errors, "region")} />
               <s-text-field label="Prix d’une bouteille (CHF)" name="price" value={values.price} details="Ex. 25.50" {...errorProps(errors, "price")} />
               <s-number-field
-                label="Bouteilles en cave"
+                label="Cartons en cave"
                 name="quantity"
                 value={values.quantity}
                 min={0}
                 step={1}
                 inputMode="numeric"
-                details="0 si le vin n’est pas encore arrivé"
+                details="6 bouteilles par carton. 0 si le vin n’est pas encore arrivé"
                 {...errorProps(errors, "quantity")}
               />
             </s-grid>

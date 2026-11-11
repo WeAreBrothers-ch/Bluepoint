@@ -1,17 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFetcher } from "react-router";
-import { CARTON_SIZES, parseQuantity } from "../../lib/commande/cart";
+import { CARTON_SIZE } from "../../lib/commande/types";
 import { formatChf, formatInteger } from "../../lib/format/money";
 import type { PhotoResult } from "../../lib/stock/photo";
 import type { PriceResult } from "../../lib/stock/price";
-import { bottles, confirmationQuestion, reservedText, type StockActionResult, type StockIntent, type StockItem } from "../../lib/stock/stock";
+import {
+  bottles,
+  cartonsText,
+  confirmationQuestion,
+  MAX_CARTONS,
+  PALLET_CARTONS,
+  parseCount,
+  reservedText,
+  splitCartons,
+  type StockActionResult,
+  type StockIntent,
+  type StockItem,
+} from "../../lib/stock/stock";
 import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { PhotoPicker } from "./PhotoPicker";
 
 /**
  * Un vin de la page Stock : combien on peut encore en vendre, puis deux boutons.
- * « Ajouter des bouteilles » quand du vin arrive ; « Corriger le nombre » après avoir compté la cave.
+ * « Ajouter des cartons » quand du vin arrive (cartons, palettes) ; « Corriger le nombre » après avoir compté la cave.
  * « Ajouter une photo » / « Changer la photo » pour la photo du site.
  * Chaque bouton ouvre une petite question à la place des boutons, avec « Annuler ».
  */
@@ -39,10 +51,22 @@ interface ChangePanelProps {
   readonly onCancel: () => void;
 }
 
+/** Boutons qui ajoutent des cartons : on appuie deux fois sur « + 1 palette » pour deux palettes. */
+const CARTON_STEPS: readonly { readonly cartons: number; readonly label: string }[] = [
+  { cartons: 1, label: "+ 1 carton" },
+  { cartons: 5, label: "+ 5 cartons" },
+  { cartons: 10, label: "+ 10 cartons" },
+  { cartons: PALLET_CARTONS, label: `+ 1 palette (${PALLET_CARTONS} cartons)` },
+];
+
 function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProps) {
   const adding = intent === "ajouter";
-  const [quantity, setQuantity] = useState(adding ? 0 : Math.max(item.onHand, 0));
-  // Une faute de frappe (0, ou 600 au lieu de 60) part dans Shopify : on redemande avant.
+  const start = splitCartons(item.onHand);
+  // Ajout : on compte en cartons. Comptage : cartons pleins, plus les bouteilles des cartons entamés.
+  const [fullCartons, setFullCartons] = useState(adding ? 0 : start.cartons);
+  const [loose, setLoose] = useState(adding ? 0 : start.loose);
+  const quantity = fullCartons * CARTON_SIZE + (adding ? 0 : loose);
+  // Une faute de frappe (0, ou 100 cartons au lieu de 10) part dans Shopify : on redemande avant.
   const [asking, setAsking] = useState<string | null>(null);
   const ready = adding ? quantity > 0 : true;
   const submit = () => {
@@ -60,7 +84,7 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
               Oui, enregistrer
             </s-button>
             <s-button icon="arrow-left" onClick={() => setAsking(null)} {...(busy ? { disabled: true } : {})}>
-              Non, corriger le nombre
+              Non, corriger
             </s-button>
           </s-stack>
         </s-stack>
@@ -69,27 +93,63 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
   }
   return (
     <s-box padding="base" background="subdued" borderRadius="base">
-      <s-stack direction="block" gap="small-200">
-        <s-stack direction="inline" gap="small-200" alignItems="end">
-          <s-box inlineSize="120px">
-            <s-number-field
-              label={adding ? "Combien de bouteilles arrivent ?" : "Combien de bouteilles avez-vous en cave ?"}
-              value={String(quantity)}
-              min={0}
-              step={1}
-              inputMode="numeric"
-              onInput={(event) => setQuantity(parseQuantity(event.currentTarget.value))}
-            />
-          </s-box>
-          {adding
-            ? CARTON_SIZES.map((size) => (
-                <s-button key={size} onClick={() => setQuantity(size)}>
-                  {`${size === 6 ? "1 carton" : "2 cartons"} (${size})`}
+      <s-stack direction="block" gap="base">
+        {adding ? (
+          <>
+            <s-box inlineSize="220px">
+              <s-number-field
+                label="Combien de cartons arrivent ?"
+                value={String(fullCartons)}
+                min={0}
+                step={1}
+                inputMode="numeric"
+                details={`${CARTON_SIZE} bouteilles par carton`}
+                onInput={(event) => setFullCartons(parseCount(event.currentTarget.value, MAX_CARTONS))}
+              />
+            </s-box>
+            <s-stack direction="inline" gap="small-200">
+              {CARTON_STEPS.map((step) => (
+                <s-button key={step.cartons} onClick={() => setFullCartons((value) => Math.min(value + step.cartons, MAX_CARTONS))}>
+                  {step.label}
                 </s-button>
-              ))
-            : null}
-        </s-stack>
-        {adding ? null : <s-text color="subdued">Comptez aussi les bouteilles des commandes pas encore livrées.</s-text>}
+              ))}
+              {fullCartons === 0 ? null : (
+                <s-button variant="tertiary" icon="reset" onClick={() => setFullCartons(0)}>
+                  Remettre à zéro
+                </s-button>
+              )}
+            </s-stack>
+          </>
+        ) : (
+          <>
+            <s-stack direction="inline" gap="base" alignItems="end">
+              <s-box inlineSize="200px">
+                <s-number-field
+                  label="Cartons pleins"
+                  value={String(fullCartons)}
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  onInput={(event) => setFullCartons(parseCount(event.currentTarget.value, MAX_CARTONS))}
+                />
+              </s-box>
+              <s-box inlineSize="200px">
+                <s-number-field
+                  label="Bouteilles en plus"
+                  value={String(loose)}
+                  min={0}
+                  max={CARTON_SIZE - 1}
+                  step={1}
+                  inputMode="numeric"
+                  details="Cartons entamés"
+                  onInput={(event) => setLoose(parseCount(event.currentTarget.value, CARTON_SIZE - 1))}
+                />
+              </s-box>
+            </s-stack>
+            <s-text color="subdued">Comptez aussi les cartons des commandes pas encore livrées.</s-text>
+          </>
+        )}
+        <s-text type="strong">{quantity === 0 ? "Total : aucune bouteille" : `Total : ${cartonsText(quantity)} = ${bottles(quantity)}`}</s-text>
         <s-stack direction="inline" gap="small-200">
           <s-button
             variant="primary"
@@ -98,7 +158,7 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
             {...(busy ? { loading: true } : {})}
             {...(ready ? {} : { disabled: true })}
           >
-            {adding ? (quantity > 0 ? `Ajouter ${bottles(quantity)}` : "Ajouter") : `Enregistrer ${bottles(quantity)} en cave`}
+            {adding ? (quantity > 0 ? `Ajouter ${cartonsText(quantity)}` : "Ajouter") : "Enregistrer ce comptage"}
           </s-button>
           <s-button icon="x" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
             Annuler
@@ -231,7 +291,7 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
     setPanel("aucun");
   };
 
-  // Le vin à recommander met « Ajouter des bouteilles » en avant ; sinon, tous les boutons sont discrets.
+  // Le vin à recommander met « Ajouter des cartons » en avant ; sinon, tous les boutons sont discrets.
   const restock = item.level === "epuise" || item.level === "bas";
   const canChange = place !== null && canEdit;
   const canPrice = canPhoto; // même autorisation que « Nouveau vin » et la photo (écrire les produits)
@@ -240,7 +300,7 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
       {canChange ? (
         <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
           <s-button {...FILL} variant={restock ? "primary" : "secondary"} icon="plus" onClick={() => setPanel("ajouter")} {...(busy ? { loading: true } : {})}>
-            Ajouter des bouteilles
+            Ajouter des cartons
           </s-button>
         </s-grid>
       ) : null}
@@ -286,9 +346,13 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
           <s-stack direction="block" gap="small-200">
             <s-stack direction="inline" gap="small-200" alignItems="center">
               <s-text type="strong" {...(item.level === "epuise" ? { tone: "critical" as const } : {})}>
-                <span style={{ fontSize: "32px", lineHeight: 1.1 }}>{formatInteger(Math.max(item.available, 0))}</span>
+                <span style={{ fontSize: "32px", lineHeight: 1.1 }}>{formatInteger(splitCartons(item.available).cartons)}</span>
               </s-text>
-              <s-text color="subdued">{item.available === 1 ? "bouteille à vendre" : "bouteilles à vendre"}</s-text>
+              <s-text color="subdued">
+                {`${splitCartons(item.available).cartons > 1 ? "cartons" : "carton"} à vendre${
+                  splitCartons(item.available).loose > 0 ? ` + ${bottles(splitCartons(item.available).loose)}` : ""
+                } (${bottles(Math.max(item.available, 0))})`}
+              </s-text>
               <LevelBadge item={item} />
             </s-stack>
             {reserved === null ? null : <s-text color="subdued">{reserved}</s-text>}
