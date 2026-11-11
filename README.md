@@ -83,7 +83,7 @@ Les vins se vendent **par cartons de 6 bouteilles, au minimum un carton** (6, 12
 ## Noms des pages
 
 Les noms du menu et des titres viennent d’une seule liste, `app/lib/titres.ts` : Livraisons, Prendre une commande,
-Factures, Vins en cave, Clients, Toutes les commandes, Informations de l’entreprise, Aide. Les phrases d’aide les
+Factures, Stock, Clients, Aide, Toutes les commandes, Litres vendus, Informations de l’entreprise. Les phrases d’aide les
 reprennent, pour que tout le monde (le patron comme un employé) lise toujours les mêmes mots.
 
 ## Rabais carte (2 % pour un paiement par carte tout de suite)
@@ -114,7 +114,7 @@ est suivi par le CSCV revient à la fiduciaire.
   part, hors du total du vin. Le champagne (sorte « Champagne » du formulaire, rangée avec les effervescents, ou appellation
   « Champagne ») est toujours compté comme venant de France.
 - **Où sont les données** : dans les étiquettes Shopify du vin, comme `pays:` et `region:` pour le menu du site :
-  `contenance:75` (en cl, `37.5` pour une demi), `millesime:2022`, `appellation:Dézaley AOC`. « Nouveau vin » (page Vins en cave) demande
+  `contenance:75` (en cl, `37.5` pour une demi), `millesime:2022`, `appellation:Dézaley AOC`. « Nouveau vin » (page Stock) demande
   le pays et la contenance et écrit ces étiquettes. Un vin sans contenance est compté à 75 cl et signalé ; un vin sans pays est classé
   « Pays non renseigné ». La page propose de les compléter vin par vin (écrit dans Shopify, autorisation `write_products`).
 - **Limite importante** : sans l’autorisation `read_all_orders`, Shopify ne donne que les 60 derniers jours de commandes. La page
