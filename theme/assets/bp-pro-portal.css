@@ -1,9 +1,9 @@
-/* BluePoint — Espace pro (sections/bp-pro-portal.liquid). */
+/* BluePoint — Espace pro (sections/bp-pro-portal.liquid) : le titre et quatre tuiles à gauche, un seul cadre à droite. */
 
 .bp-pro {
   display: grid;
   gap: clamp(2rem, 5vw, 4rem);
-  padding: calc(var(--hauteur-entete) + clamp(2rem, 6vw, 4rem)) var(--marge) 0;
+  padding: calc(var(--hauteur-entete) + clamp(2rem, 5vw, 3.5rem)) var(--marge) var(--section);
 }
 
 .bp-pro__intro {
@@ -12,22 +12,68 @@
   gap: clamp(1.25rem, 3vw, 2rem);
 }
 
+/* « Espace pro » : une petite pastille bleu ciel. */
+.bp-pro__label {
+  justify-self: start;
+  padding: 0.2rem 0.9rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  font-size: var(--t-mention);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 /* Un titre qui se lit d'un coup : phrase en casse normale, de taille raisonnable. */
 .bp-pro__statement {
-  max-width: 22ch;
+  max-width: 20ch;
   font-size: clamp(2rem, 1.2rem + 2.6vw, 3.5rem);
   font-weight: 800;
   line-height: 1.08;
+  letter-spacing: -0.02em;
   text-wrap: balance;
 }
 
+/* Les conditions : quatre tuiles arrondies, chacune dans sa nuance de bleu, avec une étoile. */
 .bp-pro__terms {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--gouttiere);
   list-style: none;
-  padding: 0;
-  font-size: var(--t-sous-titre);
-  line-height: 1.4;
+  font-size: 1.0625rem;
+  line-height: 1.35;
+}
+
+.bp-pro__term {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-glacier);
+  font-weight: 700;
+  text-wrap: pretty;
+}
+
+.bp-pro__term::before {
+  content: "";
+  width: 1.75rem;
+  height: 1.75rem;
+  background: var(--c-roi);
+  clip-path: var(--forme-etoile);
+}
+
+.bp-pro__term:nth-child(4n + 2) {
+  background: var(--c-ciel);
+}
+
+.bp-pro__term:nth-child(4n + 3) {
+  background: var(--c-azur);
+}
+
+.bp-pro__term:nth-child(4n + 4) {
+  background: var(--c-blanc);
 }
 
 /* Le compte et ses actions réunis dans un seul cadre : on voit où agir. */
@@ -38,8 +84,13 @@
   max-width: var(--mesure);
   padding: clamp(1.25rem, 3vw, 2rem);
   border: var(--trait) solid var(--encre);
-  border-radius: var(--rayon);
+  border-radius: calc(var(--rayon) * 1.35);
   background: var(--c-glacier);
+}
+
+.bp-pro__login {
+  display: grid;
+  gap: 1rem;
 }
 
 .bp-pro__text {
@@ -55,6 +106,7 @@
 
 .bp-pro__company-name {
   font-size: var(--t-sous-titre);
+  font-weight: 800;
   line-height: 1.25;
 }
 
@@ -75,11 +127,13 @@
   gap: 0.75rem 1.5rem;
 }
 
+/* Le titre du formulaire, séparé de la connexion par un filet. */
 .bp-pro__form-title {
-  margin-block-start: 1rem;
   padding-block-start: 1.5rem;
   border-block-start: var(--trait) solid var(--ligne);
-  font-size: var(--t-sous-titre);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .bp-pro__form {
@@ -87,62 +141,107 @@
   gap: 1rem;
 }
 
-.bp-pro__field {
-  display: grid;
-  gap: 0.5rem;
-}
-
-/* Champs encadrés : on voit où écrire, sans avoir à deviner une simple ligne. */
-/* Deux cases côte à côte (prénom/nom, NPA/localité), l'une sous l'autre sur téléphone. */
-.bp-pro__row {
+.bp-pro__pair {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
+.bp-pro__field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.bp-pro__field > .bp-ui {
+  font-weight: 700;
+}
+
+/* Champs en pilule, comme ceux de la lettre : on voit où écrire. */
 .bp-pro__field input,
-.bp-pro__field select,
 .bp-pro__field textarea {
   width: 100%;
   min-height: 3.25rem;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.25rem;
   border: var(--trait) solid var(--encre);
-  border-radius: calc(var(--rayon) * 0.6);
-  background: var(--fond);
+  border-radius: var(--rayon-pilule);
+  background: var(--c-blanc);
   color: var(--encre);
   font: inherit;
   font-size: 1rem; /* 16 px : iOS ne zoome pas au focus */
 }
 
 .bp-pro__field textarea {
+  min-height: 6.5rem;
+  border-radius: 1.5rem;
   resize: vertical;
 }
 
 .bp-pro__field input:focus-visible,
-.bp-pro__field select:focus-visible,
 .bp-pro__field textarea:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
+/* « Envoyer la demande » : un grand bouton sur toute la largeur du cadre. */
 .bp-pro__form .bp-button {
-  justify-self: start;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.5rem;
   margin-block-start: 0.5rem;
+  background: var(--c-roi);
+  color: var(--c-blanc);
+  --focus: var(--c-encre);
 }
 
 .bp-pro__success,
 .bp-pro__error {
-  padding-inline-start: 0.9rem;
-  border-inline-start: 2px solid var(--accent);
+  padding: 0.9rem 1.1rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-blanc);
+  font-weight: 600;
 }
 
-.bp-pro__error {
-  border-inline-start-color: var(--encre);
+.bp-pro__success {
+  background: var(--c-ciel);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .bp-pro__form .bp-button:hover {
+    background: var(--c-encre);
+  }
+}
+
+/* Téléphone : l'étoile à gauche du texte, pour que les quatre tuiles prennent moins de place. */
+@media (max-width: 47.999rem) {
+  .bp-pro__term {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .bp-pro__terms {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bp-pro__pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Ordinateur : le titre et les tuiles restent à l'écran pendant qu'on remplit le formulaire. */
 @media (min-width: 64rem) {
   .bp-pro {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    column-gap: var(--gouttiere);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+  .bp-pro__intro {
+    position: sticky;
+    top: calc(var(--hauteur-entete) + 1.5rem);
+  }
+  .bp-pro__panel {
+    max-width: none;
   }
 }
