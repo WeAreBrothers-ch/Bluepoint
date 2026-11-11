@@ -21,17 +21,53 @@ describe("nouveau vin", () => {
   });
 
   it("accepte un vin complet, sans producteur ni bouteille", () => {
-    const parsed = parseNewWine(form({ title: "  Chasselas 2025 ", vendor: "", type: "Blanc", price: "18", quantity: "" }));
-    expect(parsed).toEqual({ ok: true, input: { title: "Chasselas 2025", vendor: null, productType: "Blanc", priceCents: 1800, quantity: 0 } });
+    const parsed = parseNewWine(form({ title: "  Chasselas 2025 ", vendor: "", type: "Blanc", country: "Suisse", size: "75", price: "18", quantity: "" }));
+    expect(parsed).toEqual({
+      ok: true,
+      input: {
+        title: "Chasselas 2025",
+        vendor: null,
+        productType: "Blanc",
+        tags: ["blanc", "pays:Suisse", "contenance:75"],
+        values: { title: "Chasselas 2025", vendor: "", type: "Blanc", country: "Suisse", size: "75", vintage: "", appellation: "", region: "", price: "18", quantity: "0" },
+        priceCents: 1800,
+        quantity: 0,
+      },
+    });
     const other = parseNewWine(form({ title: "Coffret", vendor: "BluePoint", type: "Autre", price: "60", quantity: "4" }));
     expect(other.ok && other.input.productType).toBeNull();
+    expect(other.ok && other.input.tags).toEqual([]);
+  });
+
+  it("note l'année, la région et l'appellation dans les étiquettes", () => {
+    const parsed = parseNewWine(
+      form({ title: "Barolo", type: "Rouge", country: "Italie", size: "75", vintage: "2019", appellation: "Barolo DOCG", region: "Piémont", price: "60", quantity: "6" }),
+    );
+    expect(parsed.ok && parsed.input.tags).toEqual(["rouge", "pays:Italie", "region:Piémont", "contenance:75", "millesime:2019", "appellation:Barolo DOCG"]);
+  });
+
+  it("range le champagne avec les effervescents, toujours de France", () => {
+    const parsed = parseNewWine(form({ title: "Brut", type: "Champagne", country: "Italie", size: "150", price: "90", quantity: "6" }));
+    expect(parsed.ok && parsed.input.productType).toBe("Effervescent");
+    expect(parsed.ok && parsed.input.tags).toEqual(["effervescent", "pays:France", "contenance:150", "appellation:Champagne"]);
+    // Le pays n'est même pas demandé pour le champagne.
+    expect(parseNewWine(form({ title: "Brut", type: "Champagne", size: "75", price: "90", quantity: "0" })).ok).toBe(true);
+  });
+
+  it("demande le pays et la contenance, sauf pour « Autre »", () => {
+    const parsed = parseNewWine(form({ title: "Merlot", type: "Rouge", size: "", price: "20", quantity: "1", vintage: "22" }));
+    expect(parsed.ok).toBe(false);
+    expect(!parsed.ok && parsed.errors).toMatchObject({
+      country: "Choisissez le pays d’où vient le vin.",
+      vintage: "L’année s’écrit avec quatre chiffres, par exemple 2022.",
+    });
   });
 
   it("dit ce qui manque, case par case, et garde ce qui a été tapé", () => {
-    const parsed = parseNewWine(form({ title: "", vendor: "", type: "Rouge", price: "0", quantity: "-3" }));
+    const parsed = parseNewWine(form({ title: "", vendor: "", type: "Rouge", country: "France", size: "75", price: "0", quantity: "-3" }));
     expect(parsed).toEqual({
       ok: false,
-      values: { title: "", vendor: "", type: "Rouge", price: "0", quantity: "-3" },
+      values: { title: "", vendor: "", type: "Rouge", country: "France", size: "75", vintage: "", appellation: "", region: "", price: "0", quantity: "-3" },
       errors: {
         title: "Écrivez le nom du vin.",
         price: "Écrivez le prix d’une bouteille, par exemple 25.50.",

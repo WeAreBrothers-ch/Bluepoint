@@ -104,6 +104,7 @@ function productInput(input: NewWineInput, locationId: string, files: ReturnType
     ...(files === null ? {} : { files }),
     ...(input.vendor === null ? {} : { vendor: input.vendor }),
     ...(input.productType === null ? {} : { productType: input.productType }),
+    ...(input.tags.length === 0 ? {} : { tags: input.tags }),
     productOptions: [{ name: "Title", values: [{ name: "Default Title" }] }],
     variants: [
       {
@@ -122,13 +123,7 @@ export async function handleNewWine(admin: AdminApiContext, form: FormData): Pro
     return { ok: false, intent: "nouveau_vin", message: "Il manque quelque chose : regardez les cases en rouge.", values: parsed.values, errors: parsed.errors };
   }
   const { input } = parsed;
-  const values = {
-    title: input.title,
-    vendor: input.vendor ?? "",
-    type: input.productType ?? "Autre",
-    price: shopifyPrice(input.priceCents),
-    quantity: String(input.quantity),
-  };
+  const values = { ...input.values, price: shopifyPrice(input.priceCents), quantity: String(input.quantity) };
   const places = await findPlaces(admin, input.title);
   if (places === null || places.locationId === null) {
     return { ok: false, intent: "nouveau_vin", message: "Shopify ne répond pas pour le moment. Réessayez dans un instant : rien n’a été créé.", values, errors: {} };

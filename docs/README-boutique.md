@@ -37,7 +37,11 @@ Pour qu'une nouvelle bouteille arrive dans le bon rayon, dans l'admin Shopify (f
 | Étiquette du type | le type en minuscules | `rouge` |
 | Étiquette du pays | `pays:` puis le pays | `pays:Italie` |
 | Étiquette de la région | `region:` puis la région (facultatif) | `region:Piémont` |
+| Contenance de la bouteille (en cl) | `contenance:` puis le nombre de cl | `contenance:75` (`contenance:37.5` pour une demi) |
+| Année (facultatif) | `millesime:` puis l’année | `millesime:2022` |
+| Appellation (facultatif) | `appellation:` puis l’appellation (`appellation:Champagne` pour le champagne) | `appellation:Dézaley AOC` |
 
+Ces trois étiquettes servent à compter les litres vendus (page « Litres vendus » de l’app de gestion). « Nouveau vin » dans l’app les écrit tout seul.
 - Le rayon « Rouges » apparaît dès qu'une bouteille de type Rouge existe, et disparaît s'il n'y en a plus.
 - Adresses des rayons : `/collections/all/rouge`, `/collections/all/region-piemont`, `/collections/all/rouge+pays-italie`.
 - Limite actuelle : les rayons sont calculés sur les 50 premières bouteilles de la boutique.
