@@ -116,7 +116,7 @@ const RECIPES: readonly Recipe[] = [
       "Touchez « Voir les demandes ».",
       "Touchez « Accepter » pour lui donner les prix pros, ou « Refuser ».",
     ],
-    href: "/app/pros",
+    href: "/app/clients/pros",
     button: "Voir les demandes",
   },
   {
