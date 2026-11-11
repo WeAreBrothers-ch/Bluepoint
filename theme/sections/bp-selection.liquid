@@ -1,0 +1,65 @@
+{%- comment -%}
+  « La sélection » : rangée défilante de bouteilles (aimantation native).
+  Au doigt on fait glisser ; à la souris ou au clavier, PRÉC. / SUIV. avancent d’une carte.
+  Rien n’est affiché tant que la collection est vide.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign source = s.collection
+  if source == blank
+    assign source = collections.all
+  endif
+  assign heading_id = 'bp-selection-title-' | append: section.id
+-%}
+
+{%- if source.products_count > 0 -%}
+{{ 'bp-carousel.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bp-carousel.js' | asset_url }}" defer></script>
+
+<section id="selection" class="bp-section" aria-labelledby="{{ heading_id }}">
+  {% render 'bp-section-head',
+    id: heading_id,
+    title: s.title,
+    link_url: routes.all_products_collection_url,
+    link_label: s.link_label
+  %}
+  <div class="bp-carousel" role="region" aria-roledescription="carrousel" aria-label="Bouteilles de la sélection" data-bp-carousel>
+    <ul class="bp-carousel__track" data-bp-carousel-track>
+      {%- for product in source.products limit: s.limit -%}
+        <li class="bp-carousel__slide">
+          {% render 'bp-product-card',
+            product: product,
+            teinte: forloop.index,
+            sizes: '(min-width: 90rem) 19vw, (min-width: 64rem) 24vw, 70vw'
+          %}
+        </li>
+      {%- endfor -%}
+    </ul>
+    <div class="bp-ui bp-carousel__controls" data-bp-carousel-controls hidden>
+      <button type="button" class="bp-carousel__button" data-bp-carousel-prev aria-disabled="true">
+        <span aria-hidden="true">‹</span> Préc.
+      </button>
+      <span class="bp-carousel__ticks" aria-hidden="true" data-bp-carousel-ticks></span>
+      <span class="bp-sr-only" aria-live="polite" data-bp-carousel-status></span>
+      <button type="button" class="bp-carousel__button" data-bp-carousel-next aria-disabled="false">
+        Suiv. <span aria-hidden="true">›</span>
+      </button>
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "La sélection",
+  "tag": "div",
+  "class": "bp-selection-section",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titre", "default": "La sélection" },
+    { "type": "text", "id": "link_label", "label": "Lien vers la boutique", "default": "Toutes les bouteilles" },
+    { "type": "collection", "id": "collection", "label": "Collection", "info": "Sans choix, toutes les bouteilles." },
+    { "type": "range", "id": "limit", "label": "Nombre maximum de bouteilles", "min": 3, "max": 24, "step": 1, "default": 12 }
+  ],
+  "presets": [{ "name": "La sélection BluePoint" }]
+}
+{% endschema %}

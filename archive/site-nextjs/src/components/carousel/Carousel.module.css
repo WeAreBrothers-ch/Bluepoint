@@ -1,0 +1,101 @@
+.carousel {
+  --visibles: 1.35;
+  display: grid;
+  /* Colonne bornée à la largeur disponible : la rangée défile au lieu d'élargir la page. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+/* La rangée déborde jusqu'aux bords de l'écran, alignée sur la marge de la page. */
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - (var(--visibles) - 1) * var(--gouttiere)) / var(--visibles));
+  column-gap: var(--gouttiere);
+  margin-inline: calc(-1 * var(--marge));
+  padding-inline: var(--marge);
+  scroll-padding-inline: var(--marge);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  list-style: none;
+  min-width: 0;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.slide {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+}
+
+.button {
+  display: inline-flex;
+  gap: 0.4em;
+  min-height: 2.75rem;
+  align-items: center;
+  transition:
+    color 180ms var(--ease-out),
+    opacity 180ms var(--ease-out);
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ticks {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  height: 1.25rem;
+}
+
+.tick {
+  width: 1px;
+  height: 60%;
+  background: var(--encre-douce);
+  transition:
+    height 320ms var(--ease-out),
+    background-color 320ms var(--ease-out);
+}
+
+.tick[data-actif="true"] {
+  height: 100%;
+  width: 1.5px;
+  background: var(--encre);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button:not(:disabled):hover {
+    color: var(--accent);
+  }
+}
+
+@media (min-width: 40rem) {
+  .carousel {
+    --visibles: 2.4;
+  }
+}
+
+@media (min-width: 64rem) {
+  .carousel {
+    --visibles: 4;
+  }
+}
+
+@media (min-width: 90rem) {
+  .carousel {
+    --visibles: 5;
+  }
+}

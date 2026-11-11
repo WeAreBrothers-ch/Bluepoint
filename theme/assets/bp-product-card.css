@@ -1,0 +1,175 @@
+/* BluePoint — carte bouteille (snippets/bp-product-card.liquid). */
+
+/* ---------- Carte bouteille ---------- */
+
+/* La carte suit sa propre largeur (container query) : prix et bouton côte à côte quand il y a la place. */
+.bp-card {
+  /* Ancre le texte d'annonce (sr-only) dans la carte : sinon, dans le carrousel, il
+     échappe au défilement et élargit toute la page sur mobile. */
+  position: relative;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  gap: 0.9rem;
+  padding: clamp(0.75rem, 1.4vw, 1.25rem) clamp(0.75rem, 1.4vw, 1.25rem) clamp(1rem, 1.6vw, 1.5rem);
+  background: var(--fond);
+  /* Filets d'encre à droite et dessous, dans la carte (un filet extérieur serait recouvert par la carte voisine). */
+  border-right: var(--trait) solid var(--ligne);
+  border-bottom: var(--trait) solid var(--ligne);
+}
+
+/* La tuile en haut : toutes les bouteilles alignées d'une carte à l'autre, quel que soit le nom. */
+.bp-card__visual-link {
+  position: relative;
+  display: block;
+}
+
+.bp-card__visual {
+  aspect-ratio: 4 / 5;
+}
+
+/* Le type, en pastille posée dans le coin de la tuile. */
+.bp-card__type {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  padding: 0.15rem 0.6rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--fond);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.bp-card__info {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+}
+
+/* Nom : grotesque grasse en capitales, l'élément fort sous la bouteille. */
+.bp-card__name {
+  font-family: var(--police-titre);
+  font-size: var(--t-nom-carte);
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.bp-card__producer,
+.bp-card__region {
+  color: var(--encre-douce);
+  font-size: var(--t-detail-carte);
+  line-height: 1.3;
+}
+
+.bp-card__region {
+  font-weight: 600;
+}
+
+/* En bas : le prix, puis le bouton sur toute la largeur (côte à côte dans une carte large). */
+.bp-card__actions {
+  display: grid;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.bp-card__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.bp-card__price .bp-price__was {
+  margin-right: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.bp-card__quick-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  font-family: var(--police-titre);
+  font-size: var(--t-bouton-carte);
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+@container (min-width: 16rem) {
+  .bp-card__actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .bp-card__quick-add {
+    width: auto;
+  }
+  .bp-card__error {
+    grid-column: 1 / -1;
+  }
+}
+
+.bp-card__quick-add--epuise {
+  background: transparent;
+  color: var(--encre-douce);
+}
+
+.bp-card__quick-done,
+.bp-card__quick-add[data-ajoute="true"] .bp-card__quick-idle {
+  display: none;
+}
+
+.bp-card__quick-add[data-ajoute="true"] .bp-card__quick-done {
+  display: inline;
+}
+
+.bp-card__quick-add[data-ajoute="true"] {
+  background: var(--c-encre);
+  color: var(--c-blanc);
+}
+
+.bp-card__quick-add:active {
+  scale: 0.98;
+}
+
+/* Échec de l'ajout rapide : visible pour tout le monde, pas seulement les lecteurs d'écran. */
+.bp-card__error {
+  font-size: var(--t-mention);
+  color: var(--encre);
+}
+
+.bp-card__error[hidden] {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-card__info:hover .bp-card__name {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.2em;
+  }
+  .bp-card__quick-add:not([data-ajoute="true"]):hover {
+    background: var(--c-blanc);
+  }
+}

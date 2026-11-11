@@ -1,0 +1,67 @@
+/*
+ * Motifs graphiques partagés par tout le site. Volontairement globaux : ce sont
+ * les « mots » de l'identité, réutilisés tels quels dans chaque composant.
+ */
+
+/* Texte d'interface : capitales à chasse fixe, petite taille. */
+.ui {
+  font-size: var(--t-ui);
+  letter-spacing: var(--interlettre-ui);
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+/* Le petit carré plein devant chaque intitulé. Bleu quand l'élément est actif. */
+.carre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.carre::before {
+  content: "";
+  flex: none;
+  width: 0.62em;
+  height: 0.62em;
+  background: currentColor;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.carre[aria-current="page"]::before,
+.carre[data-actif="true"]::before {
+  background: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.carre:hover::before,
+  button.carre:hover::before {
+    background: var(--accent);
+  }
+}
+
+/* Intitulé entre crochets : [CONTACT]. */
+.crochets::before {
+  content: "[";
+}
+
+.crochets::after {
+  content: "]";
+}
+
+/* Entrée douce au défilement, seulement là où le navigateur sait le faire sans script. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .apparition {
+      animation: apparition linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}

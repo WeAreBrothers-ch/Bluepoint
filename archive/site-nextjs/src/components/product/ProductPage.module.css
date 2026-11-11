@@ -1,0 +1,43 @@
+.page {
+  padding-top: var(--hauteur-entete);
+}
+
+.main {
+  display: grid;
+  gap: 2rem;
+  padding: clamp(1rem, 3vw, 2.5rem) var(--marge) 0;
+}
+
+.visual {
+  aspect-ratio: 4 / 5;
+  max-height: 78svh;
+  animation: devoile 1000ms var(--ease-out) both;
+}
+
+@media (min-width: 64rem) {
+  .main {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
+    gap: clamp(2rem, 5vw, 6rem);
+  }
+  /* La bouteille reste à l'écran pendant qu'on parcourt la fiche. */
+  .visualColumn {
+    position: sticky;
+    top: calc(var(--hauteur-entete) + 1rem);
+  }
+  .visual {
+    aspect-ratio: auto;
+    height: calc(100svh - var(--hauteur-entete) - 3rem);
+    max-height: none;
+    min-height: 30rem;
+  }
+}
+
+@keyframes devoile {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

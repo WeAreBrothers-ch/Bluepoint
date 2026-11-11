@@ -1,0 +1,79 @@
+{%- comment -%}
+  Choix du format (1, 3, 6 ou 12 bouteilles) et ajout au panier.
+  Un format = une quantité de l’unique variante : prix = prix unitaire × nombre, sans remise inventée.
+  Seule exception : la remise pro des clients marqués « pro » (voir snippets/bp-price.liquid).
+  Un format plus grand que le stock disponible est désactivé (« Stock insuffisant »).
+  Sans JavaScript, le formulaire Shopify ajoute au panier normalement ;
+  assets/bp-product.js l’améliore (ajout sans quitter la page, confirmation, barre fixe).
+  Paramètres : product, form_id, free_shipping_from
+{%- endcomment -%}
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign pack_sizes = '1,3,6,12' | split: ','
+  assign shipping_from = free_shipping_from | default: 24
+  assign limited = false
+  if variant.inventory_management == 'shopify' and variant.inventory_policy == 'deny'
+    assign limited = true
+  endif
+  assign checked_done = false
+-%}
+{%- capture unit_price -%}{%- render 'bp-price', cents: variant.price, mode: 'plain' -%}{%- endcapture -%}
+
+<div class="bp-buy-box">
+  {%- if product.available -%}
+    {%- form 'product', product, id: form_id, class: 'bp-buy-box__form', data-bp-buy-form: '' -%}
+      <input type="hidden" name="id" value="{{ variant.id }}">
+
+      <fieldset class="bp-ui bp-pack">
+        <legend class="bp-pack__legend bp-phrase">Combien de bouteilles&#8239;?</legend>
+        <div class="bp-pack__options">
+          {%- for size_text in pack_sizes -%}
+            {%- liquid
+              assign size = size_text | plus: 0
+              assign pack_cents = variant.price | times: size
+              assign too_many = false
+              if limited and variant.inventory_quantity < size
+                assign too_many = true
+              endif
+            -%}
+            {%- capture pack_price -%}{%- render 'bp-price', cents: pack_cents, mode: 'plain' -%}{%- endcapture -%}
+            <label class="bp-pack__option"{% if too_many %} data-indisponible="true"{% endif %}>
+              <input
+                type="radio"
+                name="quantity"
+                value="{{ size }}"
+                class="bp-pack__input"
+                data-price="{{ pack_price | escape }}"
+                {% if too_many %}
+                  disabled
+                {% elsif checked_done == false %}
+                  checked
+                  {%- assign checked_done = true -%}
+                {% endif %}
+              >
+              <span class="bp-carre">{% if size == 1 %}1&nbsp;bouteille{% else %}Carton de&nbsp;{{ size }}{% endif %}</span>
+              <span class="bp-pack__price">{% if too_many %}Stock insuffisant{% else %}{% render 'bp-price', cents: pack_cents %}{% endif %}</span>
+            </label>
+          {%- endfor -%}
+        </div>
+      </fieldset>
+
+      <button type="submit" class="bp-ui bp-carre bp-buy-box__add" data-actif="false" data-bp-add-button data-bp-main-add>
+        <span class="bp-buy-box__add-label" data-bp-add-text data-idle="Ajouter au panier" data-done="Ajouté au panier">
+          Ajouter au panier
+        </span>
+        <span data-bp-pack-price>{{ unit_price }}</span>
+      </button>
+    {%- endform -%}
+
+    <p class="bp-buy-box__delivery">Livraison sous 48&nbsp;h. Offerte dès {{ shipping_from }}&nbsp;bouteilles.</p>
+    <p class="bp-buy-box__status" role="status" data-bp-buy-status data-cart-url="{{ routes.cart_url }}"></p>
+  {%- else -%}
+    {%- assign subject = 'Retour de ' | append: product.title | url_encode -%}
+    <p class="bp-ui bp-carre bp-buy-box__sold-out">Épuisé pour le moment</p>
+    <p class="bp-buy-box__delivery">
+      <a class="bp-buy-box__status-link" href="mailto:{{ shop.email }}?subject={{ subject }}">Écrivez-nous</a>
+      pour savoir quand elle revient.
+    </p>
+  {%- endif -%}
+</div>

@@ -1,0 +1,67 @@
+/* BluePoint — éléments posés au-dessus des pages : le bouton panier flottant. */
+
+/* ---------- Bouton panier flottant ---------- */
+
+/* Une pilule bleu ciel cernée d'encre ; le nombre de bouteilles dans un rond marine, le « point » de BluePoint. */
+.bp-floating-cart {
+  position: fixed;
+  right: var(--repere);
+  bottom: calc(var(--repere) + env(safe-area-inset-bottom));
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.25rem;
+  padding: 0.4rem 0.45rem 0.4rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  color: var(--encre);
+  font-weight: 700;
+  transition:
+    translate 320ms var(--ease-out),
+    background-color 200ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-floating-cart__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--rayon-pilule);
+  background: var(--c-encre);
+  color: var(--c-blanc);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Après un ajout seulement (attribut posé par bp-cart.js) : un bref fondu, sans déplacement. */
+.bp-floating-cart__count[data-maj] {
+  animation: bp-maj 200ms var(--ease-out);
+}
+
+.bp-floating-cart[data-actif="true"] .bp-floating-cart__count {
+  background: var(--c-roi);
+}
+
+.bp-floating-cart:active {
+  scale: 0.97;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-floating-cart:hover {
+    background: var(--c-blanc);
+  }
+}
+
+/* Sur une fiche, la barre d’achat fixe occupe le bas : le bouton remonte au-dessus. */
+body:has([data-barre-achat="visible"]) .bp-floating-cart {
+  translate: 0 calc(-1 * var(--hauteur-barre-achat));
+}
+
+@keyframes bp-maj {
+  from {
+    opacity: 0.3;
+  }
+}

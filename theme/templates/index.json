@@ -1,0 +1,74 @@
+{
+  "sections": {
+    "intro": {
+      "type": "bp-intro",
+      "settings": {
+        "enabled": true
+      }
+    },
+    "hero": {
+      "type": "bp-hero",
+      "settings": {
+        "featured_product": "barolo-passione-di-re"
+      }
+    },
+    "selection": {
+      "type": "bp-selection",
+      "settings": {}
+    },
+    "manifesto": {
+      "type": "bp-manifesto",
+      "settings": {}
+    },
+    "moments": {
+      "type": "bp-table-moments",
+      "blocks": {
+        "moment_1": {
+          "type": "moment",
+          "settings": {
+            "moment": "Apéritif",
+            "title": "Pour l’apéritif",
+            "dishes": "Fritto misto, olives, tomme vaudoise",
+            "product": "col-del-forno-prosecco"
+          }
+        },
+        "moment_2": {
+          "type": "moment",
+          "settings": {
+            "moment": "Plat",
+            "title": "Pour le plat",
+            "dishes": "Filets de perche, risotto, viande grillée",
+            "product": "dezaley-tour-marsens"
+          }
+        },
+        "moment_3": {
+          "type": "moment",
+          "settings": {
+            "moment": "Fromage",
+            "title": "Pour le fromage",
+            "dishes": "Castelmagno, gruyère d’alpage, pecorino",
+            "product": "barolo-passione-di-re"
+          }
+        }
+      },
+      "block_order": [
+        "moment_1",
+        "moment_2",
+        "moment_3"
+      ],
+      "settings": {}
+    },
+    "house": {
+      "type": "bp-house-story",
+      "settings": {}
+    }
+  },
+  "order": [
+    "intro",
+    "hero",
+    "selection",
+    "manifesto",
+    "moments",
+    "house"
+  ]
+}

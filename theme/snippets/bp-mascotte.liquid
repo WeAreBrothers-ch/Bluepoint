@@ -1,0 +1,19 @@
+{%- comment -%}
+  Paolo qui surgit au centre, en bas de l’écran, après un ajout au panier, avec une bulle « Magnifique ! ».
+  Décoratif (aria-hidden) : l’ajout est déjà annoncé aux lecteurs d’écran par le bouton.
+  Piloté par assets/bp-mascotte.js (événement « bp:cart-added » émis par bp-cart.js).
+{%- endcomment -%}
+<div class="bp-mascotte" data-bp-mascotte data-visible="false" aria-hidden="true">
+  <div class="bp-mascotte__body">
+    <p class="bp-mascotte__bubble">
+      <span class="bp-mascotte__text">Magnifique&nbsp;!</span>
+      <svg class="bp-mascotte__tail" viewBox="0 0 40 36" focusable="false">
+        <path d="M0 0H40L6 34Z" fill="currentColor"/>
+        <path d="M0 0 6 34 40 0" fill="none" stroke="var(--c-encre)" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </p>
+    <div class="bp-mascotte__character">
+      {% render 'bp-intro-figure', uid: '-mascotte' %}
+    </div>
+  </div>
+</div>

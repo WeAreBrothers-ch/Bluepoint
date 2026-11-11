@@ -1,0 +1,68 @@
+{%- comment -%}
+  Une ligne du panier : vignette, nom, producteur, prix unitaire, « Moins » / « Plus », « Retirer » et total de la ligne.
+  Chaque bouton est un petit formulaire POST vers /cart/change (fonctionne sans script) ;
+  assets/bp-cart-page.js l’intercepte pour une mise à jour instantanée.
+  La ligne est repérée par sa clé (item.key), jamais par son numéro : les numéros se décalent
+  quand une ligne disparaît.
+  Paramètres : item (ligne du panier)
+{%- endcomment -%}
+{%- liquid
+  assign less = item.quantity | minus: 1
+  assign more = item.quantity | plus: 1
+  assign name = item.product.title | default: item.title
+  assign unit_price = item.final_price | money | replace: "'", '’'
+  assign line_price = item.final_line_price | money | replace: "'", '’'
+-%}
+<li class="bp-cart__line">
+  <a href="{{ item.url }}" class="bp-cart__thumb" tabindex="-1" aria-hidden="true">
+    {%- if item.product != blank -%}
+      {%- render 'bp-packshot', product: item.product, sizes: '6rem' -%}
+    {%- elsif item.image != blank -%}
+      {{ item.image | image_url: width: 240 | image_tag: class: 'bp-cart__thumb-image', alt: '' }}
+    {%- endif -%}
+  </a>
+  <div class="bp-cart__line-text">
+    <a href="{{ item.url }}" class="bp-ui bp-cart__line-name">{{ name | escape }}</a>
+    {%- if item.vendor != blank -%}
+      <span class="bp-ui bp-phrase bp-cart__muted">{{ item.vendor | escape }}</span>
+    {%- endif -%}
+    {%- if item.quantity > 1 -%}
+      <span class="bp-ui bp-phrase bp-cart__muted">{{ unit_price }} la bouteille</span>
+    {%- endif -%}
+    {%- for allocation in item.line_level_discount_allocations -%}
+      <span class="bp-ui bp-carre bp-pro-badge">
+        {{- allocation.discount_application.title | escape }} : −{{ allocation.amount | money | replace: "'", '’' -}}
+      </span>
+    {%- endfor -%}
+    <div class="bp-cart__controls">
+      <div class="bp-cart__stepper" role="group" aria-label="Quantité de {{ name | escape }}">
+        <form action="{{ routes.cart_change_url }}" method="post" class="bp-cart__step-form" data-bp-cart-change data-name="{{ name | escape }}">
+          <input type="hidden" name="id" value="{{ item.key }}">
+          <button
+            type="submit"
+            name="quantity"
+            value="{{ less }}"
+            class="bp-ui bp-cart__step"
+            data-bp-cart-step
+          >
+            Moins<span class="bp-sr-only"> : retirer une bouteille de {{ name | escape }}</span>
+          </button>
+        </form>
+        <span class="bp-ui" aria-live="polite">{{ item.quantity }}</span>
+        <form action="{{ routes.cart_change_url }}" method="post" class="bp-cart__step-form" data-bp-cart-change data-name="{{ name | escape }}">
+          <input type="hidden" name="id" value="{{ item.key }}">
+          <button type="submit" name="quantity" value="{{ more }}" class="bp-ui bp-cart__step" data-bp-cart-step>
+            Plus<span class="bp-sr-only"> : ajouter une bouteille de {{ name | escape }}</span>
+          </button>
+        </form>
+      </div>
+      <form action="{{ routes.cart_change_url }}" method="post" class="bp-cart__step-form" data-bp-cart-change data-name="{{ name | escape }}">
+        <input type="hidden" name="id" value="{{ item.key }}">
+        <button type="submit" name="quantity" value="0" class="bp-ui bp-cart__remove" data-bp-cart-step>
+          Retirer<span class="bp-sr-only"> {{ name | escape }}</span>
+        </button>
+      </form>
+    </div>
+  </div>
+  <span class="bp-ui">{{ line_price }}</span>
+</li>

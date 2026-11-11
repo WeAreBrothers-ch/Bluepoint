@@ -1,0 +1,48 @@
+.section {
+  padding: var(--section) var(--marge) 0;
+}
+
+.layout {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 5rem);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gouttiere);
+}
+
+
+.text {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  max-width: var(--mesure);
+  color: var(--encre-douce);
+}
+
+.title {
+  color: var(--encre);
+  font-size: var(--t-titre);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
+  margin-top: 0.75rem;
+  color: var(--encre);
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: end;
+  }
+}

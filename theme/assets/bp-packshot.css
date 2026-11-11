@@ -1,0 +1,65 @@
+/* BluePoint — tuile bouteille (snippets/bp-packshot.liquid), utilisée par les cartes, la fiche et le menu. */
+
+/* La tuile arrondie et cernée d'encre, dans l'une des quatre nuances de bleu (data-teinte, choisie par bp-packshot). */
+.bp-packshot {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--tuile, var(--c-glacier));
+}
+
+.bp-packshot[data-teinte="1"] {
+  --tuile: var(--c-glacier);
+}
+.bp-packshot[data-teinte="2"] {
+  --tuile: var(--c-ciel);
+}
+.bp-packshot[data-teinte="3"] {
+  --tuile: var(--c-azur);
+}
+.bp-packshot[data-teinte="4"] {
+  --tuile: var(--c-bleu);
+}
+
+/* Toutes les bouteilles détourées sur la même ligne de base, à 82 % de la hauteur de la tuile. */
+.bp-packshot__bottle {
+  position: absolute;
+  inset: 9% 12% 9%;
+  width: 76%;
+  height: 82%;
+  object-fit: contain;
+  object-position: 50% 100%;
+}
+
+/* Photo de mise en scène : elle remplit toute la tuile, recadrée au centre. */
+.bp-packshot__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Photo principale sans détourage : posée en entier dans la tuile, avec une marge. */
+.bp-packshot__image {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  object-fit: contain;
+}
+
+/* Produit sans image : son nom, centré dans la tuile. */
+.bp-packshot__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: var(--encre);
+  text-align: center;
+  overflow-wrap: anywhere;
+}

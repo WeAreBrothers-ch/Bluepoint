@@ -1,0 +1,93 @@
+{%- comment -%}
+  Les rayons de la boutique, en haut de la grille : une rangée de pastilles par type, une par origine.
+  Les deux se combinent : « Rouges » puis « Piémont » mène à /collections/all/rouge+region-piemont.
+  Rien à régler : tout vient des produits (type de produit, étiquettes « pays:… » et « region:… »).
+  Paramètres : current_type (handle du type choisi ou vide), current_place (handle de l'origine choisie ou vide)
+  Limite : les 50 premières bouteilles de la boutique servent à construire les rayons.
+{%- endcomment -%}
+{{ 'bp-shop-filters.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign shop_url = routes.all_products_collection_url
+  assign products = collections.all.products
+  capture types
+    render 'bp-catalog-data', mode: 'types', products: products
+  endcapture
+  assign types = types | split: '|'
+
+  # Les origines proposées : celles du type choisi, sinon toutes.
+  assign place_products = products
+  for type in types
+    assign type_handle = type | handle
+    if type_handle == current_type
+      assign place_products = products | where: 'type', type
+    endif
+  endfor
+  capture countries
+    render 'bp-catalog-data', mode: 'countries', products: place_products
+  endcapture
+  assign countries = countries | split: '|'
+
+  assign type_suffix = ''
+  if current_type != blank
+    assign type_suffix = '/' | append: current_type
+  endif
+-%}
+
+<nav class="bp-ui bp-filters" aria-label="Rayons de la boutique">
+  <div class="bp-filters__row" role="group" aria-labelledby="bp-filtres-type">
+    <span class="bp-filters__label" id="bp-filtres-type">Type</span>
+    <ul class="bp-filters__list">
+      <li>
+        <a class="bp-filters__pill" href="{% if current_place != blank %}{{ shop_url }}/{{ current_place }}{% else %}{{ shop_url }}{% endif %}" {% if current_type == blank %}aria-current="true"{% endif %}>Tous</a>
+      </li>
+      {%- for type in types -%}
+        {%- liquid
+          assign type_handle = type | handle
+          assign type_url = shop_url | append: '/' | append: type_handle
+          if current_place != blank
+            assign type_url = type_url | append: '+' | append: current_place
+          endif
+        -%}
+        <li>
+          <a class="bp-filters__pill" href="{{ type_url }}" {% if current_type == type_handle %}aria-current="true"{% endif %}>
+            {%- render 'bp-type-label', type: type -%}
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+
+  {%- if countries.size > 0 -%}
+    <div class="bp-filters__row" role="group" aria-labelledby="bp-filtres-origine">
+      <span class="bp-filters__label" id="bp-filtres-origine">Origine</span>
+      <ul class="bp-filters__list">
+        <li>
+          <a class="bp-filters__pill" href="{{ shop_url }}{{ type_suffix }}" {% if current_place == blank %}aria-current="true"{% endif %}>Toutes</a>
+        </li>
+        {%- for country in countries -%}
+          {%- liquid
+            capture country_regions
+              render 'bp-catalog-data', mode: 'regions', products: place_products, within: country
+            endcapture
+            assign places = country | append: '|' | append: country_regions | split: '|'
+          -%}
+          {%- for place in places -%}
+            {%- liquid
+              assign place_handle = place | handle
+              assign place_url = shop_url | append: '/'
+              if current_type != blank
+                assign place_url = place_url | append: current_type | append: '+'
+              endif
+              assign place_url = place_url | append: place_handle
+            -%}
+            <li>
+              <a class="bp-filters__pill{% if forloop.first %} bp-filters__pill--country{% endif %}" href="{{ place_url }}" {% if current_place == place_handle %}aria-current="true"{% endif %}>
+                {{- place | remove_first: 'pays:' | remove_first: 'region:' | strip | escape -}}
+              </a>
+            </li>
+          {%- endfor -%}
+        {%- endfor -%}
+      </ul>
+    </div>
+  {%- endif -%}
+</nav>

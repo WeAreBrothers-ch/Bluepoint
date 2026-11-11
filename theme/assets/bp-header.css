@@ -1,0 +1,103 @@
+/* BluePoint — en-tête fixe et menu plein écran (sections/bp-header.liquid). */
+
+/* ---------- En-tête ---------- */
+
+/* Sa hauteur totale vaut exactement --hauteur-entete : les pages s'y calent. */
+.bp-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  background: var(--fond);
+  color: var(--encre);
+}
+
+/* Sans bandeau d'annonce, la barre seule : les pages remontent d'autant. */
+body.bluepoint:not(:has(.bp-header__annonce)) {
+  --hauteur-annonce: 0rem;
+}
+
+.bp-header__annonce {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hauteur-annonce);
+  padding-inline: var(--marge);
+  overflow: hidden;
+  border-bottom: var(--trait) solid var(--ligne);
+  background: var(--pilule);
+  font-size: var(--t-mention);
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bp-header__bar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  height: calc(var(--hauteur-entete) - var(--hauteur-annonce));
+  border-bottom: var(--trait) solid var(--ligne);
+}
+
+.bp-header__brand {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding-inline: var(--marge);
+}
+
+.bp-header__logo {
+  width: clamp(6.5rem, 10vw, 8.5rem);
+  transition: opacity 180ms var(--ease-out);
+}
+
+.bp-header__link {
+  min-height: 2.75rem;
+  white-space: nowrap;
+}
+
+/* Le nombre de bouteilles de la boutique, dans une petite pastille. */
+.bp-header__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  margin-left: 0.45em;
+  padding-inline: 0.35rem;
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  font-size: var(--t-mention);
+  font-variant-numeric: tabular-nums;
+}
+
+.bp-header__external {
+  display: inline-block;
+  margin-left: 0.15em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-header__brand:hover .bp-header__logo {
+    opacity: 0.7;
+  }
+  .bp-header__link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
+  }
+}
+
+/* ---------- Bouton « Menu » (téléphone et tablette) ---------- */
+
+/* « Menu » : une case séparée du logo par un filet, comme dans la barre. */
+.bp-menu__toggle {
+  min-width: 5.5rem;
+  padding-inline: 1.25rem;
+  border-left: var(--trait) solid var(--ligne);
+  font-size: 1.0625rem;
+}
+
+@media (min-width: 75rem) {
+  button.bp-menu__toggle {
+    display: none;
+  }
+}

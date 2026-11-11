@@ -1,0 +1,40 @@
+.figure {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--rayon);
+  background: var(--fond-tuile);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: scale 800ms var(--ease-out);
+}
+
+/* Cadre au format imposé : la photo le remplit, recadrée au centre. */
+.image[data-cadre="impose"] {
+  height: 100%;
+  object-fit: cover;
+}
+
+.caption {
+  display: flex;
+  gap: 1rem;
+  color: var(--encre-douce);
+  transition: color 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .figure:hover .image {
+    scale: 1.035;
+  }
+  .figure:hover .caption {
+    color: var(--encre);
+  }
+}

@@ -1,0 +1,76 @@
+{%- comment -%}
+  Fiche bouteille BluePoint : une seule mise en page pour tous les produits.
+  Chaque produit ajouté dans l’admin s'affiche ici automatiquement.
+  Contenus éditoriaux : métachamps bluepoint.* du produit (voir snippets/bp-product-info.liquid).
+{%- endcomment -%}
+{{ 'bp-product.css' | asset_url | stylesheet_tag }}
+{{ 'bp-product-extras.css' | asset_url | stylesheet_tag }}
+{{ 'bp-buy-box.css' | asset_url | stylesheet_tag }}
+{{ 'bp-buy-bar.css' | asset_url | stylesheet_tag }}
+{{ 'bp-gallery.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bp-product.js' | asset_url }}" defer></script>
+<script src="{{ 'bp-gallery.js' | asset_url }}" defer></script>
+
+{%- assign form_id = 'bp-product-form-' | append: section.id -%}
+
+<div class="bp-product" data-bp-product>
+  <div class="bp-product__main">
+    <div class="bp-product__visual-column">
+      {%- render 'bp-product-gallery',
+        product: product,
+        sizes: '(min-width: 64rem) 55vw, 100vw',
+        class: 'bp-product__visual',
+        section_id: section.id
+      -%}
+    </div>
+    {%- render 'bp-product-info',
+      product: product,
+      form_id: form_id,
+      free_shipping_from: section.settings.free_shipping_from,
+      delivery_text: section.settings.delivery_text
+    -%}
+  </div>
+
+  {%- render 'bp-pairings', product: product, section_id: section.id -%}
+  {%- render 'bp-more-bottles', product: product, section_id: section.id -%}
+
+  {%- comment -%}
+    Barre d'achat fixe, hors de la colonne animée (une animation parente la piégerait).
+    Elle soumet le même formulaire que le bouton principal (attribut form).
+  {%- endcomment -%}
+  {%- if product.available -%}
+    <div class="bp-buy-bar" data-bp-buy-bar data-visible="false" data-barre-achat="masquee" aria-hidden="true" inert>
+      <p class="bp-ui bp-buy-bar__name">
+        <span class="bp-buy-bar__title" data-bp-bar-title>{{ product.title | escape }}</span>
+        <span class="bp-buy-bar__price" data-bp-pack-price>{% render 'bp-price', cents: product.selected_or_first_available_variant.price, mode: 'plain' %}</span>
+      </p>
+      <button type="submit" form="{{ form_id }}" class="bp-ui bp-carre bp-buy-bar__add" data-actif="false" data-bp-add-button>
+        <span data-bp-add-text data-idle="Ajouter" data-done="Ajouté">Ajouter</span>
+      </button>
+    </div>
+  {%- endif -%}
+</div>
+
+<script type="application/ld+json">{{ product | structured_data }}</script>
+
+{% schema %}
+{
+  "name": "Fiche bouteille",
+  "tag": "section",
+  "class": "bp-product-section",
+  "settings": [
+    {
+      "type": "number",
+      "id": "free_shipping_from",
+      "label": "Livraison offerte dès (bouteilles)",
+      "default": 24
+    },
+    {
+      "type": "textarea",
+      "id": "delivery_text",
+      "label": "Texte du bloc « Livraison »",
+      "default": "Livraison sous 48 h en Suisse, offerte dès 24 bouteilles."
+    }
+  ]
+}
+{% endschema %}

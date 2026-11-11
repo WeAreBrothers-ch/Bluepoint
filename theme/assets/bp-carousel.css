@@ -1,0 +1,112 @@
+/* BluePoint — carrousel (sections/bp-selection.liquid, assets/bp-carousel.js). */
+
+.bp-carousel {
+  --visibles: 1.35;
+  display: grid;
+  /* Colonne bornée à la largeur disponible : la rangée défile au lieu d'élargir la page. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+/* La rangée déborde jusqu'aux bords de l'écran, alignée sur la marge de la page. */
+.bp-carousel__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc(100% / var(--visibles));
+  column-gap: 0; /* les filets des cartes se touchent */
+  margin-inline: calc(-1 * var(--marge));
+  border-top: var(--trait) solid var(--ligne);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  list-style: none;
+  min-width: 0;
+}
+
+.bp-carousel__track::-webkit-scrollbar {
+  display: none;
+}
+
+.bp-carousel__slide {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+.bp-carousel__controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+}
+
+.bp-carousel__controls[hidden] {
+  display: none;
+}
+
+/* « Préc. » et « Suiv. » en pilules cernées. */
+.bp-carousel__button {
+  display: inline-flex;
+  gap: 0.4em;
+  min-height: 3rem;
+  align-items: center;
+  padding: 0.5rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  transition:
+    background-color 180ms var(--ease-out),
+    opacity 180ms var(--ease-out);
+}
+
+.bp-carousel__button[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bp-carousel__ticks {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  height: 1.25rem;
+}
+
+/* Les traits grandissent par « scale » (pas par la hauteur) : aucun recalcul de mise en page. */
+.bp-carousel__tick {
+  width: var(--trait);
+  height: 100%;
+  background: var(--encre-douce);
+  transform-origin: 50% 100%;
+  scale: 1 0.6;
+  transition:
+    scale 200ms var(--ease-out),
+    background-color 200ms var(--ease-out);
+}
+
+.bp-carousel__tick[data-actif="true"] {
+  scale: 1 1;
+  background: var(--encre);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-carousel__button:not([aria-disabled="true"]):hover {
+    background: var(--pilule);
+  }
+}
+
+@media (min-width: 40rem) {
+  .bp-carousel {
+    --visibles: 2.4;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-carousel {
+    --visibles: 4;
+  }
+}
+
+@media (min-width: 90rem) {
+  .bp-carousel {
+    --visibles: 5;
+  }
+}

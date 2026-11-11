@@ -1,0 +1,48 @@
+.section {
+  padding: var(--section) var(--marge) 0;
+}
+
+.intro {
+  max-width: var(--mesure);
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  color: var(--encre-douce);
+}
+
+.list {
+  list-style: none;
+  display: grid;
+  gap: 2.5rem var(--gouttiere);
+}
+
+.item {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+.moment {
+  display: flex;
+  gap: 1.25rem;
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ligne);
+  color: var(--encre-douce);
+}
+
+.dish {
+  font-size: var(--t-sous-titre);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.why {
+  max-width: 28rem;
+  color: var(--encre-douce);
+}
+
+@media (min-width: 48rem) {
+  .list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,96 @@
+.card {
+  /* Ancre le texte d'annonce (sr-only) dans la carte : sinon, dans le carrousel, il
+     échappe au défilement et élargit toute la page sur mobile. */
+  position: relative;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.visualLink {
+  display: block;
+}
+
+.visual {
+  aspect-ratio: 2 / 3;
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  align-items: start;
+}
+
+.info {
+  display: grid;
+  padding-top: 0.15rem;
+}
+
+.name {
+  transition: color 180ms var(--ease-out);
+}
+
+.producer {
+  color: var(--encre-douce);
+}
+
+/* Bouton « + » : une cible de 44 px, le signe reste petit et collé à gauche. */
+.quickAdd {
+  display: grid;
+  place-items: start;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-top: -0.25rem;
+  padding: 0.35rem 0;
+}
+
+.quickAdd svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  overflow: visible;
+  transition: rotate 300ms var(--ease-out);
+}
+
+.plus,
+.check {
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 260ms var(--ease-out);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.check {
+  opacity: 0;
+  scale: 0.4;
+  color: var(--accent);
+}
+
+.quickAdd[data-ajoute="true"] .plus {
+  opacity: 0;
+  scale: 0.4;
+}
+
+.quickAdd[data-ajoute="true"] .check {
+  opacity: 1;
+  scale: 1;
+}
+
+.quickAdd:active svg {
+  scale: 0.85;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .visual img {
+    scale: 1.04;
+  }
+  .card:hover .name {
+    color: var(--accent);
+  }
+  .quickAdd:hover svg {
+    rotate: 90deg;
+    color: var(--accent);
+  }
+  .quickAdd[data-ajoute="true"]:hover svg {
+    rotate: 0deg;
+  }
+}

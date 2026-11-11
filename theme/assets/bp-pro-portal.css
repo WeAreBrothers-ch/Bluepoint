@@ -1,0 +1,139 @@
+/* BluePoint — Espace pro (sections/bp-pro-portal.liquid). */
+
+.bp-pro {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  padding: calc(var(--hauteur-entete) + clamp(2rem, 6vw, 4rem)) var(--marge) 0;
+}
+
+.bp-pro__intro {
+  display: grid;
+  align-content: start;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+/* Un titre qui se lit d'un coup : phrase en casse normale, de taille raisonnable. */
+.bp-pro__statement {
+  max-width: 22ch;
+  font-size: clamp(2rem, 1.2rem + 2.6vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.bp-pro__terms {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  font-size: var(--t-sous-titre);
+  line-height: 1.4;
+}
+
+/* Le compte et ses actions réunis dans un seul cadre : on voit où agir. */
+.bp-pro__panel {
+  display: grid;
+  align-content: start;
+  gap: 1.5rem;
+  max-width: var(--mesure);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-glacier);
+}
+
+.bp-pro__text {
+  font-size: var(--t-corps);
+  color: var(--encre);
+  text-wrap: pretty;
+}
+
+.bp-pro__company {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bp-pro__company-name {
+  font-size: var(--t-sous-titre);
+  line-height: 1.25;
+}
+
+.bp-pro__location {
+  color: var(--encre-douce);
+  font-size: var(--t-ui);
+}
+
+.bp-pro__small {
+  color: var(--encre-douce);
+  font-size: var(--t-ui);
+}
+
+.bp-pro__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.bp-pro__form-title {
+  margin-block-start: 1rem;
+  padding-block-start: 1.5rem;
+  border-block-start: var(--trait) solid var(--ligne);
+  font-size: var(--t-sous-titre);
+}
+
+.bp-pro__form {
+  display: grid;
+  gap: 1rem;
+}
+
+.bp-pro__field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Champs encadrés : on voit où écrire, sans avoir à deviner une simple ligne. */
+.bp-pro__field input,
+.bp-pro__field textarea {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: calc(var(--rayon) * 0.6);
+  background: var(--fond);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1rem; /* 16 px : iOS ne zoome pas au focus */
+}
+
+.bp-pro__field textarea {
+  resize: vertical;
+}
+
+.bp-pro__field input:focus-visible,
+.bp-pro__field textarea:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bp-pro__form .bp-button {
+  justify-self: start;
+  margin-block-start: 0.5rem;
+}
+
+.bp-pro__success,
+.bp-pro__error {
+  padding-inline-start: 0.9rem;
+  border-inline-start: 2px solid var(--accent);
+}
+
+.bp-pro__error {
+  border-inline-start-color: var(--encre);
+}
+
+@media (min-width: 64rem) {
+  .bp-pro {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    column-gap: var(--gouttiere);
+  }
+}

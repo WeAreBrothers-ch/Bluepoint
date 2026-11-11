@@ -5,3 +5,6 @@ node_modules
 prisma
 public
 .shopify
+theme
+references
+archive

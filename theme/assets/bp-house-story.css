@@ -1,0 +1,59 @@
+/* BluePoint — « La maison » (sections/bp-house-story.liquid). */
+
+.bp-house {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 5rem);
+}
+
+.bp-house__gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gouttiere);
+}
+
+/* Paolo : le texte dans une grande tuile bleu ciel arrondie, cernée d'encre. */
+.bp-house__text {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-ciel);
+  color: var(--encre);
+}
+
+.bp-house__body {
+  max-width: var(--mesure);
+}
+
+.bp-house__body {
+  display: grid;
+  gap: 1.25rem;
+  hyphens: auto;
+}
+
+.bp-house__title {
+  --affiche-remplissage: var(--c-blanc);
+  font-size: var(--t-titre);
+}
+
+.bp-house__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* Sur la tuile bleu ciel, le bouton plein passe en bleu pâle. */
+.bp-house__actions .bp-button[data-variant="plein"] {
+  background: var(--c-blanc);
+}
+
+@media (min-width: 64rem) {
+  .bp-house {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+}

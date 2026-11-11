@@ -1,0 +1,53 @@
+/* BluePoint — « À propos » (sections/bp-manifesto.liquid). */
+
+.bp-manifesto {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* « À propos » en pilule. */
+.bp-manifesto__label {
+  justify-self: start;
+  align-self: start;
+  padding: 0.35rem 1rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  font-size: var(--t-ui);
+}
+
+.bp-manifesto__body {
+  display: grid;
+  justify-items: start;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+/* La promesse en lettres d'affiche, remplies du bleu du logo. */
+.bp-manifesto__statement {
+  max-width: 22ch;
+  font-size: var(--t-titre);
+  line-height: 1.02;
+}
+
+/* Bandeau photo : la cave en grand, les étiquettes en carré à côté. */
+.bp-manifesto__photos {
+  display: grid;
+  gap: var(--gouttiere);
+  margin-top: clamp(1rem, 3vw, 2rem);
+}
+
+@media (min-width: 48rem) {
+  .bp-manifesto__photos {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-manifesto {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  }
+  .bp-manifesto__photos {
+    grid-column: 1 / -1;
+  }
+}

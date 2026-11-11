@@ -1,0 +1,83 @@
+.header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 0.75rem var(--marge);
+  background: var(--fond);
+  border-bottom: 1px solid var(--ligne);
+  color: var(--encre);
+}
+
+/*
+ * Sur grand écran, l'en-tête n'a plus de fond : il passe en mode « différence »,
+ * noir sur le blanc et inversé sur les photos, comme sur la référence.
+ */
+@media (min-width: 56rem) {
+  .header {
+    align-items: flex-start;
+    padding: calc(var(--repere) + 0.75rem) var(--marge) 0;
+    background: none;
+    border-bottom: 0;
+    color: var(--c-blanc);
+    mix-blend-mode: difference;
+    pointer-events: none;
+    /* En mode différence, une couleur s'inverse sur le blanc : on peint donc le complément
+       du bleu du logo (255 − R, 255 − G, 255 − B) pour qu'il apparaisse en vrai bleu. */
+    --accent: #e58f48;
+    --focus: #e58f48;
+  }
+
+  .header > * {
+    pointer-events: auto;
+  }
+}
+
+.brand {
+  display: block;
+  flex: none;
+}
+
+.logo {
+  width: clamp(6.5rem, 11vw, 9.5rem);
+  transition: opacity 180ms var(--ease-out);
+}
+
+.nav {
+  display: none;
+}
+
+.column {
+  display: grid;
+  gap: 0.2rem;
+  list-style: none;
+}
+
+.link {
+  white-space: nowrap;
+}
+
+.count {
+  margin-left: 0.6em;
+}
+
+.external {
+  margin-left: 0.15em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .brand:hover .logo {
+    opacity: 0.7;
+  }
+}
+
+@media (min-width: 56rem) {
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    column-gap: clamp(3rem, 8vw, 10rem);
+  }
+}

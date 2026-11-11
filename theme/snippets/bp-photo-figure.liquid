@@ -1,0 +1,35 @@
+{%- comment -%}
+  Photo encadrée et légendée (■ À LA VIGNE).
+  L’image choisie dans l’éditeur l’emporte ; sinon, la photo par défaut du thème (fallback).
+
+  Paramètres :
+  - image : image_picker (peut être vide)
+  - fallback : nom du fichier dans assets/ (ex. 'bp-photo-cave.webp')
+  - alt, caption, sizes
+  - width, height : dimensions du fichier par défaut (évite les sauts de mise en page)
+  - ratio : format imposé au cadre (ex. '4 / 5') ; sans lui, la photo garde ses proportions
+{%- endcomment -%}
+{%- liquid
+  assign fit = 'libre'
+  if ratio != blank
+    assign fit = 'impose'
+  endif
+  assign alt_text = alt
+  if image != blank and image.alt != blank
+    assign alt_text = image.alt
+  endif
+-%}
+<figure class="bp-figure">
+  <div class="bp-figure__frame"{% if ratio != blank %} style="--bp-ratio: {{ ratio }}"{% endif %} data-cadre="{{ fit }}">
+    {%- if image != blank -%}
+      {{ image | image_url: width: 1800 | image_tag: class: 'bp-figure__image', widths: '400, 700, 1000, 1400, 1800', sizes: sizes, loading: 'lazy', alt: alt_text }}
+    {%- elsif fallback != blank -%}
+      <img class="bp-figure__image" src="{{ fallback | asset_url }}" alt="{{ alt_text | escape }}" width="{{ width | default: 1200 }}" height="{{ height | default: 1500 }}" loading="lazy" decoding="async">
+    {%- endif -%}
+  </div>
+  {%- if caption != blank -%}
+    <figcaption class="bp-ui bp-figure__caption">
+      <span class="bp-carre">{{ caption | escape }}</span>
+    </figcaption>
+  {%- endif -%}
+</figure>

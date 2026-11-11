@@ -1,0 +1,106 @@
+/* BluePoint — fiche bouteille : accords mets et « À découvrir aussi ». */
+
+/* ---------- Accords ---------- */
+
+.bp-pairings,
+.bp-more {
+  padding: var(--section) var(--marge) 0;
+}
+
+.bp-pairings__intro {
+  max-width: var(--mesure);
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  color: var(--encre-douce);
+}
+
+/* Trois tuiles arrondies, chacune dans sa nuance de bleu : le moment en pilule, le plat en lettres d'affiche. */
+.bp-pairings__list {
+  list-style: none;
+  display: grid;
+  gap: var(--gouttiere);
+}
+
+.bp-pairings__item {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 1rem;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-glacier);
+}
+
+.bp-pairings__item:nth-child(3n + 2) {
+  background: var(--c-ciel);
+}
+
+.bp-pairings__item:nth-child(3n) {
+  background: var(--c-azur);
+}
+
+.bp-pairings__moment {
+  padding: 0.2rem 0.9rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--c-blanc);
+}
+
+.bp-pairings__dish {
+  --affiche-remplissage: var(--c-blanc);
+  font-size: clamp(1.875rem, 1.3rem + 2vw, 3rem);
+  overflow-wrap: anywhere;
+}
+
+.bp-pairings__why {
+  max-width: 28rem;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--encre);
+  hyphens: auto;
+}
+
+@media (min-width: 48rem) {
+  .bp-pairings__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------- À découvrir aussi : rangée défilante, aimantée ---------- */
+
+.bp-more__track {
+  --visibles: 1.35;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc(100% / var(--visibles));
+  /* Pleine largeur et sans espace : les filets des cartes dessinent la grille d'un bord à l'autre. */
+  margin-inline: calc(-1 * var(--marge));
+  border-top: var(--trait) solid var(--ligne);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  list-style: none;
+  min-width: 0;
+}
+
+.bp-more__track::-webkit-scrollbar {
+  display: none;
+}
+
+.bp-more__slide {
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+@media (min-width: 40rem) {
+  .bp-more__track {
+    --visibles: 2.4;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-more__track {
+    --visibles: 4;
+  }
+}

@@ -1,0 +1,44 @@
+/* BluePoint — photo légendée et espacement commun des sections de contenu. */
+
+/* ---------- Photo légendée (snippets/bp-photo-figure.liquid), sans effet au survol : elle n’est pas cliquable ---------- */
+
+.bp-figure {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.bp-figure__frame {
+  position: relative;
+  overflow: hidden;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--fond-tuile);
+}
+
+.bp-figure__frame[data-cadre="impose"] {
+  aspect-ratio: var(--bp-ratio);
+}
+
+.bp-figure__image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Cadre au format imposé : la photo le remplit, recadrée au centre. */
+.bp-figure__frame[data-cadre="impose"] .bp-figure__image {
+  height: 100%;
+  object-fit: cover;
+}
+
+.bp-figure__caption {
+  display: flex;
+  gap: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Espacement commun des sections de contenu. */
+.bp-section {
+  padding: var(--section) var(--marge) 0;
+}

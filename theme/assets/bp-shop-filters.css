@@ -1,0 +1,65 @@
+/* BluePoint — rayons de la boutique : une rangée de pastilles par type, une par origine (snippets/bp-shop-filters.liquid). */
+
+.bp-filters {
+  display: grid;
+  gap: 1rem;
+  margin: clamp(1.75rem, 4vw, 2.75rem) 0 clamp(3rem, 7vw, 5rem);
+}
+
+.bp-filters__row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.bp-filters__label {
+  font-weight: 800;
+}
+
+.bp-filters__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.bp-filters__pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding-inline: 1.1rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--fond);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+/* Le pays ouvre sa rangée, en gras ; ses régions suivent. */
+.bp-filters__pill--country {
+  font-weight: 800;
+}
+
+/* Le rayon choisi : pastille pleine, marine. */
+.bp-filters__pill[aria-current] {
+  background: var(--encre);
+  color: var(--c-blanc);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-filters__pill:not([aria-current]):hover {
+    background: var(--pilule);
+  }
+}
+
+@media (min-width: 48rem) {
+  .bp-filters__row {
+    grid-template-columns: 6rem minmax(0, 1fr);
+    align-items: start;
+  }
+  .bp-filters__label {
+    padding-top: 0.7rem;
+  }
+}

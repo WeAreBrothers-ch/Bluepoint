@@ -1,0 +1,79 @@
+.info {
+  display: grid;
+  gap: 1.25rem;
+  animation: entree 800ms var(--ease-out) 150ms both;
+}
+
+.trail {
+  display: flex;
+  gap: 0.75rem;
+  color: var(--encre-douce);
+}
+
+.trailLink {
+  color: var(--encre);
+  transition: color 180ms var(--ease-out);
+}
+
+.heading {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.name {
+  font-size: var(--t-titre);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.producer {
+  color: var(--encre-douce);
+}
+
+.price {
+  font-size: var(--t-sous-titre);
+}
+
+.description {
+  max-width: var(--mesure);
+  color: var(--encre-douce);
+  margin-bottom: 0.5rem;
+}
+
+.facts {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--ligne);
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid var(--ligne);
+}
+
+.fact dt {
+  color: var(--encre-douce);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .trailLink:hover {
+    color: var(--accent);
+  }
+}
+
+@media (min-width: 64rem) {
+  .info {
+    padding-top: clamp(1rem, 4vw, 4rem);
+  }
+}
+
+@keyframes entree {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}

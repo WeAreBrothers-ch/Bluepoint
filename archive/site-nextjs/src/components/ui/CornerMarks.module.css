@@ -1,0 +1,70 @@
+.marks {
+  display: none;
+  position: fixed;
+  inset: var(--repere);
+  z-index: 35;
+  pointer-events: none;
+  color: var(--c-blanc);
+  mix-blend-mode: difference;
+}
+
+.mark {
+  position: absolute;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 0 solid currentColor;
+}
+
+.mark[data-position="haut-gauche"] {
+  top: 0;
+  left: 0;
+  border-width: 1.5px 0 0 1.5px;
+}
+
+.mark[data-position="haut-droite"] {
+  top: 0;
+  right: 0;
+  border-width: 1.5px 1.5px 0 0;
+}
+
+.mark[data-position="bas-gauche"] {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1.5px 1.5px;
+}
+
+.mark[data-position="bas-droite"] {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+/* Repères du milieu : un trait vertical coupé par un petit tiret vers l'intérieur. */
+.mark[data-position^="milieu"] {
+  display: none;
+  top: 50%;
+  height: 1.4rem;
+  translate: 0 -50%;
+}
+
+.mark[data-position="milieu-gauche"] {
+  left: 0;
+  border-left-width: 1.5px;
+  background: linear-gradient(currentColor, currentColor) left center / 0.55rem 1.5px no-repeat;
+}
+
+.mark[data-position="milieu-droite"] {
+  right: 0;
+  border-right-width: 1.5px;
+  background: linear-gradient(currentColor, currentColor) right center / 0.55rem 1.5px no-repeat;
+}
+
+/* Sur téléphone, l'écran est trop étroit : les repères gêneraient le contenu. */
+@media (min-width: 56rem) {
+  .marks {
+    display: block;
+  }
+  .mark[data-position^="milieu"] {
+    display: block;
+  }
+}

@@ -1,0 +1,257 @@
+/* BluePoint — fiche bouteille : mise en page, informations, blocs dépliables. */
+
+.bp-product {
+  padding-top: var(--hauteur-entete);
+}
+
+.bp-product__main {
+  display: grid;
+  gap: 2rem;
+  padding: clamp(1rem, 3vw, 2.5rem) var(--marge) 0;
+}
+
+.bp-product__visual {
+  aspect-ratio: 4 / 5;
+  max-height: 78svh;
+}
+
+@media (min-width: 64rem) {
+  .bp-product__main {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 5fr);
+    align-items: start;
+    gap: clamp(2rem, 5vw, 6rem);
+  }
+  /* La bouteille reste à l'écran pendant qu'on parcourt la fiche. */
+  .bp-product__visual-column {
+    position: sticky;
+    top: calc(var(--hauteur-entete) + 1rem);
+  }
+  /* Cadre 4/5 qui tient tout entier dans l'écran : sa largeur suit la hauteur disponible. */
+  .bp-product__visual {
+    aspect-ratio: 4 / 5;
+    width: min(100%, calc((100svh - var(--hauteur-entete) - 5rem) * 0.8));
+    margin-inline: auto;
+    height: auto;
+    max-height: none;
+  }
+}
+
+
+/* ---------- Informations ---------- */
+
+.bp-product-info {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.bp-product-info__trail {
+  display: flex;
+  gap: 0.75rem;
+  color: var(--encre-douce);
+}
+
+.bp-product-info__trail-link {
+  color: var(--encre);
+  transition: color 180ms var(--ease-out);
+}
+
+.bp-product-info__heading {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Le nom : le grand élément de la page, en lettres d'affiche. */
+.bp-product-info__name {
+  font-size: var(--t-nom-fiche);
+  overflow-wrap: anywhere;
+}
+
+.bp-product-info__producer {
+  font-size: var(--t-corps);
+  line-height: 1.3;
+}
+
+.bp-product-info__pricing {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.bp-product-info__price {
+  font-size: var(--t-prix-fiche);
+  font-weight: 700;
+}
+
+.bp-product-info__description {
+  display: grid;
+  gap: 0.75rem;
+  max-width: var(--mesure);
+  color: var(--encre);
+  margin-bottom: 0.5rem;
+  hyphens: auto;
+}
+
+.bp-product-info__facts {
+  margin-top: 1.5rem;
+  border-top: var(--trait) solid var(--ligne);
+}
+
+.bp-product-info__fact {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding-block: 0.7rem;
+  border-bottom: var(--trait) solid var(--ligne);
+}
+
+.bp-product-info__fact dt {
+  color: var(--encre-douce);
+  font-weight: 400;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-product-info__trail-link:hover {
+    color: var(--accent);
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-product-info {
+    padding-top: clamp(1rem, 4vw, 4rem);
+  }
+}
+
+/*
+ * Téléphone : nom et prix d'abord, puis la photo pleine largeur entre deux filets, puis l'achat.
+ * La colonne d'information est « dissoute » (display: contents) pour que ses blocs
+ * se glissent de part et d'autre de la photo, sans dupliquer le titre.
+ */
+@media (max-width: 63.999rem) {
+  .bp-product {
+    padding-top: var(--hauteur-entete);
+  }
+
+  .bp-product__main {
+    gap: 0;
+    padding: 0;
+  }
+
+  .bp-product-info {
+    display: contents;
+  }
+
+  .bp-product-info > * {
+    order: 4;
+    padding-inline: var(--marge);
+    margin-top: 1.5rem;
+  }
+
+  .bp-product-info > .bp-product-info__trail {
+    order: 0;
+    margin-top: 1rem;
+  }
+
+  .bp-product-info > .bp-product-info__heading {
+    order: 1;
+    margin-top: 1rem;
+  }
+
+  .bp-product-info > .bp-product-info__pricing {
+    order: 2;
+    margin-top: 0.75rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .bp-product__visual-column {
+    order: 3;
+    padding-inline: var(--marge);
+  }
+
+  .bp-product__visual {
+    aspect-ratio: 1 / 1;
+    max-height: none;
+  }
+}
+
+/* ---------- Blocs dépliables ---------- */
+
+/* Chaque bloc s'ouvre depuis une pilule bleu ciel cernée d'encre, pleine largeur. */
+.bp-accordions {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.bp-accordions__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0.5rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  cursor: pointer;
+  list-style: none;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.bp-accordions__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Mot + signe : l'état se lit sans deviner le symbole. Le mot affiché suit l'état du bloc. */
+.bp-accordions__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: var(--t-mention);
+}
+
+.bp-accordions__word[data-etat="ouvert"],
+.bp-accordions__item[open] .bp-accordions__word[data-etat="ferme"] {
+  display: none;
+}
+
+.bp-accordions__item[open] .bp-accordions__word[data-etat="ouvert"] {
+  display: inline;
+}
+
+/* Signe plus / moins dessiné en CSS : la barre verticale pivote à l'ouverture. */
+.bp-accordions__icon {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+}
+
+.bp-accordions__icon::before,
+.bp-accordions__icon::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
+  margin-top: -1px;
+  background: currentColor;
+  transition: rotate 260ms var(--ease-out);
+}
+
+.bp-accordions__icon::after {
+  rotate: 90deg;
+}
+
+.bp-accordions__item[open] .bp-accordions__icon::after {
+  rotate: 0deg;
+}
+
+.bp-accordions__body {
+  max-width: var(--mesure);
+  padding: 1rem 1.25rem 0.75rem;
+  color: var(--encre);
+  hyphens: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-accordions__summary:hover {
+    background: var(--c-blanc);
+  }
+}

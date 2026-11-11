@@ -1,0 +1,126 @@
+.footer {
+  padding: var(--section) var(--marge) calc(var(--repere) + 4.5rem);
+}
+
+/* Sur une fiche, la barre d'achat fixe ne doit pas masquer les mentions légales. */
+:global(body:has([data-barre-achat="visible"])) .footer {
+  padding-bottom: calc(var(--repere) + 4.5rem + var(--hauteur-barre-achat));
+}
+
+/* Le tableau : un cadre fin, coupé en deux cellules. */
+.box {
+  position: relative;
+  display: grid;
+  border: 1px solid var(--ligne);
+}
+
+/* Petit repère en croix là où le séparateur vertical touche le haut du cadre. */
+.joint {
+  display: none;
+}
+
+.brandCell {
+  display: grid;
+  align-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 3rem);
+  border-bottom: 1px solid var(--ligne);
+}
+
+.brand {
+  display: block;
+  width: fit-content;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  width: clamp(7rem, 12vw, 10rem);
+  color: var(--accent);
+}
+
+.address {
+  font-style: normal;
+  color: var(--encre-douce);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem 1.5rem;
+  padding: clamp(1.5rem, 3vw, 3rem);
+}
+
+.column {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.heading {
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--encre-douce);
+}
+
+.column[data-large="true"] {
+  grid-column: 1 / -1;
+}
+
+.links {
+  display: grid;
+  gap: 0.15rem;
+  list-style: none;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 2rem;
+  overflow-wrap: anywhere;
+  transition: color 180ms var(--ease-out);
+}
+
+.icon {
+  flex: none;
+}
+
+.legal {
+  margin-top: 1.25rem;
+  max-width: 60rem;
+  color: var(--encre-douce);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    color: var(--accent);
+  }
+}
+
+@media (min-width: 64rem) {
+  .box {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr);
+  }
+  .brandCell {
+    border-bottom: 0;
+    border-right: 1px solid var(--ligne);
+  }
+  .columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1.5fr) minmax(0, 0.8fr);
+  }
+  .column[data-large="true"] {
+    grid-column: auto;
+  }
+  .joint {
+    display: block;
+    position: absolute;
+    top: -0.45rem;
+    left: calc(100% / 3.6);
+    width: 0.9rem;
+    height: 0.9rem;
+    translate: -50% 0;
+    background:
+      linear-gradient(var(--encre), var(--encre)) center / 1px 100% no-repeat,
+      linear-gradient(var(--encre), var(--encre)) center / 100% 1px no-repeat;
+  }
+}

@@ -1,0 +1,89 @@
+{%- comment -%}
+  « La maison » : quatre photos d’ambiance légendées, puis Paolo.
+{%- endcomment -%}
+{{ 'bp-house-story.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign s = section.settings
+  assign heading_id = 'bp-maison-title-' | append: section.id
+  assign fallbacks = 'bp-photo-vigne.webp,bp-photo-sante.webp,bp-photo-aperitif.webp,bp-photo-blanc-rose.webp' | split: ','
+  assign widths = '736,1120,960,789' | split: ','
+  assign heights = '920,1400,1199,1200' | split: ','
+  assign phone_href = s.phone | remove: ' ' | prepend: 'tel:'
+-%}
+
+<section id="maison" class="bp-section" aria-labelledby="{{ heading_id }}">
+  {% render 'bp-section-head', id: heading_id, title: s.title %}
+  <div class="bp-house">
+    <div class="bp-house__gallery">
+      {%- for i in (1..4) -%}
+        {%- liquid
+          assign image_key = 'photo_' | append: i
+          assign alt_key = 'photo_' | append: i | append: '_alt'
+          assign caption_key = 'photo_' | append: i | append: '_caption'
+          assign fallback = fallbacks[forloop.index0]
+          assign fallback_width = widths[forloop.index0]
+          assign fallback_height = heights[forloop.index0]
+        -%}
+        {% render 'bp-photo-figure',
+          image: s[image_key],
+          fallback: fallback,
+          width: fallback_width,
+          height: fallback_height,
+          alt: s[alt_key],
+          caption: s[caption_key],
+          ratio: '4 / 5',
+          sizes: '(min-width: 64rem) 26vw, 46vw'
+        %}
+      {%- endfor -%}
+    </div>
+
+    <div class="bp-house__text">
+      <p class="bp-affiche bp-house__title">{{ s.heading | escape }}</p>
+      <div class="bp-house__body">{{ s.body }}</div>
+      <div class="bp-house__actions">
+        {%- if s.email != blank -%}
+          <a href="mailto:{{ s.email | escape }}" class="bp-ui bp-carre bp-button" data-variant="plein">{{ s.email_label | escape }}</a>
+        {%- endif -%}
+        {%- if s.phone != blank -%}
+          <a href="{{ phone_href | escape }}" class="bp-ui bp-carre bp-button" data-variant="trait">{{ s.phone | escape }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "La maison",
+  "tag": "div",
+  "class": "bp-house-section",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titre de section", "default": "La maison" },
+    { "type": "text", "id": "heading", "label": "Accroche", "default": "Paolo, à Lutry, depuis 2003" },
+    {
+      "type": "richtext",
+      "id": "body",
+      "label": "Texte",
+      "default": "<p>Paolo Pioletti importe des vins italiens depuis 2003. Après des années à chercher des vignerons attachés au travail artisanal, il s’est ouvert aux vins suisses. Depuis 2020, il s’y consacre entièrement.</p><p>De petits domaines, souvent en exclusivité pour la Suisse romande, et une relation directe avec chaque vigneron.</p>"
+    },
+    { "type": "text", "id": "email_label", "label": "Bouton e-mail", "default": "Écrire à Paolo" },
+    { "type": "text", "id": "email", "label": "E-mail", "default": "info@bluepointdistribution.com" },
+    { "type": "text", "id": "phone", "label": "Téléphone", "default": "+41 79 606 33 22" },
+    { "type": "header", "content": "Photos", "info": "Sans photo choisie, les photos provisoires s’affichent." },
+    { "type": "image_picker", "id": "photo_1", "label": "Photo 1" },
+    { "type": "text", "id": "photo_1_alt", "label": "Description 1", "default": "Un vigneron en t-shirt rouge taille la vigne au milieu des feuilles" },
+    { "type": "text", "id": "photo_1_caption", "label": "Légende 1", "default": "À la vigne" },
+    { "type": "image_picker", "id": "photo_2", "label": "Photo 2" },
+    { "type": "text", "id": "photo_2_alt", "label": "Description 2", "default": "Une main lève un verre de vin blanc au-dessus des vignes, sous un ciel clair" },
+    { "type": "text", "id": "photo_2_caption", "label": "Légende 2", "default": "Santé" },
+    { "type": "image_picker", "id": "photo_3", "label": "Photo 3" },
+    { "type": "text", "id": "photo_3_alt", "label": "Description 3", "default": "Un verre de vin blanc et sa bouteille sur un plateau argenté, devant un ciel bleu" },
+    { "type": "text", "id": "photo_3_caption", "label": "Légende 3", "default": "L’apéritif" },
+    { "type": "image_picker", "id": "photo_4", "label": "Photo 4" },
+    { "type": "text", "id": "photo_4_alt", "label": "Description 4", "default": "Deux mains tiennent une bouteille de blanc et une bouteille de rosé devant un pull vert" },
+    { "type": "text", "id": "photo_4_caption", "label": "Légende 4", "default": "Blanc ou rosé" }
+  ],
+  "presets": [{ "name": "La maison BluePoint" }]
+}
+{% endschema %}

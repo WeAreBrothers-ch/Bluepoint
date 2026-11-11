@@ -1,0 +1,96 @@
+/* BluePoint — page « La boutique » (grille de bouteilles). */
+
+.bp-shop {
+  padding: calc(var(--hauteur-entete) + clamp(2.5rem, 6vw, 4.5rem)) var(--marge) 0;
+}
+
+.bp-shop__title {
+  font-size: var(--t-geant);
+}
+
+/* Le nombre de bouteilles, dans une pastille ronde à la fin du titre. */
+.bp-shop__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.9em;
+  height: 1.9em;
+  margin-left: 0.35em;
+  padding-inline: 0.4em;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  color: var(--encre);
+  font-family: var(--police);
+  font-size: 0.24em;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: top;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.bp-shop__intro {
+  max-width: 36rem;
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+  line-height: 1.4;
+}
+
+.bp-shop__grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* La grille sort des marges de la page : les filets vont d'un bord à l'autre. */
+  margin-inline: calc(var(--marge) * -1);
+  border-top: var(--trait) solid var(--ligne);
+  overflow: clip;
+}
+
+.bp-shop__empty {
+  max-width: var(--mesure);
+  color: var(--encre-douce);
+}
+
+.bp-shop__empty-link {
+  color: var(--encre);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.bp-shop__pages {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2rem);
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  color: var(--encre-douce);
+}
+
+.bp-shop__page-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0.5rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  color: var(--encre);
+  transition: background-color 180ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-shop__page-link:hover {
+    background: var(--pilule);
+  }
+}
+
+@media (min-width: 40rem) {
+  .bp-shop__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-shop__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,90 @@
+/* BluePoint — « À chaque moment de la table » (sections/bp-table-moments.liquid).
+   De grandes tuiles bleues : la bouteille détourée, et le nom du moment en lettres d'affiche par-dessus. */
+
+.bp-moments {
+  list-style: none;
+  display: grid;
+  gap: var(--gouttiere);
+}
+
+.bp-moments__link {
+  display: grid;
+  gap: 1rem;
+  height: 100%;
+  align-content: start;
+}
+
+.bp-moments__tile {
+  position: relative;
+  display: block;
+}
+
+.bp-moments__visual {
+  aspect-ratio: 4 / 5;
+}
+
+/* Le mot du moment, centré sur la tuile, par-dessus la bouteille ; rempli de bleu pâle. */
+.bp-moments__word {
+  --affiche-remplissage: var(--c-blanc);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  font-size: clamp(2.5rem, 1.2rem + 5vw, 5rem);
+  text-align: center;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.bp-moments__head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bp-moments__title {
+  font-size: var(--t-nom-carte);
+  font-weight: 800;
+  line-height: 1.1;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.bp-moments__dishes {
+  color: var(--encre-douce);
+  font-size: var(--t-detail-carte);
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+/* La bouteille conseillée et son prix, en pilule. */
+.bp-moments__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+  padding: 0.5rem 1.1rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  font-weight: 700;
+  line-height: 1.1;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.bp-moments__price {
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-moments__link:hover .bp-moments__bar {
+    background: var(--c-blanc);
+  }
+}
+
+@media (min-width: 48rem) {
+  .bp-moments {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

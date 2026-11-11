@@ -1,0 +1,73 @@
+{%- comment -%}
+  Intro de l’accueil : Paolo fait tourner son vin, le sent, s’émeut, puis le rideau bleu
+  se lève sur le site. Tout le minutage vit dans assets/bp-intro.css et bp-intro-motion.css ;
+  l’animation démarre d’elle-même dès que la vérification d’âge est passée (masquée avant).
+  Jouée une fois par onglet, et à chaque rechargement (script dans layout/theme.liquid).
+  Pendant qu’elle se joue, bp-intro.js rend le reste de la page inerte et place le focus sur « Passer ».
+{%- endcomment -%}
+{%- if section.settings.enabled -%}
+  {{ 'bp-intro.css' | asset_url | stylesheet_tag }}
+  {{ 'bp-intro-motion.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'bp-intro.js' | asset_url }}" defer></script>
+
+  {%- comment -%}
+    La réplique, dans une bulle de BD : deux lignes, écrites lettre à lettre.
+    Espace insécable normale avant « ! » : la police n’a pas d’espace fine, le navigateur
+    en prendrait une plus large ailleurs et le « ! » sortirait de la bulle.
+  {%- endcomment -%}
+  {%- assign lines = 'Oh là là,|quelle émotion !' | split: '|' -%}
+
+  <div class="bp-intro" data-intro data-bp-intro role="region" aria-label="Introduction">
+    <div class="bp-ui bp-intro__top">
+      {% render 'bp-logo', class: 'bp-intro__logo' %}
+      <button type="button" class="bp-ui bp-carre bp-intro__skip" data-bp-intro-skip>Passer</button>
+    </div>
+
+    <div class="bp-intro__bubble">
+      <p class="bp-intro__quote">
+        {%- for line in lines -%}
+          <span class="bp-intro__quote-line" style="--lettres: {{ line.size }}; --rang: {{ forloop.index0 }}">
+            {{- line -}}
+          </span>
+        {%- endfor -%}
+      </p>
+      <svg class="bp-intro__tail" viewBox="0 0 40 36" aria-hidden="true" focusable="false">
+        <path d="M0 0H40L6 34Z" fill="currentColor"/>
+        <path d="M0 0 6 34 40 0" fill="none" stroke="var(--c-encre)" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      </svg>
+    </div>
+
+    <div class="bp-intro__stage">
+      <div
+        class="bp-intro__character"
+        role="img"
+        aria-label="Paolo, dessiné au trait, fait tourner son verre de vin rouge puis le hume les yeux fermés"
+      >
+        {% render 'bp-intro-figure' %}
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Intro animée",
+  "tag": "div",
+  "class": "bp-intro-section",
+  "limit": 1,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Afficher l’intro animée",
+      "info": "Jouée une fois par visite, après la vérification d’âge. Rechargez la page, ou ajoutez ?intro à l’adresse, pour la revoir.",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Intro animée"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,82 @@
+{%- comment -%}
+  Bloc « Livraison » du récapitulatif panier : mode (livraison, Poste, retrait) et date souhaitée.
+  Les champs s’appellent attributes[...] et vivent dans le formulaire du panier : sans script,
+  le bouton « Commander » les envoie avec la commande. assets/bp-cart-delivery.js les enregistre
+  dès qu’ils changent (/cart/update.js), recalcule la date minimale (heure de Zurich, jours ouvrables)
+  et masque la date pour un envoi par la Poste.
+  Paramètres : lead_days (délai minimum en jours ouvrables), section_id
+{%- endcomment -%}
+{%- liquid
+  assign lead = lead_days | default: 2 | plus: 0
+  assign mode = cart.attributes['Mode de livraison'] | default: 'livraison'
+  assign date_value = cart.attributes['Date de livraison souhaitée']
+  if mode == 'poste'
+    assign date_value = ''
+  endif
+
+  # Date minimale côté serveur (secours sans script) : aujourd’hui + N jours ouvrables, week-end sauté.
+  assign ts = 'now' | date: '%s' | plus: 0
+  assign added = 0
+  for step in (1..30)
+    if added >= lead
+      break
+    endif
+    assign ts = ts | plus: 86400
+    assign weekday = ts | date: '%u' | plus: 0
+    if weekday < 6
+      assign added = added | plus: 1
+    endif
+  endfor
+  assign min_iso = ts | date: '%Y-%m-%d'
+  assign min_label = ts | date: '%d.%m.%Y'
+
+  assign uid = 'bp-livraison-' | append: section_id
+-%}
+<fieldset class="bp-livraison" data-bp-livraison data-lead-days="{{ lead }}">
+  <legend class="bp-ui bp-livraison__legend">Livraison</legend>
+
+  <fieldset class="bp-livraison__group">
+    <legend class="bp-ui bp-cart__muted bp-livraison__sublegend">Mode</legend>
+    {%- assign options = 'livraison|poste|retrait' | split: '|' -%}
+    {%- for option in options -%}
+      <label class="bp-livraison__option">
+        <input
+          type="radio"
+          class="bp-livraison__radio"
+          name="attributes[Mode de livraison]"
+          value="{{ option }}"
+          {% if mode == option %}checked{% endif %}
+          data-bp-livraison-mode
+        >
+        <span class="bp-ui bp-carre bp-livraison__label">
+          {%- case option -%}
+            {%- when 'livraison' -%}
+              Livraison <span class="bp-cart__muted">(camion BluePoint)</span>
+            {%- when 'poste' -%}
+              Envoi par la Poste
+            {%- when 'retrait' -%}
+              Retrait à Lutry
+          {%- endcase -%}
+        </span>
+      </label>
+    {%- endfor -%}
+  </fieldset>
+
+  <div class="bp-livraison__date" data-bp-livraison-date-field>
+    <label class="bp-ui bp-cart__muted" for="{{ uid }}-date">Date souhaitée</label>
+    <input
+      type="date"
+      id="{{ uid }}-date"
+      class="bp-livraison__input"
+      name="attributes[Date de livraison souhaitée]"
+      value="{{ date_value | escape }}"
+      min="{{ min_iso }}"
+      aria-describedby="{{ uid }}-hint {{ uid }}-error"
+      data-bp-livraison-date
+    >
+    <p class="bp-livraison__hint" id="{{ uid }}-hint" data-bp-livraison-hint>
+      Au plus tôt le {{ min_label }}
+    </p>
+    <p class="bp-livraison__error" id="{{ uid }}-error" data-bp-livraison-error hidden></p>
+  </div>
+</fieldset>

@@ -1,0 +1,237 @@
+/* BluePoint — haut de l'accueil (sections/bp-hero.liquid). */
+
+.bp-hero {
+  padding-top: calc(var(--hauteur-entete) + var(--marge));
+}
+
+/* Le grand aplat bleu vif, arrondi et cerné d'encre, posé dans la marge de la page. */
+.bp-hero__tile {
+  display: grid;
+  gap: clamp(1.75rem, 4vw, 3rem);
+  margin-inline: var(--marge);
+  padding: clamp(1.5rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 4rem);
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-roi);
+  color: var(--c-blanc);
+  --focus: var(--c-blanc);
+}
+
+.bp-hero__text {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.bp-hero__kicker {
+  font-size: var(--t-sous-titre);
+}
+
+/* Titre d'affiche rempli de bleu ciel sur le bleu vif. */
+.bp-hero__title {
+  --affiche-remplissage: var(--c-ciel);
+  font-size: var(--t-geant);
+}
+
+/* Marge haute compensée : les accents des capitales (É, À) ne sont pas coupés ; marge basse pour l'ombre. */
+.bp-hero__line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.2em 0.14em;
+  margin-block: -0.2em -0.08em;
+  padding-inline: 0.06em 0.12em;
+  margin-inline: -0.06em -0.12em;
+}
+
+.bp-hero__line-inner {
+  display: block;
+}
+
+/* Les lignes montent comme un rideau, une seule fois : juste après l'intro. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-intro-vue]) .bp-hero__line-inner {
+    animation: bp-monte 600ms var(--ease-out) both;
+    animation-delay: calc(var(--delai-intro, 0s) + var(--bp-delai, 0ms));
+  }
+}
+
+.bp-hero__lead {
+  max-width: 32rem;
+  font-size: var(--t-sous-titre);
+  line-height: 1.45;
+}
+
+.bp-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Sur le bleu vif, le bouton secondaire est cerné de bleu pâle. */
+.bp-hero__actions .bp-button[data-variant="trait"] {
+  border-color: var(--c-blanc);
+  color: var(--c-blanc);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-hero__actions .bp-button[data-variant="trait"]:hover {
+    background: var(--c-blanc);
+    color: var(--encre);
+  }
+}
+
+.bp-hero__photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border: var(--trait) solid var(--encre);
+  border-radius: calc(var(--rayon) * 0.75);
+  background: var(--fond-tuile);
+}
+
+.bp-hero__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: 50% 30%;
+}
+
+/* Légende en petite pilule : lisible quelle que soit la photo. */
+.bp-hero__caption {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.3rem 0.85rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--fond);
+  color: var(--encre);
+}
+
+/* La pastille ronde, un peu penchée, qui déborde du coin haut droit de la photo. */
+.bp-hero__sticker {
+  position: absolute;
+  top: clamp(-1.5rem, -2vw, -1rem);
+  right: clamp(-1.5rem, -2vw, -0.75rem);
+  display: grid;
+  place-items: center;
+  width: clamp(6.5rem, 11vw, 9rem);
+  aspect-ratio: 1;
+  padding: 0.9rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--c-ciel);
+  color: var(--c-encre);
+  font-family: var(--police-affiche);
+  font-size: clamp(1rem, 0.75rem + 0.8vw, 1.45rem);
+  line-height: 0.95;
+  text-align: center;
+  text-transform: uppercase;
+  rotate: 10deg;
+}
+
+/* Petite étiquette posée sur la photo, comme un « prochain rendez-vous ». */
+.bp-hero__featured {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  display: grid;
+  max-width: 22rem;
+  gap: 0.15rem;
+  padding: 0.9rem 1.1rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: calc(var(--rayon) * 0.6);
+  background: var(--fond);
+  color: var(--encre);
+  transition: background-color 200ms var(--ease-out);
+}
+
+.bp-hero__featured-label {
+  justify-self: start;
+  margin-bottom: 0.4rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: var(--rayon-pilule);
+  background: var(--c-roi);
+  color: var(--c-blanc);
+  font-size: var(--t-mention);
+}
+
+.bp-hero__featured-meta {
+  color: var(--encre-douce);
+  font-weight: 400;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-hero__featured:hover {
+    background: var(--c-ciel);
+  }
+}
+
+/* ---------- Bande des promesses : fixe, en capitales grasses, séparées par des points bleus ---------- */
+
+.bp-hero__promises {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1.25rem;
+  margin-top: var(--marge);
+  padding: 0.9rem var(--marge);
+  border-block: var(--trait) solid var(--ligne);
+  list-style: none;
+  font-weight: 800;
+  font-size: clamp(1rem, 0.85rem + 0.6vw, 1.5rem);
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.bp-hero__promise {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.bp-hero__promise + .bp-hero__promise::before {
+  content: "";
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background: var(--c-bleu);
+}
+
+@media (max-width: 39.99rem) {
+  .bp-hero__promises {
+    flex-direction: column;
+  }
+  .bp-hero__promise + .bp-hero__promise::before {
+    display: none;
+  }
+}
+
+@media (min-width: 56rem) {
+  .bp-hero__tile {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    align-items: center;
+    column-gap: clamp(2rem, 5vw, 5rem);
+    min-height: calc(100svh - var(--hauteur-entete) - 7rem);
+  }
+  .bp-hero__title {
+    font-size: clamp(3rem, 0.6rem + 5.2vw, 6.25rem);
+  }
+  /* La photo garde son format 4:5 et tient dans la hauteur de l'écran. */
+  .bp-hero__photo {
+    width: min(100%, calc((100svh - var(--hauteur-entete) - 13rem) * 0.8));
+    justify-self: center;
+  }
+}
+
+@keyframes bp-monte {
+  from {
+    translate: 0 105%;
+  }
+}

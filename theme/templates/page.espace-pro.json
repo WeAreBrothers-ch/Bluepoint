@@ -1,0 +1,15 @@
+{
+  "sections": {
+    "main": {
+      "type": "bp-pro-portal",
+      "blocks": {
+        "prix": { "type": "condition", "settings": { "text": "Remise professionnelle de 15 % au panier" } },
+        "cartons": { "type": "condition", "settings": { "text": "Cartons de 6 et 12 bouteilles" } },
+        "facture": { "type": "condition", "settings": { "text": "Paiement sur facture" } }
+      },
+      "block_order": ["prix", "cartons", "facture"],
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

@@ -1,0 +1,236 @@
+/*
+ * BluePoint — fondations du thème : jetons et base (la police est déclarée dans bp-fonts.css).
+ * Chargé après les styles de Horizon : ces règles l'emportent.
+ * Les composants ne lisent que les jetons de RÔLE (--fond, --encre, --accent…).
+ * Toutes les classes du thème BluePoint sont préfixées « bp- » pour ne jamais
+ * entrer en collision avec celles de Horizon.
+ */
+
+:root {
+  /*
+   * Palette : uniquement des bleus, du plus pâle au marine (voir DIRECTION-ARTISTIQUE.md, v5).
+   * --c-blanc, --c-bleu et --c-encre sont aussi lus par l'intro et Paolo (bp-intro*.css, bp-mascotte.css) :
+   * leurs valeurs ne changent pas, pour que les personnages restent identiques.
+   */
+  --c-blanc: #eef5ff; /* bleu très pâle : le fond de toutes les pages */
+  --c-glacier: #d6e7fb; /* tuile la plus claire, survols */
+  --c-ciel: #a9d1f7; /* bandeau d'annonce, boutons pilule, pastilles : encre à 10,6:1 */
+  --c-azur: #4c9be8; /* tuile moyenne */
+  --c-bleu: #1a70b7; /* bleu exact du logo */
+  --c-roi: #1f4fd8; /* grand aplat de l'accueil : texte pâle à 6:1 */
+  --c-encre: #0a1a4f; /* marine profond, à la place du noir : 15:1 sur le fond */
+  --c-gris: #34406a; /* texte secondaire : 8,9:1 sur le fond */
+  --c-bleu-texte: #0a3bd1; /* liens et repères : 5,2:1 sur le fond */
+
+  /* Rôles */
+  --fond: var(--c-blanc);
+  --fond-tuile: var(--c-glacier);
+  --encre: var(--c-encre);
+  --encre-douce: var(--c-gris);
+  --ligne: var(--c-encre);
+  --survol: var(--c-glacier);
+  --accent: var(--c-bleu-texte);
+  --aplat: var(--c-encre);
+  --sur-aplat: var(--c-blanc);
+  --pilule: var(--c-ciel);
+  --focus: var(--c-bleu-texte);
+  --selection: var(--c-ciel);
+  --trait: 1.5px; /* épaisseur des filets et des contours, partout la même */
+
+  /*
+   * Typographie : Bagel Fat One, ronde et très grasse, pour les grands titres d'affiche ;
+   * Schibsted Grotesk pour tout le reste (texte, interface, prix).
+   */
+  --police-affiche: "Bagel Fat One", "Arial Rounded MT Bold", sans-serif;
+  --police-titre: "Schibsted Grotesk", "Arial", sans-serif;
+  --police: "Schibsted Grotesk", "Arial", sans-serif;
+
+  --t-geant: clamp(2.75rem, 1.4rem + 5.6vw, 7rem);
+  --t-titre: clamp(2rem, 1.2rem + 3.2vw, 4rem);
+  --t-sous-titre: clamp(1.125rem, 1rem + 0.4vw, 1.375rem);
+  /* Lisibilité d'abord : 17 px pour lire, 16 px pour les libellés, 14 px minimum pour les mentions. */
+  --t-corps: 1.0625rem;
+  --t-ui: 1rem;
+  --t-mention: 0.875rem;
+  --interlettre-ui: 0;
+  --t-nom-carte: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --t-detail-carte: 0.9375rem;
+  --t-bouton-carte: 1rem;
+  --t-nom-fiche: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
+  --t-prix-fiche: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  --interlettre-titre: 0;
+
+  /* Espace */
+  --marge: clamp(1rem, 2vw, 1.5rem);
+  --repere: clamp(0.75rem, 1.6vw, 1.5rem);
+  --section: clamp(4rem, 9vw, 8rem);
+  --gouttiere: clamp(0.75rem, 1.4vw, 1.25rem);
+  --mesure: 38rem;
+  --hauteur-annonce: 2.5rem;
+  --hauteur-entete: calc(var(--hauteur-annonce) + clamp(4rem, 5vw, 4.5rem));
+  --hauteur-barre-achat: 4.75rem;
+  --rayon: clamp(0.875rem, 1.4vw, 1.5rem); /* tuiles et grands aplats */
+  --rayon-pilule: 999px; /* boutons et champs */
+
+  /* Mouvement */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Les pages restées en Horizon (compte, recherche…) prennent la même police et les mêmes formes. */
+  --font-body--family: var(--police);
+  --font-heading--family: var(--police);
+  --font-subheading--family: var(--police);
+  --font-accent--family: var(--police);
+  --font-body--weight: 400;
+  --font-heading--weight: 700;
+  --font-subheading--weight: 600;
+  --font-accent--weight: 600;
+  --style-border-radius-buttons-primary: var(--rayon-pilule);
+  --style-border-radius-buttons-secondary: var(--rayon-pilule);
+  --style-border-radius-inputs: var(--rayon-pilule);
+  --style-border-radius-popover: var(--rayon);
+  --variant-picker-button-radius: var(--rayon-pilule);
+  --button-text-case-primary: none;
+  --button-text-case-secondary: none;
+}
+
+@media (min-width: 90rem) {
+  :root {
+    --t-corps: 1.125rem;
+  }
+}
+
+/* ---------- Base ---------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  scroll-padding-top: var(--hauteur-entete);
+}
+
+body.bluepoint {
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font-family: var(--police);
+  font-size: var(--t-corps);
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Pas de chiffres à chasse fixe sur le texte : dans Schibsted Grotesk, l'option élargit aussi la ponctuation. */
+
+/* Les personnages (intro de l'accueil et Paolo après un ajout au panier) gardent la police de leurs bulles. */
+.bp-intro__bubble,
+.bp-mascotte__bubble {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* Remise à zéro limitée aux blocs BluePoint : les pages Horizon gardent leurs réglages. */
+:where([class^="bp-"], [class*=" bp-"]),
+:where([class^="bp-"], [class*=" bp-"]) *,
+:where([class^="bp-"], [class*=" bp-"]) *::before,
+:where([class^="bp-"], [class*=" bp-"]) *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:where([class^="bp-"], [class*=" bp-"]) :is(img, svg) {
+  display: block;
+  max-width: 100%;
+}
+
+:where([class^="bp-"], [class*=" bp-"]) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where([class^="bp-"], [class*=" bp-"]) button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+:where([class^="bp-"], [class*=" bp-"]) :is(h1, h2, h3) {
+  font-family: var(--police-titre);
+  font-weight: 700;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+/*
+ * Titre d'affiche : la police ronde en capitales, remplie de bleu, cernée et doublée d'une ombre marine
+ * décalée, comme une enseigne peinte. La couleur de remplissage se règle avec --affiche-remplissage.
+ */
+.bp-affiche {
+  font-family: var(--police-affiche);
+  font-weight: 400;
+  line-height: 1.1; /* assez d’air pour les accents des capitales (É, À, Â) sous la ligne du dessus */
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+  color: var(--affiche-remplissage, var(--c-bleu));
+  -webkit-text-stroke: 0.05em var(--c-encre);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 var(--c-encre);
+  text-wrap: balance;
+}
+
+:where([class^="bp-"], [class*=" bp-"]) p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--encre);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Les phrases se lisent en casse normale : les capitales sont réservées aux libellés courts. */
+.bp-phrase,
+.bp-ui.bp-phrase {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.bp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Le contenu principal laisse la place de l'en-tête fixe sur les pages Horizon. */
+.bluepoint-main {
+  display: block;
+  min-height: 60svh;
+}
+
+.bluepoint-main > .shopify-section:first-child:not([class*="bp-"]) {
+  padding-top: var(--hauteur-entete);
+}
+
+/* Tant que l'âge n'est pas confirmé, la page ne défile pas sous la vérification. */
+html:not([data-age-ok]) body.bluepoint {
+  overflow: hidden;
+}
+
+/* Pendant l'intro de l'accueil, la page ne défile pas et les entrées attendent le rideau. */
+html[data-age-ok]:not([data-intro-vue]) body.bluepoint:has([data-intro]) {
+  overflow: hidden;
+}
+
+html[data-age-ok]:not([data-intro-vue]):has([data-intro]) {
+  --delai-intro: 5.1s;
+}

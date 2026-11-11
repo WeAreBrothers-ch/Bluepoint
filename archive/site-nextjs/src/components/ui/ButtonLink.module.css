@@ -1,0 +1,30 @@
+.button {
+  min-height: 2.75rem;
+  transition:
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+
+.button[data-variant="plein"] {
+  justify-content: center;
+  padding: 0.85rem 1.4rem;
+  border-radius: var(--rayon);
+  background: var(--aplat);
+  color: var(--sur-aplat);
+}
+
+.button:active {
+  scale: 0.98;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .button[data-variant="plein"]:hover {
+    background: var(--accent);
+  }
+  .button[data-variant="plein"]:hover::before {
+    background: var(--sur-aplat);
+  }
+  .button[data-variant="trait"]:hover {
+    color: var(--accent);
+  }
+}

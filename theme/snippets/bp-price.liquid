@@ -1,0 +1,38 @@
+{%- comment -%}
+  Prix BluePoint, avec la remise pro annoncée d’avance.
+  La remise est une remise automatique Shopify (« Prix pro -15 % », réservée aux clients marqués « pro »).
+  Le thème ne peut pas lire son montant : il le recalcule ici. Le pourcentage ci-dessous doit donc
+  rester égal à celui de la remise dans Shopify.
+
+  Paramètres :
+  - cents : prix public en centimes (obligatoire, sauf pour mode 'badge')
+  - mode : 'full' (défaut) prix public barré + prix pro ; 'plain' prix à payer seul, en texte brut ;
+           'badge' mention « Prix pro −15 % » (rien si le client n’est pas pro)
+{%- endcomment -%}
+{%- liquid
+  assign pro_percent = 15
+  assign is_pro = false
+  if customer and customer.tags contains 'pro'
+    assign is_pro = true
+  endif
+-%}
+{%- if mode == 'badge' -%}
+  {%- if is_pro -%}
+    <p class="bp-ui bp-carre bp-pro-badge">Prix pro −{{ pro_percent }}&nbsp;%</p>
+  {%- endif -%}
+{%- else -%}
+  {%- liquid
+    assign public_price = cents | money | replace: "'", '’'
+    assign pro_factor = 100 | minus: pro_percent
+    assign pro_cents = cents | times: pro_factor | divided_by: 100.0 | round
+    assign pro_price = pro_cents | money | replace: "'", '’'
+  -%}
+  {%- if is_pro == false -%}
+    {{- public_price -}}
+  {%- elsif mode == 'plain' -%}
+    {{- pro_price -}}
+  {%- else -%}
+    <s class="bp-price__was"><span class="bp-sr-only">Prix public </span>{{ public_price }}</s>
+    <span class="bp-price__pro"><span class="bp-sr-only">Prix pro </span>{{ pro_price }}</span>
+  {%- endif -%}
+{%- endif -%}

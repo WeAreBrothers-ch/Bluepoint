@@ -1,0 +1,71 @@
+{%- comment -%}
+  Le visuel d'une bouteille dans sa tuile bleue arrondie.
+  Ordre de préférence :
+  1. la bouteille détourée (voir snippets/bp-cutout-url.liquid), posée sur la ligne de base ;
+  2. la photo de mise en scène (métachamp bluepoint.photo), qui remplit la tuile ;
+  3. l'image principale du produit, posée dans la tuile ;
+  4. sans aucune image, le nom de la bouteille au centre.
+  La nuance de bleu de la tuile (1 à 4) : le paramètre « teinte » (la position dans la liste, pour que deux
+  voisines diffèrent), sinon une nuance tirée du nom court du produit.
+
+  Paramètres :
+  - product (obligatoire)
+  - sizes : largeur affichée, pour que le navigateur choisisse le bon fichier
+  - class : classe ajoutée au cadre
+  - priority : true pour l'image du haut de page (chargement immédiat)
+  - teinte : nombre entier (1, 2, 3…), ramené aux quatre nuances
+{%- endcomment -%}
+{%- liquid
+  assign photo = product.metafields.bluepoint.photo.value
+  assign loading = 'lazy'
+  assign fetchpriority = 'auto'
+  assign photo_alt = photo.alt | default: product.title
+  assign bottle_alt = product.featured_image.alt | default: product.title
+  if priority
+    assign loading = 'eager'
+    assign fetchpriority = 'high'
+  endif
+  assign teinte_source = teinte | default: product.handle.size
+  assign teinte_tuile = teinte_source | minus: 1 | modulo: 4 | plus: 1
+-%}
+{%- capture cutout_url -%}{%- render 'bp-cutout-url', product: product, width: 900 -%}{%- endcapture -%}
+<div class="bp-packshot {{ class }}" data-teinte="{{ teinte_tuile }}">
+  {%- if cutout_url != blank -%}
+    <img
+      class="bp-packshot__bottle"
+      src="{{ cutout_url }}"
+      width="400"
+      height="1400"
+      alt="{{ bottle_alt | escape }}"
+      loading="{{ loading }}"
+      fetchpriority="{{ fetchpriority }}"
+      decoding="async"
+    >
+  {%- elsif photo != blank -%}
+    {{
+      photo
+      | image_url: width: 1600
+      | image_tag:
+        class: 'bp-packshot__photo',
+        widths: '360, 540, 720, 1080, 1440',
+        sizes: sizes,
+        loading: loading,
+        fetchpriority: fetchpriority,
+        alt: photo_alt
+    }}
+  {%- elsif product.featured_image != blank -%}
+    {{
+      product.featured_image
+      | image_url: width: 1400
+      | image_tag:
+        class: 'bp-packshot__image',
+        widths: '300, 450, 600, 900, 1200',
+        sizes: sizes,
+        loading: loading,
+        fetchpriority: fetchpriority,
+        alt: bottle_alt
+    }}
+  {%- else -%}
+    <span class="bp-ui bp-packshot__empty">{{ product.title | escape }}</span>
+  {%- endif -%}
+</div>

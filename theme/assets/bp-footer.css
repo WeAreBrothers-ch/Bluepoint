@@ -1,0 +1,130 @@
+/* BluePoint — pied de page (sections/bp-footer.liquid). */
+
+/* ---------- Pied de page ---------- */
+
+.bp-footer {
+  padding: var(--section) var(--marge) calc(var(--repere) + 4.5rem);
+}
+
+body:has([data-barre-achat="visible"]) .bp-footer {
+  padding-bottom: calc(var(--repere) + 4.5rem + var(--hauteur-barre-achat));
+}
+
+/* La tuile marine : texte bleu pâle, titres d'affiche bleu ciel, filets bleu ciel. */
+.bp-footer__box {
+  position: relative;
+  display: grid;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-encre);
+  color: var(--c-blanc);
+  --focus: var(--c-ciel);
+}
+
+.bp-footer__brand-cell {
+  display: grid;
+  align-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 3rem);
+  border-bottom: var(--trait) solid var(--c-bleu);
+}
+
+.bp-footer__brand {
+  display: block;
+  width: fit-content;
+  margin-bottom: 2rem;
+}
+
+.bp-footer__logo {
+  width: clamp(7rem, 12vw, 10rem);
+  color: var(--c-ciel);
+}
+
+.bp-footer__address {
+  font-style: normal;
+}
+
+.bp-footer__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem 1.5rem;
+  padding: clamp(1.5rem, 3vw, 3rem);
+}
+
+.bp-footer__column {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.bp-footer__heading {
+  font-family: var(--police-affiche);
+  font-size: 1.375rem;
+  font-weight: 400;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--c-ciel);
+}
+
+.bp-footer__column[data-large="true"] {
+  grid-column: 1 / -1;
+}
+
+.bp-footer__links {
+  display: grid;
+  gap: 0.15rem;
+  list-style: none;
+}
+
+.bp-footer__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  min-height: 2.75rem;
+  overflow-wrap: anywhere;
+}
+
+.bp-footer__icon {
+  flex: none;
+}
+
+/* Une adresse e-mail ne se coupe jamais en deux et s'écrit en minuscules, comme on la tape. */
+.bp-footer__link--email {
+  overflow-wrap: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.bp-footer__legal {
+  margin-top: 1.25rem;
+  max-width: 60rem;
+  color: var(--encre-douce);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-footer__link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.25em;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-footer__box {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.6fr);
+  }
+  .bp-footer__brand-cell {
+    border-bottom: 0;
+    border-right: var(--trait) solid var(--c-bleu);
+  }
+  .bp-footer__columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1.7fr) minmax(0, 0.8fr);
+  }
+  /* Avec la colonne « Légal » (pages de politique publiées), cinq colonnes. */
+  .bp-footer__columns:has(> :nth-child(5)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1.7fr) minmax(0, 0.8fr) minmax(0, 1.1fr);
+  }
+  .bp-footer__column[data-large="true"] {
+    grid-column: auto;
+  }
+}

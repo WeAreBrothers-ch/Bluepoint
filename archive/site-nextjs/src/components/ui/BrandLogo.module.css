@@ -1,0 +1,6 @@
+.logo {
+  display: block;
+  aspect-ratio: 967 / 350;
+  background: currentColor;
+  mask: url("/assets/logo.svg") left center / contain no-repeat;
+}

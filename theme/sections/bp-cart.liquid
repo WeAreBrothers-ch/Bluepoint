@@ -1,0 +1,122 @@
+{%- comment -%}
+  Panier BluePoint (vrai panier Shopify). Le bouton « Commander » ouvre le paiement Shopify.
+  Le −/+ fonctionne sans script (petits formulaires POST /cart/change) ;
+  assets/bp-cart-page.js le rend instantané.
+{%- endcomment -%}
+{{ 'bp-cart-page.css' | asset_url | stylesheet_tag }}
+{{ 'bp-cart-delivery.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bp-cart-page.js' | asset_url }}" defer></script>
+<script src="{{ 'bp-cart-delivery.js' | asset_url }}" defer></script>
+
+{%- liquid
+  assign count = cart.item_count
+  assign shipping_from = section.settings.free_shipping_from | default: 24
+  assign missing = shipping_from | minus: count
+  if missing < 0
+    assign missing = 0
+  endif
+-%}
+
+<div class="bp-cart" data-bp-cart data-section-id="{{ section.id }}">
+  {%- if cart.item_count == 0 -%}
+    <div class="bp-cart__empty">
+      <p class="bp-ui">0 bouteille</p>
+      <h1 class="bp-affiche bp-cart__title">Panier vide</h1>
+      <p class="bp-phrase bp-cart__muted">Choisissez une bouteille, à l’unité ou en carton.</p>
+      <a href="{{ routes.all_products_collection_url }}" class="bp-ui bp-carre bp-button" data-variant="plein">
+        Voir la boutique
+      </a>
+    </div>
+  {%- else -%}
+    <h1 class="bp-affiche bp-cart__title">Panier</h1>
+    <div class="bp-cart__layout">
+      <ul class="bp-cart__lines" aria-label="Bouteilles du panier">
+        {%- for item in cart.items -%}
+          {%- render 'bp-cart-line', item: item -%}
+        {%- endfor -%}
+      </ul>
+
+      <form action="{{ routes.cart_url }}" method="post" class="bp-cart__summary">
+        <p class="bp-phrase bp-cart__error" role="alert" data-bp-cart-error hidden></p>
+        {%- if cart.total_discount > 0 -%}
+          {%- liquid
+            assign discount_title = cart.cart_level_discount_applications.first.title
+            if discount_title == blank
+              assign discount_title = cart.items.first.line_level_discount_allocations.first.discount_application.title
+            endif
+          -%}
+          <dl class="bp-ui bp-cart__savings">
+            <div class="bp-cart__savings-row">
+              <dt>Prix public</dt>
+              <dd>{{ cart.original_total_price | money | replace: "'", '’' }}</dd>
+            </div>
+            <div class="bp-cart__savings-row bp-pro-badge">
+              <dt class="bp-carre">{{ discount_title | default: 'Remise' | escape }}</dt>
+              <dd>−{{ cart.total_discount | money | replace: "'", '’' }}</dd>
+            </div>
+          </dl>
+        {%- endif -%}
+        <p class="bp-ui bp-cart__total">
+          <span>Sous-total, {{ count }}&nbsp;bouteille{% if count > 1 %}s{% endif %}</span>
+          <span>{{ cart.total_price | money | replace: "'", '’' }}</span>
+        </p>
+        {%- render 'bp-tax-note', class: 'bp-cart__tax' -%}
+        <p class="bp-ui bp-phrase bp-carre" data-actif="{% if missing == 0 %}true{% else %}false{% endif %}">
+          {%- if missing == 0 -%}
+            Livraison offerte
+          {%- else -%}
+            Encore {{ missing }}&nbsp;bouteille{% if missing > 1 %}s{% endif %} pour la livraison offerte
+          {%- endif -%}
+        </p>
+        {%- render 'bp-cart-delivery', lead_days: section.settings.lead_days, section_id: section.id -%}
+        {%- if section.settings.note != blank -%}
+          <p class="bp-phrase bp-cart__muted">{{ section.settings.note | escape }}</p>
+        {%- endif -%}
+        <button type="submit" name="checkout" class="bp-ui bp-carre bp-button bp-cart__checkout" data-variant="plein">
+          Commander
+        </button>
+        {%- comment -%}
+          Paiement express (Apple Pay, Google Pay, Shop Pay…) : seulement ici, pas sur la fiche,
+          pour que le client choisisse d’abord le mode et la date de livraison ci-dessus.
+          Les boutons n’apparaissent que si un de ces moyens est activé dans Shopify (Paramètres › Paiements).
+          assets/bp-cart-page.js les garde en place quand le panier se met à jour.
+        {%- endcomment -%}
+        {%- if additional_checkout_buttons -%}
+          <div class="bp-cart__express" data-bp-cart-express>
+            <p class="bp-phrase bp-cart__muted">Ou payez directement avec&#8239;:</p>
+            {{ content_for_additional_checkout_buttons }}
+          </div>
+        {%- endif -%}
+      </form>
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Panier BluePoint",
+  "tag": "section",
+  "class": "bp-cart-section",
+  "settings": [
+    {
+      "type": "number",
+      "id": "free_shipping_from",
+      "label": "Livraison offerte dès (bouteilles)",
+      "default": 24
+    },
+    {
+      "type": "number",
+      "id": "lead_days",
+      "label": "Délai minimum (jours ouvrables)",
+      "info": "Date de livraison la plus proche proposée au client, samedi et dimanche non comptés.",
+      "default": 2
+    },
+    {
+      "type": "text",
+      "id": "note",
+      "label": "Note sous le total",
+      "default": "Livraison sous 48 h en Suisse. Frais calculés à l’étape suivante."
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html
+  {% if request.design_mode %}
+    class="shopify-design-mode"
+  {% endif %}
+  lang="{% if request.locale.iso_code == 'fr' %}fr-CH{% else %}{{ request.locale.iso_code }}{% endif %}"
+  dir="{{ request.locale.direction | default: 'ltr' }}"
+>
+  <head>
+    {%- comment -%}
+      Avant tout affichage : âge déjà confirmé (30 jours) et intro déjà vue (cet onglet).
+      Évite que la vérification ou l’intro clignotent chez un visiteur qui les a déjà passées.
+      Mouvement réduit demandé : l’intro ne se joue jamais (vérifié en premier).
+      Sinon, ?intro dans l’adresse ou un rechargement de la page (Cmd+R, Cmd+Maj+R) la rejoue.
+    {%- endcomment -%}
+    <script>
+      try{var t=Number(localStorage.getItem("bp-age-ok"));if(t&&Date.now()-t<2592000000){document.documentElement.setAttribute("data-age-ok","")}}catch(e){}
+      try{var n=performance.getEntriesByType("navigation")[0];if(matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.setAttribute("data-intro-vue","")}else if(new URLSearchParams(location.search).has("intro")||(n&&n.type==="reload")){sessionStorage.removeItem("bp-intro-vue")}else if(sessionStorage.getItem("bp-intro-vue")){document.documentElement.setAttribute("data-intro-vue","")}}catch(e){document.documentElement.setAttribute("data-intro-vue","")}
+      {%- if request.design_mode -%}
+        {%- comment -%} Éditeur de thème : pas de vérification d’âge, et l’intro se joue à chaque ouverture de l’aperçu. {%- endcomment -%}
+        document.documentElement.setAttribute("data-age-ok","");document.documentElement.removeAttribute("data-intro-vue");
+      {%- endif -%}
+    </script>
+
+    {%- if settings.favicon != blank -%}
+      <link
+        rel="icon"
+        type="image/png"
+        href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
+      >
+    {%- endif -%}
+
+    <meta name="theme-color" content="#eef5ff">
+    {{ 'bp-schibsted-latin.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: true }}
+    {{ 'bp-bagel-latin.woff2' | asset_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: true }}
+
+    {%- render 'meta-tags' -%}
+    {%- render 'stylesheets' -%}
+    {%- render 'scripts' -%}
+    {%- render 'theme-styles-variables' -%}
+    {%- render 'color-palette' -%}
+
+    {{ 'bp-fonts.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-base.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-primitives.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-layout.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-header.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-nav.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-menu.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-footer.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-overlays.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-age-gate.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-packshot.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-product-card.css' | asset_url | stylesheet_tag }}
+    {{ 'bp-mascotte.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'bp-cart.js' | asset_url }}" defer></script>
+    <script src="{{ 'bp-chrome.js' | asset_url }}" defer></script>
+    <script src="{{ 'bp-nav.js' | asset_url }}" defer></script>
+    <script src="{{ 'bp-mascotte.js' | asset_url }}" defer></script>
+
+    {% if request.design_mode %}
+      {%- render 'theme-editor' -%}
+    {% endif %}
+
+    {{ content_for_header }}
+  </head>
+
+  <body class="bluepoint">
+    {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
+
+    {% section 'bp-header' %}
+
+    {%- comment -%} Juste après l’en-tête dans l’ordre du clavier ; sa position fixe le place en bas à droite. {%- endcomment -%}
+    {%- unless template.name == 'cart' -%}
+      {% render 'bp-floating-cart' %}
+    {%- endunless -%}
+
+    <main id="MainContent" class="bluepoint-main" role="main" data-template="{{ template }}">
+      {{ content_for_layout }}
+    </main>
+
+    {% section 'bp-footer' %}
+
+    {% render 'bp-mascotte' %}
+    {% render 'bp-age-gate' %}
+
+    {%- comment -%} Zone d’annonce permanente pour les lecteurs d’écran (BluePointCart.announce). {%- endcomment -%}
+    <p class="bp-sr-only" role="status" aria-live="polite" data-bp-live></p>
+  </body>
+</html>

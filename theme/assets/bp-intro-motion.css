@@ -1,0 +1,132 @@
+/* BluePoint — intro animée, suite : la bulle de BD, la réplique écrite lettre à lettre et les courbes de mouvement. */
+
+/*
+ * La réplique dans une bulle de BD : blanche, cernée d'encre, avec sa pointe vers Paolo.
+ * Police à chasse fixe du système (seule exception à Archivo Narrow) : la largeur de chaque ligne est réservée d'avance (la bulle ne
+ * grandit pas pendant la frappe) et le texte se découvre lettre à lettre.
+ * Taille calculée pour que « QUELLE ÉMOTION ! » (16 signes) tienne sur un téléphone.
+ */
+.bp-intro__bubble {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  max-width: calc(100vw - 2 * var(--marge));
+  margin-bottom: 1.2em;
+  padding: 0.55em 0.8em 0.6em;
+  border: 3px solid var(--c-encre);
+  border-radius: 1.2em;
+  background: var(--c-blanc);
+  color: var(--c-blanc);
+  font-size: min(calc((100vw - 2 * var(--marge)) / 11.5), 7svh);
+  transform-origin: 40% 100%;
+  animation: bp-intro-bulle 220ms var(--ease-out) var(--t-replique) both;
+}
+
+.bp-intro__quote {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--c-encre);
+}
+
+.bp-intro__quote-line {
+  display: block;
+  /* Un signe de marge : le « ! » n’est jamais coupé, même si l’espace qui le précède est plus large. */
+  width: calc((var(--lettres) + 1) * (1ch - 0.04em));
+  white-space: nowrap;
+  animation: bp-intro-ecrit calc(var(--lettres) * 40ms) steps(var(--lettres), end)
+    calc(var(--t-replique) + 180ms + var(--rang) * 450ms) both;
+}
+
+/* La pointe recouvre le trait du bas de la bulle : bulle et pointe ne font qu'un. */
+.bp-intro__tail {
+  position: absolute;
+  top: 100%;
+  left: 38%;
+  width: 1.1em;
+  height: auto;
+  overflow: visible;
+}
+
+@keyframes bp-intro-entree {
+  from { translate: 0 35%; }
+}
+
+/* Repos au nez → bras baissé → petits cercles → retour au nez. */
+@keyframes bp-intro-geste {
+  0% { rotate: 0deg; translate: 0 0; }
+  18% { rotate: -12deg; translate: 0 7%; }
+  30% { rotate: -14deg; translate: 1% 6%; }
+  42% { rotate: -10deg; translate: -1% 8%; }
+  54% { rotate: -13deg; translate: 1% 9%; }
+  66% { rotate: -11deg; translate: -1% 7%; }
+  86% { rotate: 0deg; translate: 0 0; }
+  100% { rotate: 0deg; translate: 0 0; }
+}
+
+@keyframes bp-intro-hume {
+  to { scale: 1.035; }
+}
+
+@keyframes bp-intro-tourbillon {
+  0% { rotate: 0deg; translate: 0 0; }
+  18% { rotate: -18deg; translate: 8px -6px; }
+  38% { rotate: 16deg; translate: -8px -5px; }
+  58% { rotate: -11deg; translate: 6px -3px; }
+  78% { rotate: 6deg; translate: -3px -1px; }
+  100% { rotate: 0deg; translate: 0 0; }
+}
+
+@keyframes bp-intro-ouvre {
+  from { opacity: 0; }
+}
+
+/* Valeurs explicites : un retour à 1 ne doit pas hériter du 0 laissé par « ferme ». */
+@keyframes bp-intro-reparait {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bp-intro-ferme {
+  to { opacity: 0; }
+}
+
+@keyframes bp-intro-cligne {
+  50% { scale: 1 0.1; }
+}
+
+@keyframes bp-intro-rosit {
+  to { opacity: 0.85; }
+}
+
+@keyframes bp-intro-arome {
+  0% { opacity: 0; stroke-dashoffset: 1; translate: 0 0; }
+  20% { opacity: 1; }
+  60% { stroke-dashoffset: 0; }
+  100% { opacity: 0; stroke-dashoffset: 0; translate: -6px -22px; }
+}
+
+@keyframes bp-intro-ecrit {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+
+@keyframes bp-intro-bulle {
+  from { opacity: 0; scale: 0.92; }
+}
+
+@keyframes bp-intro-sortie {
+  to {
+    transform: translate3d(0, -100%, 0);
+    visibility: hidden;
+  }
+}
+
+@keyframes bp-intro-estompe {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -2.5rem, 0);
+  }
+}
