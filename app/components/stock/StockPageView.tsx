@@ -1,9 +1,12 @@
 import { TITRES } from "../../lib/titres";
 import { useCallback, useMemo, useState } from "react";
-import { filterStock, sortByUrgency, stockSummary, type StockSummary } from "../../lib/stock/stock";
+import { useFetcher } from "react-router";
+import { filterStock, sortByUrgency, stockSummary, type StockItem, type StockSummary } from "../../lib/stock/stock";
+import type { RetiredWine, RetireResult } from "../../lib/stock/retire";
 import type { StockPageData } from "../../lib/stock/stock.server";
 import { EmptyState } from "../EmptyState";
 import { NewWineForm } from "./NewWineForm";
+import { RetiredWines } from "./RetiredWines";
 import { StockRow } from "./StockRow";
 
 /** Page « Stock » : la partie visible, séparée de la route pour pouvoir être affichée seule (aperçu, tests). */
@@ -33,6 +36,16 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
     setCreated(message);
   }, []);
   const authorized = data.canEdit && data.canCreateWines;
+  // Retirer / remettre en vente : un seul envoi pour la page, le message reste en haut même quand le vin quitte la liste.
+  const statusFetcher = useFetcher<RetireResult>({ key: "statut-vin" });
+  const pending = statusFetcher.state === "idle" ? null : statusFetcher.formData;
+  const retiring = pending?.get("intent") === "retirer" ? String(pending.get("productId")) : null;
+  const restoring = pending?.get("intent") === "remettre" ? String(pending.get("productId")) : null;
+  const statusResult = statusFetcher.state === "idle" ? statusFetcher.data : undefined;
+  const send = (intent: "retirer" | "remettre", productId: string, title: string) =>
+    statusFetcher.submit({ intent, productId, title }, { method: "post" });
+  const retire = (item: StockItem) => send("retirer", item.productId, item.label);
+  const restore = (wine: RetiredWine) => send("remettre", wine.productId, wine.title);
 
   return (
     <s-page heading={TITRES.vins} inlineSize="base">
@@ -57,6 +70,7 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
       )}
       {creating ? <NewWineForm onCreated={onCreated} onCancel={() => setCreating(false)} /> : null}
       {created === null ? null : <s-banner tone="success" heading={created} />}
+      {statusResult === undefined ? null : <s-banner tone={statusResult.ok ? "success" : "critical"} heading={statusResult.message} />}
       {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
       {data.loadError === null && data.items.length === 0 ? (
         <EmptyState heading="Aucun vin pour l’instant">Ajoutez votre premier vin avec « Nouveau vin », en haut de la page.</EmptyState>
@@ -77,10 +91,18 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
             </s-stack>
           </s-section>
           {shown.map((item) => (
-            <StockRow key={item.variantId} item={item} canEdit={data.canEdit} canPhoto={data.canCreateWines} />
+            <StockRow
+              key={item.variantId}
+              item={item}
+              canEdit={data.canEdit}
+              canPhoto={data.canCreateWines}
+              {...(data.canCreateWines ? { onRetire: retire } : {})}
+              retiring={retiring === item.productId}
+            />
           ))}
         </>
       )}
+      <RetiredWines wines={data.retired} canRestore={data.canCreateWines} onRestore={restore} restoring={restoring} />
     </s-page>
   );
 }
