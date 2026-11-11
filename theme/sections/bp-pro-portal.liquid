@@ -3,6 +3,7 @@
   1. Visiteur ou client particulier : connexion + demande de compte pro.
   2. Client connecté sans entreprise : explication + demande de rattachement.
   3. Professionnel connecté (compte B2B Shopify) : accueil, accès à la boutique.
+  Connecté (états 2 et 3) : un bouton « Se déconnecter » (routes.account_logout_url).
   La remise pro est une remise automatique Shopify (« Prix pro -15 % », segment « Clients pro »,
   c’est-à-dire les clients marqués « pro ») : aucun prix n’est écrit dans le thème.
   Le catalogue B2B n’est pas utilisable sur l’abonnement Basic.
@@ -78,10 +79,14 @@
       <div class="bp-pro__actions">
         <a href="{{ routes.all_products_collection_url }}" class="bp-ui bp-carre bp-button" data-variant="plein">{{ s.shop_label | escape }}</a>
         <a href="{{ routes.account_url }}" class="bp-ui bp-carre bp-button" data-variant="trait">Mes commandes</a>
+        <a href="{{ routes.account_logout_url }}" class="bp-ui bp-carre bp-button" data-variant="trait">Se déconnecter</a>
       </div>
     {%- else -%}
       {%- if customer -%}
         <p class="bp-pro__text">{{ s.not_linked_text | escape }}</p>
+        <div class="bp-pro__actions">
+          <a href="{{ routes.account_logout_url }}" class="bp-ui bp-carre bp-button" data-variant="trait">Se déconnecter</a>
+        </div>
       {%- else -%}
         <div class="bp-pro__login">
           <p class="bp-pro__text">{{ s.login_text | escape }}</p>
