@@ -86,7 +86,13 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
               <s-text-field label="Année (facultatif)" name="vintage" value={values.vintage} details="Ex. 2022" {...errorProps(errors, "vintage")} />
               <s-text-field label="Appellation (facultatif)" name="appellation" value={values.appellation} details="Ex. Dézaley AOC, Barolo DOCG" {...errorProps(errors, "appellation")} />
               <s-text-field label="Région (facultatif)" name="region" value={values.region} details="Ex. Piémont, Lavaux" {...errorProps(errors, "region")} />
-              <s-text-field label="Prix d’une bouteille (CHF)" name="price" value={values.price} details="Ex. 25.50" {...errorProps(errors, "price")} />
+              <s-text-field
+                label="Prix pro d’une bouteille (CHF)"
+                name="price"
+                value={values.price}
+                details="Ex. 25.50. Les particuliers paieront 15 % de plus sur le site."
+                {...errorProps(errors, "price")}
+              />
               <s-number-field
                 label="Cartons en cave"
                 name="quantity"

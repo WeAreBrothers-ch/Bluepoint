@@ -2,7 +2,7 @@ import { parseIsoDate, type IsoDate } from "../metafields/definitions";
 
 /**
  * Commande d'un professionnel et état de son paiement, tels que Shopify les décrit.
- * Un pro est un client marqué « pro » (c'est aussi ce qui donne droit à la remise de 15 %)
+ * Un pro est un client marqué « pro » (c'est aussi ce qui donne droit aux prix pro)
  * ou un acheteur rattaché à une entreprise Shopify (B2B).
  */
 

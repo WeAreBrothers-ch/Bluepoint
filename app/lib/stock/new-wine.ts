@@ -1,6 +1,7 @@
 import { formatChf } from "../format/money";
 import { BOTTLE_SIZES_CL, DEFAULT_BOTTLE_CL, parseBottleSize, plain, sizeTagValue, TAG_PREFIXES, WINE_COUNTRIES } from "../litres/wine-info";
 import { CARTON_SIZE } from "../commande/types";
+import { publicCentsFromPro } from "../prix/pro";
 import { cartonsText, MAX_CARTONS } from "./stock";
 
 /**
@@ -116,7 +117,7 @@ export function parseNewWine(form: FormData): ParsedNewWine {
   if (values.appellation.length > 80) errors.appellation = "Ce nom est trop long (80 lettres au plus).";
   if (values.region.length > 80) errors.region = "Ce nom est trop long (80 lettres au plus).";
   const priceCents = parsePrice(values.price);
-  if (priceCents === null || priceCents <= 0) errors.price = "Écrivez le prix d’une bouteille, par exemple 25.50.";
+  if (priceCents === null || priceCents <= 0) errors.price = "Écrivez le prix pro d’une bouteille, par exemple 25.50.";
   else if (priceCents > MAX_PRICE_CENTS) errors.price = "Ce prix semble trop élevé.";
   // Le formulaire demande des cartons de 6 ; Shopify compte des bouteilles.
   const cartonCount = /^\d{1,6}$/.test(values.quantity) ? Number(values.quantity) : null;
@@ -158,5 +159,6 @@ export function createdMessage(input: Pick<NewWineInput, "title" | "priceCents" 
   const where = published
     ? "Il est en vente sur le site et dans « Prendre une commande »."
     : "Il est dans « Prendre une commande », mais pas encore visible sur le site.";
-  return `Le vin « ${input.title} » est créé, à ${formatChf(input.priceCents)}, ${stock}. ${where}`;
+  const prices = `prix pro ${formatChf(input.priceCents)}, particuliers ${formatChf(publicCentsFromPro(input.priceCents))}`;
+  return `Le vin « ${input.title} » est créé (${prices}), ${stock}. ${where}`;
 }

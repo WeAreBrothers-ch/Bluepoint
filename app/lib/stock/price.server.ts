@@ -5,9 +5,10 @@ import { ShopifyUserErrors } from "../shopify/errors";
 import { runAdminMutation } from "../shopify/graphql.server";
 import { parseGid } from "../shopify/ids";
 import { plainShopifyRefusal } from "../shopify/plain-refusal";
+import { publicCentsFromPro } from "../prix/pro";
 import { centsToMoney, parsePrice, type PriceResult } from "./price";
 
-/** Change le prix d'un vin dans Shopify (Admin API, `write_products`). */
+/** Change le prix d'un vin : on reçoit le prix pro, Shopify reçoit le prix particulier (+ 15 %) (`write_products`). */
 
 const PRICE_MUTATION = `#graphql
 mutation ModifierPrix($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
@@ -38,7 +39,7 @@ export async function handlePriceChange(admin: AdminApiContext, form: FormData):
   if (!price.ok) return { ok: false, variantId, message: price.message };
   const changed = await runAdminMutation(admin, PRICE_MUTATION, (data: PriceData) => data.productVariantsBulkUpdate, {
     productId: product,
-    variants: [{ id: variant, price: centsToMoney(price.cents) }],
+    variants: [{ id: variant, price: centsToMoney(publicCentsFromPro(price.cents)) }],
   });
   if (!changed.ok) {
     logError("Prix non changé", changed.error, { variantId });
@@ -51,5 +52,9 @@ export async function handlePriceChange(admin: AdminApiContext, form: FormData):
     };
   }
   logInfo("Prix changé", { variantId, cents: price.cents });
-  return { ok: true, variantId, message: `C’est noté : le prix est maintenant de ${formatChf(price.cents)}.` };
+  return {
+    ok: true,
+    variantId,
+    message: `C’est noté : prix pro ${formatChf(price.cents)}, particuliers ${formatChf(publicCentsFromPro(price.cents))}.`,
+  };
 }

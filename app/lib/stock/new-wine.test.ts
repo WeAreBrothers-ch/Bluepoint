@@ -75,7 +75,7 @@ describe("nouveau vin", () => {
       values: { title: "", vendor: "", type: "Rouge", country: "France", size: "75", vintage: "", appellation: "", region: "", price: "0", quantity: "-3" },
       errors: {
         title: "Écrivez le nom du vin.",
-        price: "Écrivez le prix d’une bouteille, par exemple 25.50.",
+        price: "Écrivez le prix pro d’une bouteille, par exemple 25.50.",
         quantity: "Écrivez le nombre de cartons (0 s’il n’y en a pas encore).",
       },
     });
@@ -84,7 +84,7 @@ describe("nouveau vin", () => {
 
   it("annonce le vin créé", () => {
     expect(createdMessage({ title: "Chasselas 2025", priceCents: 1800, quantity: 24 }, true)).toBe(
-      "Le vin « Chasselas 2025 » est créé, à CHF\u00A018.00, avec 4 cartons en cave. Il est en vente sur le site et dans « Prendre une commande ».",
+      "Le vin « Chasselas 2025 » est créé (prix pro CHF\u00A018.00, particuliers CHF\u00A020.70), avec 4 cartons en cave. Il est en vente sur le site et dans « Prendre une commande ».",
     );
     expect(createdMessage({ title: "Merlot", priceCents: 2000, quantity: 0 }, false)).toContain(
       "sans carton en cave pour l’instant. Il est dans « Prendre une commande », mais pas encore visible sur le site.",

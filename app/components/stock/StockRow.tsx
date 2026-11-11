@@ -20,6 +20,8 @@ import {
 import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { PhotoPicker } from "./PhotoPicker";
+import { parsePrice } from "../../lib/stock/price";
+import { priceLine, proCentsFromPublic, PUBLIC_MARKUP_PERCENT, publicCentsFromPro } from "../../lib/prix/pro";
 import { retireWarnings } from "../../lib/stock/retire";
 
 /**
@@ -238,18 +240,15 @@ interface PricePanelProps {
   readonly onCancel: () => void;
 }
 
-/** « Modifier le prix » : le prix de vente d'une bouteille, en francs. */
+/** « Modifier le prix » : on écrit le PRIX PRO ; les particuliers paient 15 % de plus (calculé et affiché ici). */
 function PricePanel({ item, busy, onSubmit, onCancel }: PricePanelProps) {
-  const [price, setPrice] = useState(item.priceCents === null ? "" : (item.priceCents / 100).toFixed(2));
+  const [price, setPrice] = useState(item.priceCents === null ? "" : (proCentsFromPublic(item.priceCents) / 100).toFixed(2));
+  const typed = parsePrice(price);
+  const publicLine = typed.ok ? `Les particuliers paieront ${formatChf(publicCentsFromPro(typed.cents))} (prix pro + ${PUBLIC_MARKUP_PERCENT} %).` : "Ex. 45 ou 45.50.";
   return (
     <s-box padding="base" background="subdued" borderRadius="base">
       <s-stack direction="block" gap="small-200">
-        <s-text-field
-          label="Prix d’une bouteille (CHF)"
-          details="Ex. 55 ou 55.50. Le prix change tout de suite sur le site et dans « Prendre une commande »."
-          value={price}
-          onInput={(event) => setPrice(event.currentTarget.value)}
-        />
+        <s-text-field label="Prix pro d’une bouteille (CHF)" details={publicLine} value={price} onInput={(event) => setPrice(event.currentTarget.value)} />
         <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
           <s-button
             {...FILL}
@@ -372,7 +371,7 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
           {imageUrl === null ? <s-thumbnail alt="" size="small" /> : <s-thumbnail src={imageUrl} alt={item.imageAlt} size="small" />}
           <s-stack direction="block" gap="small-500">
             <s-heading>{item.label}</s-heading>
-            {item.priceCents === null ? null : <s-text color="subdued">{formatChf(item.priceCents)}</s-text>}
+            {item.priceCents === null ? null : <s-text color="subdued">{priceLine(item.priceCents)}</s-text>}
           </s-stack>
         </s-stack>
       }

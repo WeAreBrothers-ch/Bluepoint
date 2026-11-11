@@ -39,7 +39,7 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
     [order.lines, props.products, unitOverrides],
   );
   const warnings = useMemo(() => stockWarnings(order.lines, props.products), [order.lines, props.products]);
-  // Remise sur la commande (ex. « Prix pro -15 % ») : écart entre les lignes et le sous-total calculé par Shopify.
+  // Remise sur la commande (ex. « Prix pro ») : écart entre les lignes et le sous-total calculé par Shopify.
   const discountCents = prices === null ? 0 : Math.max(0, totals.subtotalCents - prices.subtotalCents);
 
   const priceSource: PriceSource =

@@ -6,8 +6,9 @@
   Connecté (états 2 et 3) : un bouton « Se déconnecter » (routes.account_logout_url).
   « Se connecter » utilise routes.storefront_login_url : après la connexion, le client revient ici, sur le site,
   au lieu d'atterrir sur la page « compte client » de Shopify.
-  La remise pro est une remise automatique Shopify (« Prix pro -15 % », segment « Clients pro »,
-  c’est-à-dire les clients marqués « pro ») : aucun prix n’est écrit dans le thème.
+  Les prix pro viennent d’une remise automatique Shopify (« Prix pro », segment « Clients pro », c’est-à-dire les
+  clients marqués « pro ») : aucun prix n’est écrit dans le thème. Le prix pro est celui saisi dans l’app ;
+  les particuliers paient 15 % de plus.
   Le catalogue B2B n’est pas utilisable sur l’abonnement Basic.
   Mise en page : à gauche, le titre et les conditions en quatre tuiles (elles restent à l’écran quand on remplit le
   formulaire) ; à droite, un seul cadre avec la connexion puis la demande de compte.
@@ -186,7 +187,7 @@
     { "type": "textarea", "id": "not_linked_text", "label": "Texte (connecté sans entreprise)", "default": "Votre compte n’est pas encore rattaché à une entreprise. Envoyez-nous votre demande, nous l’ouvrons ensuite." },
     { "type": "header", "content": "Professionnel connecté" },
     { "type": "text", "id": "welcome_title", "label": "Titre", "default": "Bienvenue dans votre espace pro." },
-    { "type": "textarea", "id": "welcome_text", "label": "Texte", "default": "Votre remise professionnelle de 15 % s’applique automatiquement au panier, tant que vous êtes connecté." },
+    { "type": "textarea", "id": "welcome_text", "label": "Texte", "default": "Vos prix professionnels s’appliquent automatiquement au panier, tant que vous êtes connecté." },
     { "type": "text", "id": "shop_label", "label": "Bouton boutique", "default": "Commander" }
   ],
   "blocks": [
@@ -203,7 +204,7 @@
     {
       "name": "Espace pro",
       "blocks": [
-        { "type": "condition", "settings": { "text": "Remise professionnelle de 15 % au panier" } },
+        { "type": "condition", "settings": { "text": "Prix professionnels" } },
         { "type": "condition", "settings": { "text": "Cartons de 6 et 12 bouteilles" } },
         { "type": "condition", "settings": { "text": "Paiement sur facture" } }
       ]

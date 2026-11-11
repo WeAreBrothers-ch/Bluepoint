@@ -100,6 +100,16 @@ commande sur le site.** Un paiement plus tard (facture à 30 jours, virement, es
 - **Garde-fou** : Shopify ne peut pas limiter une remise à un moyen de paiement. Si une commande utilise `CARTE2` sans
   être payée (statut « en attente »), la carte de l’agenda affiche « Rabais carte à vérifier » : le rabais n’est pas dû.
 
+## Prix pro et prix particulier
+
+Règle de BluePoint : **le prix écrit dans l’app (Stock, Nouveau vin) est le prix pro ; les particuliers paient 15 % de plus.**
+Shopify n’a qu’un prix par bouteille : l’app y enregistre le prix particulier (prix pro × 1,15, au centime) et affiche les deux
+(`app/lib/prix/pro.ts`). Les clients marqués « pro » ont la remise automatique Shopify « Prix pro » de **13,04 %**
+(1 − 1/1,15 ≈ 13,0435 %, que Shopify arrondit à 13,04 %), qui ramène au prix pro (une remise de 15 % ferait payer le pro moins
+que son prix). À cause de cet arrondi de Shopify, le pro paie au plus 0,005 % de plus que son prix : 2 centimes sur 12 bouteilles
+à 45.–, environ 1 franc sur une palette de 600. Pour un prix pro dont le centime ne tombe pas juste × 1,15 (ex. 12.35), l’arrondi
+du prix particulier ajoute au plus ½ centime d’écart par bouteille. Le thème calcule le prix pro affiché en divisant le prix par 1,15 (`snippets/bp-price.liquid`).
+
 ## Retirer un vin de la vente
 
 Page « Stock », bouton « Retirer ce vin de la vente » (confirmation) : le vin est **archivé** dans Shopify (`productUpdate`,
