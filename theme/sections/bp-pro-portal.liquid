@@ -30,6 +30,10 @@
     outline: 3px solid var(--focus);
     outline-offset: 2px;
   }
+  .bp-pro__form .bp-button[disabled] {
+    opacity: 0.7;
+    cursor: progress;
+  }
 </style>
 
 {%- liquid
@@ -89,7 +93,8 @@
 
       <h2 class="bp-ui bp-pro__form-title">{{ s.form_title | escape }}</h2>
 
-      <form method="post" action="/apps/bon-commande/devenir-pro" id="bp-pro-form" class="bp-pro__form" accept-charset="UTF-8">
+      <form method="post" action="/apps/bon-commande/devenir-pro" id="bp-pro-form" class="bp-pro__form" accept-charset="UTF-8"
+        onsubmit="var b=this.querySelector('button[type=submit]');if(b){if(b.disabled)return false;b.disabled=true;b.textContent='Envoi en cours…';}">
         <label class="bp-pro__field">
           <span class="bp-ui">Société</span>
           <input type="text" name="companyName" autocomplete="organization" required maxlength="70">
@@ -153,6 +158,7 @@
           <label>Ne pas remplir <input type="text" name="site_web" tabindex="-1" autocomplete="off"></label>
         </div>
 
+        {%- comment -%} L'envoi prend quelques secondes : le bouton se bloque après le premier clic. {%- endcomment -%}
         <button type="submit" class="bp-ui bp-carre bp-button" data-variant="plein">Envoyer la demande</button>
       </form>
     {%- endif -%}

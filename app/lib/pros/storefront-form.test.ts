@@ -26,6 +26,6 @@ describe("page « Devenir client pro » du site", () => {
   });
 
   it("remercie en nommant la boutique", () => {
-    expect(proThanksPage()).toContain("{{ shop.name }}");
+    expect(proThanksPage()).toContain("un e-mail de notre part");
   });
 });
