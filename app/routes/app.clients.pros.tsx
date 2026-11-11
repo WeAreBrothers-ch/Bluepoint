@@ -7,7 +7,10 @@ import { handleProsAction } from "../lib/pros/actions.server";
 import { loadProsPage, type ProsPageData } from "../lib/pros/page-data.server";
 import type { ProsActionResult } from "../lib/pros/view";
 
-/** Clients pro : demandes reçues par le site à accepter, et ajout direct d'un pro qui appelle. */
+/**
+ * Clients pro (/app/clients/pros) : demandes reçues par le site à accepter, et ajout direct d'un pro qui appelle.
+ * Sous « /app/clients » pour que le menu de Shopify surligne « Clients » (et non « Livraisons ») sur cette page.
+ */
 
 export const loader = async ({ request }: LoaderFunctionArgs): Promise<ProsPageData> => {
   const { admin, session } = await authenticate.admin(request);

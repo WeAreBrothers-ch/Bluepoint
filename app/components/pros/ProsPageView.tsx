@@ -36,20 +36,6 @@ export function ProsPageView({ data }: { readonly data: ProsPageData }) {
           <AddProForm canCreate={data.canCreate} />
         </s-stack>
       </s-section>
-      <s-section heading="Le formulaire du site">
-        <s-stack direction="block" gap="base">
-          <s-paragraph>
-            Les pros demandent leur compte avec le formulaire « Devenir client pro » du site. Ajoutez un lien vers cette
-            page dans le menu du site.
-          </s-paragraph>
-          <s-text color="subdued">{data.formUrl}</s-text>
-          <s-stack direction="inline">
-            <s-button href={data.formUrl} target="_blank" icon="external">
-              Voir le formulaire
-            </s-button>
-          </s-stack>
-        </s-stack>
-      </s-section>
       {data.decided.length === 0 ? null : (
         <s-section heading="Dernières réponses">
           <s-stack direction="block" gap="small-200">

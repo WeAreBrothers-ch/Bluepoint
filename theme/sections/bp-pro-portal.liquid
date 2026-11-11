@@ -4,6 +4,8 @@
   2. Client connecté sans entreprise : explication + demande de rattachement.
   3. Professionnel connecté (compte B2B Shopify) : accueil, accès à la boutique.
   Connecté (états 2 et 3) : un bouton « Se déconnecter » (routes.account_logout_url).
+  « Se connecter » utilise routes.storefront_login_url : après la connexion, le client revient ici, sur le site,
+  au lieu d'atterrir sur la page « compte client » de Shopify.
   La remise pro est une remise automatique Shopify (« Prix pro -15 % », segment « Clients pro »,
   c’est-à-dire les clients marqués « pro ») : aucun prix n’est écrit dans le thème.
   Le catalogue B2B n’est pas utilisable sur l’abonnement Basic.
@@ -91,7 +93,7 @@
         <div class="bp-pro__login">
           <p class="bp-pro__text">{{ s.login_text | escape }}</p>
           <div class="bp-pro__actions">
-            <a href="{{ routes.account_login_url }}?return_url={{ page.url | url_encode }}" class="bp-ui bp-carre bp-button" data-variant="plein">Se connecter</a>
+            <a href="{{ routes.storefront_login_url }}" class="bp-ui bp-carre bp-button" data-variant="plein">Se connecter</a>
           </div>
         </div>
       {%- endif -%}

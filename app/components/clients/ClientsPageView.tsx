@@ -95,13 +95,13 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
           Nouveau client
         </s-button>
       )}
-      <s-button slot="secondary-actions" href="/app/pros">
+      <s-button slot="secondary-actions" href="/app/clients/pros">
         {TITRES.clientsPro}
       </s-button>
       {deleted === null ? null : <s-banner tone="success" heading={deletedMessage(deleted)} />}
       {data.pendingProRequests === 0 ? null : (
         <s-banner tone="info" heading={proRequestsHeading(data.pendingProRequests)}>
-          <s-button href="/app/pros">Voir les demandes</s-button>
+          <s-button href="/app/clients/pros">Voir les demandes</s-button>
         </s-banner>
       )}
       {creating ? <NewCustomerForm initial={EMPTY_NEW_CUSTOMER} onCreated={created} onCancel={() => setCreating(false)} /> : null}
