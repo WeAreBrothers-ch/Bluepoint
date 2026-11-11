@@ -20,6 +20,7 @@ import {
 import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { PhotoPicker } from "./PhotoPicker";
+import { retireWarnings } from "../../lib/stock/retire";
 
 /**
  * Un vin de la page Stock : combien on peut encore en vendre, puis deux boutons.
@@ -33,9 +34,38 @@ interface StockRowProps {
   readonly canEdit: boolean;
   /** Le droit d'envoyer des photos a été donné à l'app. */
   readonly canPhoto: boolean;
+  /** Retire le vin de la vente (après confirmation) ; `undefined` si l'app n'en a pas le droit. */
+  readonly onRetire?: (item: StockItem) => void;
+  readonly retiring?: boolean;
 }
 
-type Panel = "aucun" | StockIntent | "photo" | "prix";
+type Panel = "aucun" | StockIntent | "photo" | "prix" | "retirer";
+
+/** « Retirer ce vin de la vente ? » : ce qui va se passer, ce qui reste en cave, et comment revenir en arrière. */
+function RetirePanel({ item, busy, onConfirm, onCancel }: { readonly item: StockItem; readonly busy: boolean; readonly onConfirm: () => void; readonly onCancel: () => void }) {
+  return (
+    <s-box padding="base" background="subdued" borderRadius="base">
+      <s-stack direction="block" gap="small-200">
+        <s-text type="strong">{`Retirer « ${item.label} » de la vente\u202F?`}</s-text>
+        <s-text>Il disparaît du site, de « Prendre une commande » et de cette liste.</s-text>
+        {retireWarnings(item).map((warning) => (
+          <s-text key={warning}>{warning}</s-text>
+        ))}
+        <s-text color="subdued">
+          Ses ventes passées restent dans les factures et les litres vendus. Vous pourrez le remettre en vente en bas de cette page.
+        </s-text>
+        <s-stack direction="inline" gap="small-200">
+          <s-button variant="primary" tone="critical" icon="archive" onClick={onConfirm} {...(busy ? { loading: true } : {})}>
+            Oui, retirer de la vente
+          </s-button>
+          <s-button icon="arrow-left" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+            Non, garder ce vin
+          </s-button>
+        </s-stack>
+      </s-stack>
+    </s-box>
+  );
+}
 
 function LevelBadge({ item }: { readonly item: StockItem }) {
   if (item.level === "epuise") return <s-badge tone="critical">Plus de bouteilles</s-badge>;
@@ -240,7 +270,7 @@ function PricePanel({ item, busy, onSubmit, onCancel }: PricePanelProps) {
   );
 }
 
-export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
+export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }: StockRowProps) {
   const [panel, setPanel] = useState<Panel>("aucun");
   const fetcher = useFetcher<StockActionResult>({ key: `stock-${item.variantId}` });
   const photoFetcher = useFetcher<PhotoResult>({ key: `photo-${item.productId}` });
@@ -318,11 +348,18 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
           ) : null}
         </s-grid>
       ) : null}
-      {canPrice ? (
-        <s-stack direction="inline">
-          <s-button variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
-            Modifier le prix
-          </s-button>
+      {canPrice || onRetire !== undefined ? (
+        <s-stack direction="inline" gap="small-200" justifyContent="space-between">
+          {canPrice ? (
+            <s-button variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
+              Modifier le prix
+            </s-button>
+          ) : null}
+          {onRetire === undefined ? null : (
+            <s-button variant="tertiary" tone="critical" icon="archive" onClick={() => setPanel("retirer")} {...(retiring ? { loading: true } : {})}>
+              Retirer ce vin de la vente
+            </s-button>
+          )}
         </s-stack>
       ) : null}
     </s-stack>
@@ -364,6 +401,16 @@ export function StockRow({ item, canEdit, canPhoto }: StockRowProps) {
           <PricePanel item={item} busy={savingPrice} onSubmit={sendPrice} onCancel={() => setPanel("aucun")} />
         ) : panel === "photo" ? (
           <PhotoPanel item={item} busy={sendingPhoto} onSubmit={sendPhoto} onCancel={() => setPanel("aucun")} />
+        ) : panel === "retirer" ? (
+          <RetirePanel
+            item={item}
+            busy={retiring}
+            onConfirm={() => {
+              onRetire?.(item);
+              setPanel("aucun");
+            }}
+            onCancel={() => setPanel("aucun")}
+          />
         ) : (
           <ChangePanel
             item={item}

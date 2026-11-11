@@ -100,6 +100,14 @@ commande sur le site.** Un paiement plus tard (facture à 30 jours, virement, es
 - **Garde-fou** : Shopify ne peut pas limiter une remise à un moyen de paiement. Si une commande utilise `CARTE2` sans
   être payée (statut « en attente »), la carte de l’agenda affiche « Rabais carte à vérifier » : le rabais n’est pas dû.
 
+## Retirer un vin de la vente
+
+Page « Stock », bouton « Retirer ce vin de la vente » (confirmation) : le vin est **archivé** dans Shopify (`productUpdate`,
+`status: ARCHIVED`), jamais effacé. Il disparaît du site, de « Prendre une commande » et de la liste du stock, mais ses ventes
+passées gardent leur sorte, leur pays et leur contenance (factures, « Litres vendus » : un vin effacé fausserait les litres).
+En bas de la page, « Vins retirés de la vente » permet de le remettre en vente (`ACTIVE`, puis remis sur les mêmes canaux
+de vente que les autres vins). Autorisation `write_products`.
+
 ## Litres vendus
 
 Page « Litres vendus » (`/app/litres`) : combien de litres de vin ont été vendus dans l’année, par sorte (rouge, blanc, rosé,

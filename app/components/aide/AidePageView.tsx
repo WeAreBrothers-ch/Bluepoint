@@ -79,6 +79,17 @@ const RECIPES: readonly Recipe[] = [
     button: "Voir le stock",
   },
   {
+    situation: "Je ne vends plus un vin",
+    steps: [
+      `Touchez ${entreGuillemets(TITRES.vins)}.`,
+      "Trouvez le vin, puis touchez « Retirer ce vin de la vente », tout en bas de sa carte.",
+      "Lisez ce qui va se passer, puis touchez « Oui, retirer de la vente ».",
+      "Il disparaît du site et de « Prendre une commande ». Pour le revendre, touchez « Remettre en vente » en bas de la page.",
+    ],
+    href: "/app/stock",
+    button: "Voir le stock",
+  },
+  {
     situation: "Je veux ajouter un nouveau vin à vendre",
     steps: [
       `Touchez ${entreGuillemets(TITRES.vins)}, puis « Nouveau vin ».`,

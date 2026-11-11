@@ -83,7 +83,7 @@ async function readPlaces(admin: AdminApiContext, variables: { readonly title: s
   return { ...base.value, products: { nodes: [] } };
 }
 
-async function findPlaces(admin: AdminApiContext, title: string): Promise<Places | null> {
+export async function findPlaces(admin: AdminApiContext, title: string): Promise<Places | null> {
   const data = await readPlaces(admin, { title: `title:${JSON.stringify(title)}` });
   if (data === null) return null;
   const publicationIds = new Set(
