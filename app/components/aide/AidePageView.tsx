@@ -65,7 +65,7 @@ const RECIPES: readonly Recipe[] = [
       "C’est tout : le stock est mis à jour partout, sur le site et dans « Prendre une commande ».",
     ],
     href: "/app/stock",
-    button: "Voir les vins en cave",
+    button: "Voir le stock",
   },
   {
     situation: "J’ai compté ma cave",
@@ -76,7 +76,7 @@ const RECIPES: readonly Recipe[] = [
       "Touchez « Enregistrer ». Si le nombre change beaucoup, l’application vous redemande : touchez « Oui, enregistrer ».",
     ],
     href: "/app/stock",
-    button: "Voir les vins en cave",
+    button: "Voir le stock",
   },
   {
     situation: "Je veux ajouter un nouveau vin à vendre",
@@ -86,7 +86,7 @@ const RECIPES: readonly Recipe[] = [
       "Touchez « Créer le vin ». Il est tout de suite dans « Prendre une commande », et sur le site.",
     ],
     href: "/app/stock",
-    button: "Voir les vins en cave",
+    button: "Voir le stock",
   },
   {
     situation: "Un client n’est pas là le jour prévu",

@@ -11,7 +11,7 @@ const RULES: readonly { readonly pattern: RegExp; readonly text: string }[] = [
   },
   {
     pattern: /inventory|out of stock|stock insuffisant|not enough|insufficient/i,
-    text: "Un des vins n’a plus assez de bouteilles. Corrigez leur nombre dans « Vins en cave », ou baissez la quantité.",
+    text: "Un des vins n’a plus assez de bouteilles. Corrigez leur nombre dans « Stock », ou baissez la quantité.",
   },
   {
     pattern: /variant.*(does not exist|not found|deleted|unavailable|not available)|product.*(not available|unavailable|archived)/i,
