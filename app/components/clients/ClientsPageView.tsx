@@ -1,6 +1,7 @@
 import { proRequestsHeading, TITRES } from "../../lib/titres";
 import { useCallback, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { deletedMessage } from "../../lib/clients/delete";
 import { phoneDisplay, phoneHref } from "../../lib/agenda/contact";
 import { CLIENTS_TABS, clientsHref, type ClientListItem } from "../../lib/clients/list";
 import type { ClientsPageData } from "../../lib/clients/list.server";
@@ -73,6 +74,9 @@ function ClientRow({ item }: { readonly item: ClientListItem }) {
 }
 
 export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
+  // Après « Supprimer ce client » : la fiche renvoie ici avec le nom, pour le dire clairement.
+  const [params] = useSearchParams();
+  const deleted = params.get("supprime");
   const navigate = useNavigate();
   const [term, setTerm] = useState(data.term);
   const [creating, setCreating] = useState(false);
@@ -94,6 +98,7 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
       <s-button slot="secondary-actions" href="/app/pros">
         {TITRES.clientsPro}
       </s-button>
+      {deleted === null ? null : <s-banner tone="success" heading={deletedMessage(deleted)} />}
       {data.pendingProRequests === 0 ? null : (
         <s-banner tone="info" heading={proRequestsHeading(data.pendingProRequests)}>
           <s-button href="/app/pros">Voir les demandes</s-button>

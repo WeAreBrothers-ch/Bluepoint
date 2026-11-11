@@ -1,4 +1,4 @@
-import { COMPLETER_ENTREPRISE, proRequestsHeading, TITRES } from "../../lib/titres";
+import { COMPLETER_ENTREPRISE, TITRES } from "../../lib/titres";
 import { AgendaTabs } from "../AgendaTabs";
 import { capitalize } from "../../lib/agenda/dates";
 import type { AgendaPageData } from "../../lib/agenda/page-data.server";
@@ -17,14 +17,6 @@ function Notices({ data }: { readonly data: AgendaPageData }) {
           Il y a trop de commandes en cours pour toutes les montrer. Terminez les livraisons en retard pour alléger la liste.
         </s-banner>
       ) : null}
-      {data.pendingProRequests === 0 ? null : (
-        <s-banner
-          tone="info"
-          heading={proRequestsHeading(data.pendingProRequests)}
-        >
-          <s-button href="/app/pros">Voir les demandes</s-button>
-        </s-banner>
-      )}
       {data.settingsComplete ? null : (
         <s-banner tone="info" heading="Les factures ne peuvent pas encore être faites">
           <s-stack direction="block" gap="small-200">

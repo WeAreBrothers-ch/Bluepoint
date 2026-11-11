@@ -112,7 +112,7 @@ const RECIPES: readonly Recipe[] = [
   {
     situation: "Un professionnel demande un compte",
     steps: [
-      `Une bande bleue « demande pour devenir client pro » apparaît en haut de ${entreGuillemets(TITRES.livraisons)} et de ${entreGuillemets(TITRES.clients)}.`,
+      `Une bande bleue « demande pour devenir client pro » apparaît en haut de ${entreGuillemets(TITRES.clients)}.`,
       "Touchez « Voir les demandes ».",
       "Touchez « Accepter » pour lui donner les prix pros, ou « Refuser ».",
     ],

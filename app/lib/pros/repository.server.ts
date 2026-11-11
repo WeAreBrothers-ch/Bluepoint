@@ -28,17 +28,36 @@ function fields(input: ProRequestInput) {
 }
 
 /** Une seule demande en attente par e-mail : renvoyer le formulaire met la demande à jour. */
+function findPending(shop: string, email: string): Promise<ProRequest | null> {
+  return prisma.proRequest.findFirst({ where: { shop, status: "en_attente", email: { equals: email, mode: "insensitive" } } });
+}
+
+async function updatePending(id: string, input: ProRequestInput): Promise<SaveResult> {
+  await prisma.proRequest.update({ where: { id }, data: fields(input) });
+  return { ok: true, id };
+}
+
+/** Erreur Prisma « valeur déjà prise » (P2002) : l'index unique a bloqué un doublon. */
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code: unknown }).code === "P2002";
+}
+
 export async function saveProRequest(shop: string, input: ProRequestInput, source: ProRequestSource): Promise<SaveResult> {
-  const existing = await prisma.proRequest.findFirst({ where: { shop, status: "en_attente", email: input.email } });
-  if (existing !== null) {
-    await prisma.proRequest.update({ where: { id: existing.id }, data: fields(input) });
-    return { ok: true, id: existing.id };
-  }
+  const existing = await findPending(shop, input.email);
+  if (existing !== null) return updatePending(existing.id, input);
   if (source === "site" && (await countPendingProRequests(shop)) >= MAX_PENDING_REQUESTS) {
     return { ok: false, reason: "trop_de_demandes" };
   }
-  const created = await prisma.proRequest.create({ data: { shop, source, ...fields(input) } });
-  return { ok: true, id: created.id };
+  try {
+    const created = await prisma.proRequest.create({ data: { shop, source, ...fields(input) } });
+    return { ok: true, id: created.id };
+  } catch (error) {
+    // Deux envois au même moment (clics répétés) : la base refuse le second (index unique), on met à jour le premier.
+    if (!isUniqueViolation(error)) throw error;
+    const winner = await findPending(shop, input.email);
+    if (winner === null) throw error;
+    return updatePending(winner.id, input);
+  }
 }
 
 export function countPendingProRequests(shop: string): Promise<number> {
