@@ -93,7 +93,15 @@
 }
 
 /* Champs encadrés : on voit où écrire, sans avoir à deviner une simple ligne. */
+/* Deux cases côte à côte (prénom/nom, NPA/localité), l'une sous l'autre sur téléphone. */
+.bp-pro__row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
 .bp-pro__field input,
+.bp-pro__field select,
 .bp-pro__field textarea {
   width: 100%;
   min-height: 3.25rem;
@@ -111,6 +119,7 @@
 }
 
 .bp-pro__field input:focus-visible,
+.bp-pro__field select:focus-visible,
 .bp-pro__field textarea:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

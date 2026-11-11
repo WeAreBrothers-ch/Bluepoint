@@ -64,44 +64,74 @@
 
       <h2 class="bp-ui bp-pro__form-title">{{ s.form_title | escape }}</h2>
 
-      {%- form 'contact', id: 'bp-pro-form', class: 'bp-pro__form', novalidate: 'novalidate' -%}
-        {%- if form.posted_successfully? -%}
-          <p class="bp-pro__success" role="status">{{ s.success_text | escape }}</p>
-        {%- else -%}
-          {%- if form.errors -%}
-            <p class="bp-pro__error" role="alert">Le formulaire est incomplet : {{ form.errors.translated_fields | join: ', ' | downcase }}.</p>
-          {%- endif -%}
-
-          <input type="hidden" name="contact[tags]" value="demande-compte-pro">
-
+      {%- comment -%}
+        La demande part dans l'app de gestion (proxy d'app /apps/bon-commande/devenir-pro) : elle arrive dans
+        « Clients pro », où le patron l'accepte en un toucher (client pro créé avec la remise et le paiement à 30 jours).
+        Si une case est mal remplie, l'app réaffiche le formulaire avec le message à côté de la case.
+        Les noms des champs doivent rester ceux de l'app (app/lib/pros/request.ts).
+      {%- endcomment -%}
+      <form method="post" action="/apps/bon-commande/devenir-pro" id="bp-pro-form" class="bp-pro__form" accept-charset="UTF-8">
+        <label class="bp-pro__field">
+          <span class="bp-ui">Société</span>
+          <input type="text" name="companyName" autocomplete="organization" required maxlength="70">
+        </label>
+        <div class="bp-pro__row">
           <label class="bp-pro__field">
-            <span class="bp-ui">Société</span>
-            <input type="text" name="contact[Entreprise]" autocomplete="organization" required
-              value="{{ form.Entreprise | escape }}">
+            <span class="bp-ui">Prénom</span>
+            <input type="text" name="firstName" autocomplete="given-name" required maxlength="40"
+              value="{{ customer.first_name | escape }}">
           </label>
           <label class="bp-pro__field">
-            <span class="bp-ui">Nom et prénom</span>
-            <input type="text" name="contact[name]" autocomplete="name" required
-              value="{{ form.name | default: customer.name | escape }}">
+            <span class="bp-ui">Nom</span>
+            <input type="text" name="lastName" autocomplete="family-name" required maxlength="40"
+              value="{{ customer.last_name | escape }}">
           </label>
+        </div>
+        <div class="bp-pro__row">
           <label class="bp-pro__field">
             <span class="bp-ui">E-mail</span>
-            <input type="email" name="contact[email]" autocomplete="email" required
-              value="{{ form.email | default: customer.email | escape }}">
+            <input type="email" name="email" autocomplete="email" required value="{{ customer.email | escape }}">
           </label>
           <label class="bp-pro__field">
             <span class="bp-ui">Téléphone</span>
-            <input type="tel" name="contact[phone]" autocomplete="tel"
-              value="{{ form.phone | escape }}">
+            <input type="tel" name="phone" autocomplete="tel" required placeholder="079 123 45 67">
+          </label>
+        </div>
+        <label class="bp-pro__field">
+          <span class="bp-ui">Rue et numéro</span>
+          <input type="text" name="street" autocomplete="street-address" required maxlength="70">
+        </label>
+        <div class="bp-pro__row">
+          <label class="bp-pro__field">
+            <span class="bp-ui">NPA</span>
+            <input type="text" name="postalCode" autocomplete="postal-code" required inputmode="numeric" pattern="[0-9]{4}" maxlength="4">
           </label>
           <label class="bp-pro__field">
-            <span class="bp-ui">Votre activité</span>
-            <textarea name="contact[body]" rows="3" required>{{ form.body | escape }}</textarea>
+            <span class="bp-ui">Localité</span>
+            <input type="text" name="city" autocomplete="address-level2" required maxlength="35">
           </label>
-
-          <button type="submit" class="bp-ui bp-carre bp-button" data-variant="plein">Envoyer la demande</button>
-        {%- endif -%}
-      {%- endform -%}
+        </div>
+        <label class="bp-pro__field">
+          <span class="bp-ui">Pays</span>
+          <select name="country" autocomplete="country">
+            <option value="CH" selected>Suisse</option>
+            <option value="LI">Liechtenstein</option>
+          </select>
+        </label>
+        <label class="bp-pro__field">
+          <span class="bp-ui">Numéro TVA (facultatif)</span>
+          <input type="text" name="vatNumber" placeholder="CHE-123.456.789 TVA">
+        </label>
+        <label class="bp-pro__field">
+          <span class="bp-ui">Votre activité (facultatif)</span>
+          <textarea name="message" rows="3" maxlength="500"></textarea>
+        </label>
+        {%- comment -%} Piège à robots : invisible pour les visiteurs, laissé vide. {%- endcomment -%}
+        <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">
+          <label>Ne pas remplir <input type="text" name="site_web" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <button type="submit" class="bp-ui bp-carre bp-button" data-variant="plein">Envoyer la demande</button>
+      </form>
     {%- endif -%}
   </div>
 </section>
@@ -116,7 +146,6 @@
     { "type": "textarea", "id": "statement", "label": "Titre (visiteur)", "default": "Restaurants, cavistes, entreprises : commandez avec la remise pro." },
     { "type": "textarea", "id": "login_text", "label": "Texte de connexion", "default": "Vous avez déjà un compte pro ? Connectez-vous : votre remise s’applique ensuite au panier." },
     { "type": "text", "id": "form_title", "label": "Titre du formulaire", "default": "Demander un compte pro" },
-    { "type": "textarea", "id": "success_text", "label": "Message après envoi", "default": "Merci, votre demande est bien partie. Nous revenons vers vous pour ouvrir votre compte." },
     { "type": "textarea", "id": "not_linked_text", "label": "Texte (connecté sans entreprise)", "default": "Votre compte n’est pas encore rattaché à une entreprise. Envoyez-nous votre demande, nous l’ouvrons ensuite." },
     { "type": "header", "content": "Professionnel connecté" },
     { "type": "text", "id": "welcome_title", "label": "Titre", "default": "Bienvenue dans votre espace pro." },
