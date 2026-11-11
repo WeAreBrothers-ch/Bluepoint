@@ -1,0 +1,95 @@
+.section {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  padding: var(--section) var(--marge) 0;
+}
+
+.label {
+  font-size: var(--t-ui);
+  line-height: 1.5;
+}
+
+.body {
+  display: grid;
+  justify-items: start;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.statement {
+  max-width: 26ch;
+  font-size: var(--t-titre);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+/* Bandeau photo : la cave en grand, les étiquettes en carré à côté. */
+.photos {
+  display: grid;
+  gap: var(--gouttiere);
+  margin-top: clamp(1rem, 3vw, 2rem);
+}
+
+/* Fiche signalétique : quatre cases séparées par des filets. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: clamp(2rem, 5vw, 4rem);
+  border-top: 1px solid var(--ligne);
+}
+
+.fact {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.25rem 1rem 1.5rem 0;
+  border-bottom: 1px solid var(--ligne);
+}
+
+.factLabel {
+  color: var(--encre-douce);
+}
+
+.factValue {
+  font-size: var(--t-titre);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.coordinates {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--encre-douce);
+}
+
+.coordinates > :first-child {
+  color: var(--encre);
+}
+
+@media (min-width: 48rem) {
+  .photos {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .facts {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .fact + .fact {
+    padding-left: 1rem;
+    border-left: 1px solid var(--ligne);
+  }
+  .coordinates {
+    grid-template-columns: repeat(3, auto);
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 64rem) {
+  .section {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  }
+  .photos,
+  .facts,
+  .coordinates {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,122 @@
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  border: 0;
+  background: var(--fond);
+  color: var(--encre);
+  display: grid;
+  place-items: center;
+  padding: var(--marge);
+}
+
+.gate:not([open]),
+:global(html[data-age-ok]) .gate {
+  display: none;
+}
+
+.gate::backdrop {
+  background: var(--fond);
+}
+
+/* Une étiquette encadrée au centre de l'écran. */
+.inner {
+  display: grid;
+  gap: 1.5rem;
+  width: min(30rem, 100%);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid var(--ligne);
+  border-radius: var(--rayon);
+  animation: entree 700ms var(--ease-out) both;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--ligne);
+  color: var(--encre-douce);
+}
+
+.logo {
+  width: 7.5rem;
+  color: var(--accent);
+}
+
+.title {
+  font-size: var(--t-titre);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+
+.text {
+  color: var(--encre-douce);
+}
+
+.link {
+  color: var(--encre);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+}
+
+.primary,
+.secondary {
+  min-height: 3.25rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--rayon);
+  transition:
+    background-color 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+}
+
+.primary {
+  background: var(--aplat);
+  color: var(--sur-aplat);
+}
+
+.secondary {
+  box-shadow: inset 0 0 0 1px var(--ligne);
+}
+
+.primary:active,
+.secondary:active {
+  scale: 0.98;
+}
+
+.legal {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--ligne);
+  color: var(--encre-douce);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primary:hover {
+    background: var(--accent);
+  }
+  .primary:hover::before {
+    background: var(--sur-aplat);
+  }
+  .secondary:hover {
+    box-shadow: inset 0 0 0 1px var(--encre);
+  }
+}
+
+@keyframes entree {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}

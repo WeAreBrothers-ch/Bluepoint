@@ -1,0 +1,43 @@
+.cart {
+  position: fixed;
+  right: var(--repere);
+  bottom: var(--repere);
+  z-index: 45;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--rayon);
+  background: var(--aplat);
+  color: var(--sur-aplat);
+  transition:
+    translate 320ms var(--ease-out),
+    background-color 200ms var(--ease-out);
+}
+
+.cart[data-actif="true"]::before {
+  background: #5aa6e6; /* bleu éclairci : lisible sur l'encre */
+}
+
+.count {
+  display: inline-block;
+  color: color-mix(in srgb, var(--sur-aplat) 60%, transparent);
+  animation: bond 420ms var(--ease-out);
+}
+
+.cart[data-actif="true"] .count {
+  color: var(--sur-aplat);
+}
+
+.cart:active {
+  scale: 0.97;
+}
+
+/* Sur une fiche, la barre d'achat fixe occupe le bas : le bouton remonte au-dessus. */
+:global(body:has([data-barre-achat="visible"])) .cart {
+  translate: 0 calc(-1 * var(--hauteur-barre-achat));
+}
+
+@keyframes bond {
+  40% {
+    translate: 0 -0.2rem;
+  }
+}

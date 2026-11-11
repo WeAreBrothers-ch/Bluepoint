@@ -1,0 +1,52 @@
+/*
+ * Jetons de design BluePoint (v4, esprit « étiquette de caisse ») — seule source des valeurs visuelles.
+ * Les composants ne lisent que les jetons de RÔLE (--fond, --encre, --accent…).
+ * Le bleu du logo marque l'état actif : carré de la page courante, survols, confirmation.
+ */
+:root {
+  /* Palette brute */
+  --c-bleu: #1a70b7; /* bleu exact du logo */
+  --c-bleu-brume: #dce9f5;
+  --c-blanc: #ffffff;
+  --c-tuile: #f1f1ee;
+  --c-encre: #0e0f10;
+  --c-gris: #63676b; /* 5,6:1 sur blanc, 5,1:1 sur tuile */
+  --c-filet: #d4d4d0;
+
+  /* Rôles */
+  --fond: var(--c-blanc);
+  --fond-tuile: var(--c-tuile);
+  --encre: var(--c-encre);
+  --encre-douce: var(--c-gris);
+  --ligne: var(--c-filet);
+  --accent: var(--c-bleu);
+  --aplat: var(--c-encre);
+  --sur-aplat: var(--c-blanc);
+  --focus: var(--c-bleu);
+  --selection: var(--c-bleu-brume);
+
+  /* Typographie : une seule famille à chasse fixe, en capitales pour l'interface. */
+  --police: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --t-geant: clamp(2.25rem, 6.2vw, 6rem);
+  --t-titre: clamp(1.5rem, 3.4vw, 3rem);
+  --t-sous-titre: clamp(1.125rem, 1.6vw, 1.375rem);
+  --t-corps: 0.9375rem;
+  --t-ui: 0.875rem;
+  --t-mention: 0.75rem;
+  --interlettre-ui: 0.02em;
+
+  /* Espace */
+  --marge: clamp(1rem, 3.2vw, 3.5rem);
+  --repere: clamp(0.5rem, 1.6vw, 1.75rem); /* position des repères de cadrage */
+  --section: clamp(5rem, 11vw, 10rem);
+  --gouttiere: clamp(0.75rem, 1.4vw, 1.5rem);
+  --mesure: 38rem;
+  --hauteur-entete: clamp(4.5rem, 8vw, 7rem);
+  --hauteur-barre-achat: 4.75rem;
+  --rayon: 3px;
+
+  /* Mouvement */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}

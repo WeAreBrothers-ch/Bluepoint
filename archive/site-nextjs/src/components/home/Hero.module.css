@@ -1,0 +1,147 @@
+.hero {
+  display: grid;
+  gap: 2.5rem;
+  padding: calc(var(--hauteur-entete) + clamp(2rem, 6vw, 4rem)) var(--marge) 0;
+}
+
+.text {
+  display: grid;
+  align-content: end;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.kicker {
+  color: var(--encre-douce);
+}
+
+.title {
+  font-size: var(--t-geant);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+/* Chaque ligne monte depuis sous sa propre ligne de base, comme un rideau. */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.lineInner {
+  display: block;
+  animation: monte 900ms var(--ease-out) both;
+}
+
+.lead {
+  max-width: 30rem;
+  color: var(--encre-douce);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--rayon);
+  background: var(--fond-tuile);
+  animation: devoile 1200ms var(--ease-out) calc(var(--delai-intro, 0s) + 200ms) both;
+}
+
+.image {
+  object-fit: cover;
+  object-position: 50% 30%;
+}
+
+.caption {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: var(--c-blanc);
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.35);
+}
+
+/* Petite étiquette blanche posée sur la photo, comme un « prochain rendez-vous ». */
+.featured {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: grid;
+  gap: 0.15rem;
+  min-width: min(17rem, calc(100% - 2rem));
+  padding: 0.9rem 1rem;
+  border-radius: var(--rayon);
+  background: var(--fond);
+  transition: background-color 200ms var(--ease-out);
+}
+
+.featuredLabel {
+  margin-bottom: 0.4rem;
+  color: var(--encre-douce);
+}
+
+.featuredMeta {
+  color: var(--encre-douce);
+}
+
+.promises {
+  display: grid;
+  gap: 0.5rem;
+  padding-block: 1.25rem;
+  border-top: 1px solid var(--ligne);
+  list-style: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .featured:hover {
+    background: var(--fond-tuile);
+  }
+}
+
+@media (min-width: 40rem) {
+  .promises {
+    grid-template-columns: repeat(3, auto);
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 56rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+    grid-template-rows: 1fr auto;
+    column-gap: clamp(2rem, 5vw, 6rem);
+    row-gap: clamp(2rem, 4vw, 3rem);
+    min-height: 100svh;
+  }
+  .text {
+    padding-bottom: 1rem;
+  }
+  .photo {
+    aspect-ratio: auto;
+    min-height: 26rem;
+  }
+  .promises {
+    grid-column: 1 / -1;
+  }
+}
+
+@keyframes monte {
+  from {
+    translate: 0 105%;
+  }
+}
+
+@keyframes devoile {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

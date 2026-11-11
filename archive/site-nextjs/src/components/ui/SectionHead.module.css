@@ -1,0 +1,35 @@
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.title {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  min-height: 2.75rem;
+  transition: color 180ms var(--ease-out);
+}
+
+.plus {
+  width: 0.75rem;
+  height: 0.75rem;
+  transition: rotate 300ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    color: var(--accent);
+  }
+  .link:hover .plus {
+    rotate: 90deg;
+  }
+}

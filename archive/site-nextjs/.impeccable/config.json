@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist mono",
+        "createdAt": "2026-10-21T09:00:36.056Z",
+        "reason": "Port of the existing BluePoint art direction: src/app/layout.tsx and DIRECTION-ARTISTIQUE.md already use Geist Mono; the Shopify theme carries it over unchanged"
+      }
+    ]
+  }
+}

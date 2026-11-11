@@ -1,0 +1,8 @@
+.cache
+build
+node_modules
+# Pas du code de l'app : inutile dans l'image
+theme
+references
+docs
+archive

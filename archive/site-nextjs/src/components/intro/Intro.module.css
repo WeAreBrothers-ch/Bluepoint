@@ -1,0 +1,270 @@
+/*
+ * Minutage de l'intro (≈ 7 s), sur le bleu BluePoint :
+ * 0,0 s  Paolo entre par le bas, le nez dans le verre, les yeux fermés
+ * 0,7 s  le bras descend, le verre quitte le nez ; il ouvre les yeux
+ * 1,2 s  il fait tourner le vin (le bras décrit de petits cercles)
+ * 2,7 s  le bras remonte, le verre revient sous le nez
+ * 3,4 s  il hume : yeux fermés, joues roses, arômes
+ * 4,0 s  la réplique s'écrit en très grand, lettre à lettre
+ * 6,4 s  la réplique et Paolo s'estompent
+ * 6,6 s  le rideau bleu glisse vers le haut et découvre le site (1,1 s)
+ */
+.intro {
+  --t-geste: 700ms;
+  --t-tourne: 1200ms;
+  --t-hume: 3400ms;
+  --t-arome: 3600ms;
+  --t-replique: 4000ms;
+  --t-sortie: 6600ms;
+  --ease-rideau: cubic-bezier(0.76, 0, 0.24, 1);
+
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* L'épaule prolongée dépasse du dessin : on la coupe au bord de l'écran. */
+  overflow: hidden;
+  background: var(--c-bleu);
+  color: var(--c-blanc);
+  /* Sortie : le rideau glisse vers le haut. Une translation est calculée par la carte
+     graphique (pas de redessin du dessin à chaque image), d'où un mouvement fluide. */
+  animation: sortie 1100ms var(--ease-rideau) var(--t-sortie) forwards;
+  will-change: transform;
+}
+
+/* Juste avant le rideau, la réplique et le personnage s'estompent en remontant un peu. */
+.top,
+.quote,
+.stage {
+  animation: estompe 550ms var(--ease-in-out) calc(var(--t-sortie) - 200ms) forwards;
+}
+
+/* Masquée tant que l'âge n'est pas confirmé, puis une fois vue. */
+:global(html:not([data-age-ok])) .intro,
+:global(html[data-intro-vue]) .intro {
+  display: none;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem var(--marge);
+}
+
+.logo {
+  width: clamp(6.5rem, 11vw, 9.5rem);
+}
+
+.skip {
+  min-height: 2.75rem;
+}
+
+.stage {
+  position: relative;
+  align-self: end;
+  justify-self: center;
+  width: min(92vw, 36rem, 56svh);
+  /* Le bas du dessin dépasse un peu de l'écran : le balancement ne découvre jamais de vide. */
+  translate: 0 4%;
+}
+
+.character {
+  position: relative;
+  aspect-ratio: 1;
+  transform-origin: 50% 100%;
+  animation:
+    entree 700ms var(--ease-out) both,
+    hume 900ms var(--ease-out) var(--t-hume) both;
+}
+
+.overlay,
+.arm {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.overlay {
+  overflow: visible;
+}
+
+/* Le bras pivote autour du coude, hors du cadre en bas : le verre quitte le nez et y revient. */
+.arm {
+  transform-origin: 63% 131%;
+  animation: geste 2700ms var(--ease-in-out) var(--t-geste) both;
+}
+
+/* Le vin tourne : la surface bascule d'un côté à l'autre en s'amortissant. */
+.wine {
+  transform-box: view-box;
+  animation: tourbillon 1500ms var(--ease-in-out) var(--t-tourne) both;
+}
+
+/* Yeux fermés au départ (nez dans le verre), ouverts pendant le geste, refermés pour humer. */
+.eyesClosed {
+  animation:
+    ferme 150ms var(--ease-out) 900ms forwards,
+    reparait 200ms var(--ease-out) var(--t-hume) forwards;
+}
+
+.eyesOpen {
+  animation:
+    ouvre 150ms var(--ease-out) 900ms both,
+    ferme 200ms var(--ease-out) var(--t-hume) forwards;
+}
+
+.pupils {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cligne 220ms ease-in-out 2100ms;
+}
+
+.blush {
+  opacity: 0;
+  mix-blend-mode: multiply;
+  animation: rosit 600ms var(--ease-out) calc(var(--t-hume) + 150ms) forwards;
+}
+
+.aroma {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: arome 1400ms var(--ease-out) forwards;
+}
+
+/*
+ * La réplique en très grand, dans le bleu au-dessus de Paolo. Police à chasse fixe :
+ * chaque ligne s'écrit une lettre à la fois (largeur animée en « ch »).
+ * Taille calculée sur la ligne la plus longue : 9 signes sur mobile (« ÉMOTION ! »),
+ * 17 sur grand écran (« QUELLE ÉMOTION ! » et son espace), un signe valant 0,56 em.
+ */
+.quote {
+  align-self: center;
+  padding-inline: var(--marge);
+  font-size: min(calc((100vw - 2 * var(--marge)) / 5.2), 12svh);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  color: var(--c-blanc);
+}
+
+.quoteLine {
+  display: block;
+  max-width: 100%;
+  width: calc(var(--lettres) * 1ch);
+  overflow: hidden;
+  white-space: nowrap;
+  animation: ecrit calc(var(--lettres) * 55ms) steps(var(--lettres), end)
+    calc(var(--t-replique) + var(--rang) * 600ms) both;
+}
+
+@media (min-width: 48rem) {
+  .quote {
+    font-size: min(calc((100vw - 2 * var(--marge)) / 10), 17svh);
+  }
+  /* « QUELLE » et « ÉMOTION ! » partagent la deuxième ligne. */
+  .quoteLine:nth-child(n + 2) {
+    display: inline-block;
+    vertical-align: top;
+  }
+  .quoteLine:nth-child(2) {
+    margin-right: 0.56em;
+  }
+}
+
+@keyframes entree {
+  from {
+    translate: 0 35%;
+  }
+}
+
+/* Repos au nez → bras baissé → petits cercles → retour au nez. */
+@keyframes geste {
+  0% { rotate: 0deg; translate: 0 0; }
+  18% { rotate: -12deg; translate: 0 7%; }
+  30% { rotate: -14deg; translate: 1% 6%; }
+  42% { rotate: -10deg; translate: -1% 8%; }
+  54% { rotate: -13deg; translate: 1% 9%; }
+  66% { rotate: -11deg; translate: -1% 7%; }
+  86% { rotate: 0deg; translate: 0 0; }
+  100% { rotate: 0deg; translate: 0 0; }
+}
+
+@keyframes hume {
+  to {
+    scale: 1.035;
+  }
+}
+
+@keyframes tourbillon {
+  0% { rotate: 0deg; translate: 0 0; }
+  18% { rotate: -18deg; translate: 8px -6px; }
+  38% { rotate: 16deg; translate: -8px -5px; }
+  58% { rotate: -11deg; translate: 6px -3px; }
+  78% { rotate: 6deg; translate: -3px -1px; }
+  100% { rotate: 0deg; translate: 0 0; }
+}
+
+@keyframes ouvre {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Valeurs explicites : un retour à 1 ne doit pas hériter du 0 laissé par « ferme ». */
+@keyframes reparait {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ferme {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes cligne {
+  50% {
+    scale: 1 0.1;
+  }
+}
+
+@keyframes rosit {
+  to {
+    opacity: 0.85;
+  }
+}
+
+@keyframes arome {
+  0% { opacity: 0; stroke-dashoffset: 1; translate: 0 0; }
+  20% { opacity: 1; }
+  60% { stroke-dashoffset: 0; }
+  100% { opacity: 0; stroke-dashoffset: 0; translate: -6px -22px; }
+}
+
+@keyframes ecrit {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes sortie {
+  to {
+    transform: translate3d(0, -100%, 0);
+    visibility: hidden;
+  }
+}
+
+@keyframes estompe {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -2.5rem, 0);
+  }
+}
