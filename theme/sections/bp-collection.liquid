@@ -1,0 +1,135 @@
+{%- comment -%}
+  « La boutique » : toutes les bouteilles d’une collection, en grille.
+  Sur /collections/all, le titre et l’introduction viennent des réglages de la section ;
+  sur une autre collection, de la collection elle-même.
+{%- endcomment -%}
+{{ 'bp-collection.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign title = collection.title
+  assign intro = collection.description
+  if collection.handle == 'all' or collection.handle == blank
+    assign title = section.settings.title
+    assign intro = section.settings.intro
+  endif
+
+  # Rayon choisi (adresse /collections/all/rouge+region-piemont) : le type et l'origine.
+  assign current_type = ''
+  assign current_place = ''
+  assign type_title = ''
+  assign place_title = ''
+  for tag in current_tags
+    assign tag_handle = tag | handle
+    assign tag_start = tag_handle | slice: 0, 5
+    assign tag_start_region = tag_handle | slice: 0, 7
+    if tag_start == 'pays-' or tag_start_region == 'region-'
+      assign current_place = tag_handle
+      assign place_title = tag | remove_first: 'pays:' | remove_first: 'region:' | strip
+    else
+      for type in shop.types
+        assign type_handle = type | handle
+        if type_handle == tag_handle
+          assign current_type = tag_handle
+          capture type_title
+            render 'bp-type-label', type: type
+          endcapture
+        endif
+      endfor
+    endif
+  endfor
+  if type_title != blank
+    assign title = type_title | strip
+  elsif place_title != blank
+    assign title = place_title
+  endif
+  assign count = collection.products_count
+  assign grid_title_id = 'bp-boutique-title-' | append: section.id
+-%}
+
+<div class="bp-shop">
+  <h1 class="bp-affiche bp-shop__title">
+    {{ title | escape }}
+    <sup class="bp-shop__count"><span class="bp-sr-only">{{ count }} bouteille{% if count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ count }}</span></sup>
+  </h1>
+  {%- if intro != blank -%}
+    <div class="bp-shop__intro">{{ intro }}</div>
+  {%- endif -%}
+
+  {%- render 'bp-shop-filters', current_type: current_type, current_place: current_place -%}
+
+  {%- liquid
+    assign grid_title = section.settings.grid_title
+    if type_title != blank and place_title != blank
+      assign grid_title = 'Origine : ' | append: place_title
+    elsif current_type != blank or current_place != blank
+      assign grid_title = 'Les bouteilles du rayon'
+    endif
+  -%}
+  {%- render 'bp-section-head', id: grid_title_id, title: grid_title -%}
+
+  {%- paginate collection.products by 24 -%}
+    {%- if collection.products.size == 0 -%}
+      <p class="bp-shop__empty">
+        {{ section.settings.empty_text | escape }}
+        <a class="bp-shop__empty-link" href="mailto:{{ shop.email }}?subject={{ 'Conseil bouteille' | url_encode }}">Écrivez-nous</a>
+        en attendant, Paolo vous conseille.
+      </p>
+    {%- else -%}
+      <ul class="bp-shop__grid" aria-labelledby="{{ grid_title_id }}">
+        {%- for product in collection.products -%}
+          <li>
+            {%- liquid
+              assign priority = false
+              if forloop.index <= 2 and paginate.current_page == 1
+                assign priority = true
+              endif
+            -%}
+            {%- render 'bp-product-card',
+              product: product,
+              teinte: forloop.index,
+              priority: priority,
+              sizes: '(min-width: 90rem) 19vw, (min-width: 64rem) 24vw, (min-width: 40rem) 32vw, 48vw'
+            -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    {%- if paginate.pages > 1 -%}
+      <nav class="bp-ui bp-shop__pages" aria-label="Pages de la boutique">
+        {%- if paginate.previous -%}
+          <a class="bp-carre bp-shop__page-link" href="{{ paginate.previous.url }}">Préc.</a>
+        {%- endif -%}
+        <span>Page {{ paginate.current_page }} sur {{ paginate.pages }}</span>
+        {%- if paginate.next -%}
+          <a class="bp-carre bp-shop__page-link" href="{{ paginate.next.url }}">Suiv.</a>
+        {%- endif -%}
+      </nav>
+    {%- endif -%}
+  {%- endpaginate -%}
+</div>
+
+{% schema %}
+{
+  "name": "Boutique BluePoint",
+  "tag": "section",
+  "class": "bp-collection-section",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titre (toutes les bouteilles)", "default": "La boutique" },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Introduction (toutes les bouteilles)",
+      "default": "<p>À l’unité ou en carton de 3, 6 ou 12. Livraison sous 48 h en Suisse, offerte dès 24 bouteilles.</p>"
+    },
+    { "type": "text", "id": "grid_title", "label": "Titre de la grille", "default": "Toutes les bouteilles" },
+    {
+      "type": "text",
+      "id": "empty_text",
+      "label": "Phrase si aucune bouteille",
+      "default": "La nouvelle sélection arrive.",
+      "info": "Suivi du lien « Écrivez-nous en attendant, Paolo vous conseille »."
+    }
+  ]
+}
+{% endschema %}

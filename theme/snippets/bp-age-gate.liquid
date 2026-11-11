@@ -1,0 +1,36 @@
+{%- comment -%}
+  Vérification d’âge (loi sur l’alcool). Rendue ouverte : sans JavaScript, elle reste visible.
+  Masquée avant le premier affichage si le navigateur a déjà confirmé l’âge (script dans <head>).
+  assets/bp-chrome.js la passe en modale native : fond inerte, focus piégé, Échap désactivé.
+  Le paragraphe de refus existe toujours (vide) : son texte, injecté au clic sur « Non »,
+  est ainsi annoncé de façon fiable par les lecteurs d’écran.
+{%- endcomment -%}
+<dialog class="bp-age-gate" aria-labelledby="bp-age-gate-title" data-bp-age-gate open>
+  <div class="bp-age-gate__inner">
+    <div class="bp-ui bp-age-gate__top">
+      {% render 'bp-logo', class: 'bp-age-gate__logo' %}
+      <span class="bp-sr-only">{{ shop.name | escape }}</span>
+      <span>18+</span>
+    </div>
+    <h2 id="bp-age-gate-title" class="bp-affiche bp-age-gate__title">Avez-vous l’âge légal&#8239;?</h2>
+    <p class="bp-age-gate__text" data-bp-age-question>
+      Pour découvrir nos vins et spiritueux, vous devez avoir 18&nbsp;ans révolus.
+    </p>
+    <p class="bp-age-gate__text" role="status" tabindex="-1" data-bp-age-refused></p>
+    <template data-bp-age-refused-template>
+      Ce site est réservé aux personnes majeures. Nous vous remercions de votre visite.
+      <a class="bp-age-gate__link" href="https://www.addictionsuisse.ch/">Addiction Suisse&#8239;: aide et informations</a>
+    </template>
+    <div class="bp-age-gate__actions">
+      <button type="button" class="bp-ui bp-carre bp-age-gate__primary" data-bp-age-confirm>
+        Oui, j’ai 18&nbsp;ans ou plus
+      </button>
+      <button type="button" class="bp-ui bp-carre bp-age-gate__secondary" data-bp-age-refuse>
+        Non, j’ai moins de 18&nbsp;ans
+      </button>
+    </div>
+    <p class="bp-ui bp-phrase bp-age-gate__legal">
+      L’abus d’alcool est dangereux pour la santé. À consommer avec modération.
+    </p>
+  </div>
+</dialog>

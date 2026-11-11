@@ -1,0 +1,57 @@
+{%- comment -%}
+  Écrit les données de navigation du catalogue, une ligne par entrée, à lire avec « split » :
+  - mode 'types'     : les types de produit qui ont au moins une bouteille, dans l'ordre du caviste ;
+  - mode 'regions'   : les étiquettes « region:… » (triées) ;
+  - mode 'countries' : les étiquettes « pays:… » (triées).
+  Paramètres : mode, products (liste de produits ; seuls ceux-là sont pris en compte),
+  within (facultatif : ne garder que les produits qui portent cette étiquette, par exemple « pays:Italie »).
+  Convention des étiquettes produit (voir README) : le type en minuscules (« rouge »), « pays:Italie », « region:Piémont ».
+{%- endcomment -%}
+{%- liquid
+  case mode
+    when 'types'
+      assign preferred = 'Rouge,Blanc,Rosé,Orange,Effervescent,Spiritueux' | split: ','
+      assign found = ''
+      for type in preferred
+        assign typed = products | where: 'type', type
+        if typed.size > 0
+          assign found = found | append: type | append: '|'
+        endif
+      endfor
+      for type in shop.types
+        if type == blank or preferred contains type
+          continue
+        endif
+        assign typed = products | where: 'type', type
+        if typed.size > 0
+          assign found = found | append: type | append: '|'
+        endif
+      endfor
+      echo found
+    else
+      assign prefix = 'region:'
+      if mode == 'countries'
+        assign prefix = 'pays:'
+      endif
+      assign prefix_size = prefix | size
+      assign found = '|'
+      for product in products
+        if within != blank
+          unless product.tags contains within
+            continue
+          endunless
+        endif
+        for tag in product.tags
+          assign start = tag | slice: 0, prefix_size
+          if start == prefix
+            assign marker = '|' | append: tag | append: '|'
+            unless found contains marker
+              assign found = found | append: tag | append: '|'
+            endunless
+          endif
+        endfor
+      endfor
+      assign sorted = found | remove_first: '|' | split: '|' | sort_natural | join: '|'
+      echo sorted
+  endcase
+-%}

@@ -1,0 +1,91 @@
+{%- comment -%}
+  « À chaque moment de la table » : de grandes tuiles (blocs), chacune liée à une bouteille.
+  Le nom du moment s'écrit en lettres d'affiche par-dessus la bouteille ; le titre, les plats,
+  puis le nom et le prix de la bouteille suivent dessous.
+  Les blocs sans bouteille sont ignorés ; la section n'apparaît pas si aucun bloc n'a de bouteille.
+{%- endcomment -%}
+{%- liquid
+  assign heading_id = 'bp-moments-title-' | append: section.id
+  assign valid_count = 0
+  for block in section.blocks
+    if block.settings.product != blank
+      assign valid_count = valid_count | plus: 1
+    endif
+  endfor
+-%}
+
+{%- if valid_count > 0 -%}
+{{ 'bp-table-moments.css' | asset_url | stylesheet_tag }}
+
+<section id="accords" class="bp-section" aria-labelledby="{{ heading_id }}">
+  {% render 'bp-section-head', id: heading_id, title: section.settings.title %}
+  <ol class="bp-moments">
+    {%- for block in section.blocks -%}
+      {%- assign product = block.settings.product -%}
+      {%- if product == blank -%}{%- continue -%}{%- endif -%}
+      <li {{ block.shopify_attributes }}>
+        <a href="{{ product.url }}" class="bp-moments__link">
+          <span class="bp-moments__tile">
+            {% render 'bp-packshot', product: product, sizes: '(min-width: 48rem) 30vw, 90vw', teinte: forloop.index, class: 'bp-moments__visual' %}
+            <span class="bp-affiche bp-moments__word" aria-hidden="true">{{ block.settings.moment | escape }}</span>
+          </span>
+          <span class="bp-moments__head">
+            <span class="bp-moments__title">{{ block.settings.title | escape }}</span>
+            <span class="bp-moments__dishes">{{ block.settings.dishes | escape }}</span>
+          </span>
+          <span class="bp-moments__bar">
+            <span class="bp-moments__bottle">{{ product.title | escape }}</span>
+            <span class="bp-moments__price">{% render 'bp-price', cents: product.price %}</span>
+          </span>
+        </a>
+      </li>
+    {%- endfor -%}
+  </ol>
+</section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Moments de la table",
+  "tag": "div",
+  "class": "bp-moments-section",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titre", "default": "À chaque moment de la table" }
+  ],
+  "blocks": [
+    {
+      "type": "moment",
+      "name": "Moment",
+      "settings": [
+        {
+          "type": "select",
+          "id": "moment",
+          "label": "Moment",
+          "options": [
+            { "value": "Apéritif", "label": "Apéritif" },
+            { "value": "Entrée", "label": "Entrée" },
+            { "value": "Plat", "label": "Plat" },
+            { "value": "Fromage", "label": "Fromage" },
+            { "value": "Dessert", "label": "Dessert" }
+          ],
+          "default": "Apéritif"
+        },
+        { "type": "text", "id": "title", "label": "Titre", "default": "Pour l’apéritif" },
+        { "type": "text", "id": "dishes", "label": "Plats", "default": "Fritto misto, olives, tomme vaudoise" },
+        { "type": "product", "id": "product", "label": "Bouteille" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Moments de la table BluePoint",
+      "blocks": [
+        { "type": "moment", "settings": { "moment": "Apéritif", "title": "Pour l’apéritif", "dishes": "Fritto misto, olives, tomme vaudoise" } },
+        { "type": "moment", "settings": { "moment": "Plat", "title": "Pour le plat", "dishes": "Filets de perche, risotto, viande grillée" } },
+        { "type": "moment", "settings": { "moment": "Fromage", "title": "Pour le fromage", "dishes": "Castelmagno, gruyère d’alpage, pecorino" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

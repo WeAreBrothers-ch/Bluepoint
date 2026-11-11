@@ -1,0 +1,14 @@
+{%- comment -%}
+  En-tête de section : grand titre d'affiche à gauche, un lien en pilule « … + » à droite.
+  Paramètres : id, title, tag ('h1' ou 'h2', défaut h2), link_url, link_label
+{%- endcomment -%}
+{%- assign heading = tag | default: 'h2' -%}
+<div class="bp-ui bp-section-head">
+  <{{ heading }} id="{{ id }}" class="bp-affiche bp-section-head__title">{{ title | escape }}</{{ heading }}>
+  {%- if link_url != blank and link_label != blank -%}
+    <a href="{{ link_url }}" class="bp-section-head__link">
+      {{ link_label | escape }}
+      <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" class="bp-section-head__plus"><path d="M6 1v10M1 6h10" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+    </a>
+  {%- endif -%}
+</div>

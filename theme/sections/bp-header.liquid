@@ -1,0 +1,139 @@
+{%- comment -%}
+  En-tête fixe BluePoint : un bandeau d'annonce bleu ciel, puis la barre logo + navigation.
+  - Grand écran : la navigation par type de vin et par région, avec un grand menu sous l'en-tête
+    (snippets/bp-nav-desktop.liquid, assets/bp-nav.js).
+  - Téléphone et tablette : bouton « Menu » qui ouvre un panneau plein écran (snippets/bp-nav-mobile.liquid).
+  Les rayons se construisent seuls à partir des produits : type de produit (Rouge, Blanc…) et
+  étiquettes « pays:… » et « region:… » (voir README, « Ranger une bouteille »).
+  Limite : les 50 premières bouteilles de la boutique servent à construire les rayons.
+{%- endcomment -%}
+{%- liquid
+  assign shop_url = routes.all_products_collection_url
+  assign products = collections.all.products
+  assign bottle_count = collections.all.products_count
+  assign pro_url = section.settings.pro_url | default: '/pages/espace-pro'
+  assign pro_label = 'Espace pro'
+  if customer and customer.b2b?
+    assign pro_label = 'Mon espace pro'
+  endif
+  assign shop_active = false
+  assign pro_active = false
+  if template.suffix == 'espace-pro'
+    assign pro_active = true
+  endif
+  if template.name == 'product' or template.name == 'collection' or template.name == 'list-collections'
+    assign shop_active = true
+  endif
+
+  capture types
+    render 'bp-catalog-data', mode: 'types', products: products
+  endcapture
+  capture regions
+    render 'bp-catalog-data', mode: 'regions', products: products
+  endcapture
+  capture countries
+    render 'bp-catalog-data', mode: 'countries', products: products
+  endcapture
+  assign types = types | split: '|'
+  assign regions = regions | split: '|'
+  assign countries = countries | split: '|'
+-%}
+
+{%- capture other_links -%}
+  <a class="bp-carre bp-header__link" href="{{ pro_url | escape }}" {% if pro_active %}aria-current="page"{% endif %}>{{ pro_label }}</a>
+  ||<a class="bp-carre bp-header__link" href="{{ routes.root_url }}#accords">Accords</a>
+  ||<a class="bp-carre bp-header__link" href="{{ routes.root_url }}#maison">La maison</a>
+  ||<a class="bp-carre bp-header__link" href="#contact">Contact</a>
+  {%- if section.settings.wine_bar_url != blank -%}
+    ||<a class="bp-carre bp-header__link" href="{{ section.settings.wine_bar_url | escape }}" target="_blank" rel="noopener noreferrer">
+      Wine bar{% render 'bp-icon-external', class: 'bp-header__external' %}<span class="bp-sr-only">(nouvel onglet)</span>
+    </a>
+  {%- endif -%}
+  {%- if section.settings.instagram_url != blank -%}
+    ||<a class="bp-carre bp-header__link" href="{{ section.settings.instagram_url | escape }}" target="_blank" rel="noopener noreferrer">
+      Instagram{% render 'bp-icon-external', class: 'bp-header__external' %}<span class="bp-sr-only">(nouvel onglet)</span>
+    </a>
+  {%- endif -%}
+{%- endcapture -%}
+{%- assign other_links = other_links | split: '||' -%}
+
+<header class="bp-header">
+  {%- if section.settings.announcement != blank -%}
+    <p class="bp-ui bp-phrase bp-header__annonce">{{ section.settings.announcement | escape }}</p>
+  {%- endif -%}
+  <div class="bp-header__bar">
+    <a href="{{ routes.root_url }}" class="bp-header__brand" aria-label="{{ shop.name | escape }}, accueil">
+      {% render 'bp-logo', class: 'bp-header__logo' %}
+    </a>
+
+    {%- render 'bp-nav-desktop',
+      products: products,
+      types: types,
+      regions: regions,
+      countries: countries,
+      shop_url: shop_url,
+      shop_active: shop_active,
+      bottle_count: bottle_count,
+      pro_url: pro_url,
+      pro_label: pro_label,
+      pro_active: pro_active,
+      wine_bar_url: section.settings.wine_bar_url,
+      instagram_url: section.settings.instagram_url
+    -%}
+
+    <button type="button" class="bp-ui bp-carre bp-menu__toggle" aria-haspopup="dialog" data-bp-menu-open>
+      Menu
+    </button>
+  </div>
+</header>
+
+{%- render 'bp-nav-mobile',
+  products: products,
+  types: types,
+  countries: countries,
+  shop_url: shop_url,
+  bottle_count: bottle_count,
+  menu_note: section.settings.menu_note,
+  other_links: other_links
+-%}
+
+{% schema %}
+{
+  "name": "En-tête BluePoint",
+  "tag": "div",
+  "class": "bp-header-section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "announcement",
+      "label": "Bandeau d’annonce",
+      "info": "Affiché tout en haut de chaque page. Vide : pas de bandeau.",
+      "default": "Livraison sous 48 h en Suisse, offerte dès 24 bouteilles"
+    },
+    {
+      "type": "text",
+      "id": "pro_url",
+      "label": "Lien Espace pro",
+      "default": "/pages/espace-pro"
+    },
+    {
+      "type": "text",
+      "id": "wine_bar_url",
+      "label": "Lien Wine bar",
+      "default": "http://vintagewinebar.ch"
+    },
+    {
+      "type": "text",
+      "id": "instagram_url",
+      "label": "Lien Instagram",
+      "default": "https://www.instagram.com/bluepointdistribution"
+    },
+    {
+      "type": "text",
+      "id": "menu_note",
+      "label": "Note en bas du menu mobile",
+      "default": "Livraison sous 48 h en Suisse"
+    }
+  ]
+}
+{% endschema %}

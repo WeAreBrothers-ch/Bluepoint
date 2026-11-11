@@ -1,0 +1,113 @@
+{%- comment -%}
+  Haut de l'accueil : un grand aplat bleu vif arrondi qui porte le titre d'affiche (ses lignes montent
+  une seule fois, juste après l'intro), la photo du vigneron avec sa pastille et l'étiquette « À la une »,
+  puis une bande fixe des trois promesses, séparées par des points bleus.
+{%- endcomment -%}
+{{ 'bp-hero.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign s = section.settings
+  assign featured = s.featured_product
+  if featured == blank
+    assign featured = collections.all.products.first
+  endif
+  assign title_lines = s.title | newline_to_br | split: '<br />'
+  assign photo_alt = s.photo_alt
+  if s.photo != blank and s.photo.alt != blank
+    assign photo_alt = s.photo.alt
+  endif
+-%}
+
+<section class="bp-hero" aria-labelledby="bp-hero-title-{{ section.id }}">
+  <div class="bp-hero__tile">
+  <div class="bp-hero__text">
+    {%- if s.kicker != blank -%}
+      <p class="bp-ui bp-hero__kicker">{{ s.kicker | escape }}</p>
+    {%- endif -%}
+    <h1 id="bp-hero-title-{{ section.id }}" class="bp-affiche bp-hero__title">
+      {%- for line in title_lines -%}
+        {%- assign delay = forloop.index0 | times: 90 | plus: 120 -%}
+        <span class="bp-hero__line">
+          <span class="bp-hero__line-inner" style="--bp-delai: {{ delay }}ms">{{ line | strip | escape }}</span>
+        </span>
+      {%- endfor -%}
+    </h1>
+    {%- if s.lead != blank -%}
+      <p class="bp-hero__lead">{{ s.lead | escape }}</p>
+    {%- endif -%}
+    <div class="bp-hero__actions">
+      {%- if s.primary_label != blank -%}
+        <a href="{{ s.primary_url | default: routes.all_products_collection_url | escape }}" class="bp-ui bp-carre bp-button" data-variant="plein">
+          {{- s.primary_label | escape -}}
+        </a>
+      {%- endif -%}
+      {%- if s.secondary_label != blank -%}
+        <a href="{{ s.secondary_url | default: '#maison' | escape }}" class="bp-ui bp-carre bp-button" data-variant="trait">
+          {{- s.secondary_label | escape -}}
+        </a>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <figure class="bp-hero__photo">
+    {%- if s.photo != blank -%}
+      {{ s.photo | image_url: width: 2000 | image_tag: class: 'bp-hero__image', widths: '600, 900, 1200, 1600, 2000', sizes: '(min-width: 56rem) 42vw, 100vw', loading: 'eager', fetchpriority: 'high', alt: photo_alt }}
+    {%- else -%}
+      <img class="bp-hero__image" src="{{ 'bp-photo-vigneron.webp' | asset_url }}" alt="{{ photo_alt | escape }}" width="1128" height="1400" fetchpriority="high">
+    {%- endif -%}
+    {%- if s.photo_caption != blank -%}
+      <figcaption class="bp-ui bp-hero__caption">{{ s.photo_caption | escape }}</figcaption>
+    {%- endif -%}
+    {%- if s.sticker != blank -%}
+      <p class="bp-hero__sticker" aria-hidden="true"><span>{{ s.sticker | escape }}</span></p>
+    {%- endif -%}
+    {%- if featured != blank -%}
+      <a href="{{ featured.url }}" class="bp-ui bp-hero__featured">
+        <span class="bp-hero__featured-label">À la une</span>
+        <span>{{ featured.title | escape }}</span>
+        <span class="bp-hero__featured-meta">
+          {{- featured.vendor | escape }} ·
+          {% if featured.available %}{{ featured.price | money | replace: "'", "’" }}{% else %}Épuisé{% endif -%}
+        </span>
+      </a>
+    {%- endif -%}
+  </figure>
+  </div>
+
+  <ul class="bp-hero__promises">
+    {%- for i in (1..3) -%}
+      {%- assign key = 'promise_' | append: i -%}
+      {%- if s[key] != blank -%}
+        <li class="bp-hero__promise">{{ s[key] | escape }}</li>
+      {%- endif -%}
+    {%- endfor -%}
+  </ul>
+</section>
+
+{% schema %}
+{
+  "name": "Haut de l’accueil",
+  "tag": "div",
+  "class": "bp-hero-section",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Surtitre", "default": "Vins d’Italie et de Suisse romande" },
+    { "type": "textarea", "id": "title", "label": "Titre", "info": "Une ligne par retour à la ligne.", "default": "Les vignerons\nd’exception,\ndirectement\nchez vous." },
+    { "type": "textarea", "id": "lead", "label": "Texte", "default": "La sélection de Paolo Pioletti, à Lutry : de petits producteurs d’Italie et de Suisse romande, souvent en exclusivité pour la Suisse romande." },
+    { "type": "text", "id": "primary_label", "label": "Bouton principal", "default": "Voir la boutique" },
+    { "type": "url", "id": "primary_url", "label": "Lien du bouton principal", "default": "/collections/all" },
+    { "type": "text", "id": "secondary_label", "label": "Lien secondaire", "default": "Rencontrer Paolo" },
+    { "type": "text", "id": "secondary_url", "label": "Adresse du lien secondaire", "default": "#maison" },
+    { "type": "header", "content": "Photo" },
+    { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Sans photo choisie, la photo provisoire du vigneron s’affiche." },
+    { "type": "text", "id": "photo_alt", "label": "Description de la photo (accessibilité)", "default": "Un vigneron souriant en tablier de cuir, accoudé à un tonneau au milieu des rangs" },
+    { "type": "text", "id": "photo_caption", "label": "Légende", "default": "Chez le vigneron" },
+    { "type": "text", "id": "sticker", "label": "Pastille ronde sur la photo", "info": "Deux ou trois mots. Vide : pas de pastille.", "default": "Livré en 48 h" },
+    { "type": "product", "id": "featured_product", "label": "Bouteille « À la une »", "info": "Sans choix, la première bouteille du catalogue." },
+    { "type": "header", "content": "Promesses" },
+    { "type": "text", "id": "promise_1", "label": "Promesse 1", "default": "Livraison sous 48 h en Suisse" },
+    { "type": "text", "id": "promise_2", "label": "Promesse 2", "default": "Offerte dès 24 bouteilles" },
+    { "type": "text", "id": "promise_3", "label": "Promesse 3", "default": "En direct des vignerons" }
+  ],
+  "presets": [{ "name": "Haut de l’accueil BluePoint" }]
+}
+{% endschema %}

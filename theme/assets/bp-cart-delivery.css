@@ -1,0 +1,152 @@
+/* BluePoint — récapitulatif panier : bloc « Livraison » (mode + date souhaitée) et paiement express. */
+
+.bp-livraison,
+.bp-livraison__group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.bp-livraison {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  padding-block: 1rem;
+  border-block: var(--trait) solid var(--ligne);
+}
+
+/* Légende flottante : elle redevient un élément ordinaire de la grille (espacements fiables partout). */
+.bp-livraison__legend,
+.bp-livraison__sublegend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+.bp-livraison__group {
+  display: grid;
+}
+
+/* Toute la ligne est cliquable : 44 px de haut au minimum. */
+.bp-livraison__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+/* Le vrai bouton radio reste dans la page (clavier, lecteur d’écran) mais invisible. */
+.bp-livraison__radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Le rond du choix de livraison : vide, il se remplit en bleu une fois choisi. */
+.bp-livraison__label.bp-carre {
+  gap: 0.6em;
+}
+
+.bp-livraison__label.bp-carre::before {
+  content: "";
+  flex: none;
+  width: 0.8em;
+  height: 0.8em;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--trait) currentColor;
+  transition:
+    background-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+}
+
+.bp-livraison__radio:checked + .bp-livraison__label.bp-carre::before {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 var(--trait) var(--accent);
+}
+
+.bp-livraison__radio:focus-visible + .bp-livraison__label {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.bp-livraison__label .bp-cart__muted {
+  margin-left: 0.35em;
+}
+
+.bp-livraison__date {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Sans script aussi : la date disparaît quand la Poste est choisie (expédition, pas de date). */
+.bp-livraison:has(.bp-livraison__radio[value="poste"]:checked) .bp-livraison__date,
+.bp-livraison__date[hidden] {
+  display: none;
+}
+
+.bp-livraison__input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: var(--trait) solid var(--ligne);
+  border-radius: var(--rayon);
+  background: var(--fond);
+  color: var(--encre);
+  font: inherit;
+  font-size: var(--t-corps);
+  transition: border-color 180ms var(--ease-out);
+}
+
+.bp-livraison__input[aria-invalid="true"] {
+  border-color: var(--encre);
+}
+
+.bp-livraison__hint {
+  color: var(--encre-douce);
+  font-size: var(--t-mention);
+}
+
+/* Erreur visible (pas seulement annoncée) : encre sur la tuile claire, comme l’erreur du panier. */
+.bp-livraison__error {
+  padding: 0.75rem 1rem;
+  border-radius: var(--rayon);
+  background: var(--fond-tuile);
+  color: var(--encre);
+}
+
+.bp-livraison__error[hidden] {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-livraison__option:hover .bp-livraison__label.bp-carre::before {
+    box-shadow: inset 0 0 0 var(--trait) var(--accent);
+  }
+  .bp-livraison__input:hover {
+    border-color: var(--encre-douce);
+  }
+}
+
+/* ---------- Paiement express (Apple Pay, Google Pay, Shop Pay…) ---------- */
+
+/* Sous « Commander » : même largeur, en pilule et 48 px de haut comme les autres boutons.
+   Les couleurs des boutons restent celles des marques (exigence Shopify). */
+.bp-cart__express {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  --shopify-accelerated-checkout-button-block-size: 3rem;
+  --shopify-accelerated-checkout-button-border-radius: 999px;
+  --shopify-accelerated-checkout-row-gap: 0.5rem;
+}
+
+.bp-cart__tax {
+  margin-top: -0.5rem;
+}

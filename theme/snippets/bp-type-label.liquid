@@ -1,0 +1,13 @@
+{%- comment -%}
+  Nom au pluriel d'un type de produit Shopify, pour la navigation : « Rouge » → « Rouges ».
+  Paramètre : type (le type de produit tel qu'écrit dans l'admin).
+{%- endcomment -%}
+{%- case type -%}
+  {%- when 'Rouge' -%}Rouges
+  {%- when 'Blanc' -%}Blancs
+  {%- when 'Rosé' -%}Rosés
+  {%- when 'Orange' -%}Vins orange
+  {%- when 'Effervescent' -%}Pétillants
+  {%- when 'Spiritueux' -%}Spiritueux
+  {%- else -%}{{ type | escape }}
+{%- endcase -%}

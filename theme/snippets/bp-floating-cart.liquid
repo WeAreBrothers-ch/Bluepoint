@@ -1,0 +1,14 @@
+{%- comment -%}
+  Bouton panier fixé en bas à droite, toujours à portée de pouce.
+  Le nombre est mis à jour par assets/bp-cart.js après chaque ajout.
+{%- endcomment -%}
+<a
+  href="{{ routes.cart_url }}"
+  class="bp-ui bp-carre bp-floating-cart"
+  data-actif="{% if cart.item_count > 0 %}true{% else %}false{% endif %}"
+  data-bp-floating-cart
+  aria-label="{% if cart.item_count == 0 %}Panier, vide{% else %}Panier, {{ cart.item_count }} bouteille{% if cart.item_count > 1 %}s{% endif %}{% endif %}"
+>
+  Panier
+  <span class="bp-floating-cart__count" aria-hidden="true" data-bp-cart-count>{{ cart.item_count }}</span>
+</a>

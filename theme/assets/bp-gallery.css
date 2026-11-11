@@ -1,0 +1,100 @@
+/* BluePoint — photos de la fiche bouteille : grande tuile + vignettes (snippets/bp-product-gallery.liquid). */
+
+.bp-gallery {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bp-gallery__frame {
+  position: relative;
+  border-radius: var(--rayon);
+}
+
+.bp-gallery__slide {
+  position: absolute;
+  inset: 0;
+}
+
+.bp-gallery__slide[hidden] {
+  display: none;
+}
+
+/* Photo supplémentaire (étiquette, dos, détail) : entière, jamais recadrée. */
+.bp-packshot__view {
+  position: absolute;
+  inset: 5%;
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+}
+
+.bp-gallery__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bp-gallery__thumbs[hidden],
+.bp-gallery__count[hidden] {
+  display: none;
+}
+
+/* Vignette : 64 px (cible tactile ≥ 48 px), cadre épais sur la photo affichée, comme les formats. */
+.bp-gallery__thumb {
+  position: relative;
+  width: 4rem;
+  height: 4rem;
+  padding: 0;
+  border: var(--trait) solid var(--ligne);
+  border-radius: calc(var(--rayon) * 0.6);
+  overflow: hidden;
+  background: var(--fond-tuile);
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out);
+}
+
+.bp-gallery__thumb[aria-pressed="true"] {
+  border: 3px solid var(--encre);
+}
+
+.bp-gallery__thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bp-gallery__count {
+  color: var(--encre-douce);
+  font-size: var(--t-mention);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-gallery__thumb:hover {
+    background: var(--c-ciel);
+  }
+}
+
+/* Grand écran : la tuile se réduit pour que tuile + vignettes tiennent ensemble dans l’écran. */
+@media (min-width: 64rem) {
+  .bp-gallery[data-multiple] .bp-product__visual {
+    width: min(100%, calc((100svh - var(--hauteur-entete) - 11rem) * 0.8));
+  }
+
+  .bp-gallery__thumbs,
+  .bp-gallery__count {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* Téléphone : la photo occupe toute la largeur, les vignettes gardent la marge du texte. */
+@media (max-width: 63.999rem) {
+  .bp-gallery__thumbs,
+  .bp-gallery__count {
+    padding-inline: var(--marge);
+  }
+
+  .bp-gallery__count {
+    padding-bottom: 1rem;
+  }
+}

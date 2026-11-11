@@ -1,0 +1,49 @@
+/* BluePoint — barre d’achat fixe de la fiche bouteille (sections/bp-main-product.liquid). */
+
+.bp-buy-bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 44;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  /* La barre d’accueil de l’iPhone ne recouvre pas le bouton. */
+  height: calc(var(--hauteur-barre-achat) + env(safe-area-inset-bottom));
+  padding: 0.75rem var(--marge) calc(0.75rem + env(safe-area-inset-bottom));
+  background: var(--fond);
+  border-top: var(--trait) solid var(--ligne);
+  transform: translateY(100%);
+  /* Sortie plus vive que l’entrée. */
+  transition: transform 240ms var(--ease-out);
+}
+
+.bp-buy-bar[data-visible="true"] {
+  transform: none;
+  transition-duration: 320ms;
+}
+
+.bp-buy-bar__name {
+  display: grid;
+  min-width: 0;
+}
+
+.bp-buy-bar__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bp-buy-bar__price {
+  color: var(--encre-douce);
+}
+
+.bp-buy-bar__add {
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+}
+
+/* Message d’erreur affiché à la place du nom : il peut passer sur deux lignes. */
+.bp-buy-bar__title[data-etat="erreur"] {
+  white-space: normal;
+}

@@ -1,0 +1,97 @@
+{%- comment -%}
+  Paolo dessiné au trait (repère 474 × 474), en calques superposés :
+  1. le personnage fixe (tête, lunettes, barbe, torse) ;
+  2. les effets de la dégustation (joues roses, arômes) ;
+  3. le bras qui tient le verre (le vin tourne dans la coupe) ;
+  4. le bout du nez, qui plonge dans le verre ;
+  5. le bord du verre, qui passe devant le nez et suit le bras.
+  Tout le mouvement est piloté par assets/bp-intro.css.
+  Paramètre facultatif uid : suffixe de l’identifiant de découpe, quand le dessin
+  apparaît deux fois sur la page (intro + personnage d’ajout au panier).
+{%- endcomment -%}
+{%- assign stubble = '366,150|365,160|366,170|357,163|356,178|349,197|363,205|298,223|312,225|323,226|335,214|344,226|353,213|350,197|367,223|358,235|349,246|338,240|356,257|344,267|334,257|333,277|323,270|322,253|312,274|321,292|307,300|298,284|290,295|278,293|271,292|294,308|283,307|274,312|290,243|281,246|272,246|287,256|276,257' | split: '|' -%}
+
+<svg class="bp-intro__overlay" viewBox="0 0 474 474" aria-hidden="true" focusable="false">
+  <path d="M100 480L115 404C120 372 136 340 168 330L266 319C272 328 280 334 290 338C312 346 340 346 360 341C384 334 398 322 401 307C440 309 466 311 480 313C560 320 690 362 790 490Z" fill="#fff"/>
+  <g fill="none" stroke="#000" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M103 480L115 404C120 372 136 340 168 330L266 319"/>
+    <path d="M401 307C440 309 466 311 480 313C560 320 690 362 790 490"/>
+  </g>
+
+  <path d="M208.5 189C211 179 214 165 217 153C220 143 222 136 225 126C228 117 231 111 235 107C245 88 262 76 288 71C305 68 330 67 355 73C370 78 382 92 390 108C396 120 400 132 401 145V307C398 322 384 334 360 341C340 346 312 346 290 338C272 326 265 312 265 300C266 270 266 240 264 206L203 204Z" fill="#fff"/>
+  <path d="M188 141C186 150 187 162 191 172C195 181 201 186 208 188L206 196L217 153L226 135L188 141Z" fill="#fff"/>
+  <g fill="none" stroke="#000" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M208.5 189C211 179 214 165 217 153C220 143 222 136 225 126C228 117 231 111 235 107C245 88 262 76 288 71C305 68 330 67 355 73C370 78 382 92 390 108C396 120 400 132 401 145V307"/>
+    <path d="M264 206C266 240 266 280 265 300C265 312 272 326 290 338C312 346 340 346 360 341C384 334 398 322 401 307"/>
+    <path d="M161 122C190 121 230 120 272 120C320 120 360 122 396 123" stroke-width="5.2"/>
+    <path d="M188 141C200 137 214 135 226 135L340 139L398 140C410 140 418 141 421 146C424 152 423 162 418 168" stroke-width="6"/>
+    <path d="M188 141C186 150 187 162 191 172C195 181 201 186 208 188"/>
+    <path d="M257 138C257 150 259 166 264 180C270 191 280 196 292 196C306 196 320 190 327 180C333 168 335 154 337 140" stroke-width="5.2"/>
+    <path d="M370 160C378 152 390 155 393 168C396 182 390 196 380 200C375 202 372 199 372 196"/>
+    <path d="M297 233C300 240 306 243 314 243C320 243 324 240 326 237"/>
+    <path d="M309 247C302 262 288 273 265 278"/>
+  </g>
+
+  <g fill="#000">
+    {%- for point in stubble -%}
+      {%- assign xy = point | split: ',' -%}
+      <ellipse cx="{{ xy[0] }}" cy="{{ xy[1] }}" rx="1.7" ry="3.3" transform="rotate(8 {{ xy[0] }} {{ xy[1] }})"/>
+    {%- endfor -%}
+  </g>
+
+  <g class="bp-intro__eyes-closed" fill="none" stroke="#000" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M277 158C279 168 285 176 293 177C301 177 307 170 310 158"/>
+    <path d="M201 157C202 163 205 167 209 168"/>
+  </g>
+  <g class="bp-intro__eyes-open">
+    <g class="bp-intro__pupils" fill="#000">
+      <ellipse cx="294" cy="168" rx="5" ry="7"/>
+      <ellipse cx="203" cy="163" rx="2.8" ry="4.2"/>
+    </g>
+  </g>
+</svg>
+
+<svg class="bp-intro__overlay" viewBox="0 0 474 474" aria-hidden="true" focusable="false">
+  <ellipse class="bp-intro__blush" cx="344" cy="222" rx="22" ry="12" fill="#f890c5"/>
+  <g fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round">
+    <path class="bp-intro__aroma" style="animation-delay: calc(var(--t-arome) + 0ms)" d="M176 196c-8-10 8-18 0-28s8-18 0-28" pathLength="1"/>
+    <path class="bp-intro__aroma" style="animation-delay: calc(var(--t-arome) + 140ms)" d="M160 204c-8-10 8-18 0-28s8-18 0-28" pathLength="1"/>
+    <path class="bp-intro__aroma" style="animation-delay: calc(var(--t-arome) + 280ms)" d="M192 190c-6-8 6-14 0-22s6-14 0-22" pathLength="1"/>
+  </g>
+</svg>
+
+<div class="bp-intro__arm">
+  <svg class="bp-intro__overlay" viewBox="0 0 474 474" aria-hidden="true" focusable="false">
+    <defs>
+      <clipPath id="bp-intro-coupe{{ uid }}">
+        <path d="M168 201H262C264 201 265 202 265 204V258C265 281 258 298 245 306C236 311 228 312 220 312C206 312 190 306 180 296C170 286 165 273 165 258V204C165 202 166 201 168 201Z"/>
+      </clipPath>
+    </defs>
+    <path d="M100 391C95 388 92 385 93 382C94 378 98 376 101 377C107 379 113 382 119 384C117 372 114 350 112 330C111 322 114 316 120 316C126 316 129 320 130 326C132 338 135 350 139 360C143 346 147 332 150 318C152 310 155 307 159 307C164 307 167 311 167 316C167 328 167 344 166 358C176 348 188 338 205 335C222 333 238 332 250 334C262 337 267 348 270 360C274 376 279 396 285 418C292 440 302 460 316 480L322 560H200L206 474C180 455 150 432 121 410C113 404 106 397 100 391Z" fill="#fff"/>
+    <g fill="none" stroke="#000" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M100 391C108 398 114 404 121 409C150 431 178 452 206 474"/>
+      <path d="M100 391C95 388 92 385 93 382C94 378 98 376 101 377C107 379 113 382 119 384C117 372 114 350 112 330C111 322 114 316 120 316C126 316 129 320 130 326C132 338 135 350 139 360C143 346 147 332 150 318C152 310 155 307 159 307C164 307 167 311 167 316C167 328 167 344 166 358C176 348 188 338 205 335C209 334 212 334 215 335"/>
+      <path d="M226 334C236 332 246 332 252 336C262 342 267 350 270 360C274 376 279 396 285 418C292 440 302 460 314 474"/>
+      <path d="M217 350C233 349 247 358 247 374C247 390 233 399 217 399C201 399 187 390 187 373C187 359 200 350 217 350Z"/>
+      <path d="M220 312V401" stroke-width="5.6"/>
+    </g>
+    <path d="M168 201H262C264 201 265 202 265 204V258C265 281 258 298 245 306C236 311 228 312 220 312C206 312 190 306 180 296C170 286 165 273 165 258V204C165 202 166 201 168 201Z" fill="#fff"/>
+    <g clip-path="url(#bp-intro-coupe{{ uid }})">
+      <g class="bp-intro__wine">
+        <path d="M100 259Q136 251 172 259T244 260T316 259V340H100Z" fill="#000"/>
+      </g>
+    </g>
+    <path d="M168 201H262C264 201 265 202 265 204V258C265 281 258 298 245 306C236 311 228 312 220 312C206 312 190 306 180 296C170 286 165 273 165 258V204C165 202 166 201 168 201Z" fill="none" stroke="#000" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>
+
+<svg class="bp-intro__overlay" viewBox="0 0 474 474" aria-hidden="true" focusable="false">
+  <path d="M208.5 189C206 196 202 205 202 214C202 224 207 229 218 229C226 229 233 222 240 215C246 210 252 206 258 205H267V189Z" fill="#fff"/>
+  <path d="M208.5 189C206 196 202 205 202 214C202 224 207 229 218 229C226 229 233 222 240 215C246 210 252 206 258 205L264 206" fill="none" stroke="#000" stroke-width="4.5" stroke-linecap="round"/>
+</svg>
+
+<div class="bp-intro__arm">
+  <svg class="bp-intro__overlay" viewBox="0 0 474 474" aria-hidden="true" focusable="false">
+    <path d="M165 207V204C165 202 166 201 168 201H262C264 201 265 202 265 204V207" fill="none" stroke="#000" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>

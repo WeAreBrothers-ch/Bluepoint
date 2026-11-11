@@ -1,0 +1,15 @@
+{%- comment -%}
+  Écrit l'adresse de la bouteille détourée d'un produit (largeur demandée), ou rien s'il n'en a pas.
+  1. Métachamp bluepoint.bouteille (fichier image ajouté dans l'admin) ;
+  2. sinon, fichier du thème assets/bp-bouteille-<handle>.webp, pour les bouteilles listées ici.
+  Usage : {% capture url %}{% render 'bp-cutout-url', product: product, width: 600 %}{% endcapture %}
+{%- endcomment -%}
+{%- liquid
+  assign theme_cutouts = 'barolo-passione-di-re,brunello-di-montalcino-salvioni,col-del-forno-prosecco,deux-freres-dry-gin,dezaley-tour-marsens' | split: ','
+  assign cutout = product.metafields.bluepoint.bouteille.value
+  if cutout != blank
+    echo cutout | image_url: width: width
+  elsif theme_cutouts contains product.handle
+    echo 'bp-bouteille-' | append: product.handle | append: '.webp' | asset_url
+  endif
+-%}

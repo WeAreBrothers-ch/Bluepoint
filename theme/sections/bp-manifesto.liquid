@@ -1,0 +1,66 @@
+{%- comment -%}
+  « À propos » : la promesse en grand, un lien vers l’histoire de la maison, puis deux photos.
+{%- endcomment -%}
+{{ 'bp-manifesto.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign s = section.settings
+  assign heading_id = 'bp-manifeste-title-' | append: section.id
+-%}
+
+<section class="bp-section bp-manifesto" aria-labelledby="{{ heading_id }}">
+  <h2 id="{{ heading_id }}" class="bp-ui bp-manifesto__label">{{ s.label | escape }}</h2>
+  <div class="bp-manifesto__body">
+    <p class="bp-affiche bp-manifesto__statement">{{ s.statement | escape }}</p>
+    {%- if s.link_label != blank -%}
+      <a href="{{ s.link_url | default: '#maison' | escape }}" class="bp-ui bp-carre bp-button" data-variant="trait">
+        {{- s.link_label | escape -}}
+      </a>
+    {%- endif -%}
+  </div>
+
+  <div class="bp-manifesto__photos">
+    {% render 'bp-photo-figure',
+      image: s.photo_1,
+      fallback: 'bp-photo-cave.webp',
+      width: 1198,
+      height: 783,
+      alt: s.photo_1_alt,
+      caption: s.photo_1_caption,
+      ratio: '3 / 2',
+      sizes: '(min-width: 48rem) 62vw, 92vw'
+    %}
+    {% render 'bp-photo-figure',
+      image: s.photo_2,
+      fallback: 'bp-photo-etiquettes.webp',
+      width: 400,
+      height: 400,
+      alt: s.photo_2_alt,
+      caption: s.photo_2_caption,
+      ratio: '1',
+      sizes: '(min-width: 48rem) 30vw, 92vw'
+    %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "À propos (manifeste)",
+  "tag": "div",
+  "class": "bp-manifesto-section",
+  "settings": [
+    { "type": "text", "id": "label", "label": "Intitulé", "default": "À propos" },
+    { "type": "textarea", "id": "statement", "label": "Phrase en grand", "default": "De petits domaines d’Italie et de Suisse romande, souvent en exclusivité, livrés de Lutry à votre table." },
+    { "type": "text", "id": "link_label", "label": "Lien", "default": "L’histoire de la maison" },
+    { "type": "text", "id": "link_url", "label": "Adresse du lien", "default": "#maison" },
+    { "type": "header", "content": "Photos" },
+    { "type": "image_picker", "id": "photo_1", "label": "Grande photo", "info": "Sans choix, la photo provisoire de la cave." },
+    { "type": "text", "id": "photo_1_alt", "label": "Description (accessibilité)", "default": "Cinq bouteilles de vin rouge aux étiquettes illustrées et colorées, alignées sur fond clair" },
+    { "type": "text", "id": "photo_1_caption", "label": "Légende", "default": "La cave" },
+    { "type": "image_picker", "id": "photo_2", "label": "Photo carrée", "info": "Sans choix, la photo provisoire des étiquettes." },
+    { "type": "text", "id": "photo_2_alt", "label": "Description (accessibilité)", "default": "Trois bouteilles de vin aux étiquettes dessinées, posées côte à côte" },
+    { "type": "text", "id": "photo_2_caption", "label": "Légende", "default": "Les étiquettes" }
+  ],
+  "presets": [{ "name": "À propos BluePoint" }]
+}
+{% endschema %}

@@ -1,0 +1,209 @@
+/* BluePoint — page panier. */
+
+.bp-cart {
+  padding: calc(var(--hauteur-entete) + clamp(3rem, 8vw, 6rem)) var(--marge) 0;
+}
+
+.bp-cart__empty {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: 1.5rem;
+  min-height: 70svh;
+}
+
+.bp-cart__title {
+  font-size: var(--t-geant);
+  margin-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+.bp-cart__empty .bp-cart__title {
+  margin-bottom: 0;
+}
+
+.bp-cart__muted {
+  color: var(--encre-douce);
+}
+
+.bp-cart__layout {
+  display: grid;
+  gap: 3rem;
+}
+
+/* Pendant une mise à jour, la liste se fige ; l’atténuation n’arrive qu’après 150 ms (pas de clignotement). */
+.bp-cart__layout {
+  transition: opacity 160ms var(--ease-out);
+}
+
+.bp-cart[aria-busy="true"] .bp-cart__layout {
+  opacity: 0.7;
+  pointer-events: none;
+  transition-delay: 150ms;
+}
+
+.bp-cart__lines {
+  list-style: none;
+  border-top: var(--trait) solid var(--ligne);
+}
+
+.bp-cart__line {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: start;
+  padding-block: 1rem;
+  border-bottom: var(--trait) solid var(--ligne);
+}
+
+.bp-cart__thumb {
+  display: block;
+  aspect-ratio: 3 / 4;
+}
+
+.bp-cart__thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--rayon);
+}
+
+.bp-cart__line-text {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.bp-cart__line-name {
+  transition: color 180ms var(--ease-out);
+}
+
+.bp-cart__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+/* Les petits formulaires n’ajoutent aucune boîte : seuls leurs boutons comptent. */
+.bp-cart__step-form {
+  display: contents;
+}
+
+.bp-cart__stepper {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  border-radius: var(--rayon-pilule);
+  box-shadow: inset 0 0 0 var(--trait) var(--ligne);
+  background: var(--pilule);
+}
+
+.bp-cart__step {
+  display: grid;
+  place-items: center;
+  min-width: 3.5rem;
+  min-height: 3rem;
+  padding-inline: 0.75rem;
+  transition:
+    color 180ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-cart__step:active,
+.bp-cart__remove:active {
+  scale: 0.94;
+}
+
+.bp-cart__remove {
+  min-height: 3rem;
+  color: var(--encre-douce);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  transition:
+    color 180ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-cart__stepper > span {
+  display: grid;
+  place-items: center;
+  min-width: 2.5rem;
+  min-height: 3rem;
+}
+
+/* Récapitulatif dans une tuile bleu glacier arrondie, cernée d'encre. */
+.bp-cart__summary {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: var(--trait) solid var(--ligne);
+  border-radius: var(--rayon);
+  background: var(--c-glacier);
+}
+
+/* Remise : prix public puis ligne de remise, juste au-dessus du sous-total. */
+.bp-cart__savings {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  color: var(--encre-douce);
+}
+
+.bp-cart__savings-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bp-cart__savings-row.bp-pro-badge {
+  color: var(--accent);
+}
+
+.bp-cart__total {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 1rem;
+  border-bottom: var(--trait) solid var(--ligne);
+  font-size: var(--t-sous-titre);
+}
+
+/* Erreur visible (pas seulement annoncée) : encre sur la tuile claire. */
+.bp-cart__error {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--rayon);
+  background: var(--c-blanc);
+  color: var(--encre);
+}
+
+.bp-cart__error[hidden] {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-cart__line-name:hover,
+  .bp-cart__step:hover,
+  .bp-cart__remove:hover {
+    color: var(--accent);
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-cart__layout {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .bp-cart__summary {
+    position: sticky;
+    top: calc(var(--hauteur-entete) + 1rem);
+  }
+}
+
+@media (min-width: 90rem) {
+  .bp-cart__title {
+    letter-spacing: -0.045em;
+  }
+}

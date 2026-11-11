@@ -1,0 +1,74 @@
+{%- comment -%}
+  Menu téléphone et tablette (<dialog> plein écran, ouvert par le bouton « Menu » ; assets/bp-chrome.js).
+  Pensé pour aller vite au bon rayon, sans sous-menus à ouvrir :
+  1. les types de vin en grandes tuiles (un seul geste vers la bonne étagère) ;
+  2. les origines en pastilles, regroupées par pays ;
+  3. les autres liens en liste simple.
+  Paramètres : products, types, countries, shop_url, bottle_count, menu_note,
+  other_links (tableau de liens <a> déjà rendus)
+{%- endcomment -%}
+<dialog class="bp-menu" aria-label="Menu" data-bp-menu>
+  <div class="bp-menu__top">
+    <span class="bp-ui">{{ shop.name | escape }}</span>
+    <button type="button" class="bp-ui bp-carre bp-menu__close" data-bp-menu-close>Fermer</button>
+  </div>
+
+  <nav class="bp-menu__body" aria-label="Menu principal">
+    <section class="bp-menu__group" aria-labelledby="bp-menu-vins">
+      <h2 class="bp-menu__heading" id="bp-menu-vins">Les bouteilles</h2>
+      <ul class="bp-menu__types">
+        {%- for type in types -%}
+          {%- assign typed = products | where: 'type', type -%}
+          <li>
+            <a class="bp-menu__type" href="{{ shop_url }}/{{ type | handle }}" data-teinte="{{ forloop.index | minus: 1 | modulo: 3 | plus: 1 }}">
+              <span class="bp-affiche bp-menu__type-name">{% render 'bp-type-label', type: type %}</span>
+              <span class="bp-menu__type-count">{{ typed.size }}<span class="bp-sr-only"> bouteille{% if typed.size > 1 %}s{% endif %}</span></span>
+            </a>
+          </li>
+        {%- endfor -%}
+        <li class="bp-menu__types-all">
+          <a class="bp-menu__type" href="{{ shop_url }}" data-teinte="0">
+            <span class="bp-affiche bp-menu__type-name">Tout voir</span>
+            <span class="bp-menu__type-count">{{ bottle_count }}<span class="bp-sr-only"> bouteilles</span></span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    {%- if countries.size > 0 -%}
+      <section class="bp-menu__group" aria-labelledby="bp-menu-regions">
+        <h2 class="bp-menu__heading" id="bp-menu-regions">Par région</h2>
+        {%- for country in countries -%}
+          {%- liquid
+            capture country_regions
+              render 'bp-catalog-data', mode: 'regions', products: products, within: country
+            endcapture
+            assign country_regions = country_regions | split: '|'
+          -%}
+          <ul class="bp-menu__places">
+            <li>
+              <a class="bp-menu__place bp-menu__place--country" href="{{ shop_url }}/{{ country | handle }}">
+                {{- country | remove_first: 'pays:' | strip | escape -}}
+              </a>
+            </li>
+            {%- for tag in country_regions -%}
+              <li>
+                <a class="bp-menu__place" href="{{ shop_url }}/{{ tag | handle }}">{{ tag | remove_first: 'region:' | strip | escape }}</a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {%- endfor -%}
+      </section>
+    {%- endif -%}
+
+    <ul class="bp-menu__list">
+      {%- for link in other_links -%}
+        <li class="bp-menu__item">{{ link | strip }}</li>
+      {%- endfor -%}
+    </ul>
+  </nav>
+
+  {%- if menu_note != blank -%}
+    <p class="bp-ui bp-menu__note">{{ menu_note | escape }}</p>
+  {%- endif -%}
+</dialog>

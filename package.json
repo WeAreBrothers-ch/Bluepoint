@@ -12,7 +12,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "docker-start": "npm run setup && npm run start",
     "setup": "prisma generate && prisma migrate deploy",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --ignore-path .gitignore --ignore-pattern packages/ --cache --cache-location ./node_modules/.cache/eslint .",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --ignore-path .gitignore --ignore-pattern packages/ --ignore-pattern theme/ --ignore-pattern references/ --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",

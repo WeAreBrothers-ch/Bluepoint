@@ -1,0 +1,33 @@
+{%- comment -%}
+  « À découvrir aussi » : les autres bouteilles de la boutique (4 au plus), en rangée défilante.
+  Paramètres : product, section_id
+{%- endcomment -%}
+{%- liquid
+  assign shown = 0
+  assign others_count = collections.all.products_count | minus: 1
+  assign title_id = 'bp-autres-title-' | append: section_id
+-%}
+{%- if others_count > 0 -%}
+  <section class="bp-more" aria-labelledby="{{ title_id }}">
+    {%- render 'bp-section-head',
+      id: title_id,
+      title: 'À découvrir aussi',
+      link_url: routes.all_products_collection_url,
+      link_label: 'Toutes les bouteilles'
+    -%}
+    <ul class="bp-more__track" aria-label="Autres bouteilles">
+      {%- for other in collections.all.products -%}
+        {%- if other.id == product.id -%}{%- continue -%}{%- endif -%}
+        {%- if shown >= 4 -%}{%- break -%}{%- endif -%}
+        <li class="bp-more__slide">
+          {%- render 'bp-product-card',
+            product: other,
+            teinte: forloop.index,
+            sizes: '(min-width: 64rem) 24vw, (min-width: 40rem) 40vw, 70vw'
+          -%}
+        </li>
+        {%- assign shown = shown | plus: 1 -%}
+      {%- endfor -%}
+    </ul>
+  </section>
+{%- endif -%}

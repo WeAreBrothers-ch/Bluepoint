@@ -1,0 +1,54 @@
+{%- comment -%}
+  Carte bouteille : la bouteille en grand dans sa tuile (avec son type en pastille), puis le nom,
+  le producteur et la région, et en bas le prix et le bouton « Ajouter ».
+  Le prix est écrit hors du bouton : lisible par tous, et le bouton ne se coupe jamais en deux.
+  La tuile et le nom mènent tous deux à la fiche. Le bouton est géré par assets/bp-cart.js
+  (le statut et l'erreur doivent rester ses voisins directs dans .bp-card__actions).
+
+  Paramètres : product (obligatoire), sizes, priority, teinte (position dans la liste, voir bp-packshot)
+{%- endcomment -%}
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign region = product.metafields.bluepoint.region.value
+  # Même mot que dans le menu (« Pétillants ») : au singulier sur la carte.
+  assign type_label = product.type
+  if product.type == 'Effervescent'
+    assign type_label = 'Pétillant'
+  endif
+-%}
+<article class="bp-card">
+  <a href="{{ product.url }}" class="bp-card__visual-link" tabindex="-1" aria-hidden="true">
+    {% render 'bp-packshot', product: product, sizes: sizes, priority: priority, teinte: teinte, class: 'bp-card__visual' %}
+    {%- if product.type != blank -%}
+      <span class="bp-card__type">{{ type_label | escape }}</span>
+    {%- endif -%}
+  </a>
+  <a href="{{ product.url }}" class="bp-card__info">
+    <span class="bp-card__name">{{ product.title | escape }}</span>
+    <span class="bp-card__producer">{{ product.vendor | escape }}</span>
+    {%- if region != blank -%}
+      <span class="bp-card__region">{{ region | escape }}</span>
+    {%- endif -%}
+  </a>
+  <div class="bp-card__actions">
+    <p class="bp-card__price">{% render 'bp-price', cents: product.price %}</p>
+    {%- if product.available -%}
+      <button
+        type="button"
+        class="bp-card__quick-add"
+        data-bp-quick-add
+        data-variant-id="{{ variant.id }}"
+        data-product-name="{{ product.title | escape }}"
+        data-ajoute="false"
+        aria-label="Ajouter une bouteille de {{ product.title | escape }} au panier"
+      >
+        <span class="bp-card__quick-idle" aria-hidden="true">Ajouter</span>
+        <span class="bp-card__quick-done" aria-hidden="true">Ajouté</span>
+      </button>
+      <span class="bp-sr-only" role="status" data-bp-quick-add-status></span>
+    {%- else -%}
+      <span class="bp-card__quick-add bp-card__quick-add--epuise">Épuisé</span>
+    {%- endif -%}
+    <span class="bp-phrase bp-card__error" role="alert" data-bp-quick-add-error hidden></span>
+  </div>
+</article>

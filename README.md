@@ -1,5 +1,8 @@
 # BluePoint Gestion
 
+> Ce dépôt contient aussi le **thème Shopify** de la boutique (`theme/`), ses **images de référence** (`references/`) et la
+> **documentation de la marque** (`docs/` : direction artistique, produit, guide de la boutique).
+
 App Shopify sur mesure, intégrée à l’admin de la boutique BluePoint (`5s71g8-0v.myshopify.com`).
 Elle sert à l’équipe, pas aux clients :
 

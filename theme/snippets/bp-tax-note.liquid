@@ -1,0 +1,12 @@
+{%- comment -%}
+  Mention de TVA sous un prix. Suit le réglage de taxes de Shopify (Paramètres › Taxes et droits) :
+  « TVA incluse » si les prix affichés la contiennent, sinon elle est annoncée au paiement.
+  Paramètre : class
+{%- endcomment -%}
+<p class="bp-phrase bp-tax-note {{ class }}">
+  {%- if cart.taxes_included -%}
+    TVA incluse
+  {%- else -%}
+    Prix hors TVA, ajoutée au paiement
+  {%- endif -%}
+</p>

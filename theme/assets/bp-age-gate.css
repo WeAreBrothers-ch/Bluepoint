@@ -1,0 +1,128 @@
+/* BluePoint — vérification d'âge (snippets/bp-age-gate.liquid, assets/bp-chrome.js). */
+
+/* ---------- Vérification d'âge ---------- */
+
+.bp-age-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  border: 0;
+  background: var(--fond);
+  color: var(--encre);
+  display: grid;
+  place-items: center;
+  padding: var(--marge);
+}
+
+.bp-age-gate:not([open]),
+html[data-age-ok] .bp-age-gate {
+  display: none;
+}
+
+.bp-age-gate::backdrop {
+  background: var(--fond);
+}
+
+.bp-age-gate__inner {
+  display: grid;
+  gap: 1.5rem;
+  width: min(30rem, 100%);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: var(--trait) solid var(--ligne);
+  border-radius: var(--rayon);
+  background: var(--c-glacier);
+  animation: bp-entree 240ms var(--ease-out) both;
+}
+
+.bp-age-gate__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: var(--trait) solid var(--ligne);
+  color: var(--encre-douce);
+}
+
+.bp-age-gate__logo {
+  width: 7.5rem;
+  color: var(--accent);
+}
+
+.bp-age-gate__title {
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+}
+
+.bp-age-gate__text {
+  font-size: var(--t-sous-titre);
+  line-height: 1.5;
+  color: var(--encre);
+}
+
+.bp-age-gate__link {
+  color: var(--encre);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Deux réponses de même taille, l'une sous l'autre : aucune ne se cache derrière l'autre. */
+.bp-age-gate__actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bp-age-gate__primary,
+.bp-age-gate__secondary {
+  min-height: 3.75rem;
+  padding-inline: 1.5rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  font-size: 1.0625rem;
+  transition:
+    background-color 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+/* Deux pilules de même poids : bleu ciel et bleu pâle, cernées d'encre. */
+.bp-age-gate__primary {
+  background: var(--pilule);
+  color: var(--encre);
+}
+
+.bp-age-gate__secondary {
+  background: var(--c-blanc);
+  color: var(--encre);
+}
+
+.bp-age-gate__primary:active,
+.bp-age-gate__secondary:active {
+  scale: 0.98;
+}
+
+.bp-age-gate__legal {
+  padding-top: 1.25rem;
+  border-top: var(--trait) solid var(--ligne);
+  color: var(--encre-douce);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-age-gate__primary:hover,
+  .bp-age-gate__secondary:hover {
+    background: var(--c-azur);
+  }
+}
+
+/* Message affiché après « Non » : il reçoit le focus pour être lu aussitôt. */
+.bp-age-gate__text:focus {
+  outline: none;
+}
+
+/* Le paragraphe de refus reste dans la page (zone d’annonce), mais ne prend pas de place vide. */
+.bp-age-gate__text:empty {
+  display: none;
+}

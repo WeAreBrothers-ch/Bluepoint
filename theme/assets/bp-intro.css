@@ -1,0 +1,136 @@
+/*
+ * BluePoint — intro animée de l'accueil. Minutage (≈ 5,6 s), sur le bleu BluePoint :
+ * 0,0 s  Paolo entre par le bas, le nez dans le verre, les yeux fermés
+ * 0,5 s  le bras descend, le verre quitte le nez ; il ouvre les yeux
+ * 0,9 s  il fait tourner le vin (le bras décrit de petits cercles)
+ * 2,5 s  le verre est revenu sous le nez : il hume, yeux fermés, joues roses, arômes
+ * 2,9 s  la bulle de BD apparaît, la réplique s'y écrit lettre à lettre
+ * 4,65 s la bulle et Paolo s'estompent, le rideau bleu glisse vers le haut (0,9 s)
+ */
+.bp-intro {
+  --t-geste: 500ms;
+  --t-tourne: 900ms;
+  --t-hume: 2500ms;
+  --t-arome: 2650ms;
+  --t-replique: 2900ms;
+  --t-sortie: 4650ms;
+  --ease-rideau: cubic-bezier(0.76, 0, 0.24, 1);
+
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* L'épaule prolongée dépasse du dessin : on la coupe au bord de l'écran. */
+  overflow: hidden;
+  background: var(--c-bleu);
+  color: var(--c-blanc);
+  /* Anneau de focus blanc : le bleu habituel serait invisible sur le rideau bleu. */
+  --focus: var(--c-blanc);
+  /* Sortie : le rideau glisse vers le haut, en translation (calculée par la carte graphique). */
+  animation: bp-intro-sortie 900ms var(--ease-rideau) var(--t-sortie) forwards;
+  will-change: transform;
+}
+
+/* Juste avant le rideau, la réplique et le personnage s'estompent en remontant un peu. */
+.bp-intro__top,
+.bp-intro__bubble,
+.bp-intro__stage {
+  animation: bp-intro-estompe 450ms var(--ease-in-out) calc(var(--t-sortie) - 200ms) forwards;
+}
+
+/* Masquée tant que l'âge n'est pas confirmé, puis une fois vue. */
+html:not([data-age-ok]) .bp-intro,
+html[data-intro-vue] .bp-intro {
+  display: none;
+}
+
+.bp-intro__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem var(--marge);
+}
+
+.bp-intro__logo {
+  width: clamp(6.5rem, 11vw, 9.5rem);
+}
+
+.bp-intro__skip {
+  min-height: 2.75rem;
+}
+
+.bp-intro__stage {
+  position: relative;
+  align-self: end;
+  justify-self: center;
+  width: min(92vw, 36rem, 56svh);
+  /* Le bas du dessin dépasse un peu de l'écran : le balancement ne découvre jamais de vide. */
+  translate: 0 4%;
+}
+
+.bp-intro__character {
+  position: relative;
+  aspect-ratio: 1;
+  transform-origin: 50% 100%;
+  animation:
+    bp-intro-entree 550ms var(--ease-out) both,
+    bp-intro-hume 700ms var(--ease-out) var(--t-hume) both;
+}
+
+.bp-intro__overlay,
+.bp-intro__arm {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bp-intro__overlay {
+  overflow: visible;
+}
+
+/* Le bras pivote autour du coude, hors du cadre en bas : le verre quitte le nez et y revient. */
+.bp-intro__arm {
+  transform-origin: 63% 131%;
+  animation: bp-intro-geste 2000ms var(--ease-in-out) var(--t-geste) both;
+}
+
+/* Le vin tourne : la surface bascule d'un côté à l'autre en s'amortissant. */
+.bp-intro__wine {
+  transform-box: view-box;
+  transform-origin: 214px 282px;
+  animation: bp-intro-tourbillon 1200ms var(--ease-in-out) var(--t-tourne) both;
+}
+
+/* Yeux fermés au départ (nez dans le verre), ouverts pendant le geste, refermés pour humer. */
+.bp-intro__eyes-closed {
+  animation:
+    bp-intro-ferme 150ms var(--ease-out) 650ms forwards,
+    bp-intro-reparait 200ms var(--ease-out) var(--t-hume) forwards;
+}
+
+.bp-intro__eyes-open {
+  animation:
+    bp-intro-ouvre 150ms var(--ease-out) 650ms both,
+    bp-intro-ferme 200ms var(--ease-out) var(--t-hume) forwards;
+}
+
+.bp-intro__pupils {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bp-intro-cligne 220ms ease-in-out 1500ms;
+}
+
+.bp-intro__blush {
+  opacity: 0;
+  mix-blend-mode: multiply;
+  animation: bp-intro-rosit 600ms var(--ease-out) calc(var(--t-hume) + 150ms) forwards;
+}
+
+.bp-intro__aroma {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+  animation: bp-intro-arome 1100ms var(--ease-out) forwards;
+}
