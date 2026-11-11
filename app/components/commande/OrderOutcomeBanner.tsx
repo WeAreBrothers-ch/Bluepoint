@@ -1,18 +1,8 @@
 import { capitalize, longDay } from "../../lib/agenda/dates";
 import type { PhoneOrderOutcome } from "../../lib/commande/outcome";
 import type { PaymentChoice } from "../../lib/commande/types";
-import { gidToNumericId, parseGid } from "../../lib/shopify/ids";
 
 /** Résultat de « Enregistrer la commande » : ce qui a été fait, en clair, et la suite. */
-
-const ADMIN_PATHS = { Order: "orders", DraftOrder: "draft_orders" } as const;
-
-/** Lien App Bridge vers la fiche dans l'admin Shopify (la liste si l'identifiant est illisible). */
-function adminLink(resource: keyof typeof ADMIN_PATHS, gid: string): string {
-  const parsed = parseGid(gid, resource);
-  const base = `shopify://admin/${ADMIN_PATHS[resource]}`;
-  return parsed === null ? base : `${base}/${gidToNumericId(parsed)}`;
-}
 
 const PAYMENT_TEXT: Readonly<Record<PaymentChoice, string>> = {
   facture: "Le client paiera sur facture.",
@@ -40,12 +30,9 @@ export function OrderOutcomeBanner({ outcome }: { readonly outcome: PhoneOrderOu
       );
     case "brouillon":
       return (
-        <s-banner tone="warning" heading={`Commande ${outcome.draftName} pas terminée`}>
+        <s-banner tone="warning" heading="Commande pas terminée">
           <s-stack direction="block" gap="small-200">
             <s-text>{outcome.message}</s-text>
-            <s-stack direction="inline">
-              <s-button href={adminLink("DraftOrder", outcome.draftOrderId)}>Ouvrir dans Shopify</s-button>
-            </s-stack>
           </s-stack>
         </s-banner>
       );

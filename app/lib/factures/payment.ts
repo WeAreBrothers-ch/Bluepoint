@@ -32,13 +32,20 @@ export function paymentSituation(
   return late > 0 ? { state: "en_retard", overdueDays: late } : { state: "a_payer", overdueDays: 0 };
 }
 
+/** Pastille de paiement, la même dans « Factures » et sur la fiche du client. */
+export function paymentBadge(state: PaymentState, overdueDays: number): { readonly tone: "success" | "critical" | "warning"; readonly label: string } {
+  if (state === "payee") return { tone: "success", label: "Le client a déjà payé" };
+  if (state === "en_retard") return { tone: "critical", label: `Paiement en retard de ${overdueDays} jour${overdueDays > 1 ? "s" : ""}` };
+  return { tone: "warning", label: "Pas encore payée" };
+}
+
 /** Comment le client a payé : noté en étiquette sur la commande Shopify (« paiement-twint »). */
 export const PAYMENT_METHODS = ["virement", "cash", "twint"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const PAYMENT_METHOD_LABELS: Readonly<Record<PaymentMethod, string>> = {
   virement: "Virement",
-  cash: "Cash",
+  cash: "Espèces",
   twint: "TWINT",
 };
 

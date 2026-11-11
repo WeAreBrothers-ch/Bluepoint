@@ -49,7 +49,7 @@ export function RecapSheet({ data }: { readonly data: LitresPageData }) {
           <>
             {data.partial ? (
               <p className="warn">
-                Chiffres incomplets : Shopify ne donne que les 60 derniers jours de commandes à l’app. Ne pas utiliser pour une déclaration.
+                Chiffres incomplets : seuls les deux derniers mois de commandes sont comptés. Ne pas utiliser pour une déclaration.
               </p>
             ) : null}
             {data.truncated ? <p className="warn">Chiffres incomplets : il y a trop de commandes pour les compter toutes.</p> : null}

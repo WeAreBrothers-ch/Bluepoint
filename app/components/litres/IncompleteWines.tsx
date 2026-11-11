@@ -68,7 +68,7 @@ export function IncompleteWines({ wines, assumedBottles }: { readonly wines: rea
               <s-text>{`${sizes} vin${sizes > 1 ? "s" : ""} sans contenance\u202F: ${formatBottles(assumedBottles)} comptées à 75\u00A0cl en attendant.`}</s-text>
             )}
             {countries === 0 ? null : <s-text>{`${countries} vin${countries > 1 ? "s" : ""} sans pays\u202F: ils sont classés « Pays non renseigné ».`}</s-text>}
-            <s-text>Choisissez ce qui manque pour chaque vin : c’est enregistré une fois pour toutes dans Shopify.</s-text>
+            <s-text>Choisissez ce qui manque pour chaque vin : c’est enregistré une fois pour toutes.</s-text>
           </s-stack>
         </s-banner>
         {wines.map((wine) => (

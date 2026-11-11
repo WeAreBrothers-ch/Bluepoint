@@ -1,3 +1,4 @@
+import { PAS_ENCORE_ACTIVE } from "../titres";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
 import { success, type Result } from "../core/result";
@@ -108,7 +109,7 @@ export async function handleStockAction(admin: AdminApiContext, form: FormData):
     logError("Stock non changé", result.error, { intent: change.intent, inventoryItemId: change.inventoryItemId });
     const denied = /access denied|access scope/i.test(result.error.message);
     const message = denied
-      ? "L’app n’a pas encore le droit de changer le stock. Il faut d’abord faire l’étape d’autorisation (cadre jaune en haut de la page)."
+      ? PAS_ENCORE_ACTIVE
       : "Shopify n’a pas pu changer le stock. Rechargez la page, puis réessayez.";
     return { ok: false, inventoryItemId: change.inventoryItemId, message };
   }

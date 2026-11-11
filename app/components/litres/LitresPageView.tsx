@@ -10,7 +10,7 @@ function YearTabs({ year, years }: { readonly year: number; readonly years: read
   return (
     <s-stack direction="inline" gap="small-200" accessibilityLabel="Année affichée">
       {years.map((value) => (
-        <s-button key={value} href={`/app/litres?annee=${value}`} variant={value === year ? "primary" : "secondary"}>
+        <s-button key={value} href={`/app/litres?annee=${value}`} variant="secondary" {...(value === year ? { icon: "check" as const } : {})}>
           {String(value)}
         </s-button>
       ))}
@@ -32,9 +32,8 @@ export function LitresPageView({ data }: { readonly data: LitresPageData }) {
       {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
       {data.partial ? (
         <s-banner tone="critical" heading="Les litres de cette année ne sont pas complets">
-          Shopify ne donne à l’app que les 60 derniers jours de commandes. Pour compter toute l’année, la personne qui s’occupe de l’app doit
-          demander à Shopify l’accès à toutes les commandes (autorisation « read_all_orders »). D’ici là, ne vous servez pas de ces chiffres pour
-          une déclaration.
+          Pour l’instant, l’application ne voit que les deux derniers mois de commandes. Ne vous servez pas de ces chiffres pour une
+          déclaration. La personne qui s’occupe de l’application peut régler ça une fois pour toutes.
         </s-banner>
       ) : null}
       {data.truncated ? (

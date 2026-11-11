@@ -24,7 +24,7 @@ function failed(intent: ProsActionResult["intent"], requestId: string | null, me
 function successMessage(input: ProRequestInput, alreadyPro: boolean, invited: boolean): string {
   if (alreadyPro) return `${input.firstName} ${input.lastName} était déjà rattaché(e) à une entreprise\u202F: l’étiquette « pro » est en place.`;
   const invitation = invited
-    ? ` Shopify lui a envoyé un e-mail d’invitation à ${input.email}.`
+    ? ` Un e-mail d’invitation lui a été envoyé à ${input.email}.`
     : " L’e-mail d’invitation n’a pas pu partir\u202F: la personne peut quand même se connecter au site avec son adresse e-mail.";
   return `C’est fait\u202F: ${input.companyName} est client pro (prix pros et paiement à 30 jours).${invitation}`;
 }
@@ -59,7 +59,7 @@ async function acceptRequest(admin: AdminApiContext, shop: string, requestId: st
   if (!made.ok) return failed(intent, requestId, made.error.message);
   await markProRequestAccepted(request.id, made.value.companyId, made.value.customerId);
   logInfo("Demande de compte pro acceptée", { requestId, companyId: made.value.companyId });
-  const terms = template === null ? " Le paiement à 30 jours reste à régler dans Shopify (fiche de l’entreprise)." : "";
+  const terms = template === null ? " Le paiement à 30 jours n’a pas pu être mis en place : appelez la personne qui s’occupe de l’application." : "";
   return { ok: true, intent, requestId, message: `${successMessage(parsed.value, made.value.alreadyPro, made.value.invited)}${terms}` };
 }
 
@@ -83,7 +83,7 @@ export async function handleProsAction(admin: AdminApiContext, shop: string, for
     const request = await getProRequest(shop, requestId);
     if (request === null || request.status !== "en_attente") return failed(intent, requestId, "Cette demande a déjà reçu une réponse. Rechargez la page.");
     await markProRequestRefused(requestId);
-    return { ok: true, intent, requestId, message: `Demande de ${request.companyName} refusée. Rien n’a été créé dans Shopify.` };
+    return { ok: true, intent, requestId, message: `Demande de ${request.companyName} refusée. Rien n’a été créé.` };
   } catch (error) {
     if (error instanceof Response) throw error;
     logError("Action « Clients pro » impossible", error, { intent, requestId });

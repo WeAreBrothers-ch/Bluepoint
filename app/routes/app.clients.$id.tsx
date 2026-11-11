@@ -15,9 +15,9 @@ export type ClientEditResult =
   | { readonly ok: false; readonly message: string; readonly errors: NewCustomerErrors; readonly values: NewCustomerValues };
 
 export const loader = async ({ request, params }: LoaderFunctionArgs): Promise<ClientPageData & { readonly numericId: string }> => {
-  const { admin } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
   const numericId = params.id ?? "";
-  return { ...(await loadClientPage(admin, numericId, new Date())), numericId };
+  return { ...(await loadClientPage(admin, session.shop, numericId, new Date())), numericId };
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs): Promise<ClientEditResult> => {

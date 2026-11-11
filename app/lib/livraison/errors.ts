@@ -11,12 +11,11 @@ export type DeliveryErrorCode =
   | "shopify_indisponible";
 
 const MESSAGES: Readonly<Record<DeliveryErrorCode, string>> = {
-  commande_introuvable: "Cette commande n’existe plus dans Shopify (elle a peut-être été supprimée).",
+  commande_introuvable: "Cette commande n’existe plus (elle a peut-être été supprimée).",
   commande_annulee: "Cette commande a été annulée\u202F: il n’y a rien à livrer.",
   rien_a_expedier: "Il ne reste rien à livrer sur cette commande.",
   expedition_bloquee:
-    "Shopify a mis cette commande en attente. Ouvrez-la dans Shopify (lien « Tous les détails » de la carte) " +
-    "pour lever l’attente, puis réessayez.",
+    "Cette commande est bloquée et ne peut pas encore être notée livrée. Appelez la personne qui s’occupe de l’application.",
   shopify_refus: "Shopify n’a pas accepté de noter cette livraison.",
   shopify_indisponible: "Shopify ne répond pas pour le moment. Réessayez dans un instant.",
 };

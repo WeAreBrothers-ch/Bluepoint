@@ -8,6 +8,7 @@ import type { ClientEditResult } from "../../routes/app.clients.$id";
 import { ClientCard } from "../ClientCard";
 import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { OrderCard } from "../commandes/OrdersPageView";
+import { ClientInvoices } from "./ClientInvoices";
 import { CustomerFields } from "../commande/CustomerFields";
 import { FILL } from "../fill";
 import { GroupTitle } from "../GroupTitle";
@@ -106,7 +107,7 @@ export function ClientPageView({ data, numericId }: { readonly data: ClientPageD
   const addressLines = customer.addressLines.filter((line) => line !== company);
 
   return (
-    <s-page heading="Fiche client" inlineSize="base">
+    <s-page heading={company ?? customer.displayName} inlineSize="base">
       <s-button slot="primary-action" variant="primary" icon="plus" href={`/app/commande?client=${numericId}`}>
         Prendre une commande
       </s-button>
@@ -182,12 +183,13 @@ export function ClientPageView({ data, numericId }: { readonly data: ClientPageD
           </s-grid>
         </ClientCard>
       )}
+      <ClientInvoices invoices={data.invoices} />
       <GroupTitle
         title={data.orders.length === 0 ? "Aucune commande pour l’instant" : "Ses dernières commandes"}
         {...(data.orders.length === 0 ? {} : { hint: `${data.orders.length} affichée${data.orders.length > 1 ? "s" : ""} sur ${client.ordersCount}` })}
       />
       {data.orders.map((item) => (
-        <OrderCard key={item.task.orderId} item={item} />
+        <OrderCard key={item.task.orderId} item={item} clientId={numericId} />
       ))}
       {client.ordersCount <= data.orders.length ? null : (
         <s-grid gridTemplateColumns="minmax(0, 1fr)">

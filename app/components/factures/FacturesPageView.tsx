@@ -1,4 +1,4 @@
-import { TITRES } from "../../lib/titres";
+import { COMPLETER_ENTREPRISE, TITRES } from "../../lib/titres";
 import { formatChf } from "../../lib/format/money";
 import {
   FACTURES_VIEWS,
@@ -36,7 +36,8 @@ function ViewTabs({ current }: { readonly current: FacturesView }) {
           key={view.id}
           {...FILL}
           href={`/app/factures?vue=${view.id}`}
-          variant={view.id === current ? "primary" : "secondary"}
+          variant="secondary"
+          {...(view.id === current ? { icon: "check" as const } : {})}
           accessibilityLabel={view.title}
         >
           {view.label}
@@ -57,7 +58,7 @@ export function FacturesPageView({ data }: { readonly data: FacturesPageData }) 
     <s-page heading={TITRES.factures} inlineSize="base">
       {data.settingsComplete ? null : (
         <s-banner tone="warning" heading="Les nouvelles factures ne peuvent pas être faites">
-          Il manque vos coordonnées ou votre compte bancaire. <s-link href="/app/reglages">Compléter mes coordonnées</s-link>
+          Il manque vos coordonnées ou votre compte bancaire. <s-link href="/app/reglages">{COMPLETER_ENTREPRISE}</s-link>
         </s-banner>
       )}
       {data.statusError === null ? null : <s-banner tone="warning" heading={data.statusError} />}

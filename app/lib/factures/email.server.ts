@@ -98,7 +98,7 @@ export async function sendInvoiceEmail(email: InvoiceEmail): Promise<Result<true
 /** Explication lisible pour l'équipe, sans détail technique ni secret. */
 function detailFor(error: unknown): string {
   const code = typeof error === "object" && error !== null && "code" in error ? String(error.code) : "";
-  if (code === "EAUTH") return "La boîte d’envoi a refusé la connexion : vérifiez l’adresse et le mot de passe dans les réglages Vercel.";
+  if (code === "EAUTH") return "La boîte e-mail d’envoi a refusé la connexion. Appelez la personne qui s’occupe de l’application.";
   if (code === "ETIMEDOUT" || code === "ECONNECTION") return "Le serveur d’e-mail ne répond pas. Réessayez dans un instant.";
   return "Le serveur d’e-mail a refusé l’envoi. Réessayez dans un instant.";
 }

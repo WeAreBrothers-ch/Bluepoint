@@ -1,3 +1,4 @@
+import { PAS_ENCORE_ACTIVE } from "../titres";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
 import { failure, success, type Result } from "../core/result";
@@ -89,7 +90,7 @@ export async function handlePhotoChange(admin: AdminApiContext, form: FormData):
     logError("Photo du vin non enregistrée", saved.error, { productId });
     const denied = /access denied|access scope/i.test(saved.error.message);
     const message = denied
-      ? "L’app n’a pas encore le droit d’envoyer des photos. Il faut d’abord faire l’étape d’autorisation (cadre jaune en haut de la page)."
+      ? PAS_ENCORE_ACTIVE
       : "La photo n’a pas pu être envoyée. Réessayez dans un instant.";
     return { ok: false, intent: "photo", productId, message };
   }

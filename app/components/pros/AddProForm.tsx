@@ -100,7 +100,7 @@ export function AddProForm({ canCreate }: { readonly canCreate: boolean }) {
           </s-button>
         </s-stack>
         <s-text color="subdued">
-          L’entreprise est créée dans Shopify avec le paiement à 30 jours et les prix pros ; la personne reçoit un e-mail pour se connecter.
+          Le client pro est créé avec le paiement à 30 jours et les prix pros ; il reçoit un e-mail pour se connecter au site.
         </s-text>
       </s-stack>
     </fetcher.Form>

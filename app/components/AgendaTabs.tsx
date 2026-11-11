@@ -17,7 +17,8 @@ export function AgendaTabs({ current }: AgendaTabsProps) {
             key={view.id}
             {...FILL}
             href={`/app?vue=${view.id}`}
-            variant={isCurrent ? "primary" : "secondary"}
+            variant="secondary"
+            {...(isCurrent ? { icon: "check" as const } : {})}
             accessibilityLabel={isCurrent ? `${view.label}, vue affichée` : view.label}
           >
             {view.label}

@@ -76,7 +76,7 @@ async function reschedule(admin: AdminApiContext, orderId: OrderGid, form: FormD
   const saved = await setMetafields(admin, forOwner(orderId, metafields));
   if (!saved.ok) {
     logError("Jour de livraison non enregistré", saved.error, { orderId, date: check.date });
-    return { ok: false, orderId, message: "Le jour n’a pas pu être enregistré dans Shopify. Réessayez dans un instant.", details: [], settingsLink: false };
+    return { ok: false, orderId, message: "Le jour n’a pas pu être enregistré. Réessayez dans un instant.", details: [], settingsLink: false };
   }
   return { ok: true, orderId, message: rescheduledMessage(check.date, today), invoice: null, warning: null, warningDetails: [], settingsLink: false };
 }

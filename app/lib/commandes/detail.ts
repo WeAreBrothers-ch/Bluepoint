@@ -17,7 +17,7 @@ query FicheCommande($id: ID!) {
   order(id: $id) {${AGENDA_ORDER_FIELDS}
       createdAt
       email
-      customer { defaultEmailAddress { emailAddress } }
+      customer { id defaultEmailAddress { emailAddress } }
       currentTotalDiscountsSet { shopMoney { amount } }
       currentShippingPriceSet { shopMoney { amount } }
       currentTotalTaxSet { shopMoney { amount } }
@@ -40,7 +40,9 @@ interface Money {
 }
 
 export interface OrderDetailNode extends Omit<AgendaOrderNode, "customer"> {
-  readonly customer: (NonNullable<AgendaOrderNode["customer"]> & { readonly defaultEmailAddress?: { readonly emailAddress: string } | null }) | null;
+  readonly customer:
+    | (NonNullable<AgendaOrderNode["customer"]> & { readonly id?: string; readonly defaultEmailAddress?: { readonly emailAddress: string } | null })
+    | null;
   readonly createdAt: string;
   readonly email: string | null;
   readonly currentTotalDiscountsSet: Money | null;
@@ -79,6 +81,8 @@ export interface OrderDetail {
   /** Ex. « Commandée le mardi 27 octobre ». */
   readonly orderedLabel: string;
   readonly email: string | null;
+  /** Numéro du client dans Shopify, pour ouvrir sa fiche dans l'app ; null sans client. */
+  readonly customerId: string | null;
   readonly lines: readonly OrderDetailLine[];
   /** Somme des lignes, avant la remise sur la commande. */
   readonly winesCents: number | null;
@@ -134,6 +138,7 @@ export function toOrderDetail(node: OrderDetailNode, paymentTerms: PaymentTermsI
     late: task.status !== "livree" && task.urgency === "en_retard",
     orderedLabel: Number.isNaN(created.getTime()) ? "" : `Commandée le ${longDay(swissIsoDate(created))}`,
     email: node.email?.trim() || node.customer?.defaultEmailAddress?.emailAddress.trim() || null,
+    customerId: node.customer?.id?.split("/").pop() ?? null,
     lines,
     winesCents,
     discountCents: cents(node.currentTotalDiscountsSet) ?? 0,

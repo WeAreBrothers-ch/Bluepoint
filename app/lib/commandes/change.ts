@@ -41,7 +41,7 @@ const NOT_STARTED = new Set(["UNFULFILLED", "OPEN", "SCHEDULED", "PENDING_FULFIL
 const PAID = new Set(["PAID", "PARTIALLY_PAID"]);
 
 export const PAID_EDIT_BLOCKED =
-  "Le client a déjà payé cette commande\u202F: on ne peut plus changer les vins. S’il veut autre chose, annulez-la (il sera remboursé), puis prenez une nouvelle commande.";
+  "Le client a déjà payé cette commande\u202F: on ne peut plus changer les vins. S’il veut autre chose, annulez-la, rendez-lui l’argent s’il n’a pas payé par carte, puis prenez une nouvelle commande.";
 
 export function changeRules(state: OrderChangeState): ChangeRules {
   const changeable = !state.cancelled && !state.hasInvoice && NOT_STARTED.has(state.fulfillmentStatus ?? "");

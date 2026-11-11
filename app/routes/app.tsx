@@ -22,15 +22,16 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<AppLoader
 function AppNav() {
   return (
     <s-app-nav>
+      {/* Shopify n'affiche que les 6 premières pages, le reste est sous « Afficher plus » : le travail de tous les jours d'abord. */}
       <s-link href="/app">{TITRES.livraisons}</s-link>
       <s-link href="/app/commande">{TITRES.nouvelleCommande}</s-link>
       <s-link href="/app/factures">{TITRES.factures}</s-link>
       <s-link href="/app/stock">{TITRES.vins}</s-link>
-      <s-link href="/app/litres">{TITRES.litres}</s-link>
       <s-link href="/app/clients">{TITRES.clients}</s-link>
-      <s-link href="/app/commandes">{TITRES.commandes}</s-link>
-      <s-link href="/app/reglages">{TITRES.entreprise}</s-link>
       <s-link href="/app/aide">{TITRES.aide}</s-link>
+      <s-link href="/app/commandes">{TITRES.commandes}</s-link>
+      <s-link href="/app/litres">{TITRES.litres}</s-link>
+      <s-link href="/app/reglages">{TITRES.entreprise}</s-link>
     </s-app-nav>
   );
 }

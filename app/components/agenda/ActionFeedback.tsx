@@ -1,3 +1,4 @@
+import { COMPLETER_ENTREPRISE } from "../../lib/titres";
 import type { AgendaActionResult } from "../../lib/agenda/action-result";
 
 /**
@@ -10,7 +11,7 @@ interface ActionFeedbackProps {
 }
 
 function SettingsLink() {
-  return <s-link href="/app/reglages">Compléter mes coordonnées</s-link>;
+  return <s-link href="/app/reglages">{COMPLETER_ENTREPRISE}</s-link>;
 }
 
 export function ActionFeedback({ result }: ActionFeedbackProps) {

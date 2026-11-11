@@ -64,6 +64,13 @@ export function OrderCustomer({ detail }: { readonly detail: OrderDetail }) {
         {task.company === null ? null : <s-text>{task.customerName}</s-text>}
         <ContactButtons task={task} />
         {detail.email === null ? null : <s-text color="subdued">{`E-mail\u202F: ${detail.email}`}</s-text>}
+        {detail.customerId === null ? null : (
+          <s-stack direction="inline">
+            <s-button icon="person" href={`/app/clients/${detail.customerId}`}>
+              Voir la fiche du client
+            </s-button>
+          </s-stack>
+        )}
       </s-stack>
     </s-section>
   );

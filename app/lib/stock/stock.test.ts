@@ -124,3 +124,19 @@ describe("ordre de la page Stock", () => {
     expect(items.map((i) => i.label)).toEqual(["A", "B"]);
   });
 });
+
+import { confirmationQuestion } from "./stock";
+
+describe("confirmation avant d'enregistrer le stock", () => {
+  it("redemande quand le comptage change beaucoup ou tombe à zéro", () => {
+    expect(confirmationQuestion("corriger", 48, 0)).toBe("Vous passez de 48 bouteilles à 0 bouteille en cave. C’est bien ça ?");
+    expect(confirmationQuestion("corriger", 60, 600)).not.toBeNull();
+    expect(confirmationQuestion("corriger", 48, 45)).toBeNull();
+    expect(confirmationQuestion("corriger", 48, 48)).toBeNull();
+  });
+
+  it("redemande pour un très gros ajout seulement", () => {
+    expect(confirmationQuestion("ajouter", 10, 12)).toBeNull();
+    expect(confirmationQuestion("ajouter", 10, 600)).toBe("Vous ajoutez 600 bouteilles d’un coup. C’est bien ça ?");
+  });
+});

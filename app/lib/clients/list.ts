@@ -12,7 +12,7 @@ export type ClientsTab = "tous" | "pros";
 
 export const CLIENTS_TABS: readonly { readonly id: ClientsTab; readonly label: string; readonly search: string }[] = [
   { id: "tous", label: "Tous", search: "" },
-  { id: "pros", label: "Pros", search: "(tag:pro OR tag:professionnel OR tag:b2b)" },
+  { id: "pros", label: "Clients pro", search: "(tag:pro OR tag:professionnel OR tag:b2b)" },
 ];
 
 export const DEFAULT_CLIENTS_TAB: ClientsTab = "tous";

@@ -1,3 +1,4 @@
+import { TITRES } from "../lib/titres";
 import { useCallback, useEffect } from "react";
 import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "react-router";
 import { useFetcher, useLoaderData } from "react-router";
@@ -56,9 +57,9 @@ export default function NouvelleCommandePage() {
   const { outcome, onSubmit, submitting } = useCreateOrder();
 
   return (
-    <s-page heading="Prendre une commande" inlineSize="base">
+    <s-page heading={TITRES.nouvelleCommande} inlineSize="base">
       <s-button slot="secondary-actions" href="/app">
-        Retour à l’agenda
+        {`Retour aux ${TITRES.livraisons.toLowerCase()}`}
       </s-button>
       <s-stack direction="block" gap="base">
         {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}

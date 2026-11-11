@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import type { ActionFunctionArgs, HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import { OrderChangeSection, OrderEditor } from "../components/commandes/OrderChange";
@@ -11,9 +11,10 @@ import type { AgendaActionResult } from "../lib/agenda/action-result";
 import { isOrderChangeIntent, type OrderChangeResult } from "../lib/commandes/change";
 import { handleOrderChange } from "../lib/commandes/change.server";
 import { loadOrderPage, type OrderPageData } from "../lib/commandes/detail.server";
+import { backLink } from "../lib/navigation";
 
 /**
- * Fiche d'une commande, ouverte depuis l'agenda : quand, quoi faire, les vins et les prix,
+ * Fiche d'une commande, ouverte depuis les livraisons, les factures ou la liste des commandes (« Retour » y ramène) : quand, quoi faire, les vins et les prix,
  * le client, la facture. Mêmes boutons que la carte de l'agenda, pour ne jamais devoir passer par Shopify.
  */
 
@@ -35,15 +36,17 @@ export default function CommandePage() {
   const [editing, setEditing] = useState(false);
   const closeEditor = useCallback(() => setEditing(false), []);
   const canEdit = change?.rules.canEdit === true;
+  const [params] = useSearchParams();
+  const back = backLink(params.get("depuis"), params.get("client"));
 
   return (
     <s-page heading={detail === null ? "Commande" : `Commande ${detail.task.name}`} inlineSize="base">
-      <s-button slot="secondary-actions" href="/app">
-        Retour aux livraisons
+      <s-button slot="secondary-actions" href={back.href}>
+        {back.label}
       </s-button>
       {detail === null ? (
         <s-banner tone="warning" heading={data.problem ?? "Cette commande n’existe pas."}>
-          <s-button href="/app">Retour aux livraisons</s-button>
+          <s-button href={back.href}>{back.label}</s-button>
         </s-banner>
       ) : (
         <>
