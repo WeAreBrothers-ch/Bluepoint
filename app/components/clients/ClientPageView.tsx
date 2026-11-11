@@ -9,6 +9,7 @@ import { ClientCard } from "../ClientCard";
 import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { OrderCard } from "../commandes/OrdersPageView";
 import { ClientInvoices } from "./ClientInvoices";
+import { DeleteClient } from "./DeleteClient";
 import { CustomerFields } from "../commande/CustomerFields";
 import { FILL } from "../fill";
 import { GroupTitle } from "../GroupTitle";
@@ -198,6 +199,7 @@ export function ClientPageView({ data, numericId }: { readonly data: ClientPageD
           </s-button>
         </s-grid>
       )}
+      <DeleteClient name={company ?? customer.displayName} orders={client.ordersCount} />
     </s-page>
   );
 }

@@ -5,6 +5,8 @@ import { authenticate } from "../shopify.server";
 import { ClientPageView } from "../components/clients/ClientPageView";
 import { loadClientPage, type ClientPageData } from "../lib/clients/detail.server";
 import { updateClient } from "../lib/clients/edit.server";
+import type { DeleteClientResult } from "../lib/clients/delete";
+import { handleDeleteClient } from "../lib/clients/delete.server";
 import { logError } from "../lib/core/logger.server";
 import { parseNewCustomer, readNewCustomerForm, type NewCustomerErrors, type NewCustomerValues } from "../lib/commande/new-customer";
 
@@ -20,9 +22,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs): Promise<C
   return { ...(await loadClientPage(admin, session.shop, numericId, new Date())), numericId };
 };
 
-export const action = async ({ request, params }: ActionFunctionArgs): Promise<ClientEditResult> => {
+export const action = async ({ request, params }: ActionFunctionArgs): Promise<ClientEditResult | DeleteClientResult> => {
   const { admin } = await authenticate.admin(request);
   const form = await request.formData();
+  // « Supprimer ce client » (après deux confirmations sur la fiche).
+  if (form.get("intent") === "supprimer") return handleDeleteClient(admin, params.id ?? "");
   const values = readNewCustomerForm(form);
   const parsed = parseNewCustomer(values);
   if (!parsed.ok) return { ok: false, message: "Certaines cases sont à corriger (en rouge).", errors: parsed.errors, values };

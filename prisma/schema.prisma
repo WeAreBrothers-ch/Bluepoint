@@ -146,6 +146,8 @@ model ProRequest {
   decidedAt   DateTime?
 
   @@index([shop, status, createdAt])
+  // + index unique partiel « une seule demande en attente par e-mail » (shop, lower(email)) WHERE status = 'en_attente' :
+  //   écrit à la main dans la migration 20261111180000_une_demande_pro_en_attente (Prisma ne sait pas le déclarer ici).
 }
 
 // --- Factures AbaNinja ---
