@@ -4,6 +4,7 @@ import { createAddress } from "./addresses.server";
 import { createInvoice, type CreatedInvoice } from "./invoices.server";
 import { classifyCreateFailure, type CreateInvoiceError } from "./invoice-errors";
 import type { AbaNinjaError } from "./errors";
+import type { AbaNinjaInvoiceInput } from "./invoice-input";
 import type { InvoiceReceiver } from "./receiver";
 import { markCreated, markRefused, markUncertain } from "./repository.server";
 import { trialAddress, trialInvoice, TRIAL_CLIENT_NAME } from "./trial-fixtures";
@@ -19,6 +20,8 @@ export interface CreatedDocuments {
   readonly uncertain: boolean;
   /** Le client existe peut-être alors que son identifiant est inconnu (il faut le chercher à la main). */
   readonly clientMaybeCreated: boolean;
+  /** Contenu de la facture créée : l'aperçu PDF d'un brouillon en a besoin. */
+  readonly invoiceInput?: AbaNinjaInvoiceInput;
 }
 
 const NOTHING: CreatedDocuments = { companyUuid: null, invoiceUuid: null, invoiceNumber: null, uncertain: false, clientMaybeCreated: false };
@@ -84,5 +87,11 @@ export async function createTrialDocuments(ctx: TrialContext, log: TrialLog, ban
     return { ...NOTHING, companyUuid, uncertain };
   }
   await recordCreated(ctx, log, invoice.value);
-  return { ...NOTHING, companyUuid, invoiceUuid: invoice.value.uuid, invoiceNumber: invoice.value.systemInvoiceNumber };
+  return {
+    ...NOTHING,
+    companyUuid,
+    invoiceUuid: invoice.value.uuid,
+    invoiceNumber: invoice.value.systemInvoiceNumber,
+    invoiceInput: input,
+  };
 }

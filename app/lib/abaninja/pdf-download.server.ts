@@ -5,6 +5,8 @@ import type { CallOptions } from "./call-options";
 import { buildCallSignal } from "./deadline";
 import type { AbaNinjaConfig } from "./config.server";
 import { AbaNinjaError, errorFromStatus } from "./errors";
+import type { AbaNinjaInvoiceInput } from "./invoice-input";
+import { requestDraftPreviewUrl } from "./invoice-preview.server";
 import { requestInvoicePdfUrl } from "./invoices.server";
 import { checkDownloadUrl, type CheckedDownloadUrl } from "./pdf-url";
 
@@ -62,13 +64,11 @@ async function readPdf(response: Response): Promise<Result<Uint8Array, AbaNinjaE
   return success(body.value);
 }
 
-/** Récupère le PDF d'une facture (10 Mo max, début « %PDF- » vérifié). */
-export async function downloadInvoicePdf(
+async function downloadFrom(
+  requested: Result<string, AbaNinjaError>,
   config: AbaNinjaConfig,
-  invoiceUuid: string,
-  options: CallOptions = {},
+  options: CallOptions,
 ): Promise<Result<Uint8Array, AbaNinjaError>> {
-  const requested = await requestInvoicePdfUrl(config, invoiceUuid, options);
   if (!requested.ok) return requested;
   const target = checkDownloadUrl(requested.value);
   if (!target.ok) {
@@ -77,4 +77,23 @@ export async function downloadInvoicePdf(
   }
   const response = await fetchPdfResponse(target.value, config, options);
   return response.ok ? readPdf(response.value) : response;
+}
+
+/** PDF d'une facture envoyée (10 Mo max, début « %PDF- » vérifié). Refusé par AbaNinja sur un brouillon. */
+export async function downloadInvoicePdf(
+  config: AbaNinjaConfig,
+  invoiceUuid: string,
+  options: CallOptions = {},
+): Promise<Result<Uint8Array, AbaNinjaError>> {
+  return downloadFrom(await requestInvoicePdfUrl(config, invoiceUuid, options), config, options);
+}
+
+/** PDF d'une facture en brouillon, via l'aperçu (mêmes contrôles que ci-dessus). */
+export async function downloadDraftInvoicePdf(
+  config: AbaNinjaConfig,
+  invoiceUuid: string,
+  input: AbaNinjaInvoiceInput,
+  options: CallOptions = {},
+): Promise<Result<Uint8Array, AbaNinjaError>> {
+  return downloadFrom(await requestDraftPreviewUrl(config, invoiceUuid, input, options), config, options);
 }

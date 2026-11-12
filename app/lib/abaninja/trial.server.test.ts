@@ -27,7 +27,9 @@ describe("essai de connexion : chemin nominal", () => {
     expect(report.manualCleanup).toEqual([]);
     expect(report.reference).toBe("BP-ESSAI-20261110-120000");
     expect(report.invoiceNumber).toBe("2026-0042");
-    expect(methodsOf(calls)).toEqual(["GET", "POST", "POST", "GET", "PATCH", "GET", "GET", "PATCH", "GET", "DELETE"]);
+    expect(methodsOf(calls)).toEqual(["GET", "POST", "POST", "GET", "POST", "GET", "GET", "PATCH", "GET", "DELETE"]);
+    expect(calls[4]?.url).toContain(`/invoices/${INVOICE_UUID}/preview`);
+    expect(calls[4]?.url).not.toContain("downloadPdf");
     expect(calls[7]?.url).toContain(`/${INVOICE_UUID}/actions/delete`);
     expectNoSecret(report);
   });

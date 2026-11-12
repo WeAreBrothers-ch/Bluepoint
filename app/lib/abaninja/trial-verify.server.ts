@@ -1,5 +1,7 @@
-import { logError } from "../core/logger.server";
-import { downloadInvoicePdf } from "./pdf-download.server";
+import { logError, logInfo } from "../core/logger.server";
+import type { AbaNinjaInvoiceInput } from "./invoice-input";
+import { listInvoiceActionNames } from "./invoice-preview.server";
+import { downloadDraftInvoicePdf } from "./pdf-download.server";
 import { getInvoice } from "./invoices.server";
 import { interpretInvoiceStatus, todayInZurich, type InvoiceReadState } from "./invoice-status";
 import { recordStatus } from "./repository.server";
@@ -38,9 +40,22 @@ export async function checkInvoiceStatus(ctx: TrialContext, log: TrialLog, invoi
   return true;
 }
 
-export async function checkInvoicePdf(ctx: TrialContext, log: TrialLog, invoiceUuid: string): Promise<boolean> {
-  const pdf = await downloadInvoicePdf(ctx.config, invoiceUuid, ctx.call);
+/** Diagnostic d'un PDF refusé : note dans le journal les actions qu'AbaNinja permet sur la facture (noms seulement). */
+async function noteAllowedActions(ctx: TrialContext, invoiceUuid: string): Promise<void> {
+  const actions = await listInvoiceActionNames(ctx.config, invoiceUuid, ctx.call);
+  logInfo("AbaNinja : actions possibles sur la facture d’essai", actions.ok ? { actions: actions.value.join(",") } : { lecture: "impossible" });
+}
+
+/** Le brouillon n'a pas encore de PDF « envoyé » : on passe par l'aperçu PDF d'AbaNinja. */
+export async function checkInvoicePdf(
+  ctx: TrialContext,
+  log: TrialLog,
+  invoiceUuid: string,
+  input: AbaNinjaInvoiceInput,
+): Promise<boolean> {
+  const pdf = await downloadDraftInvoicePdf(ctx.config, invoiceUuid, input, ctx.call);
   if (!pdf.ok) {
+    await noteAllowedActions(ctx, invoiceUuid);
     log.fail("pdf", `Le PDF n’a pas pu être téléchargé. ${pdf.error.message}`);
     return false;
   }

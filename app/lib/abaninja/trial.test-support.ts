@@ -128,7 +128,7 @@ export function happyScript(): Scripted[] {
     jsonResponse({ data: { uuid: COMPANY_UUID, addresses: [{ uuid: POSTAL_UUID }] } }, 201), // 1 client
     jsonResponse({ data: { documents: [{ uuid: INVOICE_UUID, systemInvoiceNumber: "2026-0042" }] } }, 201), // 2 facture
     invoiceResponse("draft"), // 3 relecture (étape statut)
-    jsonResponse({ data: { downloadUrl: "https://api.abaninja.ch/files/1" } }), // 4 adresse du PDF
+    jsonResponse({ data: { downloadUrl: "https://api.abaninja.ch/files/1" } }), // 4 aperçu PDF du brouillon (adresse)
     pdfResponse(), // 5 PDF
     invoiceResponse("draft"), // 6 relecture avant suppression
     jsonResponse({ data: {} }), // 7 suppression de la facture
@@ -138,6 +138,9 @@ export function happyScript(): Scripted[] {
 }
 
 /** Remplace la réponse numéro `index` du scénario nominal ; coupe la suite si `keepTail` est faux. */
+/** Réponse à la lecture des actions possibles (diagnostic après un PDF refusé). */
+export const ACTIONS_RESPONSE = jsonResponse({ data: { delete: "Supprimer", markSent: "Marquer comme envoyé" } });
+
 export function withStep(index: number, response: Scripted, keepTail = true): Scripted[] {
   const script = happyScript();
   script[index] = response;

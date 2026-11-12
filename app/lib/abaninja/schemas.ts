@@ -58,6 +58,16 @@ export const readInvoiceResponseSchema = z.union([
 
 export const downloadPdfResponseSchema = envelope(z.looseObject({ downloadUrl: z.string().min(1).max(2048) }));
 
+const optionalUrl = z.string().min(1).max(2048).nullish();
+
+/** Aperçu d'un brouillon : `downloadUrl` (préféré) ou, à défaut, `previewUrl`. */
+export const previewResponseSchema = envelope(z.looseObject({ downloadUrl: optionalUrl, previewUrl: optionalUrl }))
+  .transform((body) => body.data.downloadUrl ?? body.data.previewUrl)
+  .pipe(z.string());
+
+/** Actions possibles sur une facture : forme non précisée par la documentation (objet ou liste). */
+export const invoiceActionsResponseSchema = envelope(z.unknown());
+
 const bankAccountRecord = z.looseObject({
   uuid: uuidField,
   name: z.string().nullish(),

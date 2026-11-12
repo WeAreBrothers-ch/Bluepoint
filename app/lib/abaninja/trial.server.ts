@@ -60,8 +60,9 @@ async function claimError(ctx: TrialContext, log: TrialLog): Promise<TrialBlocke
 
 /** Étapes 5 et 6, seulement si la facture est bien créée et notée. */
 async function verify(ctx: TrialContext, log: TrialLog, created: CreatedDocuments): Promise<void> {
-  if (created.invoiceUuid === null || log.outcomeOf("creation") !== "ok") return;
-  if (await checkInvoiceStatus(ctx, log, created.invoiceUuid)) await checkInvoicePdf(ctx, log, created.invoiceUuid);
+  const { invoiceUuid, invoiceInput } = created;
+  if (invoiceUuid === null || invoiceInput === undefined || log.outcomeOf("creation") !== "ok") return;
+  if (await checkInvoiceStatus(ctx, log, invoiceUuid)) await checkInvoicePdf(ctx, log, invoiceUuid, invoiceInput);
 }
 
 export async function runConnectionTrial(shop: string, options: TrialOptions = {}): Promise<TrialResult> {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { emptyResponse, jsonResponse } from "./test-support";
 import {
-  deleteInvoiceCalls, fakePrisma, happyScript, invoiceResponse, makeRunner, methodsOf, reportOf, rows, withStep,
+  ACTIONS_RESPONSE, deleteInvoiceCalls, fakePrisma, happyScript, invoiceResponse, makeRunner, methodsOf, reportOf, rows, withStep,
 } from "./trial.test-support";
 
 vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() }));
@@ -93,7 +93,9 @@ describe("nettoyage : une suppression doit être confirmée", () => {
 
 describe("nettoyage : après un échec d'une autre étape", () => {
   it("PDF invalide : l'essai échoue mais l'essai est quand même effacé", async () => {
-    const { result, calls } = await run(withStep(5, new Response("pas un pdf", { status: 200 })));
+    const script = withStep(5, new Response("pas un pdf", { status: 200 }));
+    script.splice(6, 0, ACTIONS_RESPONSE); // diagnostic : lecture des actions possibles
+    const { result, calls } = await run(script);
     const report = reportOf(result);
     expect(result.ok).toBe(false);
     expect(report.steps[5]?.outcome).toBe("echec");
@@ -104,7 +106,7 @@ describe("nettoyage : après un échec d'une autre étape", () => {
   it("adresse de téléchargement hors liste blanche : étape PDF en échec, nettoyage tenté, aucun appel vers ce domaine", async () => {
     const evil = jsonResponse({ data: { downloadUrl: "https://evil.example/fichier.pdf" } });
     const script = withStep(4, evil);
-    script.splice(5, 1); // pas de téléchargement du PDF : la suite du scénario avance d'un cran
+    script.splice(5, 1, ACTIONS_RESPONSE); // pas de téléchargement du PDF, mais lecture des actions possibles
     const { result, calls } = await run(script);
     const report = reportOf(result);
     expect(report.steps[5]?.outcome).toBe("echec");
