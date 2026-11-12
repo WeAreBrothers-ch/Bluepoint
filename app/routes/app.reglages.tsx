@@ -69,6 +69,15 @@ export default function ReglagesPage() {
           </s-button>
         </s-stack>
       </Form>
+      <s-section heading="Connexion à AbaNinja">
+        <s-stack direction="block" gap="small-200">
+          <s-paragraph>
+            Vérifie que l’application peut créer des factures dans AbaNinja, avec une facture fictive de 1 CHF qui
+            n’est envoyée à personne et qui est effacée à la fin.
+          </s-paragraph>
+          <s-link href="/app/abaninja">Tester la connexion à AbaNinja</s-link>
+        </s-stack>
+      </s-section>
     </s-page>
   );
 }
