@@ -8,13 +8,6 @@
   border-top: var(--trait) solid var(--ligne);
 }
 
-.bp-pairings__intro {
-  max-width: var(--mesure);
-  margin: 0 auto clamp(2rem, 4vw, 3.5rem);
-  color: var(--encre-douce);
-  text-align: center;
-}
-
 /* Trois tuiles arrondies, chacune dans sa nuance de bleu : le moment en pilule, le plat en lettres d'affiche. */
 .bp-pairings__list {
   list-style: none;

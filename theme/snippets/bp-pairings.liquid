@@ -1,7 +1,7 @@
 {%- comment -%}
   « De l’apéritif au dessert » : les accords mets-vins de la bouteille.
   Source : métachamp bluepoint.accords (liste d'entrées « bp_accord » : moment, plat, pourquoi).
-  Masqué si le produit n'a aucun accord.
+  Masqué si le produit n'a aucun accord. Pas de phrase d'introduction sous le titre (retirée à la demande d'Eliott le 13/11).
   Paramètres : product, section_id
 {%- endcomment -%}
 {%- assign accords = product.metafields.bluepoint.accords.value -%}
@@ -9,10 +9,6 @@
   {%- assign title_id = 'bp-accords-title-' | append: section_id -%}
   <section class="bp-pairings" aria-labelledby="{{ title_id }}">
     {%- render 'bp-section-head', id: title_id, title: "De l’apéritif au dessert" -%}
-    <p class="bp-pairings__intro">
-      {%- if accords.size == 3 -%}Trois moments{%- else -%}Les moments{%- endif %} de la table où
-      {{ product.title | escape }} trouve sa place, choisis par Paolo.
-    </p>
     <ol class="bp-pairings__list">
       {%- for accord in accords -%}
         <li class="bp-pairings__item">
