@@ -22,18 +22,18 @@
   .bp-nav {
     display: flex;
     align-self: stretch;
+    justify-self: end;
   }
 
-  /* Une case par rayon, toutes de même largeur, séparée de la précédente (et du logo) par un filet pleine hauteur. */
+  /* Une case par rayon, à la largeur de son mot, collée à droite, un filet pleine hauteur à sa gauche. */
   .bp-nav__bar {
     display: flex;
-    flex: 1;
     list-style: none;
   }
 
   .bp-nav__entry {
     display: flex;
-    flex: 1 1 0;
+    flex: none;
     align-items: center;
     justify-content: center;
     padding-inline: 0.5rem;

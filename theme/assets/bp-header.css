@@ -158,17 +158,21 @@ body.bluepoint:not(:has(.bp-header__annonce)) {
   cursor: pointer;
 }
 
-/* ---------- Ordinateur : des cases comme sur téléphone, logo | rayons (bp-nav.css) | Espace pro | Panier, un filet
-   pleine hauteur entre chacune (le bord gauche des cellules). Les rayons se partagent la place du milieu. ---------- */
-
+/* Ordinateur : logo en case à gauche ; à droite, collées, les cases des rayons (bp-nav.css), Espace pro et Panier, filet à
+   gauche de chacune, milieu vide. Marge 1,5 rem + trait = celle des rayons (case 0,5 + pilule 1 + contour). */
 @media (min-width: 75rem) {
   .bp-header__bar {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
+  .bp-header__brand {
+    border-right: var(--trait) solid var(--ligne);
+  }
+  .bp-header__cell {
+    padding-inline: calc(1.5rem + var(--trait));
+  }
   button.bp-menu__toggle {
     display: none;
   }
-
   .bp-header__pro,
   .bp-header__cart-label {
     font-size: 1.0625rem;
@@ -179,15 +183,12 @@ body.bluepoint:not(:has(.bp-header__annonce)) {
     text-underline-offset: 0.4em;
     transition: text-decoration-color 160ms var(--ease-out);
   }
-  .bp-header__pro {
-    display: inline-flex;
-  }
+  .bp-header__pro { display: inline-flex; }
   .bp-header__pro[aria-current] {
     background: none;
     text-decoration-color: currentColor;
   }
 }
-
 @media (min-width: 75rem) and (hover: hover) and (pointer: fine) {
   .bp-header__cell:hover {
     background: none;
