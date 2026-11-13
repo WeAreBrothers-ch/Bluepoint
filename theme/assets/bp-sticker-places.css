@@ -25,34 +25,46 @@
   }
 }
 
-/* À côté d'un titre de section centré (accords) : à droite du titre, sur ordinateur seulement (sur téléphone, le titre
-   prend toute la largeur). Sélection : dans l'air au-dessus du titre sur téléphone. */
-.bp-section:has(> .bp-sticker--titre, > .bp-sticker--bande) {
+/*
+ * À cheval sur un filet horizontal entre deux parties (demande d'Eliott du 13/11 : « qu'ils soient sur la ligne ») :
+ * le centre du sticker sur le trait, moitié au-dessus, moitié dessous, au bord droit, loin du texte et des boutons.
+ * Les parents ne coupent rien (pas d'overflow) : le sticker est posé sur la section, pas dans la grille (overflow: clip).
+ */
+.bp-section:has(> .bp-sticker--filet),
+.bp-footer__bar:has(> .bp-sticker--filet) {
   position: relative;
 }
-.bp-sticker--titre,
-.bp-sticker--bande {
-  --sticker-largeur: 4.75rem;
-  top: calc(var(--section) * 0.2);
+.bp-sticker--filet {
+  --sticker-largeur: 4.25rem;
+  top: 0;
   right: var(--marge);
+  translate: 0 -50%;
 }
+/* Sur le filet du bas de la section (accords : au-dessus, la grille finit par des boutons « Ajouter un carton »). */
+.bp-sticker--filet-bas {
+  top: auto;
+  bottom: 0;
+  translate: 0 50%;
+}
+/* Téléphone, barre légale : le copyright prend la largeur sous le filet, le sticker remonte un peu plus au-dessus. */
 @media (max-width: 63.999rem) {
-  .bp-sticker--titre {
-    display: none;
+  .bp-sticker--filet-pied {
+    translate: 0 -70%;
   }
 }
 @media (min-width: 64rem) {
-  .bp-sticker--titre {
+  .bp-sticker--filet {
     --sticker-largeur: 6rem;
-    top: calc(var(--section) * 0.35);
-    right: auto;
-    left: calc(50% + 19rem);
+    right: calc(var(--marge) * 3);
   }
-  /* Sélection : l'en-tête est une bande (titre à gauche, lien à droite) ; le sticker se pose dans son vide. */
-  .bp-sticker--bande {
-    top: 0.75rem;
+  /* Bandeau d'une grille (sélection, « À découvrir aussi ») : entre le titre et le lien, au-dessus du vide du bandeau. */
+  .bp-sticker--filet-bande {
+    right: calc(var(--marge) + 16rem);
+  }
+  /* Barre légale du pied de page : dans le vide entre le copyright et la mention sur l'alcool. */
+  .bp-sticker--filet-pied {
     right: auto;
-    left: 42%;
+    left: 32%;
   }
 }
 
@@ -88,22 +100,5 @@
     right: auto;
     bottom: auto;
     left: calc(50% + 4rem);
-  }
-}
-
-/* Pied de page : à cheval sur le coin haut droit du panneau « Une question ? ». */
-.bp-footer__panel:has(> .bp-sticker) {
-  position: relative;
-}
-.bp-sticker--pied {
-  --sticker-largeur: 4.25rem;
-  top: -2.75rem;
-  right: 0.75rem;
-}
-@media (min-width: 48rem) {
-  .bp-sticker--pied {
-    --sticker-largeur: 6rem;
-    top: -1.75rem;
-    right: 3rem;
   }
 }

@@ -25,6 +25,7 @@
       link_label: 'Toutes les bouteilles',
       barre: true
     -%}
+    {%- render 'bp-sticker', forme: 'ticket', texte: 'à la vôtre !', couleur: 'rose', rotation: 5, taille: 'm', minuscules: true, class: 'bp-sticker--filet bp-sticker--filet-bande' -%}
     <ul class="bp-grille bp-more__grid">
       {%- for position in vendor_order -%}
         {%- assign other_index = position | plus: 0 -%}
