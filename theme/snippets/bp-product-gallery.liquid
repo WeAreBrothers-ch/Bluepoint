@@ -13,12 +13,14 @@
   assign gallery_id = 'bp-galerie-' | append: section_id
 
   # La première vue reprend l’image de bp-packshot : on ne la répète pas dans les suivantes.
-  # Avec une bouteille détourée ou une mise en scène, toutes les photos du produit suivent.
+  # Si elle vient d’un métachamp (bouteille détourée ou mise en scène), toutes les photos du produit suivent ;
+  # si c’est la photo principale (détourée en PNG ou non), elle n’est pas répétée.
   capture cutout_thumb
     render 'bp-cutout-url', product: product, width: 160
   endcapture
+  assign cutout_field = product.metafields.bluepoint.bouteille.value
   assign show_all = false
-  if cutout_thumb != blank or photo != blank
+  if cutout_field != blank or photo != blank
     assign show_all = true
   endif
   assign first_image = photo
