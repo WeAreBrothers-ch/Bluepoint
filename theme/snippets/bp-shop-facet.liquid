@@ -1,0 +1,50 @@
+{%- comment -%}
+  La barre de rayons d'une page filtrée par producteur ou par cépage, à la place des rayons type et origine
+  (snippets/bp-shop-filters.liquid) : « Toutes » pour retirer le filtre, puis tous les producteurs ou tous les cépages,
+  celui de la page en pastille pleine. Mêmes pastilles et même filet que les rayons de la boutique.
+  - mode 'vendor' : les producteurs, vers /collections/vendors?q=… (page de Shopify, rendue par sections/bp-collection.liquid) ;
+  - mode 'cepage' : les cépages (snippets/bp-cepages.liquid), vers /search?view=cepage&q=… (sections/bp-cepage.liquid).
+  Paramètres : mode, current (le nom affiché sur la page : producteur ou cépage)
+  Tout le catalogue sert à construire la liste : la page n'a qu'une page (le paramètre « page » vaut 1).
+{%- endcomment -%}
+{{ 'bp-shop-filters.css' | asset_url | stylesheet_tag }}
+{%- paginate collections.all.products by 250 -%}
+  {%- liquid
+    if mode == 'vendor'
+      assign names = collections.all.products | map: 'vendor' | uniq | sort_natural
+      assign label = 'Producteur'
+    else
+      capture names
+        render 'bp-cepages', products: collections.all.products
+      endcapture
+      assign names = names | split: '|'
+      assign label = 'Cépage'
+    endif
+  -%}
+{%- endpaginate -%}
+{%- assign current_handle = current | handle -%}
+<nav class="bp-ui bp-filters" aria-label="{{ label }}s de la boutique">
+  <div class="bp-filters__row" role="group" aria-labelledby="bp-filtres-{{ mode }}">
+    <span class="bp-filters__label" id="bp-filtres-{{ mode }}">{{ label }}</span>
+    <ul class="bp-filters__list">
+      <li>
+        <a class="bp-filters__pill" href="{{ routes.all_products_collection_url }}">Tous</a>
+      </li>
+      {%- for name in names -%}
+        {%- if name == blank -%}{%- continue -%}{%- endif -%}
+        {%- liquid
+          assign name_handle = name | handle
+          if mode == 'vendor'
+            assign name_url = name | url_for_vendor
+          else
+            assign encoded = name | url_encode
+            assign name_url = routes.search_url | append: '?view=cepage&q=' | append: encoded
+          endif
+        -%}
+        <li>
+          <a class="bp-filters__pill" href="{{ name_url | escape }}" {% if name_handle == current_handle %}aria-current="true"{% endif %}>{{ name | escape }}</a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</nav>

@@ -1,14 +1,15 @@
 {%- comment -%}
-  Navigation grand écran, la plus simple possible : des liens en texte, centrés dans la barre. Pas de cases, pas de filets.
-  Rien ne s'ouvre et rien ne bouge : le lien survolé et celui de la page en cours sont simplement soulignés.
-  Boutique, puis un lien par type de vin (Rouges, Blancs…). Accords et La maison sont dans le pied de page.
-  Les liens filtrent la boutique par type : /collections/all/rouge. Les origines (pays, régions) se choisissent
-  sur la page de la boutique (snippets/bp-shop-filters.liquid) et dans le menu du téléphone.
+  Grand menu de l'ordinateur : Boutique, puis un rayon par type de vin (Rouges, Blancs…), centrés dans la barre.
+  Chaque rayon est un bouton qui ouvre, sous la barre, un panneau de toute la largeur (snippets/bp-nav-panel.liquid) :
+  producteurs, pays et régions, cépages, producteur à la une. Le lien vers tout le rayon est en tête du panneau.
+  Ouverture au clic, au clavier, ou à la souris après un court arrêt ; fermeture avec Échap, en cliquant ailleurs
+  ou en quittant le menu (assets/bp-nav.js). Le rayon ouvert devient une pilule cernée d'encre (assets/bp-nav.css).
+  Sans script, le panneau s'ouvre au survol et quand le focus entre dans le rayon.
   « Espace pro » et « Panier » sont à droite de l'en-tête (sections/bp-header.liquid).
-  Paramètres : types, shop_url, shop_active
+  Paramètres : products (tout le catalogue), types, shop_url, shop_active, settings (réglages de l'en-tête)
 {%- endcomment -%}
 {%- liquid
-  # Rayon de la page en cours (boutique filtrée) : son lien reste souligné.
+  # Rayon de la page en cours (boutique filtrée) : son bouton reste souligné.
   assign current_handles = '|'
   for tag in current_tags
     assign tag_handle = tag | handle
@@ -19,20 +20,45 @@
     assign shop_current = true
   endif
 -%}
-<nav aria-label="Navigation principale" class="bp-ui bp-nav">
+{{ 'bp-nav-panel.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bp-nav.js' | asset_url }}" defer></script>
+<nav aria-label="Navigation principale" class="bp-ui bp-nav" data-bp-nav>
   <ul class="bp-nav__bar">
-    <li>
-      <a class="bp-nav__link" href="{{ shop_url }}" {% if shop_current %}aria-current="page"{% endif %}>Boutique</a>
+    <li class="bp-nav__entry">
+      <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="bp-rayon-boutique" data-bp-nav-trigger {% if shop_current %}data-current{% endif %}>
+        Boutique
+      </button>
+      {%- render 'bp-nav-panel',
+        id: 'bp-rayon-boutique',
+        products: products,
+        all_products: products,
+        types: types,
+        type: '',
+        shop_url: shop_url,
+        featured: settings.featured_boutique
+      -%}
     </li>
     {%- for type in types -%}
       {%- liquid
         assign type_handle = type | handle
         assign type_marker = '|' | append: type_handle | append: '|'
+        assign typed = products | where: 'type', type
+        assign panel_id = 'bp-rayon-' | append: type_handle
+        assign setting_key = 'featured_' | append: type_handle
       -%}
-      <li>
-        <a class="bp-nav__link" href="{{ shop_url }}/{{ type_handle }}" {% if current_handles contains type_marker %}aria-current="page"{% endif %}>
+      <li class="bp-nav__entry">
+        <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="{{ panel_id }}" data-bp-nav-trigger {% if current_handles contains type_marker %}data-current{% endif %}>
           {%- render 'bp-type-label', type: type -%}
-        </a>
+        </button>
+        {%- render 'bp-nav-panel',
+          id: panel_id,
+          products: typed,
+          all_products: products,
+          types: types,
+          type: type,
+          shop_url: shop_url,
+          featured: settings[setting_key]
+        -%}
       </li>
     {%- endfor -%}
   </ul>

@@ -2,12 +2,20 @@
   « La boutique » : toutes les bouteilles d’une collection, en grille de cellules.
   Sur /collections/all, le titre et l’introduction viennent des réglages de la section ;
   sur une autre collection, de la collection elle-même.
+  Page d’un producteur (/collections/vendors?q=Tre%20Pile, servie par Shopify) : « Producteur » en petit au-dessus de son
+  nom, et la barre de tous les producteurs (snippets/bp-shop-facet.liquid) à la place des rayons type et origine.
 {%- endcomment -%}
 {{ 'bp-collection.css' | asset_url | stylesheet_tag }}
 
 {%- liquid
   assign title = collection.title
   assign intro = collection.description
+  assign kicker = ''
+  assign is_vendor = false
+  if request.path == '/collections/vendors'
+    assign is_vendor = true
+    assign kicker = 'Producteur'
+  endif
   if collection.handle == 'all' or collection.handle == blank
     assign title = section.settings.title
     assign intro = section.settings.intro
@@ -48,6 +56,7 @@
 
 <div class="bp-shop">
   <header class="bp-shop__head">
+    {%- if kicker != blank -%}<p class="bp-ui bp-shop__kicker">{{ kicker }}</p>{%- endif -%}
     <h1 class="bp-affiche bp-shop__title">
       {{ title | escape }}
       <sup class="bp-shop__count"><span class="bp-sr-only">{{ count }} bouteille{% if count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ count }}</span></sup>
@@ -57,7 +66,11 @@
     {%- endif -%}
   </header>
 
-  {%- render 'bp-shop-filters', current_type: current_type, current_place: current_place -%}
+  {%- if is_vendor -%}
+    {%- render 'bp-shop-facet', mode: 'vendor', current: collection.title -%}
+  {%- else -%}
+    {%- render 'bp-shop-filters', current_type: current_type, current_place: current_place -%}
+  {%- endif -%}
 
   {%- liquid
     assign grid_title = section.settings.grid_title
@@ -65,6 +78,8 @@
       assign grid_title = 'Origine : ' | append: place_title
     elsif current_type != blank or current_place != blank
       assign grid_title = 'Les bouteilles du rayon'
+    elsif is_vendor
+      assign grid_title = 'Les bouteilles de ' | append: collection.title
     endif
   -%}
   <h2 id="{{ grid_title_id }}" class="bp-sr-only">{{ grid_title | escape }}</h2>
@@ -74,8 +89,6 @@
     un tri ne porte que sur la page affichée.
   {%- endcomment -%}
   {%- paginate collection.products by 250 -%}
-    {%- capture vendor_order -%}{%- render 'bp-vendor-order', products: collection.products -%}{%- endcapture -%}
-    {%- assign vendor_order = vendor_order | strip | split: ',' -%}
     {%- if collection.products.size == 0 -%}
       <p class="bp-shop__empty">
         {{ section.settings.empty_text | escape }}
@@ -83,26 +96,13 @@
         en attendant, Paolo vous conseille.
       </p>
     {%- else -%}
-      <ul class="bp-grille bp-shop__grid" aria-labelledby="{{ grid_title_id }}">
-        {%- for position in vendor_order -%}
-          {%- assign product_index = position | plus: 0 -%}
-          {%- assign product = collection.products[product_index] -%}
-          <li>
-            {%- liquid
-              assign priority = false
-              if forloop.index <= 2 and paginate.current_page == 1
-                assign priority = true
-              endif
-            -%}
-            {%- render 'bp-product-card',
-              product: product,
-              teinte: forloop.index,
-              priority: priority,
-              sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
-            -%}
-          </li>
-        {%- endfor -%}
-      </ul>
+      {%- liquid
+        assign first_page = false
+        if paginate.current_page == 1
+          assign first_page = true
+        endif
+      -%}
+      {%- render 'bp-shop-grid', products: collection.products, title_id: grid_title_id, first_page: first_page -%}
     {%- endif -%}
 
     {%- if paginate.pages > 1 -%}

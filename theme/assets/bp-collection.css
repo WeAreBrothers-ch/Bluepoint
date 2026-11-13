@@ -16,6 +16,12 @@
   font-size: var(--t-geant);
 }
 
+/* Page d'un producteur ou d'un cépage : ce qu'on regarde, en petit au-dessus du nom (petit → grand). */
+.bp-shop__kicker {
+  margin-bottom: -0.5rem;
+  font-size: var(--t-sous-titre);
+}
+
 /* Le nombre de bouteilles, dans un éclat à la fin du titre. */
 .bp-shop__count {
   display: inline-grid;

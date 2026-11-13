@@ -1,0 +1,68 @@
+{%- comment -%}
+  La page d'un cépage : toutes les bouteilles qui le contiennent, classées par producteur de A à Z.
+  Adresse : /search?view=cepage&q=Nebbiolo (gabarit templates/search.cepage.json). Shopify ne sait pas filtrer par
+  cépage : le nom cherché (search.terms) est comparé, sans tenir compte des majuscules ni des accents, aux cépages de
+  chaque bouteille du catalogue (métachamp bluepoint.cepage, lu par snippets/bp-cepages.liquid). Les résultats de la
+  recherche de Shopify ne servent pas.
+  Même présentation que la page d'un producteur : « Cépage » en petit, le nom en titre d'affiche, la barre de tous
+  les cépages (« Tous » retire le filtre), puis la grille.
+{%- endcomment -%}
+{{ 'bp-collection.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign wanted = search.terms | handle
+  assign title = search.terms | strip
+  assign no_bottles = '' | split: ','
+  assign matches = no_bottles
+  assign grid_title_id = 'bp-cepage-title-' | append: section.id
+-%}
+{%- comment -%} Une seule page : le paramètre « page » vaut 1, les 250 premières bouteilles couvrent le catalogue. {%- endcomment -%}
+{%- paginate collections.all.products by 250 -%}
+  {%- for bottle in collections.all.products -%}
+    {%- liquid
+      assign single = collections.all.products | where: 'id', bottle.id
+      capture names
+        render 'bp-cepages', products: single
+      endcapture
+      assign names = names | split: '|'
+      for name in names
+        assign name_handle = name | handle
+        if name_handle == wanted
+          assign matches = matches | concat: single
+          assign title = name
+          break
+        endif
+      endfor
+    -%}
+  {%- endfor -%}
+{%- endpaginate -%}
+
+<div class="bp-shop">
+  <header class="bp-shop__head">
+    <p class="bp-ui bp-shop__kicker">Cépage</p>
+    <h1 class="bp-affiche bp-shop__title">
+      {{ title | escape }}
+      <sup class="bp-shop__count"><span class="bp-sr-only">{{ matches.size }} bouteille{% if matches.size > 1 %}s{% endif %}</span><span aria-hidden="true">{{ matches.size }}</span></sup>
+    </h1>
+  </header>
+
+  {%- render 'bp-shop-facet', mode: 'cepage', current: title -%}
+
+  <h2 id="{{ grid_title_id }}" class="bp-sr-only">Les bouteilles de {{ title | escape }}</h2>
+  {%- if matches.size == 0 -%}
+    <p class="bp-shop__empty">
+      Aucune bouteille de ce cépage en ce moment.
+      <a class="bp-shop__empty-link" href="{{ routes.all_products_collection_url }}">Voir toute la boutique</a>
+    </p>
+  {%- else -%}
+    {%- render 'bp-shop-grid', products: matches, title_id: grid_title_id, first_page: true -%}
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Cépage BluePoint",
+  "tag": "section",
+  "class": "bp-collection-section"
+}
+{% endschema %}

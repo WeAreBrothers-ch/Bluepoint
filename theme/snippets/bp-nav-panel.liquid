@@ -1,0 +1,111 @@
+{%- comment -%}
+  Le panneau d'un rayon dans le grand menu de l'ordinateur (snippets/bp-nav-desktop.liquid), sous la barre.
+  Des colonnes de liens en texte, chacune amenée par un intitulé, séparées par des filets ; puis le producteur à la une.
+  1. le lien vers tout le rayon, puis les producteurs de A à Z (chacun mène à la page de ses vins, /collections/vendors) ;
+  2. pays et régions : la boutique filtrée par type et origine (/collections/all/rouge+region-piemont) ;
+  3. cépages (pour un type de vin) ou types (pour la boutique entière) ;
+  4. le producteur à la une (snippets/bp-nav-feature.liquid).
+  Paramètres :
+  - id : identifiant du panneau (le bouton du rayon s'y rattache par aria-controls)
+  - products : les bouteilles du rayon ; type : le type de produit (« Rouge »), vide pour toute la boutique
+  - all_products : tout le catalogue (pour les nombres de bouteilles par type) ; types : les types, dans l'ordre du caviste
+  - shop_url ; featured : le producteur choisi dans l'éditeur de thème (texte, peut être vide)
+{%- endcomment -%}
+{%- liquid
+  assign rayon_url = shop_url
+  assign type_prefix = ''
+  assign all_label = 'Toute la boutique'
+  if type != blank
+    assign type_handle = type | handle
+    assign rayon_url = shop_url | append: '/' | append: type_handle
+    assign type_prefix = type_handle | append: '+'
+    capture type_label
+      render 'bp-type-label', type: type
+    endcapture
+    assign type_label = type_label | strip | downcase
+    assign all_label = 'Tous les ' | append: type_label
+  endif
+
+  assign vendors = products | map: 'vendor' | uniq | sort_natural
+  capture countries
+    render 'bp-catalog-data', mode: 'countries', products: products
+  endcapture
+  assign countries = countries | split: '|'
+  if type != blank and type != 'Spiritueux'
+    capture grapes
+      render 'bp-cepages', products: products
+    endcapture
+    assign grapes = grapes | split: '|'
+  endif
+-%}
+<div class="bp-nav__panel" id="{{ id }}" hidden>
+  <div class="bp-nav__columns">
+    <div class="bp-nav__column bp-nav__column--large">
+      <a class="bp-nav__all" href="{{ rayon_url }}">
+        <span class="bp-nav__all-label">{{ all_label }}</span>
+        <span class="bp-nav__count">{{ products.size }}<span class="bp-sr-only"> bouteille{% if products.size > 1 %}s{% endif %}</span></span>
+      </a>
+      <p class="bp-nav__heading" id="{{ id }}-producteurs">Producteurs</p>
+      <ul class="bp-nav__list" aria-labelledby="{{ id }}-producteurs">
+        {%- for vendor in vendors -%}
+          {%- if vendor == blank -%}{%- continue -%}{%- endif -%}
+          <li><a class="bp-nav__item-link" href="{{ vendor | url_for_vendor }}">{{ vendor | escape }}</a></li>
+        {%- endfor -%}
+      </ul>
+    </div>
+
+    {%- if countries.size > 0 -%}
+      <div class="bp-nav__column">
+        <p class="bp-nav__heading" id="{{ id }}-origines">Pays et régions</p>
+        <ul class="bp-nav__list bp-nav__list--places" aria-labelledby="{{ id }}-origines">
+          {%- for country in countries -%}
+            {%- capture country_regions -%}
+              {%- render 'bp-catalog-data', mode: 'regions', products: products, within: country -%}
+            {%- endcapture -%}
+            {%- assign country_regions = country_regions | split: '|' -%}
+            <li>
+              <a class="bp-nav__item-link bp-nav__country" href="{{ shop_url }}/{{ type_prefix }}{{ country | handle }}">
+                {{- country | remove_first: 'pays:' | strip | escape -}}
+              </a>
+              {%- if country_regions.size > 0 -%}
+                <ul class="bp-nav__regions">
+                  {%- for region in country_regions -%}
+                    <li><a class="bp-nav__item-link" href="{{ shop_url }}/{{ type_prefix }}{{ region | handle }}">{{ region | remove_first: 'region:' | strip | escape }}</a></li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+
+    {%- if type == blank -%}
+      <div class="bp-nav__column">
+        <p class="bp-nav__heading" id="{{ id }}-types">Types</p>
+        <ul class="bp-nav__list" aria-labelledby="{{ id }}-types">
+          {%- for each_type in types -%}
+            {%- assign typed = all_products | where: 'type', each_type -%}
+            <li>
+              <a class="bp-nav__item-link" href="{{ shop_url }}/{{ each_type | handle }}">
+                {%- render 'bp-type-label', type: each_type -%}
+                <span class="bp-nav__count">{{ typed.size }}<span class="bp-sr-only"> bouteille{% if typed.size > 1 %}s{% endif %}</span></span>
+              </a>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- elsif grapes.size > 0 -%}
+      <div class="bp-nav__column">
+        <p class="bp-nav__heading" id="{{ id }}-cepages">Cépages</p>
+        <ul class="bp-nav__list bp-nav__list--grapes" aria-labelledby="{{ id }}-cepages">
+          {%- for grape in grapes -%}
+            <li><a class="bp-nav__item-link" href="{{ routes.search_url }}?view=cepage&amp;q={{ grape | url_encode }}">{{ grape | escape }}</a></li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+
+    {%- render 'bp-nav-feature', products: products, vendor: featured, id: id -%}
+  </div>
+</div>

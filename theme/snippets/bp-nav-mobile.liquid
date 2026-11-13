@@ -1,9 +1,10 @@
 {%- comment -%}
   Menu téléphone et tablette : un panneau plein écran bleu (<dialog>, ouvert par le bouton « Menu » ; assets/bp-chrome.js),
-  comme celui du site de référence : de grosses pastilles claires sur un fond de couleur. Pensé pour le pouce, sans sous-menu :
+  comme celui du site de référence : de grosses pastilles claires sur un fond de couleur. Pensé pour le pouce :
   1. le haut : le logo et « Fermer » ;
   2. une pastille par ligne : toute la boutique, puis un type de vin, avec le nombre de bouteilles ;
-  3. les origines en petites pastilles, regroupées par pays ;
+  3. trois volets à déplier (<details>, sans script) : producteurs de A à Z, pays et régions, cépages,
+     chacun en petites pastilles (styles : assets/bp-menu-plis.css) ;
   4. le bas, toujours visible : une pastille bleu ciel, « Espace pro ».
   Accords, La maison, Wine bar, Instagram… ne sont plus ici : ils sont dans le pied de page.
   Paramètres : products, types, countries, shop_url, bottle_count, pro_url, pro_label, pro_active
@@ -15,6 +16,7 @@
     assign current_handles = current_handles | append: tag_handle | append: '|'
   endfor
 -%}
+{{ 'bp-menu-plis.css' | asset_url | stylesheet_tag }}
 <dialog class="bp-menu" aria-label="Menu" data-bp-menu>
   <div class="bp-menu__top">
     <a href="{{ routes.root_url }}" class="bp-menu__brand" aria-label="BluePoint, accueil">
@@ -46,9 +48,26 @@
       {%- endfor -%}
     </ul>
 
+    {%- liquid
+      assign vendors = products | map: 'vendor' | uniq | sort_natural
+      capture grapes
+        render 'bp-cepages', products: products
+      endcapture
+      assign grapes = grapes | split: '|'
+    -%}
+    <details class="bp-menu__pli">
+      <summary class="bp-ui bp-menu__pli-titre">Producteurs<span class="bp-menu__pli-signe" aria-hidden="true"></span></summary>
+      <ul class="bp-menu__places">
+        {%- for vendor in vendors -%}
+          {%- if vendor == blank -%}{%- continue -%}{%- endif -%}
+          <li><a class="bp-ui bp-menu__place" href="{{ vendor | url_for_vendor }}">{{ vendor | escape }}</a></li>
+        {%- endfor -%}
+      </ul>
+    </details>
+
     {%- if countries.size > 0 -%}
-      <section class="bp-menu__group" aria-labelledby="bp-menu-regions">
-        <h2 class="bp-rubrique bp-menu__heading" id="bp-menu-regions">Par origine</h2>
+      <details class="bp-menu__pli">
+        <summary class="bp-ui bp-menu__pli-titre">Pays et régions<span class="bp-menu__pli-signe" aria-hidden="true"></span></summary>
         {%- for country in countries -%}
           {%- liquid
             capture country_regions
@@ -69,7 +88,18 @@
             {%- endfor -%}
           </ul>
         {%- endfor -%}
-      </section>
+      </details>
+    {%- endif -%}
+
+    {%- if grapes.size > 0 -%}
+      <details class="bp-menu__pli">
+        <summary class="bp-ui bp-menu__pli-titre">Cépages<span class="bp-menu__pli-signe" aria-hidden="true"></span></summary>
+        <ul class="bp-menu__places">
+          {%- for grape in grapes -%}
+            <li><a class="bp-ui bp-menu__place" href="{{ routes.search_url }}?view=cepage&amp;q={{ grape | url_encode }}">{{ grape | escape }}</a></li>
+          {%- endfor -%}
+        </ul>
+      </details>
     {%- endif -%}
   </nav>
 

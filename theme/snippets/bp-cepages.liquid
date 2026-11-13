@@ -1,0 +1,54 @@
+{%- comment -%}
+  Écrit les cépages d'une liste de bouteilles, de A à Z, sans doublon, séparés par « | » (à lire avec « split »).
+  Ils viennent du métachamp bluepoint.cepage, en texte libre : « Sangiovese 70 %, Cabernet Sauvignon 20 %, Merlot 10 % ».
+  Pour chaque bouteille : le texte est coupé aux virgules, les pourcentages sont retirés, chaque nom commence par une
+  majuscule. Deux écritures du même nom (« Pinot noir », « Pinot Noir ») n'en font qu'une : la première rencontrée.
+  - Noms équivalents (ci-dessous, « alias ») : ramenés au même nom, pour ne pas couper un cépage en deux.
+  - Mentions qui ne sont pas des cépages (« ignore ») : laissées de côté. À corriger dans la fiche du produit.
+  Paramètres : products (liste de produits)
+  Exemple : la page d'un cépage compare le « handle » du nom cherché à celui de chaque nom écrit ici.
+{%- endcomment -%}
+{%- liquid
+  assign alias_from = 'pinot-nero,aglianico-di-taurasi' | split: ','
+  assign alias_to = 'Pinot noir,Aglianico' | split: ','
+  assign ignore = '|genievre-et-botaniques|fleurs-de-sureaux|marche-rosso-igt|'
+  assign digits = '0,1,2,3,4,5,6,7,8,9' | split: ','
+
+  assign seen = '|'
+  assign names = ''
+  for product in products
+    assign raw = product.metafields.bluepoint.cepage.value | default: ''
+    assign parts = raw | split: ','
+    for part in parts
+      assign name = part | remove: '%'
+      for digit in digits
+        assign name = name | remove: digit
+      endfor
+      assign name = name | strip
+      assign key = name | handle
+      if key == blank
+        continue
+      endif
+      assign ignore_marker = '|' | append: key | append: '|'
+      if ignore contains ignore_marker
+        continue
+      endif
+      for from in alias_from
+        if key == from
+          assign name = alias_to[forloop.index0]
+          assign key = name | handle
+        endif
+      endfor
+      assign marker = '|' | append: key | append: '|'
+      if seen contains marker
+        continue
+      endif
+      assign seen = seen | append: key | append: '|'
+      assign first_letter = name | slice: 0 | upcase
+      assign rest = name | slice: 1, 200
+      assign names = names | append: first_letter | append: rest | append: '|'
+    endfor
+  endfor
+  assign names = names | split: '|' | sort_natural | join: '|'
+  echo names
+-%}

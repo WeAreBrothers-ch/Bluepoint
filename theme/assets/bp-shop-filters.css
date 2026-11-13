@@ -80,15 +80,19 @@
   .bp-filters__list::-webkit-scrollbar {
     display: none;
   }
-  .bp-filters__pill {
+  /* Chaque pastille garde sa largeur et tient sur une ligne, même un long nom de producteur. */
+  .bp-filters__list > li {
     flex: none;
+  }
+  .bp-filters__pill {
+    white-space: nowrap;
     scroll-snap-align: start;
   }
 }
 
 @media (min-width: 48rem) {
   .bp-filters__row {
-    grid-template-columns: 6rem minmax(0, 1fr);
+    grid-template-columns: 7.5rem minmax(0, 1fr);
     align-items: center;
   }
 }

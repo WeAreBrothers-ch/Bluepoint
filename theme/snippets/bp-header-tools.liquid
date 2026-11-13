@@ -1,0 +1,29 @@
+{%- comment -%}
+  Le côté droit de l'en-tête (sections/bp-header.liquid) : « Espace pro » (ordinateur), « Panier », « Menu » (téléphone).
+  Le panier porte l'attribut data-bp-floating-cart : assets/bp-cart.js y met à jour le nombre de bouteilles.
+  Paramètres : pro_url, pro_label, pro_active
+{%- endcomment -%}
+{%- liquid
+  assign cart_label = 'Panier, vide'
+  if cart.item_count == 1
+    assign cart_label = 'Panier, 1 bouteille'
+  elsif cart.item_count > 1
+    assign cart_label = 'Panier, ' | append: cart.item_count | append: ' bouteilles'
+  endif
+-%}
+<div class="bp-header__tools">
+  <a class="bp-ui bp-header__cell bp-header__pro" href="{{ pro_url | escape }}" {% if pro_active %}aria-current="page"{% endif %}>{{ pro_label }}</a>
+  <a
+    href="{{ routes.cart_url }}"
+    class="bp-ui bp-header__cell bp-header__cart"
+    data-actif="{% if cart.item_count > 0 %}true{% else %}false{% endif %}"
+    data-bp-floating-cart
+    aria-label="{{ cart_label }}"
+  >
+    <span class="bp-header__cart-label">Panier</span>
+    <span class="bp-eclat bp-header__burst" aria-hidden="true" data-bp-cart-count>{{ cart.item_count }}</span>
+  </a>
+  <button type="button" class="bp-ui bp-header__cell bp-menu__toggle" aria-haspopup="dialog" aria-expanded="false" data-bp-menu-open>
+    Menu
+  </button>
+</div>

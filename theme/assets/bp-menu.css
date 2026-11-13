@@ -130,16 +130,7 @@ html:has(.bp-menu[open]) {
   background: var(--c-blanc);
 }
 
-/* Les origines : de petites pastilles, le pays en premier (en bleu ciel). */
-.bp-menu__group {
-  padding-top: 1.5rem;
-}
-
-.bp-menu__heading {
-  margin-bottom: 0.75rem;
-  color: var(--c-ciel);
-}
-
+/* Producteurs, origines, cépages : de petites pastilles (dans les volets de bp-menu-plis.css), le pays en bleu ciel. */
 .bp-menu__places {
   display: flex;
   flex-wrap: wrap;

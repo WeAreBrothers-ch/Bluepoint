@@ -1,0 +1,77 @@
+{%- comment -%}
+  « Producteur à la une », la dernière colonne d'un panneau du grand menu (snippets/bp-nav-panel.liquid) :
+  ses bouteilles détourées côte à côte sur le panneau bleu des fiches (bp-packshot.css), son nom dessous.
+  Le producteur se choisit dans l'éditeur de thème (en-tête, un réglage par rayon). Réglage vide, ou producteur
+  sans bouteille dans ce rayon : celui qui y a le plus de bouteilles (à égalité, le premier de A à Z).
+  Trois bouteilles au plus, celles qui ont une image détourée ; sans aucune, l'image de la première bouteille.
+  Images chargées seulement quand on s'apprête à ouvrir le panneau (assets/bp-nav.js).
+  Paramètres : products (les bouteilles du rayon), vendor (le producteur choisi, texte), id (identifiant du panneau)
+{%- endcomment -%}
+{%- liquid
+  assign vendors = products | map: 'vendor' | uniq | sort_natural
+  assign chosen = ''
+  assign wanted = vendor | handle
+  if wanted != blank
+    for name in vendors
+      assign name_handle = name | handle
+      if name_handle == wanted
+        assign chosen = name
+      endif
+    endfor
+  endif
+  if chosen == blank
+    assign best = 0
+    for name in vendors
+      if name == blank
+        continue
+      endif
+      assign owned = products | where: 'vendor', name
+      if owned.size > best
+        assign best = owned.size
+        assign chosen = name
+      endif
+    endfor
+  endif
+  assign bottles = products | where: 'vendor', chosen
+-%}
+{%- if chosen != blank -%}
+  <div class="bp-nav__column bp-nav__feature">
+    <p class="bp-nav__heading" id="{{ id }}-une">Producteur à la une</p>
+    <a class="bp-nav__feature-link" href="{{ chosen | url_for_vendor }}" aria-describedby="{{ id }}-une">
+      <span class="bp-packshot bp-nav__tile" data-teinte="2">
+        {%- assign shown = 0 -%}
+        {%- for bottle in bottles -%}
+          {%- if shown >= 3 -%}{%- break -%}{%- endif -%}
+          {%- capture small -%}{%- render 'bp-cutout-url', product: bottle, width: 240 -%}{%- endcapture -%}
+          {%- if small == blank -%}{%- continue -%}{%- endif -%}
+          {%- capture large -%}{%- render 'bp-cutout-url', product: bottle, width: 480 -%}{%- endcapture -%}
+          <img
+            class="bp-packshot__bottle bp-nav__bottle"
+            src="{{ small }}"
+            srcset="{{ small }} 240w, {{ large }} 480w"
+            sizes="10rem"
+            width="240"
+            height="300"
+            alt=""
+            loading="lazy"
+            decoding="async"
+          >
+          {%- assign shown = shown | plus: 1 -%}
+        {%- endfor -%}
+        {%- if shown == 0 and bottles.first.featured_image != blank -%}
+          {{
+            bottles.first.featured_image
+            | image_url: width: 600
+            | image_tag:
+              class: 'bp-packshot__image',
+              widths: '300, 450, 600',
+              sizes: '22vw',
+              loading: 'lazy',
+              alt: ''
+          }}
+        {%- endif -%}
+      </span>
+      <span class="bp-nav__feature-name">{{ chosen | escape }}</span>
+    </a>
+  </div>
+{%- endif -%}

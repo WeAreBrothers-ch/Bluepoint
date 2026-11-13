@@ -1,0 +1,74 @@
+/*
+ * BluePoint — volets du menu du téléphone (snippets/bp-nav-mobile.liquid) : Producteurs, Pays et régions, Cépages.
+ * Sous les grosses pastilles des types de vin, trois lignes à toucher, séparées par des filets bleu ciel,
+ * chacune avec un + qui devient − (le même signe que les blocs dépliables de la fiche produit).
+ * Le volet s'ouvre d'un coup, sans animation : on y passe souvent, il doit répondre tout de suite.
+ */
+
+.bp-menu__pli {
+  border-bottom: var(--trait) solid var(--c-ciel);
+}
+
+.bp-menu__pli:first-of-type {
+  margin-top: 1.5rem;
+  border-top: var(--trait) solid var(--c-ciel);
+}
+
+.bp-menu__pli-titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.5rem;
+  padding-block: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Le survol générique des volets du thème d'origine (une encre grisée) resterait collé après un toucher. */
+.bp-menu__pli-titre:hover {
+  color: inherit;
+}
+
+/* Un nom long (« Arthur Duplan, Domaine de la Tour de Marsens ») passe sur deux lignes dans sa pastille. */
+.bp-menu__pli .bp-menu__place {
+  padding-block: 0.35rem;
+  line-height: 1.25;
+}
+
+.bp-menu__pli-titre::-webkit-details-marker {
+  display: none;
+}
+
+/* Le signe : deux traits ; le trait vertical se couche quand le volet est ouvert. */
+.bp-menu__pli-signe {
+  position: relative;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.bp-menu__pli-signe::before,
+.bp-menu__pli-signe::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 2px;
+  margin-top: -1px;
+  background: currentColor;
+}
+
+.bp-menu__pli-signe::after {
+  rotate: 90deg;
+}
+
+.bp-menu__pli[open] .bp-menu__pli-signe::after {
+  rotate: 0deg;
+}
+
+.bp-menu__pli[open] {
+  padding-bottom: 1rem;
+}

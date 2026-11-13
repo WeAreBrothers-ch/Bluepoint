@@ -1,12 +1,11 @@
 {%- comment -%}
-  En-tête fixe BluePoint : la barre (logo, liens, panier), puis dessous un bandeau d'annonce bleu ciel
-  (même ordre que le site de référence). Le logo est toujours à gauche.
-  - Grand écran : les rayons en texte, centrés (aucun panneau qui s'ouvre au survol), « Espace pro » et « Panier »
-    en texte à droite (snippets/bp-nav-desktop.liquid).
+  En-tête fixe BluePoint : la barre (logo, rayons, panier), puis dessous un bandeau d'annonce bleu ciel.
+  Le logo est toujours à gauche.
+  - Grand écran : les rayons au centre ; chacun ouvre un grand panneau (producteurs, origines, cépages, producteur
+    à la une : snippets/bp-nav-desktop.liquid) ; « Espace pro » et « Panier » à droite (snippets/bp-header-tools.liquid).
   - Téléphone et tablette : « Panier » puis « Menu » à droite (panneau plein écran : snippets/bp-nav-mobile.liquid).
-  Le panier porte l'attribut data-bp-floating-cart : assets/bp-cart.js y met à jour le nombre de bouteilles.
-  Les rayons se construisent seuls à partir des produits : type de produit (Rouge, Blanc…) et
-  étiquettes « pays:… » et « region:… » (voir README, « Ranger une bouteille »).
+  Les rayons se construisent seuls à partir des produits : type de produit (Rouge, Blanc…), producteur (vendor),
+  étiquettes « pays:… » et « region:… », métachamp du cépage (voir README, « Ranger une bouteille »).
   Tout le catalogue sert à construire les rayons et leurs nombres de bouteilles : voir le commentaire suivant.
 {%- endcomment -%}
 {%- comment -%}
@@ -75,22 +74,11 @@
   capture types
     render 'bp-catalog-data', mode: 'types', products: products
   endcapture
-  capture regions
-    render 'bp-catalog-data', mode: 'regions', products: products
-  endcapture
   capture countries
     render 'bp-catalog-data', mode: 'countries', products: products
   endcapture
   assign types = types | split: '|'
-  assign regions = regions | split: '|'
   assign countries = countries | split: '|'
-
-  assign cart_label = 'Panier, vide'
-  if cart.item_count == 1
-    assign cart_label = 'Panier, 1 bouteille'
-  elsif cart.item_count > 1
-    assign cart_label = 'Panier, ' | append: cart.item_count | append: ' bouteilles'
-  endif
 -%}
 
 <header class="bp-header">
@@ -100,27 +88,14 @@
     </a>
 
     {%- render 'bp-nav-desktop',
+      products: products,
       types: types,
+      settings: section.settings,
       shop_url: shop_url,
       shop_active: shop_active
     -%}
 
-    <div class="bp-header__tools">
-      <a class="bp-ui bp-header__cell bp-header__pro" href="{{ pro_url | escape }}" {% if pro_active %}aria-current="page"{% endif %}>{{ pro_label }}</a>
-      <a
-        href="{{ routes.cart_url }}"
-        class="bp-ui bp-header__cell bp-header__cart"
-        data-actif="{% if cart.item_count > 0 %}true{% else %}false{% endif %}"
-        data-bp-floating-cart
-        aria-label="{{ cart_label }}"
-      >
-        <span class="bp-header__cart-label">Panier</span>
-        <span class="bp-eclat bp-header__burst" aria-hidden="true" data-bp-cart-count>{{ cart.item_count }}</span>
-      </a>
-      <button type="button" class="bp-ui bp-header__cell bp-menu__toggle" aria-haspopup="dialog" aria-expanded="false" data-bp-menu-open>
-        Menu
-      </button>
-    </div>
+    {%- render 'bp-header-tools', pro_url: pro_url, pro_label: pro_label, pro_active: pro_active -%}
   </div>
   {%- if section.settings.announcement != blank -%}
     <p class="bp-ui bp-phrase bp-header__annonce">
@@ -166,7 +141,18 @@
       "id": "pro_url",
       "label": "Lien Espace pro",
       "default": "/pages/espace-pro"
-    }
+    },
+    {
+      "type": "header",
+      "content": "Producteur à la une",
+      "info": "Dans le grand menu de l’ordinateur, une tuile par rayon. Écrire le nom du producteur tel qu’il est dans la fiche des produits (champ « Fournisseur »). Vide : celui qui a le plus de bouteilles dans le rayon."
+    },
+    { "type": "text", "id": "featured_boutique", "label": "Boutique" },
+    { "type": "text", "id": "featured_rouge", "label": "Rouges" },
+    { "type": "text", "id": "featured_blanc", "label": "Blancs" },
+    { "type": "text", "id": "featured_rose", "label": "Rosés" },
+    { "type": "text", "id": "featured_effervescent", "label": "Pétillants" },
+    { "type": "text", "id": "featured_spiritueux", "label": "Spiritueux" }
   ]
 }
 {% endschema %}

@@ -1,0 +1,28 @@
+{%- comment -%}
+  La grille des bouteilles de la boutique, classées par producteur de A à Z puis par nom (snippets/bp-vendor-order.liquid).
+  Utilisée par la boutique et ses rayons (sections/bp-collection.liquid) et par la page d'un cépage (sections/bp-cepage.liquid).
+  Paramètres : products (liste, 250 au plus), title_id (id du titre de la grille, lu par les lecteurs d'écran),
+  first_page (true : les deux premières images se chargent tout de suite)
+{%- endcomment -%}
+{%- capture vendor_order -%}{%- render 'bp-vendor-order', products: products -%}{%- endcapture -%}
+{%- assign vendor_order = vendor_order | strip | split: ',' -%}
+<ul class="bp-grille bp-shop__grid" aria-labelledby="{{ title_id }}">
+  {%- for position in vendor_order -%}
+    {%- liquid
+      assign product_index = position | plus: 0
+      assign product = products[product_index]
+      assign priority = false
+      if forloop.index <= 2 and first_page
+        assign priority = true
+      endif
+    -%}
+    <li>
+      {%- render 'bp-product-card',
+        product: product,
+        teinte: forloop.index,
+        priority: priority,
+        sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
+      -%}
+    </li>
+  {%- endfor -%}
+</ul>

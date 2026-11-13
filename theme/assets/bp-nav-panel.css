@@ -1,0 +1,153 @@
+/*
+ * BluePoint — contenu d'un panneau du grand menu (snippets/bp-nav-panel.liquid, bp-nav-feature.liquid).
+ * Des colonnes de liens calmes, chacune amenée par un intitulé, séparées par des filets d'encre ;
+ * puis le producteur à la une : ses bouteilles sur le panneau bleu des fiches (bp-packshot.css), son nom dessous.
+ * Le cadre du panneau et son apparition sont dans bp-nav.css.
+ */
+
+@media (min-width: 75rem) {
+  .bp-nav__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.85fr) minmax(0, 1.4fr) minmax(0, 1.25fr);
+  }
+
+  .bp-nav__column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: calc(var(--marge) * 1.5) var(--marge) calc(var(--marge) * 2);
+  }
+
+  .bp-nav__column + .bp-nav__column {
+    border-left: var(--trait) solid var(--ligne);
+  }
+
+  /* Le producteur à la une se cale toujours dans la dernière colonne, même quand une colonne manque. */
+  .bp-nav__feature {
+    grid-column: 4;
+  }
+
+  /* L'intitulé : petit, gras, en capitales sans interlettrage (comme les blocs de la fiche). */
+  .bp-nav__heading {
+    font-size: var(--t-ui);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  /* Le lien vers tout le rayon, en tête : plus grand, avec le nombre de bouteilles. */
+  .bp-nav__all {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: var(--t-sous-titre);
+    font-weight: 700;
+  }
+
+  .bp-nav__all-label {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
+  }
+
+  .bp-nav__count {
+    color: var(--encre-douce);
+    font-size: var(--t-mention);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bp-nav__list,
+  .bp-nav__regions {
+    list-style: none;
+  }
+
+  /* Liste longue (plus de 12 noms) : sur deux colonnes, sans couper un nom entre les deux. */
+  .bp-nav__list:has(> li:nth-child(13)) {
+    columns: 2;
+    column-gap: var(--marge);
+    width: 100%;
+  }
+
+  .bp-nav__list > li {
+    break-inside: avoid;
+  }
+
+  /* Les cépages, courts, tiennent sur une ligne : « Cabernet Sauvignon » ne se coupe pas. */
+  .bp-nav__list--grapes .bp-nav__item-link {
+    white-space: nowrap;
+  }
+
+  .bp-nav__item-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding-block: 0.15rem;
+    font-size: var(--t-corps);
+    font-weight: 400;
+    line-height: 1.35;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color 160ms var(--ease-out);
+  }
+
+  /* Le pays en demi-gras, ses régions dessous, en retrait. */
+  .bp-nav__country {
+    font-weight: 600;
+  }
+
+  .bp-nav__list--places > li + li {
+    margin-top: 0.5rem;
+  }
+
+  .bp-nav__regions {
+    padding-left: 0.9rem;
+  }
+
+  /* Producteur à la une : ses bouteilles posées côte à côte sur le panneau bleu, son nom dessous. */
+  .bp-nav__feature-link {
+    display: grid;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .bp-nav__tile {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    aspect-ratio: 4 / 3;
+    padding: 0 6% 4%;
+  }
+
+  /* Chaque image est une toile 4:5 où la bouteille n'occupe que le milieu : les toiles se chevauchent. */
+  .bp-nav__tile .bp-nav__bottle {
+    position: static;
+    flex: none;
+    width: 58%;
+    height: auto;
+    margin-inline: -15%;
+  }
+
+  .bp-nav__feature-name {
+    font-size: var(--t-corps);
+    font-weight: 700;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color 160ms var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .bp-nav__item-link:hover,
+    .bp-nav__feature-link:hover .bp-nav__feature-name {
+      text-decoration-color: currentColor;
+    }
+  }
+}
