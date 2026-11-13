@@ -1,0 +1,63 @@
+{%- comment -%}
+  Fiche d'identité de la bouteille : un tableau à deux colonnes (intitulé en gras, valeur), une ligne par donnée connue.
+  Les lignes vides ne s'affichent pas ; sans aucune donnée, rien n'est écrit.
+  Sources : le producteur (vendor), le type, les étiquettes « pays:… » et « millesime:… »,
+  les métachamps bluepoint.region, bluepoint.cepage, bluepoint.volume_ml et bluepoint.degre.
+  Paramètre : product
+{%- endcomment -%}
+{%- liquid
+  assign bp = product.metafields.bluepoint
+  assign region = bp.region.value
+  assign cepage = bp.cepage.value
+
+  assign pays = ''
+  assign millesime = ''
+  for tag in product.tags
+    assign tag_start = tag | slice: 0, 10
+    if tag_start == 'millesime:'
+      assign millesime = tag | remove_first: 'millesime:' | strip
+    elsif tag contains 'pays:'
+      assign pays = tag | remove_first: 'pays:' | strip
+    endif
+  endfor
+
+  assign volume_label = ''
+  assign volume_ml = bp.volume_ml.value
+  if volume_ml != blank
+    assign volume_rest = volume_ml | modulo: 10
+    if volume_rest == 0
+      assign volume_label = volume_ml | divided_by: 10 | append: ' cl'
+    else
+      assign volume_label = volume_ml | divided_by: 10.0 | append: '' | replace: '.', ',' | append: ' cl'
+    endif
+  endif
+
+  assign degre_label = ''
+  assign degre = bp.degre.value
+  if degre != blank
+    assign degre_text = degre | append: ''
+    assign degre_end = degre_text | slice: -2, 2
+    if degre_end == '.0'
+      assign degre_text = degre | round
+    endif
+    assign degre_label = degre_text | append: '' | replace: '.', ',' | append: ' % vol.'
+  endif
+-%}
+
+{%- capture rows -%}
+  {%- if product.vendor != blank -%}<div class="bp-identity__row"><dt>Producteur</dt><dd>{{ product.vendor | escape }}</dd></div>{%- endif -%}
+  {%- if pays != blank -%}<div class="bp-identity__row"><dt>Pays</dt><dd>{{ pays | escape }}</dd></div>{%- endif -%}
+  {%- if region != blank -%}<div class="bp-identity__row"><dt>Région</dt><dd>{{ region | escape }}</dd></div>{%- endif -%}
+  {%- if product.type != blank -%}<div class="bp-identity__row"><dt>Type</dt><dd>{{ product.type | escape }}</dd></div>{%- endif -%}
+  {%- if cepage != blank -%}<div class="bp-identity__row"><dt>Cépages</dt><dd>{{ cepage | escape }}</dd></div>{%- endif -%}
+  {%- if millesime != blank -%}<div class="bp-identity__row"><dt>Millésime</dt><dd>{{ millesime | escape }}</dd></div>{%- endif -%}
+  {%- if volume_label != blank -%}<div class="bp-identity__row"><dt>Contenance</dt><dd>{{ volume_label }}</dd></div>{%- endif -%}
+  {%- if degre_label != blank -%}<div class="bp-identity__row"><dt>Degré</dt><dd>{{ degre_label }}</dd></div>{%- endif -%}
+{%- endcapture -%}
+
+{%- if rows != blank -%}
+  <section class="bp-product-block" aria-labelledby="bp-identite-titre">
+    <h2 class="bp-product-block__label" id="bp-identite-titre">Fiche d’identité</h2>
+    <dl class="bp-identity">{{ rows }}</dl>
+  </section>
+{%- endif -%}

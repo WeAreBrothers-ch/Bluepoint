@@ -96,5 +96,5 @@
 }
 
 .bp-more__grid .bp-card {
-  padding-bottom: calc(clamp(0.9rem, 1.8vw, 1.5rem) + var(--onde, 2rem) + var(--trait));
+  padding-bottom: calc(var(--marge) + var(--onde, 2rem) + var(--trait));
 }

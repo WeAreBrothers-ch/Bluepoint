@@ -10,8 +10,8 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   height: 100%;
-  gap: clamp(0.75rem, 1.6vw, 1.25rem);
-  padding: clamp(0.9rem, 1.8vw, 1.5rem);
+  gap: var(--marge);
+  padding: var(--marge);
   background: var(--fond);
   /* Filets d'encre à droite et dessous, dans la carte (un filet extérieur serait recouvert par la carte voisine). */
   border-right: var(--trait) solid var(--ligne);
@@ -62,7 +62,7 @@
   font-weight: 500;
 }
 
-/* Au milieu : la bouteille, alignée d'une carte à l'autre quel que soit le nom. */
+/* Au milieu : la bouteille sur son panneau en dégradé (bp-packshot.css), alignée d'une carte à l'autre quel que soit le nom. */
 .bp-card__visual-link {
   position: relative;
   display: block;
@@ -71,36 +71,6 @@
 
 .bp-card__visual {
   aspect-ratio: 4 / 5;
-}
-
-/*
- * Une bouteille détourée n'a pas de tuile : elle se tient devant un grand rond bleu (la nuance de data-teinte),
- * qui déborde à peine de la cellule. Une photo de mise en scène garde sa tuile arrondie.
- */
-.bp-card__visual:has(.bp-packshot__bottle) {
-  overflow: visible;
-  border-color: transparent;
-  background: transparent;
-}
-
-.bp-card__visual:has(.bp-packshot__bottle)::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 54%;
-  width: 88%;
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: var(--tuile, var(--c-glacier));
-  transition: scale 360ms var(--ease-out);
-}
-
-.bp-card__visual .bp-packshot__bottle {
-  inset: 3% 10% 3%;
-  width: 80%;
-  height: 94%;
-  transition: translate 360ms var(--ease-out);
 }
 
 /* En bas : « Ajouter un carton », une pastille bleu vif sur toute la largeur (le texte passe à la ligne si la cellule est étroite). */
@@ -176,12 +146,6 @@
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.2em;
-  }
-  .bp-card:hover .bp-card__visual:has(.bp-packshot__bottle)::before {
-    scale: 1.06;
-  }
-  .bp-card:hover .bp-card__visual .bp-packshot__bottle {
-    translate: 0 -0.5rem;
   }
   .bp-card__quick-add:not([data-ajoute="true"], .bp-card__quick-add--epuise):hover {
     border-color: var(--c-encre);

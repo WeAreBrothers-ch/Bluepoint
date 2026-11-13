@@ -11,25 +11,40 @@
   background: var(--tuile, var(--c-glacier));
 }
 
+/* Chaque nuance : la tuile pleine (photo, image non détourée) et sa version adoucie pour le dégradé des bouteilles. */
 .bp-packshot[data-teinte="1"] {
   --tuile: var(--c-glacier);
+  --tuile-douce: var(--c-ciel);
 }
 .bp-packshot[data-teinte="2"] {
   --tuile: var(--c-ciel);
+  --tuile-douce: color-mix(in oklch, var(--c-azur) 55%, var(--fond));
 }
 .bp-packshot[data-teinte="3"] {
   --tuile: var(--c-azur);
+  --tuile-douce: var(--c-glacier);
 }
 .bp-packshot[data-teinte="4"] {
   --tuile: var(--c-bleu);
+  --tuile-douce: color-mix(in oklch, var(--c-bleu) 40%, var(--fond));
 }
 
-/* Toutes les bouteilles détourées sur la même ligne de base, à 82 % de la hauteur de la tuile. */
+/*
+ * Bouteille détourée : pas de tuile cernée, un panneau arrondi dont le bleu se fond dans le fond de la page
+ * aux trois quarts de la hauteur. La bouteille est posée en bas, presque à pleine hauteur.
+ * Les nuances sont adoucies (mélangées au fond) pour que l'étiquette reste lisible sur le haut du panneau.
+ */
+.bp-packshot:has(.bp-packshot__bottle) {
+  border-color: transparent;
+  /* Le dégradé couvre aussi la bordure transparente : sinon il se répète dessous et dessine un trait bleu. */
+  background: linear-gradient(to bottom, var(--tuile-douce) 0%, var(--fond) 75%) border-box;
+}
+
 .bp-packshot__bottle {
   position: absolute;
-  inset: 9% 12% 9%;
-  width: 76%;
-  height: 82%;
+  inset: 5% 10% 4%;
+  width: 80%;
+  height: 91%;
   object-fit: contain;
   object-position: 50% 100%;
 }

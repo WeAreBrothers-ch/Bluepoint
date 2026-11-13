@@ -3,3 +3,4 @@ TX-13 | * | Faux positif : {{ … }} est la syntaxe des modèles Liquid de Shopi
 CT-14 | * | Titres d'affiche cernés à ombre dure décalée et pilules cernées d'encre : demandés par écrit par Eliott le 04.11.2026 (« inspire-toi fortement de sometimesalways.com.au, gros titres rétro ») pour ce projet
 CT-20b | assets/bp-base.css | Helvetica figée sur les bulles de l'intro et de Paolo : Eliott a demandé de ne pas toucher aux personnages (04.11.2026)
 CT-28 | assets/bp-intro-motion.css | Police à chasse fixe de la bulle de l'intro (largeur réservée pour l'écriture lettre à lettre) : personnages figés à la demande d'Eliott (04.11.2026)
+CT-03 | assets/bp-packshot.css | Dégradé vertical bleu → fond derrière les bouteilles détourées : demandé par écrit par Eliott le 13.11.2026 (« plus la structure, le dégradé derrière les bouteilles » de sometimesalways.com.au). Limité à ce panneau.

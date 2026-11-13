@@ -1,37 +1,10 @@
 {%- comment -%}
-  Colonne d’information de la fiche, la plus courte possible : fil d'Ariane, nom, producteur et région, prix,
-  achat, description, repères (cépage, contenance, degré), puis les blocs dépliables.
-  Rien n’est écrit deux fois : le producteur et l’origine sont dans la ligne sous le nom (plus de tableau),
-  la livraison est dans le bandeau d’annonce.
+  Colonne d'information de la fiche. Les textes arrivent dans cet ordre, du plus petit au plus fort puis à l'achat :
+  fil d'Ariane, producteur et région en petit, le nom en grand, le prix en grand, l'achat ;
+  puis les textes ouverts, chacun amené par un filet et un intitulé, et la fiche d'identité (snippets/bp-product-blocks.liquid).
   Paramètres : product, form_id
 {%- endcomment -%}
-{%- liquid
-  assign bp = product.metafields.bluepoint
-  assign region = bp.region.value
-  assign cepage = bp.cepage.value
-
-  assign volume_label = ''
-  assign volume_ml = bp.volume_ml.value
-  if volume_ml != blank
-    assign volume_rest = volume_ml | modulo: 10
-    if volume_rest == 0
-      assign volume_label = volume_ml | divided_by: 10 | append: ' cl'
-    else
-      assign volume_label = volume_ml | divided_by: 10.0 | append: '' | replace: '.', ',' | append: ' cl'
-    endif
-  endif
-
-  assign degre_label = ''
-  assign degre = bp.degre.value
-  if degre != blank
-    assign degre_text = degre | append: ''
-    assign degre_end = degre_text | slice: -2, 2
-    if degre_end == '.0'
-      assign degre_text = degre | round
-    endif
-    assign degre_label = degre_text | append: '' | replace: '.', ',' | append: ' % vol.'
-  endif
--%}
+{%- assign region = product.metafields.bluepoint.region.value -%}
 
 <div class="bp-product-info">
   <nav aria-label="Fil d’Ariane" class="bp-ui bp-product-info__trail">
@@ -43,11 +16,11 @@
   </nav>
 
   <div class="bp-product-info__heading">
-    <h1 class="bp-affiche bp-product-info__name">{{ product.title | escape }}</h1>
     <p class="bp-product-info__producer">
       {{- product.vendor | escape -}}
       {%- if region != blank %}, {{ region | escape }}{% endif -%}
     </p>
+    <h1 class="bp-affiche bp-product-info__name">{{ product.title | escape }}</h1>
   </div>
 
   <div class="bp-product-info__pricing">
@@ -58,23 +31,5 @@
 
   {%- render 'bp-buy-box', product: product, form_id: form_id -%}
 
-  {%- if product.description != blank -%}
-    <div class="bp-product-info__description">{{ product.description }}</div>
-  {%- endif -%}
-
-  {%- if cepage != blank or volume_label != blank or degre_label != blank -%}
-    <ul class="bp-ui bp-product-info__chips" aria-label="Repères">
-      {%- if cepage != blank -%}
-        <li class="bp-product-info__chip">{{ cepage | escape }}</li>
-      {%- endif -%}
-      {%- if volume_label != blank -%}
-        <li class="bp-product-info__chip">{{ volume_label }}</li>
-      {%- endif -%}
-      {%- if degre_label != blank -%}
-        <li class="bp-product-info__chip">{{ degre_label }}</li>
-      {%- endif -%}
-    </ul>
-  {%- endif -%}
-
-  {%- render 'bp-info-accordions', product: product -%}
+  {%- render 'bp-product-blocks', product: product -%}
 </div>

@@ -1,0 +1,44 @@
+{%- comment -%}
+  Les textes de la fiche, ouverts et lus d'un trait : chaque bloc est amené par un filet puis un intitulé court,
+  et le texte suit. Ordre : la description (si elle existe), Dégustation, Le domaine, Service et conservation.
+  Un bloc dont le contenu est vide n'est pas affiché. La fiche d'identité suit (snippets/bp-product-identity.liquid).
+  La livraison n'est pas répétée ici : elle est dans le bandeau d'annonce, tout en haut de la page.
+  Paramètre : product
+{%- endcomment -%}
+{%- liquid
+  assign bp = product.metafields.bluepoint
+-%}
+{%- capture tasting -%}{%- render 'bp-field-text', field: bp.degustation -%}{%- endcapture -%}
+{%- capture domain -%}{%- render 'bp-field-text', field: bp.producteur -%}{%- endcapture -%}
+{%- capture service -%}{%- render 'bp-field-text', field: bp.service -%}{%- render 'bp-field-text', field: bp.conservation -%}{%- endcapture -%}
+
+<div class="bp-product-blocks">
+  {%- if product.description != blank -%}
+    <section class="bp-product-block" aria-label="Présentation">
+      <div class="bp-product-block__text">{{ product.description }}</div>
+    </section>
+  {%- endif -%}
+
+  {%- if tasting != blank -%}
+    <section class="bp-product-block" aria-labelledby="bp-degustation-titre">
+      <h2 class="bp-product-block__label" id="bp-degustation-titre">Dégustation</h2>
+      <div class="bp-product-block__text">{{ tasting }}</div>
+    </section>
+  {%- endif -%}
+
+  {%- if domain != blank -%}
+    <section class="bp-product-block" aria-labelledby="bp-domaine-titre">
+      <h2 class="bp-product-block__label" id="bp-domaine-titre">Le domaine</h2>
+      <div class="bp-product-block__text">{{ domain }}</div>
+    </section>
+  {%- endif -%}
+
+  {%- if service != blank -%}
+    <section class="bp-product-block" aria-labelledby="bp-service-titre">
+      <h2 class="bp-product-block__label" id="bp-service-titre">Service et conservation</h2>
+      <div class="bp-product-block__text">{{ service }}</div>
+    </section>
+  {%- endif -%}
+
+  {%- render 'bp-product-identity', product: product -%}
+</div>

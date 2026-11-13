@@ -42,11 +42,12 @@
 
   /*
    * Typographie : Bagel Fat One, ronde et très grasse, pour les mots d'affiche (accueil, rayons, moments) ;
-   * Schibsted Grotesk pour tout le reste (titres de section, texte, interface, prix).
+   * Host Grotesk pour tout le reste (titres de section, texte, interface, prix) : une grotesque aux formes ouvertes
+   * et rondes qui accompagne les titres ronds, avec un vrai écart entre le texte (400) et ce qu'on met en avant (600-700).
    */
   --police-affiche: "Bagel Fat One", "Arial Rounded MT Bold", sans-serif;
-  --police-titre: "Schibsted Grotesk", "Arial", sans-serif;
-  --police: "Schibsted Grotesk", "Arial", sans-serif;
+  --police-titre: "Host Grotesk", "Arial", sans-serif;
+  --police: "Host Grotesk", "Arial", sans-serif;
 
   --t-geant: clamp(2.75rem, 1.4rem + 5.6vw, 7rem);
   --t-titre: clamp(2.25rem, 1.3rem + 3.6vw, 4.25rem);
@@ -60,11 +61,11 @@
   --t-detail-carte: 0.9375rem;
   --t-bouton-carte: 1rem;
   --t-nom-fiche: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
-  --t-prix-fiche: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  --t-prix-fiche: clamp(1.75rem, 1.3rem + 1.6vw, 2.75rem);
   --interlettre-titre: 0;
 
   /* Espace */
-  --marge: clamp(1rem, 2vw, 1.5rem);
+  --marge: 1.25rem; /* la même marge partout : bord de l'écran, intérieur des cellules, écart entre les blocs */
   --repere: clamp(0.75rem, 1.6vw, 1.5rem);
   --section: clamp(3.5rem, 8vw, 7rem);
   --gouttiere: clamp(0.75rem, 1.4vw, 1.25rem);

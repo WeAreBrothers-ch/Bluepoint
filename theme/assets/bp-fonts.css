@@ -1,5 +1,5 @@
 /*
- * BluePoint — Bagel Fat One (titres d'affiche) et Schibsted Grotesk (variable, 400 à 900, texte et interface).
+ * BluePoint — Bagel Fat One (titres d'affiche) et Host Grotesk (variable, 300 à 800, texte et interface).
  * Fichiers servis par le thème, découpés par jeu de caractères. Licence SIL Open Font License.
  */
 
@@ -24,9 +24,9 @@
 }
 
 @font-face {
-  font-family: "Schibsted Grotesk";
-  src: url("bp-schibsted-latin.woff2") format("woff2");
-  font-weight: 400 900;
+  font-family: "Host Grotesk";
+  src: url("bp-host-grotesk-latin.woff2") format("woff2");
+  font-weight: 300 800;
   font-style: normal;
   font-display: swap;
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
@@ -34,9 +34,9 @@
 }
 
 @font-face {
-  font-family: "Schibsted Grotesk";
-  src: url("bp-schibsted-latin-ext.woff2") format("woff2");
-  font-weight: 400 900;
+  font-family: "Host Grotesk";
+  src: url("bp-host-grotesk-latin-ext.woff2") format("woff2");
+  font-weight: 300 800;
   font-style: normal;
   font-display: swap;
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,

@@ -99,5 +99,5 @@
 
 /* La vague recouvre le bas de la grille : on ajoute sous chaque carte la hauteur d'une vague, pour que « Ajouter un carton » reste au-dessus. */
 .bp-shop__grid:last-child .bp-card {
-  padding-bottom: calc(clamp(0.9rem, 1.8vw, 1.5rem) + var(--onde, 2rem) + var(--trait));
+  padding-bottom: calc(var(--marge) + var(--onde, 2rem) + var(--trait));
 }
