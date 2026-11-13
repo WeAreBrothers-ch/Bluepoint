@@ -10,7 +10,8 @@
 
   <div class="bp-product-info__pricing">
     <p class="bp-product-info__price">{% render 'bp-price', cents: product.price %} <span class="bp-product-info__unit">la bouteille</span></p>
-    {%- render 'bp-tax-note' -%}
+    {%- comment -%} « TVA incluse » retiré de la fiche (Eliott, 13/11) ; la mention reste si les prix sont un jour hors TVA. {%- endcomment -%}
+    {%- unless cart.taxes_included -%}{%- render 'bp-tax-note' -%}{%- endunless -%}
     {%- render 'bp-price', mode: 'badge' -%}
   </div>
 
