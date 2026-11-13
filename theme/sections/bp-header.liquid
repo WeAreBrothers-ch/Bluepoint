@@ -7,12 +7,57 @@
   Le panier porte l'attribut data-bp-floating-cart : assets/bp-cart.js y met à jour le nombre de bouteilles.
   Les rayons se construisent seuls à partir des produits : type de produit (Rouge, Blanc…) et
   étiquettes « pays:… » et « region:… » (voir README, « Ranger une bouteille »).
-  Limite : les 50 premières bouteilles de la boutique servent à construire les rayons.
+  Tout le catalogue sert à construire les rayons et leurs nombres de bouteilles : voir le commentaire suivant.
+{%- endcomment -%}
+{%- comment -%}
+  Toutes les bouteilles dans « products ». Sans « paginate », Shopify n’en donne que 50 ; avec, il lit le paramètre
+  « page » de l’adresse, partagé avec la recherche (?page=2…). D’où :
+  - page 1 (presque toutes les pages) : un seul bloc de 250 ;
+  - page N ≥ 2 : les 50 premières (lues avant tout « paginate »), puis des blocs dont la taille est choisie pour que leur
+    page N reprenne là où le bloc précédent s’arrête. Complet jusqu’à la page 8 (192 résultats de recherche) ; au-delà,
+    certaines positions ne sont atteignables par aucun bloc et la boucle s’arrête dès qu’elle n’avance plus.
 {%- endcomment -%}
 {%- liquid
-  assign shop_url = routes.all_products_collection_url
-  assign products = collections.all.products
+  assign no_bottles = '' | split: ','
+  assign products = collections.all.products | concat: no_bottles
   assign bottle_count = collections.all.products_count
+  assign covered = products.size
+  assign pages_before = current_page | minus: 1
+-%}
+{%- if current_page == 1 -%}
+  {%- paginate collections.all.products by 250 -%}
+    {%- assign products = collections.all.products | concat: no_bottles -%}
+  {%- endpaginate -%}
+{%- else -%}
+  {%- for attempt in (1..20) -%}
+    {%- liquid
+      if covered >= bottle_count
+        break
+      endif
+      assign block = covered | divided_by: pages_before
+      if block > 250
+        assign block = 250
+      endif
+      if block < 1
+        break
+      endif
+      assign covered_before = covered
+    -%}
+    {%- paginate collections.all.products by block -%}
+      {%- for bottle in collections.all.products -%}
+        {%- assign position = paginate.current_offset | plus: forloop.index0 -%}
+        {%- if position >= covered -%}
+          {%- assign new_bottle = collections.all.products | where: 'id', bottle.id -%}
+          {%- assign products = products | concat: new_bottle -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- assign covered = paginate.current_offset | plus: collections.all.products.size -%}
+    {%- endpaginate -%}
+    {%- if covered <= covered_before -%}{%- break -%}{%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+{%- liquid
+  assign shop_url = routes.all_products_collection_url
   assign pro_url = section.settings.pro_url | default: '/pages/espace-pro'
   assign pro_label = 'Espace pro'
   if customer and customer.b2b?
