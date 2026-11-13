@@ -1,13 +1,17 @@
 {%- comment -%}
   En-tête de section : un petit libellé de rubrique facultatif, le titre centré, puis un lien en pilule « … + ».
-  Paramètres : id, title, tag ('h1' ou 'h2', défaut h2), link_url, link_label, kicker (facultatif)
+  Variante « barre » (barre: true) : un bandeau bas au-dessus d'une grille de bouteilles, titre aligné à gauche
+  et lien à droite (demande d'Eliott du 13/11, « justifié à gauche dans une case pas très haute »).
+  Paramètres : id, title, tag ('h1' ou 'h2', défaut h2), link_url, link_label, kicker (facultatif), barre (facultatif)
 {%- endcomment -%}
 {%- assign heading = tag | default: 'h2' -%}
-<div class="bp-ui bp-section-head">
-  {%- if kicker != blank -%}
-    <p class="bp-rubrique">{{ kicker | escape }}</p>
-  {%- endif -%}
-  <{{ heading }} id="{{ id }}" class="bp-titre bp-section-head__title">{{ title | escape }}</{{ heading }}>
+<div class="bp-ui bp-section-head{% if barre %} bp-section-head--barre{% endif %}">
+  <div class="bp-section-head__texte">
+    {%- if kicker != blank -%}
+      <p class="bp-rubrique">{{ kicker | escape }}</p>
+    {%- endif -%}
+    <{{ heading }} id="{{ id }}" class="bp-titre bp-section-head__title">{{ title | escape }}</{{ heading }}>
+  </div>
   {%- if link_url != blank and link_label != blank -%}
     <a href="{{ link_url }}" class="bp-section-head__link">
       {{ link_label | escape }}

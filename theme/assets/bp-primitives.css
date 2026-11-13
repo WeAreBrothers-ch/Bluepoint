@@ -162,6 +162,63 @@
   }
 }
 
+/* Variante « barre » : bandeau bas au-dessus d'une grille, titre à gauche, lien à droite. */
+
+.bp-section--grille:has(> .bp-section-head--barre) {
+  padding-top: 0;
+}
+
+/* Bandeau en bleu ciel, de bord à bord, pour bien séparer la grille de ce qui précède (demande d'Eliott du 13/11). */
+.bp-section-head--barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  justify-items: start;
+  gap: 0.75rem 1.25rem;
+  margin: 0 calc(var(--marge) * -1);
+  padding: clamp(0.875rem, 0.7rem + 0.7vw, 1.375rem) var(--marge);
+  background: var(--c-ciel);
+  text-align: left;
+}
+
+.bp-section-head--barre .bp-section-head__texte {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.bp-section-head--barre .bp-section-head__title {
+  max-width: none;
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+}
+
+/* Lien plus discret : petit sur téléphone, survol en bleu glacier (le ciel est déjà le fond du bandeau). */
+.bp-section-head--barre .bp-section-head__link {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.9rem;
+  font-size: var(--t-mention);
+}
+
+@media (min-width: 40rem) {
+  .bp-section-head--barre .bp-section-head__link {
+    min-height: 2.75rem;
+    padding-inline: 1.1rem;
+    font-size: var(--t-ui);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-section-head--barre .bp-section-head__link:hover {
+    background: var(--c-glacier);
+  }
+}
+
+.bp-section-head__texte {
+  display: grid;
+  justify-items: inherit;
+  gap: 1.25rem;
+}
+
 /* ---------- Mouvement réduit ---------- */
 
 @media (prefers-reduced-motion: reduce) {
