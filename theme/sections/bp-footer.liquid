@@ -27,6 +27,7 @@
         <a class="bp-ui bp-carre bp-button bp-footer__contact" data-variant="trait" href="mailto:{{ s.email | escape }}">{{ s.email | escape | replace: '@', '<wbr>@' }}</a>
       {%- endif -%}
     </div>
+    {%- render 'bp-sticker', forme: 'ticket', texte: 'cheers', couleur: 'vigne', rotation: -5, taille: 'm', class: 'bp-sticker--pied' -%}
   </div>
 
   <div class="bp-footer__cols">

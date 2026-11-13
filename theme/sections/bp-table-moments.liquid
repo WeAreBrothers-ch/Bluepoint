@@ -19,6 +19,7 @@
 
 <section id="accords" class="bp-section" aria-labelledby="{{ heading_id }}">
   {% render 'bp-section-head', id: heading_id, title: section.settings.title %}
+  {%- render 'bp-sticker', forme: 'fleur', texte: 'santé !', couleur: 'rose', rotation: -7, taille: 'm', class: 'bp-sticker--titre' -%}
   <ol class="bp-moments">
     {%- for block in section.blocks -%}
       {%- assign product = block.settings.product -%}

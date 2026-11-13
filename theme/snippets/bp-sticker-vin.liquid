@@ -1,0 +1,66 @@
+{%- comment -%}
+  Le sticker posé sur la photo de la fiche vin : une seule information tirée des vraies données de la bouteille,
+  dans l'ordre : « bio » (étiquette « bio » ou mot « Bio » dans le nom), puis le millésime (étiquette « millesime:… »),
+  puis le degré (métachamp bluepoint.degre). Sans aucune de ces données : « good taste ».
+  La couleur suit la robe du vin : grenat pour les rouges, rose pour les rosés, vert vigne pour les blancs et les
+  pétillants, ciel pour le reste. Le texte répète la fiche d'identité : il reste décoratif pour les lecteurs d'écran.
+  Paramètre : product
+{%- endcomment -%}
+{%- liquid
+  assign texte = ''
+  assign forme = 'feston'
+  assign rotation = -6
+
+  assign bio = false
+  assign millesime = ''
+  assign title_words = product.title | split: ' '
+  if title_words contains 'Bio' or title_words contains 'bio'
+    assign bio = true
+  endif
+  for tag in product.tags
+    assign tag_down = tag | downcase
+    if tag_down == 'bio'
+      assign bio = true
+    elsif tag_down contains 'millesime:'
+      assign millesime = tag | remove_first: 'millesime:' | strip
+    endif
+  endfor
+
+  assign degre = product.metafields.bluepoint.degre.value
+  if bio
+    assign texte = 'bio'
+    assign forme = 'fleur'
+  elsif millesime != blank
+    assign texte = millesime
+  elsif degre != blank
+    assign degre_text = degre | append: ''
+    assign degre_end = degre_text | slice: -2, 2
+    if degre_end == '.0'
+      assign degre_text = degre | round
+    endif
+    assign texte = degre_text | append: '' | replace: '.', ',' | append: ' %'
+  else
+    assign texte = 'good taste'
+    assign forme = 'etoile'
+    assign rotation = 7
+  endif
+
+  case product.type
+    when 'Rouge'
+      assign couleur = 'grenat'
+    when 'Rosé'
+      assign couleur = 'rose'
+    when 'Blanc', 'Effervescent'
+      assign couleur = 'vigne'
+    else
+      assign couleur = 'ciel'
+  endcase
+-%}
+{%- render 'bp-sticker',
+  forme: forme,
+  texte: texte,
+  couleur: couleur,
+  rotation: rotation,
+  taille: 'm',
+  class: 'bp-sticker--fiche'
+-%}

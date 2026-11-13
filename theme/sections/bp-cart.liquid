@@ -39,7 +39,10 @@
   {%- if cart.item_count == 0 -%}
     <div class="bp-cart__empty">
       <p class="bp-ui">0 bouteille</p>
-      <h1 class="bp-affiche bp-cart__title">Panier vide</h1>
+      <h1 class="bp-affiche bp-cart__title">
+        Panier vide
+        {%- render 'bp-sticker', forme: 'bulle', texte: 'encore soif ?', couleur: 'vigne', rotation: 6, taille: 'm', minuscules: true, class: 'bp-sticker--panier' -%}
+      </h1>
       <p class="bp-phrase bp-cart__muted">Choisissez un vin : il se commande par carton de 6 bouteilles.</p>
       <a href="{{ routes.all_products_collection_url }}" class="bp-ui bp-carre bp-button" data-variant="plein">
         Voir la boutique

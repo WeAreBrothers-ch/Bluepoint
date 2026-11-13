@@ -1,0 +1,109 @@
+/* BluePoint — emplacements des stickers (snippets/bp-sticker.liquid ; formes et couleurs : bp-sticker.css). */
+
+/* Barre de l'ordinateur : dans le vide entre le logo et les rayons, seulement quand la place y est. */
+.bp-sticker--entete {
+  display: none;
+}
+@media (min-width: 87.5rem) {
+  .bp-sticker--entete {
+    --sticker-largeur: 4.5rem;
+    display: grid;
+    top: calc(var(--hauteur-barre) / 2);
+    left: calc(min(8rem, 10vw) + 2 * var(--marge) + 2.5rem);
+    translate: 0 -50%;
+  }
+}
+
+/* Fiche vin : en haut à gauche de la tuile, là où le dégradé est vide (la bouteille est centrée). */
+.bp-sticker--fiche {
+  top: var(--marge);
+  left: var(--marge);
+}
+@media (max-width: 47.999rem) {
+  .bp-sticker--fiche {
+    --sticker-largeur: 5rem;
+  }
+}
+
+/* À côté d'un titre de section centré (accords) : à droite du titre, sur ordinateur seulement (sur téléphone, le titre
+   prend toute la largeur). Sélection : dans l'air au-dessus du titre sur téléphone. */
+.bp-section:has(> .bp-sticker--titre, > .bp-sticker--bande) {
+  position: relative;
+}
+.bp-sticker--titre,
+.bp-sticker--bande {
+  --sticker-largeur: 4.75rem;
+  top: calc(var(--section) * 0.2);
+  right: var(--marge);
+}
+@media (max-width: 63.999rem) {
+  .bp-sticker--titre {
+    display: none;
+  }
+}
+@media (min-width: 64rem) {
+  .bp-sticker--titre {
+    --sticker-largeur: 6rem;
+    top: calc(var(--section) * 0.35);
+    right: auto;
+    left: calc(50% + 19rem);
+  }
+  /* Sélection : l'en-tête est une bande (titre à gauche, lien à droite) ; le sticker se pose dans son vide. */
+  .bp-sticker--bande {
+    top: 0.75rem;
+    right: auto;
+    left: 42%;
+  }
+}
+
+/* Panier vide : accroché au coin du titre « Panier vide ». */
+.bp-cart__title:has(> .bp-sticker) {
+  position: relative;
+}
+.bp-sticker--panier {
+  top: -4.5rem;
+  right: 0;
+}
+@media (min-width: 48rem) {
+  .bp-sticker--panier {
+    top: -3rem;
+    right: auto;
+    left: calc(100% + 0.5rem);
+  }
+}
+
+/* Page introuvable : au-dessus du titre centré, décalé à droite. */
+.section:has(> .bp-sticker--introuvable) {
+  position: relative;
+}
+.bp-sticker--introuvable {
+  --sticker-largeur: 4.75rem;
+  right: var(--marge);
+  bottom: 0.5rem;
+}
+@media (min-width: 48rem) {
+  .bp-sticker--introuvable {
+    --sticker-largeur: 6.5rem;
+    top: 1rem;
+    right: auto;
+    bottom: auto;
+    left: calc(50% + 4rem);
+  }
+}
+
+/* Pied de page : à cheval sur le coin haut droit du panneau « Une question ? ». */
+.bp-footer__panel:has(> .bp-sticker) {
+  position: relative;
+}
+.bp-sticker--pied {
+  --sticker-largeur: 4.25rem;
+  top: -2.75rem;
+  right: 0.75rem;
+}
+@media (min-width: 48rem) {
+  .bp-sticker--pied {
+    --sticker-largeur: 6rem;
+    top: -1.75rem;
+    right: 3rem;
+  }
+}

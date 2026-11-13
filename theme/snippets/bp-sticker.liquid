@@ -1,0 +1,62 @@
+{%- comment -%}
+  Un sticker : une forme pleine dessinée en SVG (cernée d'encre, comme l'éclat de l'accueil), un mot court en HTML par-dessus.
+  Petit détail de couleur posé çà et là (voir assets/bp-sticker.css pour les couleurs et les emplacements).
+  Rien n'est affiché si le réglage du thème « Afficher les stickers » est décoché.
+
+  Paramètres :
+  - forme : 'etoile' (éclat à pointes), 'bulle' (bulle de BD), 'ticket' (à encoches), 'feston' (rond festonné),
+    'fleur' (quatre lobes), 'drapeau' (fanion à pointe). Défaut : 'etoile'.
+  - texte (obligatoire) : deux ou trois mots au plus.
+  - couleur : 'rose', 'vigne', 'grenat' (couleurs réservées aux stickers), 'ciel' ou 'glacier'. Défaut : 'rose'.
+  - rotation : en degrés, de -8 à 8. Défaut : 0.
+  - taille : 's', 'm' ou 'l'. Défaut : 'm'.
+  - minuscules : true pour écrire en minuscules rondes (Host Grotesk) au lieu des capitales d'affiche.
+  - lu : true si le texte apporte une information que la page ne donne pas ailleurs (il est alors lu par les
+    lecteurs d'écran) ; sinon le sticker est décoratif et masqué pour eux.
+  - class : classe d'emplacement (ex. 'bp-sticker--entete').
+{%- endcomment -%}
+{%- if settings.bp_stickers != false and texte != blank -%}
+  {%- liquid
+    assign f = forme | default: 'etoile'
+    assign c = couleur | default: 'rose'
+    assign t = taille | default: 'm'
+    assign rot = rotation | default: 0 | at_least: -8 | at_most: 8
+    case f
+      when 'bulle'
+        assign vb = '0 0 120 90'
+      when 'ticket'
+        assign vb = '0 0 140 80'
+      when 'drapeau'
+        assign vb = '0 0 150 64'
+      else
+        assign vb = '0 0 100 100'
+    endcase
+  -%}
+  <span
+    class="bp-sticker {{ class }}"
+    data-forme="{{ f }}"
+    data-couleur="{{ c }}"
+    data-taille="{{ t }}"
+    {% if minuscules %}data-minuscules{% endif %}
+    style="--sticker-rotation: {{ rot }}deg;"
+    {% unless lu %}aria-hidden="true"{% endunless %}
+  >
+    <svg class="bp-sticker__forme" viewBox="{{ vb }}" focusable="false" aria-hidden="true">
+      {%- case f -%}
+        {%- when 'bulle' -%}
+          <path d="M60 6C92 6 114 20 114 38S92 70 60 70c-6 0-12-.5-17-1.5L24 84l5-19C14 60 6 50 6 38 6 20 28 6 60 6Z"/>
+        {%- when 'ticket' -%}
+          <path d="M10 4h120a6 6 0 0 1 6 6v21a9 9 0 0 0 0 18v21a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6V49a9 9 0 0 0 0-18V10a6 6 0 0 1 6-6Z"/>
+        {%- when 'drapeau' -%}
+          <path d="M4 8h114l28 24-28 24H4l14-24Z"/>
+        {%- when 'feston' -%}
+          <path d="M94 50A8.4 8.4 0 0 1 90.7 66.8 8.4 8.4 0 0 1 81.1 81.1 8.4 8.4 0 0 1 66.8 90.7 8.4 8.4 0 0 1 50 94 8.4 8.4 0 0 1 33.2 90.7 8.4 8.4 0 0 1 18.9 81.1 8.4 8.4 0 0 1 9.3 66.8 8.4 8.4 0 0 1 6 50 8.4 8.4 0 0 1 9.3 33.2 8.4 8.4 0 0 1 18.9 18.9 8.4 8.4 0 0 1 33.2 9.3 8.4 8.4 0 0 1 50 6 8.4 8.4 0 0 1 66.8 9.3 8.4 8.4 0 0 1 81.1 18.9 8.4 8.4 0 0 1 90.7 33.2 8.4 8.4 0 0 1 94 50Z"/>
+        {%- when 'fleur' -%}
+          <path d="M26 26A24 24 0 1 1 74 26 24 24 0 1 1 74 74 24 24 0 1 1 26 74 24 24 0 1 1 26 26Z"/>
+        {%- else -%}
+          <polygon points="50,0 57.9,18 71.4,9.3 71.9,25.3 90.3,22.2 80.9,38.3 93.7,44.7 82.8,54 96.8,67.7 77.2,68.7 81.2,85.2 65.3,79.2 60.8,93.7 50,83 38,98.5 34.7,79.2 19.5,84.4 22.8,68.7 4.2,67.4 17.2,54 6.3,44.7 19.1,38.3 10.5,22.7 28.1,25.3 28.2,8.4 42.1,18"/>
+      {%- endcase -%}
+    </svg>
+    <span class="bp-sticker__texte">{{ texte | escape }}</span>
+  </span>
+{%- endif -%}

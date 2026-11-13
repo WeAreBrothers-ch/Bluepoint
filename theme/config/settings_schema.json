@@ -2118,6 +2118,18 @@
     ]
   },
   {
+    "name": "Stickers",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "bp_stickers",
+        "label": "Afficher les stickers",
+        "info": "Les petites formes de couleur posées çà et là (barre de navigation, photo des fiches vins, accueil, panier vide, pied de page, page introuvable). Décoché : aucun sticker sur tout le site.",
+        "default": true
+      }
+    ]
+  },
+  {
     "name": "Espace pro",
     "settings": [
       {

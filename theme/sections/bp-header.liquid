@@ -96,6 +96,7 @@
     -%}
 
     {%- render 'bp-header-tools', pro_url: pro_url, pro_label: pro_label, pro_active: pro_active -%}
+    {%- render 'bp-sticker', forme: 'drapeau', texte: 'love wine', couleur: 'rose', rotation: -4, taille: 's', minuscules: true, class: 'bp-sticker--entete' -%}
   </div>
   {%- if section.settings.announcement != blank -%}
     <p class="bp-ui bp-phrase bp-header__annonce">

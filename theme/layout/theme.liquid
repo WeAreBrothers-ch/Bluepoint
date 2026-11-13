@@ -52,6 +52,10 @@
     {{ 'bp-packshot.css' | asset_url | stylesheet_tag }}
     {{ 'bp-product-card.css' | asset_url | stylesheet_tag }}
     {{ 'bp-mascotte.css' | asset_url | stylesheet_tag }}
+    {%- if settings.bp_stickers != false -%}
+      {{ 'bp-sticker.css' | asset_url | stylesheet_tag }}
+      {{ 'bp-sticker-places.css' | asset_url | stylesheet_tag }}
+    {%- endif -%}
     <script src="{{ 'bp-cart.js' | asset_url }}" defer></script>
     <script src="{{ 'bp-chrome.js' | asset_url }}" defer></script>
     <script src="{{ 'bp-mascotte.js' | asset_url }}" defer></script>

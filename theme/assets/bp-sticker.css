@@ -1,0 +1,138 @@
+/*
+ * BluePoint — stickers (snippets/bp-sticker.liquid) : de petites formes pleines, cernées d'encre comme l'éclat de l'accueil,
+ * avec un mot court par-dessus. Demande d'Eliott du 13/11/2026 : « un peu plus de couleur, des informations sur le vin,
+ * des messages positifs, de temps en temps, pas trop ». Un à deux par écran au plus, jamais sur un bouton, un prix,
+ * un texte à lire ni sur les personnages. Aucun mouvement : un sticker est collé, il ne bouge pas.
+ * Tout se coupe d'un coup avec le réglage du thème « Afficher les stickers ».
+ */
+
+/*
+ * Couleurs réservées aux stickers, prises dans le verre et la robe du vin, pour poser un peu de chaleur sur les bleus
+ * sans revenir à l'orange et au jaune de la référence d'origine. Le texte du sticker passe 4,5:1 sur chacune :
+ * - rose (le rosé) : encre à 9,4:1 ;
+ * - vigne (la feuille de vigne, le verre des blancs) : encre à 11,2:1 ;
+ * - grenat (la robe des rouges) : fond pâle à 8,3:1. Jamais posé sur l'aplat bleu roi (1,4:1).
+ */
+:root {
+  --c-sticker-rose: oklch(0.83 0.09 355);
+  --c-sticker-vigne: oklch(0.86 0.12 135);
+  --c-sticker-grenat: oklch(0.42 0.14 15);
+}
+
+.bp-sticker {
+  --sticker-fond: var(--c-sticker-rose);
+  --sticker-texte: var(--c-encre);
+  --sticker-largeur: 6.5rem;
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  width: var(--sticker-largeur);
+  container-type: inline-size;
+  color: var(--sticker-texte);
+  rotate: var(--sticker-rotation, 0deg);
+  pointer-events: none;
+  user-select: none;
+  /* Posé dans un titre d'affiche, il n'en reprend ni le contour ni l'ombre. */
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  letter-spacing: normal;
+  text-wrap: balance;
+}
+
+.bp-sticker[data-taille="s"] {
+  --sticker-largeur: 4.75rem;
+}
+.bp-sticker[data-taille="l"] {
+  --sticker-largeur: 8.5rem;
+}
+/* Les formes en longueur sont plus larges, pour une hauteur voisine. */
+.bp-sticker:is([data-forme="bulle"], [data-forme="ticket"], [data-forme="drapeau"]) {
+  width: calc(var(--sticker-largeur) * 1.35);
+}
+
+.bp-sticker[data-couleur="vigne"] {
+  --sticker-fond: var(--c-sticker-vigne);
+}
+.bp-sticker[data-couleur="grenat"] {
+  --sticker-fond: var(--c-sticker-grenat);
+  --sticker-texte: var(--c-blanc);
+}
+.bp-sticker[data-couleur="ciel"] {
+  --sticker-fond: var(--c-ciel);
+}
+.bp-sticker[data-couleur="glacier"] {
+  --sticker-fond: var(--c-glacier);
+}
+
+/* La forme et le mot occupent la même case : le mot est centré dans la partie pleine de la forme. */
+.bp-sticker__forme,
+.bp-sticker__texte {
+  grid-area: 1 / 1;
+}
+
+.bp-sticker__forme {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.bp-sticker__forme > * {
+  fill: var(--sticker-fond);
+  stroke: var(--c-encre);
+  stroke-width: var(--trait);
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.bp-sticker__texte {
+  align-self: center;
+  justify-self: center;
+  max-width: 64%;
+  font-family: var(--police-affiche);
+  font-size: 17cqi;
+  font-weight: 400;
+  line-height: 0.95;
+  text-align: center;
+  text-transform: uppercase;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+/* Minuscules rondes : la grotesque du site, très grasse. */
+.bp-sticker[data-minuscules] .bp-sticker__texte {
+  font-family: var(--police);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+/* Le mot dans la partie pleine de chaque forme (la queue de la bulle, les encoches et la pointe restent vides). */
+.bp-sticker[data-forme="feston"] .bp-sticker__texte {
+  font-size: 21cqi;
+}
+.bp-sticker[data-forme="fleur"] .bp-sticker__texte {
+  font-size: 17cqi;
+}
+.bp-sticker[data-forme="bulle"] .bp-sticker__texte {
+  margin-bottom: 11.5%;
+  max-width: 70%;
+  font-size: 12cqi;
+}
+.bp-sticker[data-forme="ticket"] .bp-sticker__texte {
+  max-width: 74%;
+  font-size: 13cqi;
+}
+.bp-sticker[data-forme="drapeau"] .bp-sticker__texte {
+  justify-self: start;
+  margin-left: 15%;
+  max-width: 64%;
+  font-size: 13cqi;
+}
+
+@media print {
+  .bp-sticker {
+    display: none;
+  }
+}
