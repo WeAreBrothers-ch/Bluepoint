@@ -1,13 +1,9 @@
-/* BluePoint — menu plein écran du téléphone et de la tablette (snippets/bp-nav-mobile.liquid). */
+/* BluePoint — menu plein écran du téléphone et de la tablette (snippets/bp-nav-mobile.liquid) : un panneau bleu, de grosses pastilles claires. */
 
-.bp-menu__close {
-  min-height: 3rem;
-  padding-inline: 1.25rem;
-  border: var(--trait) solid var(--encre);
-  border-radius: var(--rayon-pilule);
-  background: var(--pilule);
-}
-
+/*
+ * Le panneau couvre tout l'écran (dvh : il suit la barre d'adresse du navigateur) et se divise en trois :
+ * le haut fixe, le milieu qui défile, le bas fixe avec la pastille « Espace pro ».
+ */
 .bp-menu {
   position: fixed;
   inset: 0;
@@ -15,18 +11,20 @@
   max-width: none;
   height: 100%;
   max-height: none;
+  margin: 0;
+  padding: 0;
   border: 0;
-  padding: var(--repere) var(--marge) var(--marge);
-  background: var(--fond);
-  color: var(--encre);
-  flex-direction: column;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  background: var(--c-roi);
+  color: var(--c-blanc);
+  overflow: hidden;
+  --focus: var(--c-blanc);
 }
 
 .bp-menu[open] {
-  display: flex;
-  animation: bp-panneau 200ms var(--ease-out);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+  animation: bp-menu-entre 220ms var(--ease-out);
 }
 
 /* Menu ouvert : la page dessous ne défile plus. */
@@ -38,112 +36,115 @@ html:has(.bp-menu[open]) {
   background: transparent;
 }
 
-.bp-menu__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 1rem;
-  border-bottom: var(--trait) solid var(--ligne);
-}
-
-.bp-menu__note {
-  margin-top: 1.25rem;
-  color: var(--encre-douce);
-}
-
-@keyframes bp-panneau {
+@keyframes bp-menu-entre {
   from {
     opacity: 0;
+    translate: 0 -0.75rem;
   }
 }
 
-/* ---------- Contenu du menu ---------- */
+/* Le haut : le logo à gauche, « Fermer » à droite, sans cases. */
+.bp-menu__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--hauteur-barre);
+  padding-inline: var(--marge);
+}
 
+.bp-menu__brand {
+  display: flex;
+  align-items: center;
+}
+
+.bp-menu__logo {
+  width: 6.5rem;
+  color: var(--c-ciel);
+}
+
+.bp-menu__close {
+  min-height: 2.75rem;
+  padding-inline: 0.75rem;
+  margin-right: -0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--c-blanc);
+}
+
+/* Le milieu : il défile seul, sans jamais entraîner la page dessous. */
 .bp-menu__body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem var(--marge) 1rem;
+}
+
+/* De grosses pastilles claires, une par ligne : une pastille = un geste. */
+.bp-menu__rows {
   display: grid;
-  align-content: start;
-  gap: 2rem;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.bp-menu__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.75rem 0.5rem 1.5rem;
+  border-radius: var(--rayon-pilule);
+  background: var(--c-blanc);
+  color: var(--c-encre);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.bp-menu__label {
   flex: 1;
-  padding-block: 1.5rem 1rem;
+}
+
+/* Le nombre de bouteilles, dans un petit rond bleu ciel. */
+.bp-menu__count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding-inline: 0.5rem;
+  border-radius: var(--rayon-pilule);
+  background: var(--c-ciel);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.bp-menu__row[aria-current],
+.bp-menu__row:active {
+  background: var(--c-ciel);
+}
+
+.bp-menu__row[aria-current] .bp-menu__count,
+.bp-menu__row:active .bp-menu__count {
+  background: var(--c-blanc);
+}
+
+/* Les origines : de petites pastilles, le pays en premier (en bleu ciel). */
+.bp-menu__group {
+  padding-top: 1.5rem;
 }
 
 .bp-menu__heading {
   margin-bottom: 0.75rem;
-  font-family: var(--police-affiche);
-  font-size: 1.375rem;
-  font-weight: 400;
-  line-height: 1.1;
-  text-transform: uppercase;
-  color: var(--c-bleu);
+  color: var(--c-ciel);
 }
 
-/* Les types : deux tuiles par ligne, un seul geste vers le bon rayon. */
-.bp-menu__types {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.625rem;
-  list-style: none;
-}
-
-/* « Tout voir » prend toute la largeur quand il tombe seul sur sa ligne. */
-.bp-menu__types-all:nth-child(odd) {
-  grid-column: 1 / -1;
-}
-
-.bp-menu__type {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  align-items: end;
-  gap: 0.5rem;
-  height: 100%;
-  min-height: 5.25rem;
-  padding: 0.7rem 0.8rem 0.85rem;
-  border: var(--trait) solid var(--encre);
-  border-radius: calc(var(--rayon) * 0.8);
-  background: var(--tuile);
-  color: var(--encre);
-}
-
-.bp-menu__type[data-teinte="1"] { --tuile: var(--c-glacier); }
-.bp-menu__type[data-teinte="2"] { --tuile: var(--c-ciel); }
-.bp-menu__type[data-teinte="3"] {
-  --tuile: var(--c-azur);
-  --affiche-remplissage: var(--c-blanc);
-}
-.bp-menu__type[data-teinte="0"] {
-  --tuile: var(--c-roi);
-  --affiche-remplissage: var(--c-ciel);
-}
-
-/* Le nom tient sur une ligne, sous le nombre : jamais coupé au milieu du mot. */
-.bp-menu__type-name {
-  grid-row: 2;
-  font-size: clamp(1.0625rem, 4.4vw, 1.625rem);
-  white-space: nowrap;
-}
-
-.bp-menu__type-count {
-  grid-row: 1;
-  justify-self: end;
-  display: inline-grid;
-  flex: none;
-  place-items: center;
-  min-width: 2rem;
-  height: 2rem;
-  padding-inline: 0.4rem;
-  border: var(--trait) solid var(--encre);
-  border-radius: var(--rayon-pilule);
-  background: var(--c-blanc);
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-/* Les origines : une ligne de pastilles par pays, le pays en premier. */
 .bp-menu__places {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.625rem;
+  margin-bottom: 0.5rem;
   list-style: none;
 }
 
@@ -152,40 +153,49 @@ html:has(.bp-menu[open]) {
   align-items: center;
   min-height: 2.75rem;
   padding-inline: 1rem;
-  border: var(--trait) solid var(--encre);
+  border: var(--trait) solid var(--c-blanc);
   border-radius: var(--rayon-pilule);
-  background: var(--fond);
+  color: var(--c-blanc);
   font-size: 1.0625rem;
   font-weight: 600;
 }
 
 .bp-menu__place--country {
-  background: var(--pilule);
+  border-color: var(--c-ciel);
+  background: var(--c-ciel);
+  color: var(--c-encre);
   font-weight: 800;
 }
 
-/* Les autres liens : une liste simple entre des filets. */
-.bp-menu__list {
-  border-top: var(--trait) solid var(--ligne);
-  list-style: none;
+/* Le bas : toujours visible, hors de la zone qui défile ; il respecte la barre d'accueil des iPhone. */
+.bp-menu__foot {
+  padding: 0.5rem var(--marge) max(1rem, env(safe-area-inset-bottom));
 }
 
-.bp-menu__item {
+/* « Espace pro » : une pastille bleu ciel sur toute la largeur. */
+.bp-menu__pro {
   display: flex;
-  align-items: center;
-  border-bottom: var(--trait) solid var(--ligne);
-  font-size: 1.25rem;
-  font-weight: 700;
+  justify-content: center;
+  width: 100%;
+  min-height: 3.5rem;
+  border-radius: var(--rayon-pilule);
+  background: var(--c-ciel);
+  color: var(--c-encre);
+  font-size: 1.125rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
-.bp-menu__item a {
-  flex: 1;
-  min-height: 3.25rem;
+.bp-menu__pro[aria-current="page"] {
+  text-decoration: none;
+  background: var(--c-blanc);
 }
 
 @media (min-width: 40rem) {
-  .bp-menu__types {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .bp-menu__body,
+  .bp-menu__foot {
+    width: 100%;
+    max-width: 44rem;
+    margin-inline: auto;
   }
-  .bp-menu__types-all:nth-child(odd) { grid-column: auto; }
 }

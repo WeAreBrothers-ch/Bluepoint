@@ -14,9 +14,11 @@
   align-content: start;
 }
 
+/* La tuile mesure sa propre largeur (cqw) : le mot du moment s'y adapte et ne se coupe jamais. */
 .bp-moments__tile {
   position: relative;
   display: block;
+  container-type: inline-size;
 }
 
 .bp-moments__visual {
@@ -31,28 +33,18 @@
   display: grid;
   place-items: center;
   padding: 1rem;
-  font-size: clamp(2.5rem, 1.2rem + 5vw, 5rem);
+  font-size: min(14cqw, 5rem);
+  line-height: 1;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
   pointer-events: none;
 }
 
-.bp-moments__head {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.bp-moments__title {
-  font-size: var(--t-nom-carte);
-  font-weight: 800;
-  line-height: 1.1;
-  text-transform: uppercase;
-  text-wrap: balance;
-}
-
+/* Les plats : une seule ligne de texte sous la tuile (le moment est déjà écrit en grand dessus). */
 .bp-moments__dishes {
-  color: var(--encre-douce);
-  font-size: var(--t-detail-carte);
+  padding-inline: 0.25rem;
+  font-size: var(--t-corps);
+  font-weight: 600;
   line-height: 1.35;
   text-wrap: pretty;
 }

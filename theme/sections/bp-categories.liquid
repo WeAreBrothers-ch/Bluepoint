@@ -1,0 +1,112 @@
+{%- comment -%}
+  « Les rayons » : de grandes tuiles photo (blocs), une par type de bouteille. Le nom du rayon s'écrit une seule fois,
+  en lettres d'affiche sur toute la largeur de la tuile ; une pastille avec une flèche, en haut à droite, dit que la
+  tuile est un lien.
+  Les liens filtrent la boutique par type : /collections/all/rouge, /collections/all/blanc…
+  Les blocs sans lien mènent à toute la boutique ; la section n'apparaît pas sans bloc.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign heading_id = 'bp-rayons-title-' | append: section.id
+-%}
+
+{%- if section.blocks.size > 0 -%}
+{{ 'bp-categories.css' | asset_url | stylesheet_tag }}
+
+<section id="rayons" class="bp-section" aria-labelledby="{{ heading_id }}">
+  {% render 'bp-section-head', id: heading_id, title: s.title, kicker: s.kicker %}
+  <ul class="bp-rayons">
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign photo = block.settings.photo
+        assign width = 1198
+        assign height = 783
+        case photo
+          when 'blanc-rose'
+            assign width = 789
+            assign height = 1200
+          when 'aperitif'
+            assign width = 960
+            assign height = 1199
+          when 'sante'
+            assign width = 1120
+            assign height = 1400
+          when 'vigne'
+            assign width = 736
+            assign height = 920
+          when 'vigneron'
+            assign width = 1128
+            assign height = 1400
+        endcase
+        assign fallback = 'bp-photo-' | append: photo | append: '.webp'
+        assign word = block.settings.word | strip
+        assign teinte = forloop.index | minus: 1 | modulo: 4 | plus: 1
+      -%}
+      <li {{ block.shopify_attributes }}>
+        <a href="{{ block.settings.url | default: routes.all_products_collection_url }}" class="bp-rayon" data-teinte="{{ teinte }}">
+          <span class="bp-rayon__tile">
+            {%- if block.settings.image != blank -%}
+              {{ block.settings.image | image_url: width: 1000 | image_tag: class: 'bp-rayon__image', widths: '400, 600, 800, 1000', sizes: '(min-width: 64rem) 24vw, 46vw', loading: 'lazy', alt: '' }}
+            {%- else -%}
+              <img class="bp-rayon__image" src="{{ fallback | asset_url }}" alt="" width="{{ width }}" height="{{ height }}" loading="lazy" decoding="async">
+            {%- endif -%}
+            <span class="bp-affiche bp-rayon__word" style="--lettres: {{ word.size }}">{{ word | escape }}</span>
+            <span class="bp-rayon__go" aria-hidden="true">
+              <svg viewBox="0 0 16 16" focusable="false"><path d="M3 8h9.5M8.5 4 12.5 8 8.5 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </span>
+        </a>
+      </li>
+    {%- endfor -%}
+  </ul>
+</section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Les rayons",
+  "tag": "div",
+  "class": "bp-categories-section",
+  "max_blocks": 8,
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Petit libellé au-dessus du titre", "default": "La boutique" },
+    { "type": "text", "id": "title", "label": "Titre", "default": "Choisissez votre rayon" }
+  ],
+  "blocks": [
+    {
+      "type": "rayon",
+      "name": "Rayon",
+      "settings": [
+        { "type": "text", "id": "word", "label": "Mot en grand sur la tuile", "default": "Rouges" },
+        { "type": "text", "id": "url", "label": "Lien", "info": "Par exemple /collections/all/rouge. Vide : toute la boutique.", "default": "/collections/all" },
+        { "type": "image_picker", "id": "image", "label": "Photo", "info": "Sans photo choisie, la photo provisoire ci-dessous s’affiche." },
+        {
+          "type": "select",
+          "id": "photo",
+          "label": "Photo provisoire",
+          "options": [
+            { "value": "cave", "label": "La cave" },
+            { "value": "blanc-rose", "label": "Blanc et rosé" },
+            { "value": "aperitif", "label": "L’apéritif" },
+            { "value": "sante", "label": "Santé" },
+            { "value": "vigne", "label": "À la vigne" },
+            { "value": "vigneron", "label": "Chez le vigneron" }
+          ],
+          "default": "cave"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Les rayons BluePoint",
+      "blocks": [
+        { "type": "rayon", "settings": { "word": "Rouges", "url": "/collections/all/rouge", "photo": "cave" } },
+        { "type": "rayon", "settings": { "word": "Blancs", "url": "/collections/all/blanc", "photo": "blanc-rose" } },
+        { "type": "rayon", "settings": { "word": "Pétillants", "url": "/collections/all/effervescent", "photo": "aperitif" } },
+        { "type": "rayon", "settings": { "word": "Spiritueux", "url": "/collections/all/spiritueux", "photo": "sante" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,8 +1,8 @@
-/* BluePoint — en-tête fixe et menu plein écran (sections/bp-header.liquid). */
+/* BluePoint — en-tête fixe (sections/bp-header.liquid) : le logo à gauche, puis Panier et Menu (téléphone) ou les liens centrés (ordinateur). */
 
 /* ---------- En-tête ---------- */
 
-/* Sa hauteur totale vaut exactement --hauteur-entete : les pages s'y calent. */
+/* Sa hauteur totale vaut exactement --hauteur-entete : les pages s'y calent. La barre est en haut, le bandeau d'annonce dessous. */
 .bp-header {
   position: fixed;
   inset: 0 0 auto;
@@ -26,78 +26,190 @@ body.bluepoint:not(:has(.bp-header__annonce)) {
   border-bottom: var(--trait) solid var(--ligne);
   background: var(--pilule);
   font-size: var(--t-mention);
+  font-weight: 700;
   text-align: center;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+/* Deux versions de la phrase : la longue sur grand écran, la courte (une ligne sans coupure) sur téléphone. */
+.bp-header__annonce-court {
+  display: none;
+}
+
+@media (max-width: 39.999rem) {
+  .bp-header__annonce-long {
+    display: none;
+  }
+  .bp-header__annonce-court {
+    display: inline;
+  }
+}
+
+/* La barre : téléphone = logo (qui prend la place qui reste) | Panier | Menu, séparés par des filets. */
 .bp-header__bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch;
-  justify-content: space-between;
-  height: calc(var(--hauteur-entete) - var(--hauteur-annonce));
+  height: var(--hauteur-barre);
   border-bottom: var(--trait) solid var(--ligne);
 }
 
 .bp-header__brand {
   display: flex;
   align-items: center;
-  flex: none;
+  justify-content: flex-start;
   padding-inline: var(--marge);
 }
 
 .bp-header__logo {
-  width: clamp(6.5rem, 10vw, 8.5rem);
+  width: clamp(6rem, 10vw, 8rem);
+  color: var(--c-bleu);
   transition: opacity 180ms var(--ease-out);
 }
 
-.bp-header__link {
-  min-height: 2.75rem;
-  white-space: nowrap;
+.bp-header__tools {
+  display: flex;
+  align-items: stretch;
 }
 
-/* Le nombre de bouteilles de la boutique, dans une petite pastille. */
-.bp-header__count {
+/* Une cellule : un libellé dans une case délimitée par un filet. */
+.bp-header__cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding-inline: clamp(0.9rem, 3vw, 1.5rem);
+  border-left: var(--trait) solid var(--ligne);
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 160ms var(--ease-out);
+}
+
+/* L'espace pro vit dans le menu sur téléphone ; la pastille n'apparaît qu'à partir de l'ordinateur. */
+.bp-header__pro {
+  display: none;
+}
+
+/* Le nombre de bouteilles du panier : un éclat à douze pointes, le « point » de BluePoint. */
+.bp-header__burst {
   display: inline-grid;
   place-items: center;
-  min-width: 1.6rem;
-  height: 1.6rem;
-  margin-left: 0.45em;
-  padding-inline: 0.35rem;
-  border-radius: var(--rayon-pilule);
-  background: var(--pilule);
-  font-size: var(--t-mention);
+  width: 2.25rem;
+  height: 2.25rem;
+  background: var(--c-roi);
+  color: var(--c-blanc);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-.bp-header__external {
-  display: inline-block;
-  margin-left: 0.15em;
+.bp-header__cart[data-actif="false"] .bp-header__burst {
+  background: var(--c-ciel);
+  color: var(--c-encre);
+}
+
+/* Après un ajout seulement (attribut posé par bp-cart.js) : l'éclat gonfle brièvement. */
+.bp-header__burst[data-maj] {
+  animation: bp-eclat-maj 320ms var(--ease-out);
+}
+
+@keyframes bp-eclat-maj {
+  35% {
+    scale: 1.3;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .bp-header__brand:hover .bp-header__logo {
     opacity: 0.7;
   }
-  .bp-header__link:hover {
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.3em;
+  .bp-header__cell:hover {
+    background: var(--survol);
+  }
+}
+
+.bp-header__cell[aria-current="page"] {
+  background: var(--survol);
+}
+
+/* Très petit écran (320 px) : seul le nombre reste dans la cellule du panier, le logo rétrécit un peu. */
+@media (max-width: 21.999rem) {
+  .bp-header__cart-label {
+    display: none;
+  }
+  .bp-header__brand {
+    padding-inline: 0.75rem;
+  }
+  .bp-header__logo {
+    width: 5rem;
+  }
+  .bp-header__cell {
+    padding-inline: 0.75rem;
   }
 }
 
 /* ---------- Bouton « Menu » (téléphone et tablette) ---------- */
 
-/* « Menu » : une case séparée du logo par un filet, comme dans la barre. */
 .bp-menu__toggle {
   min-width: 5.5rem;
-  padding-inline: 1.25rem;
-  border-left: var(--trait) solid var(--ligne);
   font-size: 1.0625rem;
+  cursor: pointer;
 }
 
+/* ---------- Ordinateur : le logo à gauche, les liens centrés, « Espace pro » et « Panier » à droite. Aucune case. ---------- */
+
 @media (min-width: 75rem) {
+  .bp-header__bar {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    padding-inline: var(--marge);
+  }
   button.bp-menu__toggle {
     display: none;
+  }
+  .bp-header__brand {
+    justify-self: start;
+    padding: 0;
+  }
+  .bp-header__tools {
+    justify-self: end;
+    align-items: center;
+    gap: clamp(1.25rem, 2.4vw, 2.5rem);
+  }
+
+  /* Plus de filets entre les cellules : « Espace pro » et « Panier » sont de simples textes, comme les liens du centre. */
+  .bp-header__cell {
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+  }
+  .bp-header__pro,
+  .bp-header__cart-label {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.4em;
+    transition: text-decoration-color 160ms var(--ease-out);
+  }
+  .bp-header__pro {
+    display: inline-flex;
+  }
+  .bp-header__pro[aria-current] {
+    background: none;
+    text-decoration-color: currentColor;
+  }
+}
+
+@media (min-width: 75rem) and (hover: hover) and (pointer: fine) {
+  .bp-header__cell:hover {
+    background: none;
+  }
+  .bp-header__pro:hover,
+  .bp-header__cart:hover .bp-header__cart-label {
+    text-decoration-color: currentColor;
   }
 }

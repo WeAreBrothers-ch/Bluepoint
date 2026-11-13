@@ -1,7 +1,7 @@
 {%- comment -%}
-  Haut de l'accueil : un grand aplat bleu vif arrondi qui porte le titre d'affiche (ses lignes montent
-  une seule fois, juste après l'intro), la photo du vigneron avec sa pastille et l'étiquette « À la une »,
-  puis une bande fixe des trois promesses, séparées par des points bleus.
+  Haut de l'accueil : un grand aplat bleu vif très arrondi qui porte le titre d'affiche (ses lignes montent
+  une seule fois, juste après l'intro), la photo du vigneron avec son éclat « Par cartons de 6 » et l'étiquette
+  « À la une », puis, juste dessous, un bandeau marine qui défile (les trois promesses, séparées par des étoiles).
 {%- endcomment -%}
 {{ 'bp-hero.css' | asset_url | stylesheet_tag }}
 
@@ -17,6 +17,17 @@
     assign photo_alt = s.photo.alt
   endif
 -%}
+
+{%- capture marquee_items -%}
+  {%- for round in (1..2) -%}
+    {%- for i in (1..3) -%}
+      {%- assign key = 'promise_' | append: i -%}
+      {%- if s[key] != blank -%}
+        <li class="bp-marquee__item" data-copie="{{ round }}">{{ s[key] | escape }}</li>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endcapture -%}
 
 <section class="bp-hero" aria-labelledby="bp-hero-title-{{ section.id }}">
   <div class="bp-hero__tile">
@@ -59,7 +70,10 @@
       <figcaption class="bp-ui bp-hero__caption">{{ s.photo_caption | escape }}</figcaption>
     {%- endif -%}
     {%- if s.sticker != blank -%}
-      <p class="bp-hero__sticker" aria-hidden="true"><span>{{ s.sticker | escape }}</span></p>
+      <p class="bp-hero__sticker" aria-hidden="true">
+        <svg class="bp-hero__sticker-shape" viewBox="-2 -2 104 104" focusable="false"><polygon points="50,0 59,9 71,4 76,16 89,18 89,31 100,38 94,50 100,62 89,69 89,82 76,84 71,96 59,91 50,100 41,91 29,96 24,84 11,82 11,69 0,62 6,50 0,38 11,31 11,18 24,16 29,4 41,9" fill="var(--c-ciel)" stroke="var(--c-encre)" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+        <span>{{ s.sticker | escape }}</span>
+      </p>
     {%- endif -%}
     {%- if featured != blank -%}
       <a href="{{ featured.url }}" class="bp-ui bp-hero__featured">
@@ -74,14 +88,14 @@
   </figure>
   </div>
 
-  <ul class="bp-hero__promises">
-    {%- for i in (1..3) -%}
-      {%- assign key = 'promise_' | append: i -%}
-      {%- if s[key] != blank -%}
-        <li class="bp-hero__promise">{{ s[key] | escape }}</li>
-      {%- endif -%}
-    {%- endfor -%}
-  </ul>
+  {%- if marquee_items contains 'bp-marquee__item' -%}
+    <div class="bp-marquee" role="region" aria-label="Nos promesses">
+      <div class="bp-marquee__track">
+        <ul class="bp-marquee__group">{{ marquee_items }}</ul>
+        <ul class="bp-marquee__group" aria-hidden="true">{{ marquee_items }}</ul>
+      </div>
+    </div>
+  {%- endif -%}
 </section>
 
 {% schema %}
@@ -92,7 +106,7 @@
   "settings": [
     { "type": "text", "id": "kicker", "label": "Surtitre", "default": "Vins d’Italie et de Suisse romande" },
     { "type": "textarea", "id": "title", "label": "Titre", "info": "Une ligne par retour à la ligne.", "default": "Les vignerons\nd’exception,\ndirectement\nchez vous." },
-    { "type": "textarea", "id": "lead", "label": "Texte", "default": "La sélection de Paolo Pioletti, à Lutry : de petits producteurs d’Italie et de Suisse romande, souvent en exclusivité pour la Suisse romande." },
+    { "type": "textarea", "id": "lead", "label": "Texte", "default": "La sélection de Paolo Pioletti, à Lutry." },
     { "type": "text", "id": "primary_label", "label": "Bouton principal", "default": "Voir la boutique" },
     { "type": "url", "id": "primary_url", "label": "Lien du bouton principal", "default": "/collections/all" },
     { "type": "text", "id": "secondary_label", "label": "Lien secondaire", "default": "Rencontrer Paolo" },
@@ -101,12 +115,12 @@
     { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Sans photo choisie, la photo provisoire du vigneron s’affiche." },
     { "type": "text", "id": "photo_alt", "label": "Description de la photo (accessibilité)", "default": "Un vigneron souriant en tablier de cuir, accoudé à un tonneau au milieu des rangs" },
     { "type": "text", "id": "photo_caption", "label": "Légende", "default": "Chez le vigneron" },
-    { "type": "text", "id": "sticker", "label": "Pastille ronde sur la photo", "info": "Deux ou trois mots. Vide : pas de pastille.", "default": "Livré en 48 h" },
+    { "type": "text", "id": "sticker", "label": "Éclat sur la photo", "info": "Deux ou trois mots. Vide : pas d’éclat.", "default": "Par cartons de 6" },
     { "type": "product", "id": "featured_product", "label": "Bouteille « À la une »", "info": "Sans choix, la première bouteille du catalogue." },
-    { "type": "header", "content": "Promesses" },
-    { "type": "text", "id": "promise_1", "label": "Promesse 1", "default": "Livraison sous 48 h en Suisse" },
-    { "type": "text", "id": "promise_2", "label": "Promesse 2", "default": "Offerte dès 24 bouteilles" },
-    { "type": "text", "id": "promise_3", "label": "Promesse 3", "default": "En direct des vignerons" }
+    { "type": "header", "content": "Bandeau qui défile" },
+    { "type": "text", "id": "promise_1", "label": "Promesse 1", "default": "Choisis un à un par Paolo" },
+    { "type": "text", "id": "promise_2", "label": "Promesse 2", "default": "Souvent en exclusivité" },
+    { "type": "text", "id": "promise_3", "label": "Promesse 3", "default": "Prix pro −15 %" }
   ],
   "presets": [{ "name": "Haut de l’accueil BluePoint" }]
 }

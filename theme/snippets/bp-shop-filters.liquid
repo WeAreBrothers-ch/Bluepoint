@@ -1,6 +1,9 @@
 {%- comment -%}
-  Les rayons de la boutique, en haut de la grille : une rangée de pastilles par type, une par origine.
-  Les deux se combinent : « Rouges » puis « Piémont » mène à /collections/all/rouge+region-piemont.
+  Les rayons de la boutique, en haut de la grille, au plus léger possible :
+  - « Type » : Tous, Rouges, Blancs…
+  - « Origine » : seulement les pays (Toutes, Italie, Suisse…), pas toutes les régions d'un coup ;
+  - « Région » : n'apparaît que lorsqu'un pays est choisi, avec les régions de ce pays.
+  Les choix se combinent : « Rouges », « Italie » puis « Piémont » mène à /collections/all/rouge+region-piemont.
   Rien à régler : tout vient des produits (type de produit, étiquettes « pays:… » et « region:… »).
   Paramètres : current_type (handle du type choisi ou vide), current_place (handle de l'origine choisie ou vide)
   Limite : les 50 premières bouteilles de la boutique servent à construire les rayons.
@@ -31,6 +34,42 @@
   if current_type != blank
     assign type_suffix = '/' | append: current_type
   endif
+
+  # Le pays « ouvert » : celui qui est choisi, ou celui de la région choisie. Ses régions s'affichent sur une 3e rangée.
+  assign open_country = ''
+  assign open_regions = nil
+  for country in countries
+    capture country_regions
+      render 'bp-catalog-data', mode: 'regions', products: place_products, within: country
+    endcapture
+    assign regions_list = country_regions | split: '|'
+    assign country_handle = country | handle
+    if current_place == country_handle
+      assign open_country = country
+      assign open_regions = regions_list
+    else
+      for region in regions_list
+        assign region_handle = region | handle
+        if region_handle == current_place
+          assign open_country = country
+          assign open_regions = regions_list
+        endif
+      endfor
+    endif
+  endfor
+
+  # Un seul pays en boutique : inutile de lui faire une rangée, ses régions s'affichent directement.
+  assign show_countries = true
+  if countries.size == 1
+    assign show_countries = false
+    if open_country == blank
+      assign open_country = countries.first
+      capture only_regions
+        render 'bp-catalog-data', mode: 'regions', products: place_products, within: open_country
+      endcapture
+      assign open_regions = only_regions | split: '|'
+    endif
+  endif
 -%}
 
 <nav class="bp-ui bp-filters" aria-label="Rayons de la boutique">
@@ -57,7 +96,7 @@
     </ul>
   </div>
 
-  {%- if countries.size > 0 -%}
+  {%- if show_countries and countries.size > 0 -%}
     <div class="bp-filters__row" role="group" aria-labelledby="bp-filtres-origine">
       <span class="bp-filters__label" id="bp-filtres-origine">Origine</span>
       <ul class="bp-filters__list">
@@ -66,26 +105,41 @@
         </li>
         {%- for country in countries -%}
           {%- liquid
-            capture country_regions
-              render 'bp-catalog-data', mode: 'regions', products: place_products, within: country
-            endcapture
-            assign places = country | append: '|' | append: country_regions | split: '|'
+            assign country_handle = country | handle
+            assign country_url = shop_url | append: '/'
+            if current_type != blank
+              assign country_url = country_url | append: current_type | append: '+'
+            endif
+            assign country_url = country_url | append: country_handle
           -%}
-          {%- for place in places -%}
-            {%- liquid
-              assign place_handle = place | handle
-              assign place_url = shop_url | append: '/'
-              if current_type != blank
-                assign place_url = place_url | append: current_type | append: '+'
-              endif
-              assign place_url = place_url | append: place_handle
-            -%}
-            <li>
-              <a class="bp-filters__pill{% if forloop.first %} bp-filters__pill--country{% endif %}" href="{{ place_url }}" {% if current_place == place_handle %}aria-current="true"{% endif %}>
-                {{- place | remove_first: 'pays:' | remove_first: 'region:' | strip | escape -}}
-              </a>
-            </li>
-          {%- endfor -%}
+          <li>
+            <a class="bp-filters__pill" href="{{ country_url }}" {% if current_place == country_handle %}aria-current="true"{% elsif open_country == country %}data-parent="true"{% endif %}>
+              {{- country | remove_first: 'pays:' | strip | escape -}}
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+    </div>
+  {%- endif -%}
+
+  {%- if open_regions.size > 0 -%}
+    <div class="bp-filters__row" role="group" aria-labelledby="bp-filtres-region">
+      <span class="bp-filters__label" id="bp-filtres-region">Région</span>
+      <ul class="bp-filters__list">
+        {%- for region in open_regions -%}
+          {%- liquid
+            assign region_handle = region | handle
+            assign region_url = shop_url | append: '/'
+            if current_type != blank
+              assign region_url = region_url | append: current_type | append: '+'
+            endif
+            assign region_url = region_url | append: region_handle
+          -%}
+          <li>
+            <a class="bp-filters__pill" href="{{ region_url }}" {% if current_place == region_handle %}aria-current="true"{% endif %}>
+              {{- region | remove_first: 'region:' | strip | escape -}}
+            </a>
+          </li>
         {%- endfor -%}
       </ul>
     </div>

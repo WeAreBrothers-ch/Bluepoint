@@ -1,0 +1,118 @@
+/* BluePoint — « La lettre de Paolo » (sections/bp-join.liquid) : une tuile avec le formulaire (et une photo à gauche, si elle existe). */
+
+.bp-join {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  border: var(--trait) solid var(--encre);
+  border-radius: calc(var(--rayon) * 1.35);
+  background: var(--c-glacier);
+}
+
+.bp-join__photo {
+  max-width: 32rem;
+  width: 100%;
+  justify-self: center;
+}
+
+.bp-join__body {
+  display: grid;
+  justify-items: start;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.bp-join__head {
+  display: grid;
+  justify-items: start;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.bp-join__title {
+  max-width: 14ch;
+}
+
+.bp-join__text {
+  max-width: 30rem;
+  font-size: var(--t-sous-titre);
+  line-height: 1.4;
+}
+
+.bp-join__form {
+  width: 100%;
+  max-width: 34rem;
+}
+
+.bp-join__field {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Champ en pilule, bouton ciel dessous (à côté sur grand écran). */
+.bp-join__input {
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.75rem 1.5rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--c-blanc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1.0625rem;
+}
+
+.bp-join__input::placeholder {
+  color: var(--encre-douce);
+  opacity: 1;
+}
+
+.bp-join__input[aria-invalid="true"] {
+  border-width: 3px;
+}
+
+.bp-join__merci {
+  padding: 1rem 1.5rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--c-ciel);
+  font-size: 1.125rem;
+}
+
+.bp-join__erreur {
+  margin-top: 0.75rem;
+  font-weight: 700;
+}
+
+@media (min-width: 48rem) {
+  .bp-join__field {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-join--photo {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+  .bp-join--photo .bp-join__photo {
+    justify-self: stretch;
+    max-width: none;
+  }
+  .bp-join--photo .bp-join__body {
+    padding-inline-start: clamp(1rem, 4vw, 4rem);
+    border-left: var(--trait) solid var(--ligne);
+    min-height: 100%;
+    align-content: center;
+  }
+}
+
+/* Sans photo : le titre et le texte à gauche, le formulaire à droite. */
+@media (min-width: 64rem) {
+  .bp-join:not(.bp-join--photo) .bp-join__body {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: center;
+    column-gap: clamp(2rem, 6vw, 6rem);
+  }
+  .bp-join:not(.bp-join--photo) .bp-join__form {
+    max-width: none;
+  }
+}

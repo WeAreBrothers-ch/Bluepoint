@@ -4,21 +4,28 @@
   padding: calc(var(--hauteur-entete) + clamp(2.5rem, 6vw, 4.5rem)) var(--marge) 0;
 }
 
+/* Titre et introduction : centrés, comme l'en-tête d'une section de l'accueil. */
+.bp-shop__head {
+  display: grid;
+  justify-items: center;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  text-align: center;
+}
+
 .bp-shop__title {
   font-size: var(--t-geant);
 }
 
-/* Le nombre de bouteilles, dans une pastille ronde à la fin du titre. */
+/* Le nombre de bouteilles, dans un éclat à la fin du titre. */
 .bp-shop__count {
   display: inline-grid;
   place-items: center;
-  min-width: 1.9em;
-  height: 1.9em;
-  margin-left: 0.35em;
+  min-width: 2em;
+  height: 2em;
+  margin-left: 0.3em;
   padding-inline: 0.4em;
-  border: var(--trait) solid var(--encre);
-  border-radius: var(--rayon-pilule);
   background: var(--pilule);
+  clip-path: var(--forme-eclat);
   color: var(--encre);
   font-family: var(--police);
   font-size: 0.24em;
@@ -31,24 +38,20 @@
 
 .bp-shop__intro {
   max-width: 36rem;
-  margin-top: clamp(1.5rem, 3vw, 2.5rem);
   font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
   line-height: 1.4;
 }
 
 .bp-shop__grid {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* La grille sort des marges de la page : les filets vont d'un bord à l'autre. */
-  margin-inline: calc(var(--marge) * -1);
-  border-top: var(--trait) solid var(--ligne);
-  overflow: clip;
+  /* La grille touche le filet des pastilles de rayon au-dessus. */
+  border-top: 0;
 }
 
 .bp-shop__empty {
   max-width: var(--mesure);
+  margin: clamp(2rem, 5vw, 4rem) auto;
   color: var(--encre-douce);
+  text-align: center;
 }
 
 .bp-shop__empty-link {
@@ -62,7 +65,7 @@
   justify-content: center;
   align-items: center;
   gap: clamp(1rem, 3vw, 2rem);
-  margin-top: clamp(2.5rem, 5vw, 4rem);
+  margin-block: clamp(2.5rem, 5vw, 4rem);
   color: var(--encre-douce);
 }
 
@@ -74,6 +77,7 @@
   border: var(--trait) solid var(--encre);
   border-radius: var(--rayon-pilule);
   color: var(--encre);
+  font-weight: 700;
   transition: background-color 180ms var(--ease-out);
 }
 
@@ -83,14 +87,17 @@
   }
 }
 
-@media (min-width: 40rem) {
-  .bp-shop__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+/*
+ * Sans pagination, la grille se termine dans la vague du pied de page : le pied remonte sur ses dernières
+ * cellules (de la hauteur d'une vague, plus l'épaisseur du filet du bas). Le filet horizontal du bas disparaît
+ * sous l'aplat marine ; les filets verticaux s'enfoncent dans les creux de la vague.
+ * La marge du pied (--onde) s'ajoute à celle-ci : le pied commence exactement un filet au-dessus du bas de la grille.
+ */
+.bp-shop__grid:last-child {
+  margin-bottom: calc((var(--onde, 2rem) + var(--trait)) * -1);
 }
 
-@media (min-width: 64rem) {
-  .bp-shop__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+/* La vague recouvre le bas de la grille : on ajoute sous chaque carte la hauteur d'une vague, pour que « Ajouter un carton » reste au-dessus. */
+.bp-shop__grid:last-child .bp-card {
+  padding-bottom: calc(clamp(0.9rem, 1.8vw, 1.5rem) + var(--onde, 2rem) + var(--trait));
 }

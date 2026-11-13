@@ -1,7 +1,7 @@
 {%- comment -%}
   « À chaque moment de la table » : de grandes tuiles (blocs), chacune liée à une bouteille.
-  Le nom du moment s'écrit en lettres d'affiche par-dessus la bouteille ; le titre, les plats,
-  puis le nom et le prix de la bouteille suivent dessous.
+  Le nom du moment s'écrit une seule fois, en lettres d'affiche par-dessus la bouteille ; dessous, les plats,
+  puis le nom et le prix de la bouteille.
   Les blocs sans bouteille sont ignorés ; la section n'apparaît pas si aucun bloc n'a de bouteille.
 {%- endcomment -%}
 {%- liquid
@@ -27,12 +27,9 @@
         <a href="{{ product.url }}" class="bp-moments__link">
           <span class="bp-moments__tile">
             {% render 'bp-packshot', product: product, sizes: '(min-width: 48rem) 30vw, 90vw', teinte: forloop.index, class: 'bp-moments__visual' %}
-            <span class="bp-affiche bp-moments__word" aria-hidden="true">{{ block.settings.moment | escape }}</span>
+            <span class="bp-affiche bp-moments__word">{{ block.settings.moment | escape }}</span>
           </span>
-          <span class="bp-moments__head">
-            <span class="bp-moments__title">{{ block.settings.title | escape }}</span>
-            <span class="bp-moments__dishes">{{ block.settings.dishes | escape }}</span>
-          </span>
+          <span class="bp-moments__dishes">{{ block.settings.dishes | escape }}</span>
           <span class="bp-moments__bar">
             <span class="bp-moments__bottle">{{ product.title | escape }}</span>
             <span class="bp-moments__price">{% render 'bp-price', cents: product.price %}</span>
@@ -71,7 +68,6 @@
           ],
           "default": "Apéritif"
         },
-        { "type": "text", "id": "title", "label": "Titre", "default": "Pour l’apéritif" },
         { "type": "text", "id": "dishes", "label": "Plats", "default": "Fritto misto, olives, tomme vaudoise" },
         { "type": "product", "id": "product", "label": "Bouteille" }
       ]
@@ -81,9 +77,9 @@
     {
       "name": "Moments de la table BluePoint",
       "blocks": [
-        { "type": "moment", "settings": { "moment": "Apéritif", "title": "Pour l’apéritif", "dishes": "Fritto misto, olives, tomme vaudoise" } },
-        { "type": "moment", "settings": { "moment": "Plat", "title": "Pour le plat", "dishes": "Filets de perche, risotto, viande grillée" } },
-        { "type": "moment", "settings": { "moment": "Fromage", "title": "Pour le fromage", "dishes": "Castelmagno, gruyère d’alpage, pecorino" } }
+        { "type": "moment", "settings": { "moment": "Apéritif", "dishes": "Fritto misto, olives, tomme vaudoise" } },
+        { "type": "moment", "settings": { "moment": "Plat", "dishes": "Filets de perche, risotto, viande grillée" } },
+        { "type": "moment", "settings": { "moment": "Fromage", "dishes": "Castelmagno, gruyère d’alpage, pecorino" } }
       ]
     }
   ]

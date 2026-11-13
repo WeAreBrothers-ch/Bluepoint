@@ -1,0 +1,7 @@
+{%- comment -%} Repères de cadrage aux bords de l'écran, comme dans un viseur. Purement décoratifs. {%- endcomment -%}
+<div class="bp-marks" aria-hidden="true">
+  {%- assign positions = 'haut-gauche,haut-droite,bas-gauche,bas-droite,milieu-gauche,milieu-droite' | split: ',' -%}
+  {%- for position in positions -%}
+    <span class="bp-marks__mark" data-position="{{ position }}"></span>
+  {%- endfor -%}
+</div>

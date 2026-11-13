@@ -1,5 +1,5 @@
 {%- comment -%}
-  « La boutique » : toutes les bouteilles d’une collection, en grille.
+  « La boutique » : toutes les bouteilles d’une collection, en grille de cellules.
   Sur /collections/all, le titre et l’introduction viennent des réglages de la section ;
   sur une autre collection, de la collection elle-même.
 {%- endcomment -%}
@@ -47,13 +47,15 @@
 -%}
 
 <div class="bp-shop">
-  <h1 class="bp-affiche bp-shop__title">
-    {{ title | escape }}
-    <sup class="bp-shop__count"><span class="bp-sr-only">{{ count }} bouteille{% if count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ count }}</span></sup>
-  </h1>
-  {%- if intro != blank -%}
-    <div class="bp-shop__intro">{{ intro }}</div>
-  {%- endif -%}
+  <header class="bp-shop__head">
+    <h1 class="bp-affiche bp-shop__title">
+      {{ title | escape }}
+      <sup class="bp-shop__count"><span class="bp-sr-only">{{ count }} bouteille{% if count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ count }}</span></sup>
+    </h1>
+    {%- if intro != blank -%}
+      <div class="bp-shop__intro">{{ intro }}</div>
+    {%- endif -%}
+  </header>
 
   {%- render 'bp-shop-filters', current_type: current_type, current_place: current_place -%}
 
@@ -65,7 +67,7 @@
       assign grid_title = 'Les bouteilles du rayon'
     endif
   -%}
-  {%- render 'bp-section-head', id: grid_title_id, title: grid_title -%}
+  <h2 id="{{ grid_title_id }}" class="bp-sr-only">{{ grid_title | escape }}</h2>
 
   {%- paginate collection.products by 24 -%}
     {%- if collection.products.size == 0 -%}
@@ -75,7 +77,7 @@
         en attendant, Paolo vous conseille.
       </p>
     {%- else -%}
-      <ul class="bp-shop__grid" aria-labelledby="{{ grid_title_id }}">
+      <ul class="bp-grille bp-shop__grid" aria-labelledby="{{ grid_title_id }}">
         {%- for product in collection.products -%}
           <li>
             {%- liquid
@@ -88,7 +90,7 @@
               product: product,
               teinte: forloop.index,
               priority: priority,
-              sizes: '(min-width: 90rem) 19vw, (min-width: 64rem) 24vw, (min-width: 40rem) 32vw, 48vw'
+              sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
             -%}
           </li>
         {%- endfor -%}
@@ -120,9 +122,9 @@
       "type": "richtext",
       "id": "intro",
       "label": "Introduction (toutes les bouteilles)",
-      "default": "<p>À l’unité ou en carton de 3, 6 ou 12. Livraison sous 48 h en Suisse, offerte dès 24 bouteilles.</p>"
+      "default": "<p>Vendu par cartons de 6 bouteilles.</p>"
     },
-    { "type": "text", "id": "grid_title", "label": "Titre de la grille", "default": "Toutes les bouteilles" },
+    { "type": "text", "id": "grid_title", "label": "Titre de la grille (lu par les lecteurs d’écran)", "default": "Toutes les bouteilles" },
     {
       "type": "text",
       "id": "empty_text",

@@ -2,6 +2,10 @@
   Panier BluePoint (vrai panier Shopify). Le bouton « Commander » ouvre le paiement Shopify.
   Le −/+ fonctionne sans script (petits formulaires POST /cart/change) ;
   assets/bp-cart-page.js le rend instantané.
+  Les vins se vendent par cartons de 6 bouteilles : si une ligne n’est pas un carton complet, un message le dit
+  et « Commander » reste bloqué (Shopify n’impose pas cette règle sur l’abonnement Basic : elle vit dans le thème).
+  Client pro : deux choix clairs. « Payer par carte maintenant : −2 % » applique le code CARTE2 (réservé aux pros, voir
+  README) puis ouvre le paiement ; « Commander sur facture » ouvre le paiement normal, sans ce rabais.
 {%- endcomment -%}
 {{ 'bp-cart-page.css' | asset_url | stylesheet_tag }}
 {{ 'bp-cart-delivery.css' | asset_url | stylesheet_tag }}
@@ -15,6 +19,19 @@
   if missing < 0
     assign missing = 0
   endif
+  assign is_pro_buyer = false
+  if customer
+    if customer.b2b? or customer.tags contains 'pro'
+      assign is_pro_buyer = true
+    endif
+  endif
+  assign carton_error = false
+  for item in cart.items
+    assign carton_rest = item.quantity | modulo: 6
+    if carton_rest != 0
+      assign carton_error = true
+    endif
+  endfor
 -%}
 
 <div class="bp-cart" data-bp-cart data-section-id="{{ section.id }}">
@@ -22,7 +39,7 @@
     <div class="bp-cart__empty">
       <p class="bp-ui">0 bouteille</p>
       <h1 class="bp-affiche bp-cart__title">Panier vide</h1>
-      <p class="bp-phrase bp-cart__muted">Choisissez une bouteille, à l’unité ou en carton.</p>
+      <p class="bp-phrase bp-cart__muted">Choisissez un vin : il se commande par carton de 6 bouteilles.</p>
       <a href="{{ routes.all_products_collection_url }}" class="bp-ui bp-carre bp-button" data-variant="plein">
         Voir la boutique
       </a>
@@ -38,6 +55,11 @@
 
       <form action="{{ routes.cart_url }}" method="post" class="bp-cart__summary">
         <p class="bp-phrase bp-cart__error" role="alert" data-bp-cart-error hidden></p>
+        {%- if carton_error -%}
+          <p class="bp-ui bp-cart__error bp-cart__carton-alerte" role="alert">
+            Nos vins se vendent par cartons de 6 bouteilles. Corrigez les quantités ci-contre avec « Plus » ou « Moins » pour pouvoir commander.
+          </p>
+        {%- endif -%}
         {%- if cart.total_discount > 0 -%}
           {%- liquid
             assign discount_title = cart.cart_level_discount_applications.first.title
@@ -72,16 +94,30 @@
         {%- if section.settings.note != blank -%}
           <p class="bp-phrase bp-cart__muted">{{ section.settings.note | escape }}</p>
         {%- endif -%}
-        <button type="submit" name="checkout" class="bp-ui bp-carre bp-button bp-cart__checkout" data-variant="plein">
-          Commander
+        {%- if is_pro_buyer and carton_error == false -%}
+          <div class="bp-cart__carte">
+            <p class="bp-ui bp-cart__carte-titre">Comment voulez-vous payer&#8239;?</p>
+            <a href="/discount/CARTE2?redirect=%2Fcheckout" class="bp-ui bp-carre bp-button" data-variant="plein">Payer par carte maintenant&#8239;: −2&nbsp;%</a>
+            <p class="bp-phrase bp-cart__muted">2&nbsp;% de rabais en plus, seulement si vous payez par carte tout de suite, au moment de la commande.</p>
+          </div>
+        {%- endif -%}
+        <button
+          type="submit"
+          name="checkout"
+          class="bp-ui bp-carre bp-button bp-cart__checkout"
+          data-variant="{% if is_pro_buyer %}trait{% else %}plein{% endif %}"
+          {% if carton_error %}disabled aria-disabled="true"{% endif %}
+        >
+          {% if is_pro_buyer %}Commander sur facture (sans le rabais carte){% else %}Commander{% endif %}
         </button>
         {%- comment -%}
           Paiement express (Apple Pay, Google Pay, Shop Pay…) : seulement ici, pas sur la fiche,
           pour que le client choisisse d’abord le mode et la date de livraison ci-dessus.
           Les boutons n’apparaissent que si un de ces moyens est activé dans Shopify (Paramètres › Paiements).
           assets/bp-cart-page.js les garde en place quand le panier se met à jour.
+          Masqués tant qu’une ligne n’est pas un carton complet.
         {%- endcomment -%}
-        {%- if additional_checkout_buttons -%}
+        {%- if additional_checkout_buttons and carton_error == false -%}
           <div class="bp-cart__express" data-bp-cart-express>
             <p class="bp-phrase bp-cart__muted">Ou payez directement avec&#8239;:</p>
             {{ content_for_additional_checkout_buttons }}
@@ -91,6 +127,23 @@
     </div>
   {%- endif -%}
 </div>
+
+{% stylesheet %}
+  .bp-cart__carte {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: start;
+    width: 100%;
+    padding-block: 1rem;
+    border-block: var(--trait) solid var(--ligne);
+  }
+  .bp-cart__carte-titre {
+    font-weight: 800;
+  }
+  .bp-cart__carton-alerte {
+    font-weight: 700;
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
@@ -115,7 +168,7 @@
       "type": "text",
       "id": "note",
       "label": "Note sous le total",
-      "default": "Livraison sous 48 h en Suisse. Frais calculés à l’étape suivante."
+      "default": "Livraison sous 48 h en Suisse. Frais calculés à l’étape suivante."
     }
   ]
 }

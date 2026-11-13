@@ -1,25 +1,28 @@
 {%- comment -%}
-  Navigation grand écran : une barre de déclencheurs (un par type de vin, « Régions », « Infos »)
-  et, sous l'en-tête, un grand panneau par déclencheur (assets/bp-nav.js).
-  Chaque panneau de type : « Tous les rouges », puis par région et par pays, puis deux bouteilles à la une.
-  Les liens filtrent la boutique par étiquettes : /collections/all/rouge+region-piemont.
-  Paramètres : products, types, regions, countries, shop_url, shop_active, bottle_count, pro_url, pro_label, pro_active,
-  wine_bar_url, instagram_url
+  Navigation grand écran, la plus simple possible : des liens en texte, centrés dans la barre. Pas de cases, pas de filets.
+  Rien ne s'ouvre et rien ne bouge : le lien survolé et celui de la page en cours sont simplement soulignés.
+  Boutique, puis un lien par type de vin (Rouges, Blancs…). Accords et La maison sont dans le pied de page.
+  Les liens filtrent la boutique par type : /collections/all/rouge. Les origines (pays, régions) se choisissent
+  sur la page de la boutique (snippets/bp-shop-filters.liquid) et dans le menu du téléphone.
+  « Espace pro » et « Panier » sont à droite de l'en-tête (sections/bp-header.liquid).
+  Paramètres : types, shop_url, shop_active
 {%- endcomment -%}
 {%- liquid
-  # Rayon de la page en cours (boutique filtrée) : son déclencheur reste marqué.
+  # Rayon de la page en cours (boutique filtrée) : son lien reste souligné.
   assign current_handles = '|'
   for tag in current_tags
     assign tag_handle = tag | handle
     assign current_handles = current_handles | append: tag_handle | append: '|'
   endfor
+  assign shop_current = false
+  if shop_active and current_handles == '|'
+    assign shop_current = true
+  endif
 -%}
-<nav aria-label="Navigation principale" class="bp-ui bp-nav" data-bp-nav>
+<nav aria-label="Navigation principale" class="bp-ui bp-nav">
   <ul class="bp-nav__bar">
     <li>
-      <a class="bp-nav__trigger" href="{{ shop_url }}" {% if shop_active %}aria-current="page"{% endif %}>
-        Boutique<span class="bp-header__count">{{ bottle_count }}<span class="bp-sr-only"> bouteilles</span></span>
-      </a>
+      <a class="bp-nav__link" href="{{ shop_url }}" {% if shop_current %}aria-current="page"{% endif %}>Boutique</a>
     </li>
     {%- for type in types -%}
       {%- liquid
@@ -27,144 +30,10 @@
         assign type_marker = '|' | append: type_handle | append: '|'
       -%}
       <li>
-        <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="bp-nav-{{ type_handle }}" data-bp-nav-trigger{% if current_handles contains type_marker %} data-actif{% endif %}>
+        <a class="bp-nav__link" href="{{ shop_url }}/{{ type_handle }}" {% if current_handles contains type_marker %}aria-current="page"{% endif %}>
           {%- render 'bp-type-label', type: type -%}
-        </button>
+        </a>
       </li>
     {%- endfor -%}
-    {%- if regions.size > 0 or countries.size > 0 -%}
-      <li>
-        <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="bp-nav-regions" data-bp-nav-trigger>Régions</button>
-      </li>
-    {%- endif -%}
-    <li>
-      <a class="bp-nav__trigger" href="{{ pro_url | escape }}" {% if pro_active %}aria-current="page"{% endif %}>{{ pro_label }}</a>
-    </li>
-    <li>
-      <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="bp-nav-infos" data-bp-nav-trigger>Infos</button>
-    </li>
   </ul>
-
-  {%- for type in types -%}
-    {%- liquid
-      assign type_handle = type | handle
-      capture type_label
-        render 'bp-type-label', type: type
-      endcapture
-      assign type_url = shop_url | append: '/' | append: type_handle
-      assign typed = products | where: 'type', type
-      capture type_regions
-        render 'bp-catalog-data', mode: 'regions', products: typed
-      endcapture
-      capture type_countries
-        render 'bp-catalog-data', mode: 'countries', products: typed
-      endcapture
-      assign type_regions = type_regions | split: '|'
-      assign type_countries = type_countries | split: '|'
-    -%}
-    <div class="bp-nav__panel" id="bp-nav-{{ type_handle }}" hidden data-bp-nav-panel>
-      <div class="bp-nav__col bp-nav__col--main">
-        <a class="bp-affiche bp-nav__big" href="{{ type_url }}">Tous les {{ type_label | strip | downcase }}</a>
-        <p class="bp-phrase bp-nav__count">{{ typed.size }} bouteille{% if typed.size > 1 %}s{% endif %}</p>
-        <a class="bp-nav__all" href="{{ shop_url }}">Toute la boutique</a>
-      </div>
-      <div class="bp-nav__col">
-        {%- if type_regions.size > 0 -%}
-          <p class="bp-nav__heading">Par région</p>
-          <ul class="bp-nav__list">
-            {%- for tag in type_regions -%}
-              <li><a href="{{ type_url }}+{{ tag | handle }}">{{ tag | remove_first: 'region:' | strip | escape }}</a></li>
-            {%- endfor -%}
-          </ul>
-        {%- endif -%}
-        {%- if type_countries.size > 0 -%}
-          <p class="bp-nav__heading">Par pays</p>
-          <ul class="bp-nav__list">
-            {%- for tag in type_countries -%}
-              <li><a href="{{ type_url }}+{{ tag | handle }}">{{ tag | remove_first: 'pays:' | strip | escape }}</a></li>
-            {%- endfor -%}
-          </ul>
-        {%- endif -%}
-      </div>
-      {%- for product in typed limit: 2 -%}
-        <a class="bp-nav__feature" href="{{ product.url }}">
-          <span class="bp-nav__heading">{% if forloop.first %}À la une{% else %}Aussi dans la cave{% endif %}</span>
-          {% render 'bp-packshot', product: product, sizes: '20vw', teinte: forloop.index, class: 'bp-nav__visual' %}
-          <span class="bp-nav__feature-name">{{ product.title | escape }}</span>
-          <span class="bp-phrase bp-nav__feature-meta">{{ product.vendor | escape }}</span>
-        </a>
-      {%- endfor -%}
-    </div>
-  {%- endfor -%}
-
-  {%- if regions.size > 0 or countries.size > 0 -%}
-    <div class="bp-nav__panel" id="bp-nav-regions" hidden data-bp-nav-panel>
-      <div class="bp-nav__col bp-nav__col--main">
-        <p class="bp-affiche bp-nav__big">Par région</p>
-        <p class="bp-phrase bp-nav__count">Toutes nos bouteilles, d’où elles viennent.</p>
-        <a class="bp-nav__all" href="{{ shop_url }}">Toute la boutique</a>
-      </div>
-      {%- for country in countries -%}
-        {%- liquid
-          capture country_regions
-            render 'bp-catalog-data', mode: 'regions', products: products, within: country
-          endcapture
-          assign country_regions = country_regions | split: '|'
-        -%}
-        <div class="bp-nav__col">
-          <a class="bp-nav__heading bp-nav__heading-link" href="{{ shop_url }}/{{ country | handle }}">
-            {{- country | remove_first: 'pays:' | strip | escape -}}
-          </a>
-          <ul class="bp-nav__list">
-            {%- for tag in country_regions -%}
-              <li><a href="{{ shop_url }}/{{ tag | handle }}">{{ tag | remove_first: 'region:' | strip | escape }}</a></li>
-            {%- endfor -%}
-            <li><a href="{{ shop_url }}/{{ country | handle }}">Tout le pays</a></li>
-          </ul>
-        </div>
-      {%- endfor -%}
-    </div>
-  {%- endif -%}
-
-  <div class="bp-nav__panel" id="bp-nav-infos" hidden data-bp-nav-panel>
-    <div class="bp-nav__col bp-nav__col--main">
-      <a class="bp-affiche bp-nav__big" href="{{ routes.root_url }}#maison">La maison</a>
-      <p class="bp-phrase bp-nav__count">Paolo Pioletti, à Lutry, depuis 2003.</p>
-    </div>
-    <div class="bp-nav__col">
-      <p class="bp-nav__heading">Chez BluePoint</p>
-      <ul class="bp-nav__list">
-        <li><a href="{{ shop_url }}" {% if shop_active %}aria-current="page"{% endif %}>Toute la boutique</a></li>
-        <li><a href="{{ routes.root_url }}#accords">Accords mets et vins</a></li>
-        <li><a href="{{ routes.root_url }}#maison">La maison</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-    </div>
-    <div class="bp-nav__col">
-      <p class="bp-nav__heading">Ailleurs</p>
-      <ul class="bp-nav__list">
-        {%- if wine_bar_url != blank -%}
-          <li>
-            <a href="{{ wine_bar_url | escape }}" target="_blank" rel="noopener noreferrer">
-              Vintage Wine Bar{% render 'bp-icon-external', class: 'bp-header__external' %}<span class="bp-sr-only">(nouvel onglet)</span>
-            </a>
-          </li>
-        {%- endif -%}
-        {%- if instagram_url != blank -%}
-          <li>
-            <a href="{{ instagram_url | escape }}" target="_blank" rel="noopener noreferrer">
-              Instagram{% render 'bp-icon-external', class: 'bp-header__external' %}<span class="bp-sr-only">(nouvel onglet)</span>
-            </a>
-          </li>
-        {%- endif -%}
-      </ul>
-    </div>
-    <a class="bp-nav__feature" href="{{ routes.root_url }}#maison">
-      <span class="bp-nav__heading">Chez le vigneron</span>
-      <span class="bp-nav__photo">
-        <img src="{{ 'bp-photo-vigneron.webp' | asset_url }}" alt="" width="1128" height="1400" loading="lazy">
-      </span>
-      <span class="bp-nav__feature-name">Rencontrer Paolo</span>
-    </a>
-  </div>
 </nav>

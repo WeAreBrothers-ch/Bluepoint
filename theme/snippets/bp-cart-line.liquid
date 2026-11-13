@@ -1,14 +1,27 @@
 {%- comment -%}
-  Une ligne du panier : vignette, nom, producteur, prix unitaire, « Moins » / « Plus », « Retirer » et total de la ligne.
+  Une ligne du panier : vignette, nom et total de la ligne sur la même rangée, producteur, prix de la bouteille,
+  puis « − 2 cartons + » (de 6 bouteilles en 6 : un carton) et « Retirer ».
   Chaque bouton est un petit formulaire POST vers /cart/change (fonctionne sans script) ;
   assets/bp-cart-page.js l’intercepte pour une mise à jour instantanée.
   La ligne est repérée par sa clé (item.key), jamais par son numéro : les numéros se décalent
   quand une ligne disparaît.
+  Le nombre au milieu dit ce que fait le « + » : des cartons (« 2 cartons ») quand la quantité est un carton complet.
+  Une quantité qui n’est pas un carton complet (venue d’un ancien lien, par exemple) est signalée, en bouteilles ;
+  « − » et « + » la ramènent à un carton complet.
   Paramètres : item (ligne du panier)
 {%- endcomment -%}
 {%- liquid
-  assign less = item.quantity | minus: 1
-  assign more = item.quantity | plus: 1
+  assign rest = item.quantity | modulo: 6
+  assign cartons = item.quantity | divided_by: 6
+  assign less = item.quantity | minus: 6
+  assign more = item.quantity | plus: 6
+  if rest != 0
+    assign less = item.quantity | minus: rest
+    assign more = less | plus: 6
+  endif
+  if less < 0
+    assign less = 0
+  endif
   assign name = item.product.title | default: item.title
   assign unit_price = item.final_price | money | replace: "'", '’'
   assign line_price = item.final_line_price | money | replace: "'", '’'
@@ -23,11 +36,15 @@
   </a>
   <div class="bp-cart__line-text">
     <a href="{{ item.url }}" class="bp-ui bp-cart__line-name">{{ name | escape }}</a>
+    <span class="bp-ui bp-cart__line-price">{{ line_price }}</span>
     {%- if item.vendor != blank -%}
       <span class="bp-ui bp-phrase bp-cart__muted">{{ item.vendor | escape }}</span>
     {%- endif -%}
-    {%- if item.quantity > 1 -%}
-      <span class="bp-ui bp-phrase bp-cart__muted">{{ unit_price }} la bouteille</span>
+    <span class="bp-ui bp-phrase bp-cart__muted">
+      {{- unit_price }} la bouteille · {{ item.quantity }}&nbsp;bouteille{% if item.quantity > 1 %}s{% endif %}
+    </span>
+    {%- if rest != 0 -%}
+      <span class="bp-ui bp-cart__alerte">Ce n’est pas un carton complet&#8239;: touchez « + » ou « − ».</span>
     {%- endif -%}
     {%- for allocation in item.line_level_discount_allocations -%}
       <span class="bp-ui bp-carre bp-pro-badge">
@@ -45,14 +62,20 @@
             class="bp-ui bp-cart__step"
             data-bp-cart-step
           >
-            Moins<span class="bp-sr-only"> : retirer une bouteille de {{ name | escape }}</span>
+            <span aria-hidden="true">−</span><span class="bp-sr-only">Moins : retirer un carton de {{ name | escape }}</span>
           </button>
         </form>
-        <span class="bp-ui" aria-live="polite">{{ item.quantity }}</span>
+        <span class="bp-ui bp-cart__count" aria-live="polite">
+          {%- if rest == 0 -%}
+            {{ cartons }}&nbsp;carton{% if cartons > 1 %}s{% endif %}
+          {%- else -%}
+            {{ item.quantity }}&nbsp;bouteille{% if item.quantity > 1 %}s{% endif %}
+          {%- endif -%}
+        </span>
         <form action="{{ routes.cart_change_url }}" method="post" class="bp-cart__step-form" data-bp-cart-change data-name="{{ name | escape }}">
           <input type="hidden" name="id" value="{{ item.key }}">
           <button type="submit" name="quantity" value="{{ more }}" class="bp-ui bp-cart__step" data-bp-cart-step>
-            Plus<span class="bp-sr-only"> : ajouter une bouteille de {{ name | escape }}</span>
+            <span aria-hidden="true">+</span><span class="bp-sr-only">Plus : ajouter un carton de {{ name | escape }}</span>
           </button>
         </form>
       </div>
@@ -64,5 +87,4 @@
       </form>
     </div>
   </div>
-  <span class="bp-ui">{{ line_price }}</span>
 </li>

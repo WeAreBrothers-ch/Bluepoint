@@ -1,5 +1,7 @@
 {%- comment -%}
-  « À découvrir aussi » : les autres bouteilles de la boutique (4 au plus), en rangée défilante.
+  « À découvrir aussi » : les autres bouteilles de la boutique (4 au plus), dans la même grille de cellules que
+  la sélection de l’accueil (2 sur téléphone, 3 sur tablette, 4 sur ordinateur : assets/bp-product-extras.css).
+  Plus de rangée qui défile sur le côté : tout se voit d’un coup d’œil.
   Paramètres : product, section_id
 {%- endcomment -%}
 {%- liquid
@@ -8,22 +10,22 @@
   assign title_id = 'bp-autres-title-' | append: section_id
 -%}
 {%- if others_count > 0 -%}
-  <section class="bp-more" aria-labelledby="{{ title_id }}">
+  <section class="bp-section bp-section--grille bp-more" aria-labelledby="{{ title_id }}">
     {%- render 'bp-section-head',
       id: title_id,
       title: 'À découvrir aussi',
       link_url: routes.all_products_collection_url,
       link_label: 'Toutes les bouteilles'
     -%}
-    <ul class="bp-more__track" aria-label="Autres bouteilles">
+    <ul class="bp-grille bp-more__grid">
       {%- for other in collections.all.products -%}
         {%- if other.id == product.id -%}{%- continue -%}{%- endif -%}
         {%- if shown >= 4 -%}{%- break -%}{%- endif -%}
-        <li class="bp-more__slide">
+        <li>
           {%- render 'bp-product-card',
             product: other,
             teinte: forloop.index,
-            sizes: '(min-width: 64rem) 24vw, (min-width: 40rem) 40vw, 70vw'
+            sizes: '(min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
           -%}
         </li>
         {%- assign shown = shown | plus: 1 -%}

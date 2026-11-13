@@ -1,7 +1,9 @@
 {%- comment -%}
-  Colonne d’information de la fiche : fil d'Ariane, nom, prix, description,
-  achat, fiche technique et blocs dépliables.
-  Paramètres : product, form_id, free_shipping_from, delivery_text
+  Colonne d’information de la fiche, la plus courte possible : fil d'Ariane, nom, producteur et région, prix,
+  achat, description, repères (cépage, contenance, degré), puis les blocs dépliables.
+  Rien n’est écrit deux fois : le producteur et l’origine sont dans la ligne sous le nom (plus de tableau),
+  la livraison est dans le bandeau d’annonce.
+  Paramètres : product, form_id
 {%- endcomment -%}
 {%- liquid
   assign bp = product.metafields.bluepoint
@@ -13,9 +15,9 @@
   if volume_ml != blank
     assign volume_rest = volume_ml | modulo: 10
     if volume_rest == 0
-      assign volume_label = volume_ml | divided_by: 10 | append: ' cl'
+      assign volume_label = volume_ml | divided_by: 10 | append: ' cl'
     else
-      assign volume_label = volume_ml | divided_by: 10.0 | append: '' | replace: '.', ',' | append: ' cl'
+      assign volume_label = volume_ml | divided_by: 10.0 | append: '' | replace: '.', ',' | append: ' cl'
     endif
   endif
 
@@ -27,7 +29,7 @@
     if degre_end == '.0'
       assign degre_text = degre | round
     endif
-    assign degre_label = degre_text | append: '' | replace: '.', ',' | append: ' % vol.'
+    assign degre_label = degre_text | append: '' | replace: '.', ',' | append: ' % vol.'
   endif
 -%}
 
@@ -36,7 +38,7 @@
     <a href="{{ routes.all_products_collection_url }}" class="bp-carre bp-product-info__trail-link">Boutique</a>
     {%- if product.type != blank -%}
       <span aria-hidden="true">/</span>
-      <span>{{ product.type | escape }}</span>
+      <span>{%- render 'bp-type-label', type: product.type -%}</span>
     {%- endif -%}
   </nav>
 
@@ -49,34 +51,30 @@
   </div>
 
   <div class="bp-product-info__pricing">
-    <p class="bp-product-info__price">{% render 'bp-price', cents: product.price %}</p>
+    <p class="bp-product-info__price">{% render 'bp-price', cents: product.price %} <span class="bp-product-info__unit">la bouteille</span></p>
     {%- render 'bp-tax-note' -%}
     {%- render 'bp-price', mode: 'badge' -%}
   </div>
+
+  {%- render 'bp-buy-box', product: product, form_id: form_id -%}
 
   {%- if product.description != blank -%}
     <div class="bp-product-info__description">{{ product.description }}</div>
   {%- endif -%}
 
-  {%- render 'bp-buy-box', product: product, form_id: form_id, free_shipping_from: free_shipping_from -%}
+  {%- if cepage != blank or volume_label != blank or degre_label != blank -%}
+    <ul class="bp-ui bp-product-info__chips" aria-label="Repères">
+      {%- if cepage != blank -%}
+        <li class="bp-product-info__chip">{{ cepage | escape }}</li>
+      {%- endif -%}
+      {%- if volume_label != blank -%}
+        <li class="bp-product-info__chip">{{ volume_label }}</li>
+      {%- endif -%}
+      {%- if degre_label != blank -%}
+        <li class="bp-product-info__chip">{{ degre_label }}</li>
+      {%- endif -%}
+    </ul>
+  {%- endif -%}
 
-  <dl class="bp-ui bp-product-info__facts">
-    {%- if product.vendor != blank -%}
-      <div class="bp-product-info__fact"><dt>Producteur</dt><dd>{{ product.vendor | escape }}</dd></div>
-    {%- endif -%}
-    {%- if region != blank -%}
-      <div class="bp-product-info__fact"><dt>Origine</dt><dd>{{ region | escape }}</dd></div>
-    {%- endif -%}
-    {%- if cepage != blank -%}
-      <div class="bp-product-info__fact"><dt>Cépage</dt><dd>{{ cepage | escape }}</dd></div>
-    {%- endif -%}
-    {%- if volume_label != blank -%}
-      <div class="bp-product-info__fact"><dt>Contenance</dt><dd>{{ volume_label }}</dd></div>
-    {%- endif -%}
-    {%- if degre_label != blank -%}
-      <div class="bp-product-info__fact"><dt>Degré</dt><dd>{{ degre_label }}</dd></div>
-    {%- endif -%}
-  </dl>
-
-  {%- render 'bp-info-accordions', product: product, delivery_text: delivery_text -%}
+  {%- render 'bp-info-accordions', product: product -%}
 </div>

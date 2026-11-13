@@ -47,7 +47,6 @@
     {{ 'bp-header.css' | asset_url | stylesheet_tag }}
     {{ 'bp-nav.css' | asset_url | stylesheet_tag }}
     {{ 'bp-menu.css' | asset_url | stylesheet_tag }}
-    {{ 'bp-footer.css' | asset_url | stylesheet_tag }}
     {{ 'bp-overlays.css' | asset_url | stylesheet_tag }}
     {{ 'bp-age-gate.css' | asset_url | stylesheet_tag }}
     {{ 'bp-packshot.css' | asset_url | stylesheet_tag }}
@@ -55,7 +54,6 @@
     {{ 'bp-mascotte.css' | asset_url | stylesheet_tag }}
     <script src="{{ 'bp-cart.js' | asset_url }}" defer></script>
     <script src="{{ 'bp-chrome.js' | asset_url }}" defer></script>
-    <script src="{{ 'bp-nav.js' | asset_url }}" defer></script>
     <script src="{{ 'bp-mascotte.js' | asset_url }}" defer></script>
 
     {% if request.design_mode %}
@@ -69,11 +67,6 @@
     {% render 'skip-to-content-link', href: '#MainContent', text: 'accessibility.skip_to_text' %}
 
     {% section 'bp-header' %}
-
-    {%- comment -%} Juste après l’en-tête dans l’ordre du clavier ; sa position fixe le place en bas à droite. {%- endcomment -%}
-    {%- unless template.name == 'cart' -%}
-      {% render 'bp-floating-cart' %}
-    {%- endunless -%}
 
     <main id="MainContent" class="bluepoint-main" role="main" data-template="{{ template }}">
       {{ content_for_layout }}

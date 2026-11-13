@@ -1,7 +1,7 @@
 {%- comment -%}
-  « La sélection » : rangée défilante de bouteilles (aimantation native).
-  Au doigt on fait glisser ; à la souris ou au clavier, PRÉC. / SUIV. avancent d’une carte.
-  Rien n’est affiché tant que la collection est vide.
+  « La sélection » : une grille de bouteilles, des cellules séparées par des filets de bord à bord.
+  La dernière cellule invite les professionnels à l'espace pro et comble la fin de la rangée.
+  Rien n'est affiché tant que la collection est vide.
 {%- endcomment -%}
 {%- liquid
   assign s = section.settings
@@ -10,42 +10,51 @@
     assign source = collections.all
   endif
   assign heading_id = 'bp-selection-title-' | append: section.id
+
+  # Colonnes de la grille : 2 (téléphone), 3 (tablette), 4 (ordinateur). La dernière cellule prend ce qu'il reste de la rangée.
+  assign shown = source.products.size
+  if shown > s.limit
+    assign shown = s.limit
+  endif
+  assign rest_2 = shown | modulo: 2
+  assign rest_3 = shown | modulo: 3
+  assign rest_4 = shown | modulo: 4
+  assign span_2 = 2 | minus: rest_2
+  assign span_3 = 3 | minus: rest_3
+  assign span_4 = 4 | minus: rest_4
 -%}
 
 {%- if source.products_count > 0 -%}
-{{ 'bp-carousel.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'bp-carousel.js' | asset_url }}" defer></script>
-
-<section id="selection" class="bp-section" aria-labelledby="{{ heading_id }}">
+<section id="selection" class="bp-section bp-section--grille" aria-labelledby="{{ heading_id }}">
   {% render 'bp-section-head',
     id: heading_id,
+    kicker: s.kicker,
     title: s.title,
     link_url: routes.all_products_collection_url,
     link_label: s.link_label
   %}
-  <div class="bp-carousel" role="region" aria-roledescription="carrousel" aria-label="Bouteilles de la sélection" data-bp-carousel>
-    <ul class="bp-carousel__track" data-bp-carousel-track>
-      {%- for product in source.products limit: s.limit -%}
-        <li class="bp-carousel__slide">
-          {% render 'bp-product-card',
-            product: product,
-            teinte: forloop.index,
-            sizes: '(min-width: 90rem) 19vw, (min-width: 64rem) 24vw, 70vw'
-          %}
-        </li>
-      {%- endfor -%}
-    </ul>
-    <div class="bp-ui bp-carousel__controls" data-bp-carousel-controls hidden>
-      <button type="button" class="bp-carousel__button" data-bp-carousel-prev aria-disabled="true">
-        <span aria-hidden="true">‹</span> Préc.
-      </button>
-      <span class="bp-carousel__ticks" aria-hidden="true" data-bp-carousel-ticks></span>
-      <span class="bp-sr-only" aria-live="polite" data-bp-carousel-status></span>
-      <button type="button" class="bp-carousel__button" data-bp-carousel-next aria-disabled="false">
-        Suiv. <span aria-hidden="true">›</span>
-      </button>
-    </div>
-  </div>
+  <ul class="bp-grille">
+    {%- for product in source.products limit: s.limit -%}
+      <li>
+        {% render 'bp-product-card',
+          product: product,
+          teinte: forloop.index,
+          sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
+        %}
+      </li>
+    {%- endfor -%}
+    {%- if s.pro_title != blank -%}
+      <li class="bp-grille__fin" style="--cellules-2: {{ span_2 }}; --cellules-3: {{ span_3 }}; --cellules-4: {{ span_4 }}">
+        <p class="bp-grille__fin-titre">{{ s.pro_title | escape }}</p>
+        {%- if s.pro_text != blank -%}
+          <p class="bp-grille__fin-texte">{{ s.pro_text | escape }}</p>
+        {%- endif -%}
+        <a href="{{ s.pro_url | default: '/pages/espace-pro' | escape }}" class="bp-ui bp-carre bp-button" data-variant="plein">
+          {{- s.pro_label | default: 'Espace pro' | escape -}}
+        </a>
+      </li>
+    {%- endif -%}
+  </ul>
 </section>
 {%- endif -%}
 
@@ -55,10 +64,16 @@
   "tag": "div",
   "class": "bp-selection-section",
   "settings": [
+    { "type": "text", "id": "kicker", "label": "Petit libellé au-dessus du titre", "default": "À boire maintenant" },
     { "type": "text", "id": "title", "label": "Titre", "default": "La sélection" },
     { "type": "text", "id": "link_label", "label": "Lien vers la boutique", "default": "Toutes les bouteilles" },
     { "type": "collection", "id": "collection", "label": "Collection", "info": "Sans choix, toutes les bouteilles." },
-    { "type": "range", "id": "limit", "label": "Nombre maximum de bouteilles", "min": 3, "max": 24, "step": 1, "default": 12 }
+    { "type": "range", "id": "limit", "label": "Nombre maximum de bouteilles", "min": 3, "max": 24, "step": 1, "default": 12 },
+    { "type": "header", "content": "Dernière cellule : les professionnels" },
+    { "type": "text", "id": "pro_title", "label": "Titre", "info": "Vide : pas de cellule.", "default": "Vous êtes pro ?" },
+    { "type": "text", "id": "pro_text", "label": "Texte", "default": "Prix pro −15 %, commande sur facture à 30 jours, et 2 % de rabais en plus si vous payez par carte tout de suite." },
+    { "type": "text", "id": "pro_label", "label": "Bouton", "default": "Espace pro" },
+    { "type": "text", "id": "pro_url", "label": "Lien du bouton", "default": "/pages/espace-pro" }
   ],
   "presets": [{ "name": "La sélection BluePoint" }]
 }

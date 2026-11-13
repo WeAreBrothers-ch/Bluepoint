@@ -1,122 +1,109 @@
 {%- comment -%}
-  Pied de page : une grande tuile marine arrondie, la marque à gauche, les colonnes de liens à droite.
-  Coordonnées modifiables dans l’éditeur de thème.
+  Pied de page : un bloc bleu marine, en trois temps.
+  1. le grand panneau bleu vif « Une question ? » avec le téléphone et l’e-mail (les coordonnées ne sont écrites qu’ici) ;
+  2. le logo et l’adresse, puis deux listes de liens simples, sans cadre : « Découvrir » (boutique, accords, maison,
+     espace pro, Wine bar, réseaux) et « Infos » (livraison, retours, conditions : les pages légales de Shopify).
+     Tout ce qui n’est plus dans le menu du téléphone est ici ;
+  3. une barre : le copyright et la mention sur l’alcool.
+  Coordonnées et liens modifiables dans l’éditeur de thème. L’ancre #contact mène ici.
 {%- endcomment -%}
+{{ 'bp-footer.css' | asset_url | stylesheet_tag }}
 {%- liquid
   assign s = section.settings
   assign phone_href = s.phone | remove: ' ' | prepend: 'tel:'
 -%}
 
 <footer id="contact" class="bp-footer">
-  <div class="bp-footer__box">
-    <div class="bp-footer__brand-cell">
-      <a href="{{ routes.root_url }}" class="bp-footer__brand" aria-label="{{ shop.name | escape }}, accueil">
-        {% render 'bp-logo', class: 'bp-footer__logo' %}
-      </a>
-      <address class="bp-ui bp-footer__address">
-        {{ s.street | escape }}<br>
-        {{ s.city | escape }}
-      </address>
-      <p class="bp-ui">{{ s.company | escape }} © {{ 'now' | date: '%Y' }}</p>
+  <div class="bp-footer__panel">
+    <div class="bp-footer__ask">
+      <p class="bp-affiche bp-footer__title">Une question&#8239;?</p>
+      <p class="bp-footer__lead">Écrivez ou appelez Paolo : il vous conseille selon votre repas et votre budget.</p>
     </div>
-
-    <div class="bp-ui bp-footer__columns">
-      <div class="bp-footer__column">
-        <h2 class="bp-footer__heading">Boutique</h2>
-        <ul class="bp-footer__links">
-          <li><a class="bp-footer__link" href="{{ routes.all_products_collection_url }}">Toutes les bouteilles</a></li>
-          <li><a class="bp-footer__link" href="{{ routes.root_url }}#accords">Accords</a></li>
-          <li><a class="bp-footer__link" href="{{ routes.cart_url }}">Panier</a></li>
-        </ul>
-      </div>
-
-      <div class="bp-footer__column">
-        <h2 class="bp-footer__heading">Maison</h2>
-        <ul class="bp-footer__links">
-          <li><a class="bp-footer__link" href="{{ routes.root_url }}#maison">À propos</a></li>
-          {%- if s.wine_bar_url != blank -%}
-            <li>
-              <a class="bp-footer__link" href="{{ s.wine_bar_url | escape }}" target="_blank" rel="noopener noreferrer">
-                {% render 'bp-icon-external', class: 'bp-footer__icon' %}Vintage Wine Bar<span class="bp-sr-only">(nouvel onglet)</span>
-              </a>
-            </li>
-          {%- endif -%}
-        </ul>
-      </div>
-
-      <div class="bp-footer__column" data-large="true">
-        <h2 class="bp-footer__heading">Contact</h2>
-        <ul class="bp-footer__links">
-          {%- if s.email != blank -%}
-            <li>
-              <a class="bp-footer__link bp-footer__link--email" href="mailto:{{ s.email | escape }}">
-                {{- s.email | escape -}}
-              </a>
-            </li>
-          {%- endif -%}
-          {%- if s.phone != blank -%}
-            <li>
-              <a class="bp-footer__link" href="{{ phone_href | escape }}">
-                {{- s.phone | escape -}}
-              </a>
-            </li>
-          {%- endif -%}
-        </ul>
-      </div>
-
-      <div class="bp-footer__column">
-        <h2 class="bp-footer__heading">Suivre</h2>
-        <ul class="bp-footer__links">
-          {%- if s.instagram_url != blank -%}
-            <li>
-              <a class="bp-footer__link" href="{{ s.instagram_url | escape }}" target="_blank" rel="noopener noreferrer">
-                {% render 'bp-icon-external', class: 'bp-footer__icon' %}Instagram<span class="bp-sr-only">(nouvel onglet)</span>
-              </a>
-            </li>
-          {%- endif -%}
-          {%- if s.facebook_url != blank -%}
-            <li>
-              <a class="bp-footer__link" href="{{ s.facebook_url | escape }}" target="_blank" rel="noopener noreferrer">
-                {% render 'bp-icon-external', class: 'bp-footer__icon' %}Facebook<span class="bp-sr-only">(nouvel onglet)</span>
-              </a>
-            </li>
-          {%- endif -%}
-        </ul>
-      </div>
-
-      {%- if shop.policies.size > 0 -%}
-        <div class="bp-footer__column">
-          <h2 class="bp-footer__heading">Légal</h2>
-          <ul class="bp-footer__links">
-            {%- for policy in shop.policies -%}
-              {%- liquid
-                case policy.handle
-                  when 'privacy-policy'
-                    assign policy_label = 'Confidentialité'
-                  when 'refund-policy'
-                    assign policy_label = 'Retours'
-                  when 'terms-of-service'
-                    assign policy_label = 'Conditions de vente'
-                  when 'shipping-policy'
-                    assign policy_label = 'Livraison'
-                  when 'legal-notice'
-                    assign policy_label = 'Mentions légales'
-                  else
-                    assign policy_label = policy.title
-                endcase
-              -%}
-              <li><a class="bp-footer__link" href="{{ policy.url }}">{{ policy_label | escape }}</a></li>
-            {%- endfor -%}
-          </ul>
-        </div>
+    <div class="bp-footer__contacts">
+      {%- if s.phone != blank -%}
+        <a class="bp-ui bp-carre bp-button bp-footer__contact" data-variant="plein" href="{{ phone_href | escape }}">{{ s.phone | escape }}</a>
+      {%- endif -%}
+      {%- if s.email != blank -%}
+        <a class="bp-ui bp-carre bp-button bp-footer__contact" data-variant="trait" href="mailto:{{ s.email | escape }}">{{ s.email | escape | replace: '@', '<wbr>@' }}</a>
       {%- endif -%}
     </div>
   </div>
 
-  <p class="bp-ui bp-footer__legal">
-    L’abus d’alcool est dangereux pour la santé, à consommer avec modération. Vente réservée aux personnes de
-    18&nbsp;ans et plus.
-  </p>
+  <div class="bp-footer__cols">
+    <div class="bp-footer__brand-block">
+      <a href="{{ routes.root_url }}" class="bp-footer__brand" aria-label="BluePoint, accueil">
+        {% render 'bp-logo', class: 'bp-footer__logo' %}
+      </a>
+      <address class="bp-ui bp-footer__address">
+        {{ s.company | escape }}<br>
+        {{ s.street | escape }}<br>
+        {{ s.city | escape }}
+      </address>
+    </div>
+
+    <nav class="bp-footer__list" aria-labelledby="bp-footer-decouvrir">
+      <h2 class="bp-rubrique bp-footer__heading" id="bp-footer-decouvrir">Découvrir</h2>
+      <ul class="bp-ui bp-footer__links bp-footer__links--deux">
+        <li><a class="bp-footer__link" href="{{ routes.all_products_collection_url }}">La boutique</a></li>
+        <li><a class="bp-footer__link" href="{{ routes.root_url }}#accords">Accords</a></li>
+        <li><a class="bp-footer__link" href="{{ routes.root_url }}#maison">La maison</a></li>
+        <li><a class="bp-footer__link" href="{{ s.pro_url | default: '/pages/espace-pro' | escape }}">Espace pro</a></li>
+        {%- if s.wine_bar_url != blank -%}
+          <li>
+            <a class="bp-footer__link" href="{{ s.wine_bar_url | escape }}" target="_blank" rel="noopener noreferrer">
+              Wine bar{% render 'bp-icon-external', class: 'bp-footer__icon' %}<span class="bp-sr-only">(nouvel onglet)</span>
+            </a>
+          </li>
+        {%- endif -%}
+        {%- if s.instagram_url != blank -%}
+          <li>
+            <a class="bp-footer__link" href="{{ s.instagram_url | escape }}" target="_blank" rel="noopener noreferrer">
+              Instagram{% render 'bp-icon-external', class: 'bp-footer__icon' %}<span class="bp-sr-only">(nouvel onglet)</span>
+            </a>
+          </li>
+        {%- endif -%}
+        {%- if s.facebook_url != blank -%}
+          <li>
+            <a class="bp-footer__link" href="{{ s.facebook_url | escape }}" target="_blank" rel="noopener noreferrer">
+              Facebook{% render 'bp-icon-external', class: 'bp-footer__icon' %}<span class="bp-sr-only">(nouvel onglet)</span>
+            </a>
+          </li>
+        {%- endif -%}
+      </ul>
+    </nav>
+
+    {%- if shop.policies.size > 0 -%}
+      <nav class="bp-footer__list" aria-labelledby="bp-footer-infos">
+        <h2 class="bp-rubrique bp-footer__heading" id="bp-footer-infos">Infos</h2>
+        <ul class="bp-ui bp-footer__links">
+          {%- for policy in shop.policies -%}
+            {%- liquid
+              assign policy_label = policy.title
+              if policy.url contains 'privacy-policy'
+                assign policy_label = 'Confidentialité'
+              elsif policy.url contains 'refund-policy'
+                assign policy_label = 'Retours'
+              elsif policy.url contains 'terms-of-service'
+                assign policy_label = 'Conditions de vente'
+              elsif policy.url contains 'shipping-policy'
+                assign policy_label = 'Livraison'
+              elsif policy.url contains 'legal-notice'
+                assign policy_label = 'Mentions légales'
+              endif
+            -%}
+            <li><a class="bp-footer__link" href="{{ policy.url }}">{{ policy_label | escape }}</a></li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+  </div>
+
+  <div class="bp-footer__bar">
+    <p class="bp-ui bp-phrase bp-footer__copy">© {{ 'now' | date: '%Y' }} {{ s.company | escape }}</p>
+    <p class="bp-ui bp-phrase bp-footer__legal">
+      L’abus d’alcool est dangereux pour la santé, à consommer avec modération. Vente réservée aux personnes de 18&nbsp;ans et plus.
+    </p>
+  </div>
 </footer>
 
 {% schema %}
@@ -130,6 +117,7 @@
     { "type": "text", "id": "city", "label": "NPA, ville, pays", "default": "1095 Lutry, Suisse" },
     { "type": "text", "id": "email", "label": "E-mail", "default": "info@bluepointdistribution.com" },
     { "type": "text", "id": "phone", "label": "Téléphone", "default": "+41 79 606 33 22" },
+    { "type": "text", "id": "pro_url", "label": "Lien Espace pro", "default": "/pages/espace-pro" },
     { "type": "text", "id": "wine_bar_url", "label": "Lien Vintage Wine Bar", "default": "http://vintagewinebar.ch" },
     { "type": "text", "id": "instagram_url", "label": "Lien Instagram", "default": "https://www.instagram.com/bluepointdistribution" },
     { "type": "text", "id": "facebook_url", "label": "Lien Facebook", "default": "https://www.facebook.com/profile.php?id=100051131204556" }

@@ -1,83 +1,42 @@
-/* BluePoint — carte bouteille (snippets/bp-product-card.liquid). */
+/* BluePoint — carte bouteille (snippets/bp-product-card.liquid) : une cellule de la grille. */
 
 /* ---------- Carte bouteille ---------- */
 
-/* La carte suit sa propre largeur (container query) : prix et bouton côte à côte quand il y a la place. */
 .bp-card {
-  /* Ancre le texte d'annonce (sr-only) dans la carte : sinon, dans le carrousel, il
-     échappe au défilement et élargit toute la page sur mobile. */
+  /* Ancre le texte d'annonce (sr-only) dans la carte : sinon il échappe au défilement et élargit toute la page sur mobile. */
   position: relative;
   container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   height: 100%;
-  gap: 0.9rem;
-  padding: clamp(0.75rem, 1.4vw, 1.25rem) clamp(0.75rem, 1.4vw, 1.25rem) clamp(1rem, 1.6vw, 1.5rem);
+  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  padding: clamp(0.9rem, 1.8vw, 1.5rem);
   background: var(--fond);
   /* Filets d'encre à droite et dessous, dans la carte (un filet extérieur serait recouvert par la carte voisine). */
   border-right: var(--trait) solid var(--ligne);
   border-bottom: var(--trait) solid var(--ligne);
+  transition: background-color 220ms var(--ease-out);
 }
 
-/* La tuile en haut : toutes les bouteilles alignées d'une carte à l'autre, quel que soit le nom. */
-.bp-card__visual-link {
-  position: relative;
-  display: block;
-}
-
-.bp-card__visual {
-  aspect-ratio: 4 / 5;
-}
-
-/* Le type, en pastille posée dans le coin de la tuile. */
-.bp-card__type {
-  position: absolute;
-  top: 0.6rem;
-  left: 0.6rem;
-  padding: 0.15rem 0.6rem;
-  border: var(--trait) solid var(--encre);
-  border-radius: var(--rayon-pilule);
-  background: var(--fond);
-  font-size: 0.9375rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
+/* En haut : le nom, le prix, le producteur. */
 .bp-card__info {
   display: grid;
   align-content: start;
   gap: 0.3rem;
 }
 
-/* Nom : grotesque grasse en capitales, l'élément fort sous la bouteille. */
+/* Nom : grotesque grasse en capitales, l'élément fort de la cellule. */
 .bp-card__name {
   font-family: var(--police-titre);
   font-size: var(--t-nom-carte);
   font-weight: 800;
   line-height: 1.1;
+  letter-spacing: -0.005em;
   text-transform: uppercase;
   text-wrap: balance;
   overflow-wrap: break-word;
-  hyphens: auto;
-}
-
-.bp-card__producer,
-.bp-card__region {
-  color: var(--encre-douce);
-  font-size: var(--t-detail-carte);
-  line-height: 1.3;
-}
-
-.bp-card__region {
-  font-weight: 600;
-}
-
-/* En bas : le prix, puis le bouton sur toute la largeur (côte à côte dans une carte large). */
-.bp-card__actions {
-  display: grid;
-  gap: 0.6rem;
-  align-items: center;
+  hyphens: manual;
 }
 
 .bp-card__price {
@@ -85,10 +44,16 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 800;
-  line-height: 1.2;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
   white-space: nowrap;
+}
+
+.bp-card__unit {
+  color: var(--encre-douce);
+  font-size: var(--t-detail-carte);
+  font-weight: 500;
 }
 
 .bp-card__price .bp-price__was {
@@ -97,40 +62,78 @@
   font-weight: 500;
 }
 
+/* Au milieu : la bouteille, alignée d'une carte à l'autre quel que soit le nom. */
+.bp-card__visual-link {
+  position: relative;
+  display: block;
+  align-self: center;
+}
+
+.bp-card__visual {
+  aspect-ratio: 4 / 5;
+}
+
+/*
+ * Une bouteille détourée n'a pas de tuile : elle se tient devant un grand rond bleu (la nuance de data-teinte),
+ * qui déborde à peine de la cellule. Une photo de mise en scène garde sa tuile arrondie.
+ */
+.bp-card__visual:has(.bp-packshot__bottle) {
+  overflow: visible;
+  border-color: transparent;
+  background: transparent;
+}
+
+.bp-card__visual:has(.bp-packshot__bottle)::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  width: 88%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--tuile, var(--c-glacier));
+  transition: scale 360ms var(--ease-out);
+}
+
+.bp-card__visual .bp-packshot__bottle {
+  inset: 3% 10% 3%;
+  width: 80%;
+  height: 94%;
+  transition: translate 360ms var(--ease-out);
+}
+
+/* En bas : « Ajouter un carton », une pastille bleu vif sur toute la largeur (le texte passe à la ligne si la cellule est étroite). */
+.bp-card__actions {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+}
+
 .bp-card__quick-add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 3rem;
-  padding-inline: 1.25rem;
-  border: var(--trait) solid var(--encre);
+  padding: 0.5rem 0.9rem;
+  border: var(--trait) solid var(--c-roi);
   border-radius: var(--rayon-pilule);
-  background: var(--pilule);
+  background: var(--c-roi);
+  color: var(--c-blanc);
   font-family: var(--police-titre);
   font-size: var(--t-bouton-carte);
   font-weight: 700;
-  line-height: 1.1;
-  white-space: nowrap;
+  line-height: 1.15;
+  text-align: center;
   transition:
     background-color 160ms var(--ease-out),
     color 160ms var(--ease-out),
     scale 120ms var(--ease-out);
 }
 
-@container (min-width: 16rem) {
-  .bp-card__actions {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .bp-card__quick-add {
-    width: auto;
-  }
-  .bp-card__error {
-    grid-column: 1 / -1;
-  }
-}
-
 .bp-card__quick-add--epuise {
+  border-color: transparent;
   background: transparent;
   color: var(--encre-douce);
 }
@@ -145,6 +148,7 @@
 }
 
 .bp-card__quick-add[data-ajoute="true"] {
+  border-color: var(--c-encre);
   background: var(--c-encre);
   color: var(--c-blanc);
 }
@@ -157,6 +161,7 @@
 .bp-card__error {
   font-size: var(--t-mention);
   color: var(--encre);
+  text-align: center;
 }
 
 .bp-card__error[hidden] {
@@ -164,12 +169,22 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .bp-card:hover {
+    background: var(--c-blanc);
+  }
   .bp-card__info:hover .bp-card__name {
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.2em;
   }
-  .bp-card__quick-add:not([data-ajoute="true"]):hover {
-    background: var(--c-blanc);
+  .bp-card:hover .bp-card__visual:has(.bp-packshot__bottle)::before {
+    scale: 1.06;
+  }
+  .bp-card:hover .bp-card__visual .bp-packshot__bottle {
+    translate: 0 -0.5rem;
+  }
+  .bp-card__quick-add:not([data-ajoute="true"], .bp-card__quick-add--epuise):hover {
+    border-color: var(--c-encre);
+    background: var(--c-encre);
   }
 }

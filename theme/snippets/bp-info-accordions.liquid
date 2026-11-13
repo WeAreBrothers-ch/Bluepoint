@@ -1,56 +1,37 @@
 {%- comment -%}
   Blocs dépliables natifs (<details>) : clavier et lecteurs d'écran fonctionnent sans script.
-  Un bloc dont le métachamp est vide n’est pas affiché.
-  Texte simple : échappé, retours à la ligne conservés ; texte enrichi : rendu par Shopify (metafield_tag). Le premier bloc affiché est ouvert.
-  Paramètres : product, delivery_text
+  Trois blocs, fermés au départ : Dégustation, Le domaine, Service et conservation.
+  Un bloc dont les métachamps sont vides n’est pas affiché. L’état se lit au signe + / − (le lecteur d’écran
+  annonce « développé » ou « réduit » tout seul) : aucun mot « Ouvrir » ou « Fermer ».
+  La livraison n’est pas répétée ici : elle est dans le bandeau d’annonce, tout en haut de la page.
+  Paramètre : product
 {%- endcomment -%}
 {%- liquid
   assign bp = product.metafields.bluepoint
-  assign titles = 'Dégustation|Le domaine|Service|Conservation|Livraison' | split: '|'
-  assign opened = false
 -%}
+{%- capture tasting -%}{%- render 'bp-field-text', field: bp.degustation -%}{%- endcapture -%}
+{%- capture domain -%}{%- render 'bp-field-text', field: bp.producteur -%}{%- endcapture -%}
+{%- capture service -%}{%- render 'bp-field-text', field: bp.service -%}{%- render 'bp-field-text', field: bp.conservation -%}{%- endcapture -%}
 
-<div class="bp-accordions">
-  {%- for title in titles -%}
-    {%- liquid
-      assign field = nil
-      case forloop.index
-        when 1
-          assign field = bp.degustation
-        when 2
-          assign field = bp.producteur
-        when 3
-          assign field = bp.service
-        when 4
-          assign field = bp.conservation
-      endcase
-      if field != nil
-        assign body = field.value
-      else
-        assign body = delivery_text
-      endif
-      assign plain_text = true
-      if field != nil and field.type != 'multi_line_text_field' and field.type != 'single_line_text_field'
-        assign plain_text = false
-      endif
-    -%}
-    {%- if body != blank -%}
-      <details class="bp-accordions__item" {% unless opened %}open{% endunless %}>
-        <summary class="bp-ui bp-accordions__summary">
-          {{ title }}
-          <span class="bp-accordions__state">
-            <span class="bp-phrase bp-accordions__word" data-etat="ferme">Ouvrir</span>
-            <span class="bp-phrase bp-accordions__word" data-etat="ouvert">Fermer</span>
-            <span class="bp-accordions__icon" aria-hidden="true"></span>
-          </span>
-        </summary>
-        {%- if plain_text -%}
-          <p class="bp-accordions__body">{{ body | escape | newline_to_br }}</p>
-        {%- else -%}
-          <div class="bp-accordions__body">{{ field | metafield_tag }}</div>
-        {%- endif -%}
+{%- if tasting != blank or domain != blank or service != blank -%}
+  <div class="bp-accordions">
+    {%- if tasting != blank -%}
+      <details class="bp-accordions__item">
+        <summary class="bp-ui bp-accordions__summary">Dégustation<span class="bp-accordions__icon" aria-hidden="true"></span></summary>
+        <div class="bp-accordions__body">{{ tasting }}</div>
       </details>
-      {%- assign opened = true -%}
     {%- endif -%}
-  {%- endfor -%}
-</div>
+    {%- if domain != blank -%}
+      <details class="bp-accordions__item">
+        <summary class="bp-ui bp-accordions__summary">Le domaine<span class="bp-accordions__icon" aria-hidden="true"></span></summary>
+        <div class="bp-accordions__body">{{ domain }}</div>
+      </details>
+    {%- endif -%}
+    {%- if service != blank -%}
+      <details class="bp-accordions__item">
+        <summary class="bp-ui bp-accordions__summary">Service et conservation<span class="bp-accordions__icon" aria-hidden="true"></span></summary>
+        <div class="bp-accordions__body">{{ service }}</div>
+      </details>
+    {%- endif -%}
+  </div>
+{%- endif -%}

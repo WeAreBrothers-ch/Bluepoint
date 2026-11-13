@@ -1,0 +1,93 @@
+/* BluePoint — « Les rayons » (sections/bp-categories.liquid) : de hautes tuiles photo, le nom du rayon en grand dessus (écrit une seule fois). */
+
+.bp-rayons {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gouttiere);
+}
+
+.bp-rayon {
+  display: block;
+}
+
+.bp-rayon__tile {
+  position: relative;
+  display: block;
+  container-type: inline-size;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon);
+  background: var(--tuile, var(--c-glacier));
+  isolation: isolate;
+}
+
+.bp-rayon[data-teinte="1"] { --tuile: var(--c-glacier); --affiche-remplissage: var(--c-blanc); }
+.bp-rayon[data-teinte="2"] { --tuile: var(--c-ciel); --affiche-remplissage: var(--c-ciel); }
+.bp-rayon[data-teinte="3"] { --tuile: var(--c-azur); --affiche-remplissage: var(--c-blanc); }
+.bp-rayon[data-teinte="4"] { --tuile: var(--c-bleu); --affiche-remplissage: var(--c-ciel); }
+
+.bp-rayon__image {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale 700ms var(--ease-out);
+}
+
+/*
+ * Le nom du rayon, en lettres d'affiche, sur toute la largeur de la tuile : la taille se calcule d'après la
+ * largeur de la tuile (cqw) et le nombre de lettres (--lettres, posé par la section).
+ */
+.bp-rayon__word {
+  position: absolute;
+  inset: auto 0 7%;
+  padding-inline: 4%;
+  font-size: min(calc(88cqw / (var(--lettres, 8) * 0.64)), 6rem);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  text-wrap: nowrap;
+}
+
+/* Pastille ronde en haut à droite : une flèche, pour qu'on voie que la tuile mène quelque part. */
+.bp-rayon__go {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: 50%;
+  background: var(--fond);
+  color: var(--encre);
+  transition:
+    background-color 180ms var(--ease-out),
+    rotate 240ms var(--ease-out);
+}
+
+.bp-rayon__go svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-rayon:hover .bp-rayon__image {
+    scale: 1.05;
+  }
+  .bp-rayon:hover .bp-rayon__go {
+    background: var(--pilule);
+    rotate: -45deg;
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-rayons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

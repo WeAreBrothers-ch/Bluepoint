@@ -4,11 +4,14 @@
  * Les composants ne lisent que les jetons de RÔLE (--fond, --encre, --accent…).
  * Toutes les classes du thème BluePoint sont préfixées « bp- » pour ne jamais
  * entrer en collision avec celles de Horizon.
+ *
+ * Refonte v6 : le site se lit comme une grille. Des filets marine de bord à bord séparent les blocs,
+ * les contenus vivent dans des cellules, les grands aplats sont très arrondis, les boutons sont des pilules.
  */
 
 :root {
   /*
-   * Palette : uniquement des bleus, du plus pâle au marine (voir DIRECTION-ARTISTIQUE.md, v5).
+   * Palette : uniquement des bleus, du plus pâle au marine.
    * --c-blanc, --c-bleu et --c-encre sont aussi lus par l'intro et Paolo (bp-intro*.css, bp-mascotte.css) :
    * leurs valeurs ne changent pas, pour que les personnages restent identiques.
    */
@@ -38,22 +41,22 @@
   --trait: 1.5px; /* épaisseur des filets et des contours, partout la même */
 
   /*
-   * Typographie : Bagel Fat One, ronde et très grasse, pour les grands titres d'affiche ;
-   * Schibsted Grotesk pour tout le reste (texte, interface, prix).
+   * Typographie : Bagel Fat One, ronde et très grasse, pour les mots d'affiche (accueil, rayons, moments) ;
+   * Schibsted Grotesk pour tout le reste (titres de section, texte, interface, prix).
    */
   --police-affiche: "Bagel Fat One", "Arial Rounded MT Bold", sans-serif;
   --police-titre: "Schibsted Grotesk", "Arial", sans-serif;
   --police: "Schibsted Grotesk", "Arial", sans-serif;
 
   --t-geant: clamp(2.75rem, 1.4rem + 5.6vw, 7rem);
-  --t-titre: clamp(2rem, 1.2rem + 3.2vw, 4rem);
+  --t-titre: clamp(2.25rem, 1.3rem + 3.6vw, 4.25rem);
   --t-sous-titre: clamp(1.125rem, 1rem + 0.4vw, 1.375rem);
   /* Lisibilité d'abord : 17 px pour lire, 16 px pour les libellés, 14 px minimum pour les mentions. */
   --t-corps: 1.0625rem;
   --t-ui: 1rem;
   --t-mention: 0.875rem;
   --interlettre-ui: 0;
-  --t-nom-carte: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --t-nom-carte: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
   --t-detail-carte: 0.9375rem;
   --t-bouton-carte: 1rem;
   --t-nom-fiche: clamp(2.5rem, 1.6rem + 3.6vw, 4.75rem);
@@ -63,13 +66,14 @@
   /* Espace */
   --marge: clamp(1rem, 2vw, 1.5rem);
   --repere: clamp(0.75rem, 1.6vw, 1.5rem);
-  --section: clamp(4rem, 9vw, 8rem);
+  --section: clamp(3.5rem, 8vw, 7rem);
   --gouttiere: clamp(0.75rem, 1.4vw, 1.25rem);
   --mesure: 38rem;
-  --hauteur-annonce: 2.5rem;
-  --hauteur-entete: calc(var(--hauteur-annonce) + clamp(4rem, 5vw, 4.5rem));
+  --hauteur-annonce: 2.25rem;
+  --hauteur-barre: clamp(3.5rem, 4.6vw, 4.5rem);
+  --hauteur-entete: calc(var(--hauteur-annonce) + var(--hauteur-barre));
   --hauteur-barre-achat: 4.75rem;
-  --rayon: clamp(0.875rem, 1.4vw, 1.5rem); /* tuiles et grands aplats */
+  --rayon: clamp(1rem, 2.2vw, 2rem); /* tuiles et grands aplats */
   --rayon-pilule: 999px; /* boutons et champs */
 
   /* Mouvement */
@@ -121,8 +125,6 @@ body.bluepoint {
   text-rendering: optimizeLegibility;
 }
 
-/* Pas de chiffres à chasse fixe sur le texte : dans Schibsted Grotesk, l'option élargit aussi la ponctuation. */
-
 /* Les personnages (intro de l'accueil et Paolo après un ajout au panier) gardent la police de leurs bulles. */
 .bp-intro__bubble,
 .bp-mascotte__bubble {
@@ -157,6 +159,12 @@ body.bluepoint {
   cursor: pointer;
 }
 
+:where([class^="bp-"], [class*=" bp-"]) :is(a, button, summary, label) {
+  /* Au toucher : pas de rectangle gris du navigateur, pas d'attente avant le clic. */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 :where([class^="bp-"], [class*=" bp-"]) :is(h1, h2, h3) {
   font-family: var(--police-titre);
   font-weight: 700;
@@ -179,6 +187,25 @@ body.bluepoint {
   paint-order: stroke fill;
   text-shadow: 0.06em 0.07em 0 var(--c-encre);
   text-wrap: balance;
+}
+
+/* Titre de section : la grotesque en gras, grande et serrée, comme un titre de magazine. */
+.bp-titre {
+  font-family: var(--police-titre);
+  font-size: var(--t-titre);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* Petit libellé de rubrique : capitales, demi-gras, un peu espacé. */
+.bp-rubrique {
+  font-family: var(--police-titre);
+  font-size: var(--t-mention);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 :where([class^="bp-"], [class*=" bp-"]) p {
@@ -209,6 +236,24 @@ body.bluepoint {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* Étoile à cinq branches et éclat à douze pointes : les « autocollants » du site (bandeau, pastilles). */
+:root {
+  --forme-etoile: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  --forme-eclat: polygon(
+    50% 0%, 59% 9%, 71% 4%, 76% 16%, 89% 18%, 89% 31%, 100% 38%, 94% 50%, 100% 62%, 89% 69%, 89% 82%,
+    76% 84%, 71% 96%, 59% 91%, 50% 100%, 41% 91%, 29% 96%, 24% 84%, 11% 82%, 11% 69%, 0% 62%, 6% 50%,
+    0% 38%, 11% 31%, 11% 18%, 24% 16%, 29% 4%, 41% 9%
+  );
+}
+
+.bp-etoile {
+  clip-path: var(--forme-etoile);
+}
+
+.bp-eclat {
+  clip-path: var(--forme-eclat);
 }
 
 /* Le contenu principal laisse la place de l'en-tête fixe sur les pages Horizon. */

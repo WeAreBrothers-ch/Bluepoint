@@ -6,6 +6,8 @@
  *   refresh() → Promise<cart>, notify(itemCount), announce(text), readJson(response)
  * Émet « bp:cart-updated » (detail.itemCount) après chaque changement,
  * et « bp:cart-added » après chaque ajout réussi (Paolo surgit : bp-mascotte.js).
+ * Les vins se vendent par cartons de 6 : le bouton « Ajouter un carton » des cartes ajoute 6 bouteilles
+ * (attribut data-quantite du bouton).
  */
 (function () {
   "use strict";
@@ -13,7 +15,7 @@
   var ROOT = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || "/";
   var UNAVAILABLE = "Le panier ne répond pas. Réessayez dans un instant.";
   var CONFIRMATION_MS = 1600;
-  var NNBSP = " "; // espace fine insécable, avant les deux-points
+  var NNBSP = " "; // espace fine insécable, avant les deux-points
 
   /* Réponse de Shopify → objet, ou erreur en français (jamais un message technique). */
   function readJson(response) {
@@ -91,7 +93,7 @@
       });
   }
 
-  /* ---------- Bouton « + » des cartes bouteille : ajoute une bouteille sans quitter la page ---------- */
+  /* ---------- Bouton « Ajouter un carton » des cartes bouteille : ajoute un carton sans quitter la page ---------- */
 
   var timers = new WeakMap();
 
@@ -113,12 +115,14 @@
     var meta = button.parentElement;
     var status = meta && meta.querySelector("[data-bp-quick-add-status]");
     var name = button.getAttribute("data-product-name") || "Bouteille";
+    // Un carton = 6 bouteilles ; sans attribut, une bouteille (ancien comportement).
+    var quantity = Math.max(1, Math.round(Number(button.getAttribute("data-quantite")) || 1));
     button.disabled = true;
-    add(button.getAttribute("data-variant-id"), 1)
+    add(button.getAttribute("data-variant-id"), quantity)
       .then(function () {
         hideQuickAddError(meta);
         button.setAttribute("data-ajoute", "true");
-        if (status) status.textContent = name + NNBSP + ": ajouté au panier.";
+        if (status) status.textContent = name + NNBSP + ": " + quantity + " bouteilles ajoutées au panier.";
         window.clearTimeout(timers.get(button));
         timers.set(
           button,

@@ -1,0 +1,18 @@
+{%- comment -%}
+  Contenu d'un métachamp texte de la fiche : texte simple (échappé), un paragraphe par ligne pour aérer les textes longs,
+  ou texte enrichi (rendu par Shopify). Rien si le champ est vide.
+  Paramètre : field (le métachamp, par exemple product.metafields.bluepoint.degustation)
+{%- endcomment -%}
+{%- if field.value != blank -%}
+  {%- if field.type == 'multi_line_text_field' or field.type == 'single_line_text_field' -%}
+    {%- assign lines = field.value | escape | newline_to_br | split: '<br />' -%}
+    {%- for line in lines -%}
+      {%- assign text = line | strip -%}
+      {%- if text != blank -%}
+        <p>{{ text }}</p>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- else -%}
+    {{ field | metafield_tag }}
+  {%- endif -%}
+{%- endif -%}

@@ -1,4 +1,4 @@
-/* BluePoint — photo légendée et espacement commun des sections de contenu. */
+/* BluePoint — photo légendée, grille de bouteilles et espacement commun des sections de contenu. */
 
 /* ---------- Photo légendée (snippets/bp-photo-figure.liquid), sans effet au survol : elle n’est pas cliquable ---------- */
 
@@ -38,7 +38,122 @@
   text-transform: uppercase;
 }
 
-/* Espacement commun des sections de contenu. */
+/*
+ * Section de contenu : un filet marine de bord à bord en haut, puis de l'air.
+ * Les grilles de cellules (.bp-grille) sortent des marges pour que leurs filets touchent les bords.
+ */
 .bp-section {
-  padding: var(--section) var(--marge) 0;
+  padding: var(--section) var(--marge);
+  border-top: var(--trait) solid var(--ligne);
+}
+
+/* Section qui se termine par une grille de cellules : pas d'air dessous, et le filet du bas se confond avec celui de la section suivante. */
+.bp-section--grille {
+  padding-bottom: 0;
+}
+
+.bp-section--grille > .bp-grille {
+  margin-bottom: calc(var(--trait) * -1);
+}
+
+/* ---------- Grille de bouteilles : des cellules séparées par des filets, de bord à bord ---------- */
+
+.bp-grille {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-inline: calc(var(--marge) * -1);
+  border-top: var(--trait) solid var(--ligne);
+  overflow: clip;
+}
+
+.bp-grille > li {
+  min-width: 0;
+}
+
+@media (min-width: 40rem) {
+  .bp-grille {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-grille {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Dernière cellule : elle comble le reste de la rangée (ou prend toute la rangée si elle est déjà pleine). */
+.bp-grille__fin {
+  grid-column: span var(--cellules-2, 1);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-bottom: var(--trait) solid var(--ligne);
+  background: var(--c-roi);
+  color: var(--c-blanc);
+  text-align: center;
+  --focus: var(--c-blanc);
+}
+
+@media (min-width: 40rem) {
+  .bp-grille__fin {
+    grid-column: span var(--cellules-3, 1);
+  }
+}
+
+@media (min-width: 64rem) {
+  .bp-grille__fin {
+    grid-column: span var(--cellules-4, 1);
+  }
+}
+
+.bp-grille__fin-titre {
+  font-family: var(--police-affiche);
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 3rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: var(--c-ciel);
+  -webkit-text-stroke: 0.05em var(--c-encre);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 var(--c-encre);
+  text-wrap: balance;
+}
+
+.bp-grille__fin-texte {
+  max-width: 24rem;
+  font-size: var(--t-sous-titre);
+  line-height: 1.35;
+}
+
+.bp-grille__fin .bp-button {
+  background: var(--c-ciel);
+  color: var(--c-encre);
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-grille__fin .bp-button:hover {
+    background: var(--c-blanc);
+  }
+}
+
+/* Téléphone, deux colonnes : la cellule est étroite, tout y tient sans déborder (même à 320 px). */
+@media (max-width: 39.999rem) {
+  .bp-grille__fin {
+    padding: 1rem 0.75rem;
+    gap: 0.75rem;
+  }
+  .bp-grille__fin-titre {
+    font-size: 1.5rem;
+  }
+  .bp-grille__fin-texte {
+    font-size: 1rem;
+  }
+  .bp-grille__fin .bp-button {
+    min-height: 3rem;
+    padding-inline: 0.75rem;
+  }
 }

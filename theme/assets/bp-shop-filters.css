@@ -1,18 +1,26 @@
-/* BluePoint — rayons de la boutique : une rangée de pastilles par type, une par origine (snippets/bp-shop-filters.liquid). */
+/* BluePoint — rayons de la boutique (snippets/bp-shop-filters.liquid) : le type, l'origine (pays), puis la région d'un pays choisi. */
 
+/* Une barre de bord à bord, entre deux filets : elle sépare le titre de la grille. */
 .bp-filters {
   display: grid;
-  gap: 1rem;
-  margin: clamp(1.75rem, 4vw, 2.75rem) 0 clamp(3rem, 7vw, 5rem);
+  gap: 0.6rem;
+  margin: clamp(2rem, 5vw, 3.5rem) calc(var(--marge) * -1) 0;
+  padding: 0.9rem var(--marge);
+  border-top: var(--trait) solid var(--ligne);
+  border-bottom: var(--trait) solid var(--ligne);
 }
 
 .bp-filters__row {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .bp-filters__label {
-  font-weight: 800;
+  color: var(--encre-douce);
+  font-size: var(--t-mention);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .bp-filters__list {
@@ -26,40 +34,61 @@
   display: inline-flex;
   align-items: center;
   min-height: 2.75rem;
-  padding-inline: 1.1rem;
+  padding-inline: 1rem;
   border: var(--trait) solid var(--encre);
   border-radius: var(--rayon-pilule);
   background: var(--fond);
-  font-size: 1.0625rem;
+  font-size: 1rem;
   font-weight: 600;
   transition:
     background-color 160ms var(--ease-out),
     color 160ms var(--ease-out);
 }
 
-/* Le pays ouvre sa rangée, en gras ; ses régions suivent. */
-.bp-filters__pill--country {
-  font-weight: 800;
-}
-
-/* Le rayon choisi : pastille pleine, marine. */
+/* Le choix actif : pastille pleine, marine. */
 .bp-filters__pill[aria-current] {
   background: var(--encre);
   color: var(--c-blanc);
 }
 
+/* Le pays dont une région est choisie : pastille bleu ciel, pour garder le fil. */
+.bp-filters__pill[data-parent] {
+  background: var(--pilule);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .bp-filters__pill:not([aria-current]):hover {
-    background: var(--pilule);
+    background: var(--survol);
+  }
+}
+
+/*
+ * Téléphone : chaque rangée de pastilles tient sur une seule ligne qu'on fait glisser du pouce
+ * (la dernière pastille dépasse du bord : on voit qu'il y en a d'autres).
+ */
+@media (max-width: 47.999rem) {
+  .bp-filters__list {
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--marge) * -1);
+    padding-inline: var(--marge);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--marge);
+    scrollbar-width: none;
+  }
+  .bp-filters__list::-webkit-scrollbar {
+    display: none;
+  }
+  .bp-filters__pill {
+    flex: none;
+    scroll-snap-align: start;
   }
 }
 
 @media (min-width: 48rem) {
   .bp-filters__row {
     grid-template-columns: 6rem minmax(0, 1fr);
-    align-items: start;
-  }
-  .bp-filters__label {
-    padding-top: 0.7rem;
+    align-items: center;
   }
 }

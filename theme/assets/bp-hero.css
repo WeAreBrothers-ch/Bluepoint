@@ -1,17 +1,20 @@
-/* BluePoint — haut de l'accueil (sections/bp-hero.liquid). */
+/* BluePoint — haut de l'accueil (sections/bp-hero.liquid) et bandeau qui défile. */
 
 .bp-hero {
   padding-top: calc(var(--hauteur-entete) + var(--marge));
+  /* L'éclat penché peut dépasser de quelques pixels sur un petit écran : il ne doit jamais élargir la page. */
+  overflow-x: clip;
 }
 
-/* Le grand aplat bleu vif, arrondi et cerné d'encre, posé dans la marge de la page. */
+/* Le grand aplat bleu vif, très arrondi et cerné d'encre, posé dans la marge de la page. */
 .bp-hero__tile {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1.75rem, 4vw, 3rem);
   margin-inline: var(--marge);
   padding: clamp(1.5rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 4rem);
   border: var(--trait) solid var(--encre);
-  border-radius: var(--rayon);
+  border-radius: calc(var(--rayon) * 1.35);
   background: var(--c-roi);
   color: var(--c-blanc);
   --focus: var(--c-blanc);
@@ -32,6 +35,13 @@
 .bp-hero__title {
   --affiche-remplissage: var(--c-ciel);
   font-size: var(--t-geant);
+}
+
+/* Très petit écran (320 px) : le plus long mot du titre tient dans la tuile. */
+@media (max-width: 21.999rem) {
+  .bp-hero__title {
+    font-size: 9vw;
+  }
 }
 
 /* Marge haute compensée : les accents des capitales (É, À) ne sont pas coupés ; marge basse pour l'ombre. */
@@ -86,7 +96,7 @@
   position: relative;
   aspect-ratio: 4 / 5;
   border: var(--trait) solid var(--encre);
-  border-radius: calc(var(--rayon) * 0.75);
+  border-radius: var(--rayon);
   background: var(--fond-tuile);
 }
 
@@ -112,26 +122,34 @@
   color: var(--encre);
 }
 
-/* La pastille ronde, un peu penchée, qui déborde du coin haut droit de la photo. */
+/* L'éclat à douze pointes, un peu penché, qui déborde du coin haut droit de la photo. */
 .bp-hero__sticker {
   position: absolute;
-  top: clamp(-1.5rem, -2vw, -1rem);
-  right: clamp(-1.5rem, -2vw, -0.75rem);
+  top: clamp(-2rem, -2.5vw, -1rem);
+  right: clamp(-2rem, -2.5vw, -0.25rem);
   display: grid;
   place-items: center;
-  width: clamp(6.5rem, 11vw, 9rem);
+  width: clamp(7rem, 12vw, 10rem);
   aspect-ratio: 1;
-  padding: 0.9rem;
-  border: var(--trait) solid var(--encre);
-  border-radius: 50%;
-  background: var(--c-ciel);
   color: var(--c-encre);
+  rotate: 10deg;
+}
+
+.bp-hero__sticker-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bp-hero__sticker > span {
+  position: relative;
+  max-width: 5.6em;
   font-family: var(--police-affiche);
   font-size: clamp(1rem, 0.75rem + 0.8vw, 1.45rem);
   line-height: 0.95;
   text-align: center;
   text-transform: uppercase;
-  rotate: 10deg;
 }
 
 /* Petite étiquette posée sur la photo, comme un « prochain rendez-vous ». */
@@ -172,61 +190,93 @@
   }
 }
 
-/* ---------- Bande des promesses : fixe, en capitales grasses, séparées par des points bleus ---------- */
-
-.bp-hero__promises {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.35rem 1.25rem;
-  margin-top: var(--marge);
-  padding: 0.9rem var(--marge);
-  border-block: var(--trait) solid var(--ligne);
-  list-style: none;
-  font-weight: 800;
-  font-size: clamp(1rem, 0.85rem + 0.6vw, 1.5rem);
-  line-height: 1.2;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.bp-hero__promise {
-  display: inline-flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.bp-hero__promise + .bp-hero__promise::before {
-  content: "";
-  width: 0.55em;
-  height: 0.55em;
-  border-radius: 50%;
-  background: var(--c-bleu);
-}
-
-@media (max-width: 39.99rem) {
-  .bp-hero__promises {
-    flex-direction: column;
-  }
-  .bp-hero__promise + .bp-hero__promise::before {
-    display: none;
-  }
-}
-
 @media (min-width: 56rem) {
   .bp-hero__tile {
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
     align-items: center;
     column-gap: clamp(2rem, 5vw, 5rem);
-    min-height: calc(100svh - var(--hauteur-entete) - 7rem);
+    min-height: calc(100svh - var(--hauteur-entete) - 9rem);
   }
   .bp-hero__title {
     font-size: clamp(3rem, 0.6rem + 5.2vw, 6.25rem);
   }
   /* La photo garde son format 4:5 et tient dans la hauteur de l'écran. */
   .bp-hero__photo {
-    width: min(100%, calc((100svh - var(--hauteur-entete) - 13rem) * 0.8));
+    width: min(100%, calc((100svh - var(--hauteur-entete) - 15rem) * 0.8));
     justify-self: center;
+  }
+}
+
+/* ---------- Bandeau qui défile : marine, capitales grasses, étoiles ---------- */
+
+.bp-marquee {
+  overflow: hidden;
+  margin-top: var(--marge);
+  border-top: var(--trait) solid var(--ligne);
+  background: var(--c-encre);
+  color: var(--c-ciel);
+}
+
+.bp-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: bp-defile 40s linear infinite;
+  will-change: translate;
+}
+
+.bp-marquee:hover .bp-marquee__track {
+  animation-play-state: paused;
+}
+
+.bp-marquee__group {
+  display: flex;
+  flex: none;
+  list-style: none;
+}
+
+.bp-marquee__item {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  padding: clamp(0.85rem, 1.6vw, 1.15rem) 0 clamp(0.85rem, 1.6vw, 1.15rem) 1.75rem;
+  font-family: var(--police-titre);
+  font-size: clamp(1rem, 0.85rem + 0.7vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* L'étoile qui suit chaque promesse. */
+.bp-marquee__item::after {
+  content: "";
+  flex: none;
+  width: 1em;
+  height: 1em;
+  background: var(--c-blanc);
+  clip-path: var(--forme-etoile);
+}
+
+@keyframes bp-defile {
+  to {
+    translate: -50% 0;
+  }
+}
+
+/* Mouvement réduit : le bandeau reste immobile, sur une seule copie, centré. */
+@media (prefers-reduced-motion: reduce) {
+  .bp-marquee__track {
+    width: auto;
+    justify-content: center;
+    animation: none;
+  }
+  .bp-marquee__group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .bp-marquee__group[aria-hidden="true"],
+  .bp-marquee__item[data-copie="2"] {
+    display: none;
   }
 }
 

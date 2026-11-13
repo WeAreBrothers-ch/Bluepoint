@@ -1,17 +1,16 @@
 {%- comment -%}
-  Prix BluePoint, avec le prix pro annoncé d’avance.
-  Règle : le prix enregistré dans Shopify est le prix particulier = prix pro + 15 %. Les clients marqués « pro » ont la
-  remise automatique Shopify « Prix pro » (13,04 % = 1 − 1/1,15), qui les ramène au prix pro.
-  Le thème ne peut pas lire cette remise : il recalcule le prix pro ici (prix ÷ 1,15). Le pourcentage ci-dessous doit donc
-  rester égal à la majoration utilisée par l'app de gestion (app/lib/prix/pro.ts).
+  Prix BluePoint, avec la remise pro annoncée d’avance.
+  La remise est une remise automatique Shopify (« Prix pro -15 % », réservée aux clients marqués « pro »).
+  Le thème ne peut pas lire son montant : il le recalcule ici. Le pourcentage ci-dessous doit donc
+  rester égal à celui de la remise dans Shopify.
 
   Paramètres :
-  - cents : prix particulier en centimes (obligatoire, sauf pour mode 'badge')
-  - mode : 'full' (défaut) prix particulier barré + prix pro ; 'plain' prix à payer seul, en texte brut ;
-           'badge' mention « Prix professionnels » (rien si le client n’est pas pro)
+  - cents : prix public en centimes (obligatoire, sauf pour mode 'badge')
+  - mode : 'full' (défaut) prix public barré + prix pro ; 'plain' prix à payer seul, en texte brut ;
+           'badge' mention « Prix pro −15 % » (rien si le client n’est pas pro)
 {%- endcomment -%}
 {%- liquid
-  assign public_markup_percent = 15
+  assign pro_percent = 15
   assign is_pro = false
   if customer and customer.tags contains 'pro'
     assign is_pro = true
@@ -19,13 +18,13 @@
 -%}
 {%- if mode == 'badge' -%}
   {%- if is_pro -%}
-    <p class="bp-ui bp-carre bp-pro-badge">Prix professionnels</p>
+    <p class="bp-ui bp-carre bp-pro-badge">Prix pro −{{ pro_percent }}&nbsp;%</p>
   {%- endif -%}
 {%- else -%}
   {%- liquid
     assign public_price = cents | money | replace: "'", '’'
-    assign markup_factor = 100 | plus: public_markup_percent
-    assign pro_cents = cents | times: 100 | divided_by: markup_factor | round
+    assign pro_factor = 100 | minus: pro_percent
+    assign pro_cents = cents | times: pro_factor | divided_by: 100.0 | round
     assign pro_price = pro_cents | money | replace: "'", '’'
   -%}
   {%- if is_pro == false -%}
@@ -33,7 +32,7 @@
   {%- elsif mode == 'plain' -%}
     {{- pro_price -}}
   {%- else -%}
-    <s class="bp-price__was"><span class="bp-sr-only">Prix particulier </span>{{ public_price }}</s>
+    <s class="bp-price__was"><span class="bp-sr-only">Prix public </span>{{ public_price }}</s>
     <span class="bp-price__pro"><span class="bp-sr-only">Prix pro </span>{{ pro_price }}</span>
   {%- endif -%}
 {%- endif -%}

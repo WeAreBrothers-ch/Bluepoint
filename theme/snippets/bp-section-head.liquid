@@ -1,10 +1,13 @@
 {%- comment -%}
-  En-tête de section : grand titre d'affiche à gauche, un lien en pilule « … + » à droite.
-  Paramètres : id, title, tag ('h1' ou 'h2', défaut h2), link_url, link_label
+  En-tête de section : un petit libellé de rubrique facultatif, le titre centré, puis un lien en pilule « … + ».
+  Paramètres : id, title, tag ('h1' ou 'h2', défaut h2), link_url, link_label, kicker (facultatif)
 {%- endcomment -%}
 {%- assign heading = tag | default: 'h2' -%}
 <div class="bp-ui bp-section-head">
-  <{{ heading }} id="{{ id }}" class="bp-affiche bp-section-head__title">{{ title | escape }}</{{ heading }}>
+  {%- if kicker != blank -%}
+    <p class="bp-rubrique">{{ kicker | escape }}</p>
+  {%- endif -%}
+  <{{ heading }} id="{{ id }}" class="bp-titre bp-section-head__title">{{ title | escape }}</{{ heading }}>
   {%- if link_url != blank and link_label != blank -%}
     <a href="{{ link_url }}" class="bp-section-head__link">
       {{ link_label | escape }}

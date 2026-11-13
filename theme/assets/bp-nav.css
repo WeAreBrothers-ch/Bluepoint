@@ -1,10 +1,9 @@
 /*
- * BluePoint — navigation par rayons (snippets/bp-nav-desktop.liquid, bp-nav-mobile.liquid).
- * Grand écran : une barre de pilules et, dessous, un grand panneau bleu roi en colonnes à filets.
- * Téléphone : les types en grandes tuiles, les origines en pastilles, le reste en liste.
+ * BluePoint — navigation de l'ordinateur (snippets/bp-nav-desktop.liquid).
+ * Des liens en texte, centrés dans la barre : ni cases, ni filets. Rien ne s'ouvre, rien ne se déplace :
+ * au survol et pour la page en cours, un trait apparaît sous le mot (il est déjà là, transparent : aucun saut).
+ * Sur téléphone et tablette, c'est le menu plein écran (bp-menu.css) qui sert.
  */
-
-/* ---------- Grand écran ---------- */
 
 .bp-nav {
   display: none;
@@ -12,186 +11,37 @@
 
 @media (min-width: 75rem) {
   .bp-nav {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    justify-content: flex-end;
-    padding-right: var(--marge);
+    display: block;
   }
 
   .bp-nav__bar {
     display: flex;
     align-items: center;
-    gap: 0.125rem;
+    gap: clamp(1.25rem, 2.4vw, 2.5rem);
     list-style: none;
   }
 
-  /* Chaque rayon est une pilule : cernée quand on la survole ou qu'elle est la page en cours, pleine quand son panneau est ouvert. */
-  .bp-nav__trigger {
+  .bp-nav__link {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    padding-inline: 0.9rem;
-    border: var(--trait) solid transparent;
-    border-radius: var(--rayon-pilule);
-    background: none;
-    color: var(--encre);
-    font: inherit;
     font-size: 1.0625rem;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
-    cursor: pointer;
-    transition:
-      background-color 160ms var(--ease-out),
-      border-color 160ms var(--ease-out);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.4em;
+    transition: text-decoration-color 160ms var(--ease-out);
   }
 
-  .bp-nav__trigger[aria-current],
-  .bp-nav__trigger[data-actif],
-  .bp-nav__trigger[aria-expanded="true"] {
-    border-color: var(--encre);
-  }
-
-  .bp-nav__trigger[aria-expanded="true"] {
-    background: var(--pilule);
-  }
-
-  /* Le grand panneau, collé sous l'en-tête, sur toute la largeur. */
-  .bp-nav__panel {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) repeat(3, minmax(0, 1fr));
-    max-height: calc(100svh - var(--hauteur-entete));
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border-bottom: var(--trait) solid var(--encre);
-    background: var(--c-roi);
-    color: var(--c-blanc);
-    --focus: var(--c-blanc);
-  }
-
-  .bp-nav__panel[hidden] {
-    display: none;
-  }
-
-  .bp-nav__panel > * {
-    padding: clamp(1.75rem, 2.5vw, 2.75rem) var(--marge) clamp(2rem, 3vw, 3rem);
-  }
-
-  .bp-nav__panel > * + * {
-    border-left: var(--trait) solid var(--c-ciel);
-  }
-
-  .bp-nav__col--main {
-    display: grid;
-    align-content: start;
-    justify-items: start;
-    gap: 0.75rem;
-  }
-
-  .bp-nav__big {
-    --affiche-remplissage: var(--c-ciel);
-    font-size: clamp(2rem, 0.8rem + 2.2vw, 3.25rem);
-  }
-
-  .bp-nav__all {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.75rem;
-    margin-top: 0.75rem;
-    padding-inline: 1.1rem;
-    border: var(--trait) solid var(--c-blanc);
-    border-radius: var(--rayon-pilule);
-    font-weight: 700;
-    transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out);
-  }
-
-  /* Titres de colonne : en lettres d'affiche bleu ciel, comme dans le pied de page. */
-  .bp-nav__heading {
-    display: block;
-    margin-bottom: 0.75rem;
-    font-family: var(--police-affiche);
-    font-size: 1.375rem;
-    font-weight: 400;
-    line-height: 1.1;
-    text-transform: uppercase;
-    color: var(--c-ciel);
-  }
-
-  .bp-nav__list {
-    display: grid;
-    margin-bottom: 1.75rem;
-    list-style: none;
-    font-size: 1.125rem;
-  }
-
-  .bp-nav__list a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.25rem;
-  }
-
-  .bp-nav__feature {
-    display: grid;
-    align-content: start;
-    gap: 0.25rem;
-  }
-
-  .bp-nav__visual,
-  .bp-nav__photo {
-    display: block;
-    height: auto;
-    aspect-ratio: 4 / 5;
-    max-height: 22rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .bp-nav__photo img {
-    width: 100%;
-    height: 100%;
-    border: var(--trait) solid var(--encre);
-    border-radius: var(--rayon);
-    object-fit: cover;
-  }
-
-  .bp-nav__feature-name {
-    font-weight: 800;
-    font-size: 1.125rem;
-    text-transform: uppercase;
-  }
-
-  .bp-nav__feature-meta {
-    opacity: 0.85;
+  .bp-nav__link[aria-current] {
+    text-decoration-color: currentColor;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .bp-nav__trigger:hover {
-      border-color: var(--encre);
+    .bp-nav__link:hover {
+      text-decoration-color: currentColor;
     }
-    .bp-nav__list a:hover,
-    .bp-nav__feature:hover .bp-nav__feature-name {
-      text-decoration: underline;
-      text-decoration-thickness: 2px;
-      text-underline-offset: 0.25em;
-    }
-    .bp-nav__all:hover {
-      background: var(--c-blanc);
-      color: var(--c-roi);
-    }
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .bp-nav__panel:not([hidden]) {
-      animation: bp-nav-ouvre 160ms var(--ease-out);
-    }
-  }
-}
-
-@keyframes bp-nav-ouvre {
-  from {
-    opacity: 0;
   }
 }

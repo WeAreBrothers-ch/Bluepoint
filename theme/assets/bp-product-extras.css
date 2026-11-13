@@ -1,16 +1,18 @@
-/* BluePoint — fiche bouteille : accords mets et « À découvrir aussi ». */
+/* BluePoint — fiche bouteille : accords mets (inchangés) et « À découvrir aussi » (la grille de la sélection, limitée à une rangée). */
 
 /* ---------- Accords ---------- */
 
-.bp-pairings,
-.bp-more {
-  padding: var(--section) var(--marge) 0;
+/* Comme les sections de l'accueil : un filet marine de bord à bord, puis de l'air. L'espace au-dessus du filet vient du bas de la fiche (bp-product.css). */
+.bp-pairings {
+  padding: var(--section) var(--marge);
+  border-top: var(--trait) solid var(--ligne);
 }
 
 .bp-pairings__intro {
   max-width: var(--mesure);
-  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  margin: 0 auto clamp(2rem, 4vw, 3.5rem);
   color: var(--encre-douce);
+  text-align: center;
 }
 
 /* Trois tuiles arrondies, chacune dans sa nuance de bleu : le moment en pilule, le plat en lettres d'affiche. */
@@ -66,41 +68,33 @@
   }
 }
 
-/* ---------- À découvrir aussi : rangée défilante, aimantée ---------- */
+/* ---------- À découvrir aussi : la grille de cellules, une rangée (2, 3 ou 4 bouteilles selon l'écran) ---------- */
 
-.bp-more__track {
-  --visibles: 1.35;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: calc(100% / var(--visibles));
-  /* Pleine largeur et sans espace : les filets des cartes dessinent la grille d'un bord à l'autre. */
-  margin-inline: calc(-1 * var(--marge));
-  border-top: var(--trait) solid var(--ligne);
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  list-style: none;
-  min-width: 0;
-}
-
-.bp-more__track::-webkit-scrollbar {
+.bp-more__grid > li:nth-child(n + 3) {
   display: none;
 }
 
-.bp-more__slide {
-  scroll-snap-align: start;
-  min-width: 0;
-}
-
 @media (min-width: 40rem) {
-  .bp-more__track {
-    --visibles: 2.4;
+  .bp-more__grid > li:nth-child(3) {
+    display: block;
   }
 }
 
 @media (min-width: 64rem) {
-  .bp-more__track {
-    --visibles: 4;
+  .bp-more__grid > li:nth-child(4) {
+    display: block;
   }
+}
+
+/*
+ * « À découvrir aussi » termine la fiche : sa grille se termine dans la vague du pied de page, comme la boutique
+ * (voir bp-collection.css). Le pied remonte sur les cellules ; le filet du bas disparaît, les filets verticaux
+ * s'enfoncent dans la vague, et le bouton garde la hauteur d'une vague au-dessus d'elle.
+ */
+.bp-more.bp-section--grille > .bp-more__grid {
+  margin-bottom: calc((var(--onde, 2rem) + var(--trait)) * -1);
+}
+
+.bp-more__grid .bp-card {
+  padding-bottom: calc(clamp(0.9rem, 1.8vw, 1.5rem) + var(--onde, 2rem) + var(--trait));
 }

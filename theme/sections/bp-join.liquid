@@ -1,0 +1,84 @@
+{%- comment -%}
+  « La lettre de Paolo » : le titre, une phrase et le champ e-mail dans une tuile (une photo à gauche, si on en choisit une).
+  Le formulaire est celui de Shopify (inscription aux e-mails de la boutique) : rien à brancher.
+  L'espace pro n'est pas répété ici : il a déjà sa cellule dans la sélection et son lien dans le menu.
+{%- endcomment -%}
+{{ 'bp-join.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign s = section.settings
+  assign heading_id = 'bp-lettre-title-' | append: section.id
+  assign form_id = 'bp-lettre-' | append: section.id
+-%}
+
+<section id="lettre" class="bp-section bp-section--join" aria-labelledby="{{ heading_id }}">
+  <div class="bp-join{% if s.photo != blank %} bp-join--photo{% endif %}">
+    {%- if s.photo != blank -%}
+      <div class="bp-join__photo">
+        {% render 'bp-photo-figure',
+          image: s.photo,
+          alt: s.photo_alt,
+          ratio: '4 / 5',
+          sizes: '(min-width: 64rem) 40vw, 92vw'
+        %}
+      </div>
+    {%- endif -%}
+
+    <div class="bp-join__body">
+      <div class="bp-join__head">
+        {%- if s.kicker != blank -%}
+          <p class="bp-rubrique">{{ s.kicker | escape }}</p>
+        {%- endif -%}
+        <h2 id="{{ heading_id }}" class="bp-titre bp-join__title">{{ s.title | escape }}</h2>
+        {%- if s.text != blank -%}
+          <p class="bp-join__text">{{ s.text | escape }}</p>
+        {%- endif -%}
+      </div>
+
+      {%- form 'customer', id: form_id, class: 'bp-join__form' -%}
+        <input type="hidden" name="contact[tags]" value="newsletter">
+        {%- if form.posted_successfully? -%}
+          <p class="bp-ui bp-phrase bp-join__merci" role="status">Merci ! Vous recevrez la prochaine lettre de Paolo.</p>
+        {%- else -%}
+          <div class="bp-join__field">
+            <label class="bp-sr-only" for="{{ form_id }}-email">Votre adresse e-mail</label>
+            <input
+              id="{{ form_id }}-email"
+              class="bp-join__input"
+              type="email"
+              name="contact[email]"
+              value="{{ form.email }}"
+              placeholder="Votre adresse e-mail"
+              autocomplete="email"
+              required
+              {% if form.errors %}aria-invalid="true" aria-describedby="{{ form_id }}-erreur"{% endif %}
+            >
+            <button type="submit" class="bp-ui bp-carre bp-button" data-variant="plein">{{ s.button | default: 'Je m’inscris' | escape }}</button>
+          </div>
+          {%- if form.errors -%}
+            <p class="bp-ui bp-phrase bp-join__erreur" id="{{ form_id }}-erreur" role="alert">Cette adresse e-mail ne semble pas valide. Vérifiez-la et réessayez.</p>
+          {%- endif -%}
+        {%- endif -%}
+      {%- endform -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "La lettre de Paolo",
+  "tag": "div",
+  "class": "bp-join-section",
+  "limit": 1,
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Petit libellé", "default": "La lettre de Paolo" },
+    { "type": "text", "id": "title", "label": "Titre", "default": "Les nouvelles bouteilles, avant tout le monde." },
+    { "type": "textarea", "id": "text", "label": "Texte", "default": "Une lettre de temps en temps : un vigneron, une bouteille, un accord. Jamais de spam." },
+    { "type": "text", "id": "button", "label": "Bouton", "default": "Je m’inscris" },
+    { "type": "header", "content": "Photo" },
+    { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Facultative : sans photo, la tuile ne montre que le texte et le formulaire." },
+    { "type": "text", "id": "photo_alt", "label": "Description (accessibilité)", "default": "Une main lève un verre de vin blanc au-dessus des vignes, sous un ciel clair" }
+  ],
+  "presets": [{ "name": "La lettre de Paolo" }]
+}
+{% endschema %}

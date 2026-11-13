@@ -12,22 +12,21 @@
 <script src="{{ 'bp-gallery.js' | asset_url }}" defer></script>
 
 {%- assign form_id = 'bp-product-form-' | append: section.id -%}
+{%- assign bar_carton_cents = product.selected_or_first_available_variant.price | times: 6 -%}
 
 <div class="bp-product" data-bp-product>
   <div class="bp-product__main">
     <div class="bp-product__visual-column">
       {%- render 'bp-product-gallery',
         product: product,
-        sizes: '(min-width: 64rem) 55vw, 100vw',
+        sizes: '(min-width: 64rem) 45vw, 100vw',
         class: 'bp-product__visual',
         section_id: section.id
       -%}
     </div>
     {%- render 'bp-product-info',
       product: product,
-      form_id: form_id,
-      free_shipping_from: section.settings.free_shipping_from,
-      delivery_text: section.settings.delivery_text
+      form_id: form_id
     -%}
   </div>
 
@@ -42,7 +41,7 @@
     <div class="bp-buy-bar" data-bp-buy-bar data-visible="false" data-barre-achat="masquee" aria-hidden="true" inert>
       <p class="bp-ui bp-buy-bar__name">
         <span class="bp-buy-bar__title" data-bp-bar-title>{{ product.title | escape }}</span>
-        <span class="bp-buy-bar__price" data-bp-pack-price>{% render 'bp-price', cents: product.selected_or_first_available_variant.price, mode: 'plain' %}</span>
+        <span class="bp-buy-bar__price" data-bp-pack-price>{% render 'bp-price', cents: bar_carton_cents, mode: 'plain' %}</span>
       </p>
       <button type="submit" form="{{ form_id }}" class="bp-ui bp-carre bp-buy-bar__add" data-actif="false" data-bp-add-button>
         <span data-bp-add-text data-idle="Ajouter" data-done="Ajouté">Ajouter</span>
@@ -58,19 +57,6 @@
   "name": "Fiche bouteille",
   "tag": "section",
   "class": "bp-product-section",
-  "settings": [
-    {
-      "type": "number",
-      "id": "free_shipping_from",
-      "label": "Livraison offerte dès (bouteilles)",
-      "default": 24
-    },
-    {
-      "type": "textarea",
-      "id": "delivery_text",
-      "label": "Texte du bloc « Livraison »",
-      "default": "Livraison sous 48 h en Suisse, offerte dès 24 bouteilles."
-    }
-  ]
+  "settings": []
 }
 {% endschema %}

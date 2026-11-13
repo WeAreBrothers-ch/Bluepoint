@@ -1,6 +1,6 @@
 /*
  * BluePoint — motifs graphiques partagés par tout le site : les « mots » de l'identité
- * (capitales d'interface, carré, crochets, boutons, logo, en-tête de section, photo légendée).
+ * (texte d'interface, boutons pilule, flèches, logo, en-tête de section, filets).
  */
 
 /* ---------- Motifs de l'identité ---------- */
@@ -44,12 +44,12 @@
 
 /* Pilules cernées d'encre : bleu ciel pour l'action principale, transparente pour la secondaire. */
 .bp-button {
-  min-height: 3rem;
+  min-height: 3.25rem;
   justify-content: center;
-  padding: 0.7rem 1.6rem;
+  padding: 0.7rem 1.75rem;
   border: var(--trait) solid var(--encre);
   border-radius: var(--rayon-pilule);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.0625rem;
   color: var(--encre);
   transition:
@@ -82,6 +82,14 @@
   .bp-button[data-variant="trait"]:hover {
     background: var(--pilule);
   }
+}
+
+/* Trois chevrons, après un libellé : « Tous les rouges ➺➺➺ ». */
+.bp-fleches {
+  flex: none;
+  width: 2.75rem;
+  height: 0.7rem;
+  overflow: visible;
 }
 
 /* ---------- Prix pro (voir snippets/bp-price.liquid) ---------- */
@@ -117,19 +125,18 @@
   aspect-ratio: 967 / 350;
 }
 
-/* ---------- En-tête de section : grand titre d'affiche à gauche, lien en pilule à droite ---------- */
+/* ---------- En-tête de section : titre centré, lien en pilule dessous ---------- */
 
 .bp-section-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
-  gap: 1rem 1.5rem;
-  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  text-align: center;
 }
 
 .bp-section-head__title {
-  font-size: var(--t-titre);
+  max-width: 18ch;
 }
 
 .bp-section-head__link {
@@ -137,9 +144,10 @@
   align-items: center;
   gap: 0.6em;
   min-height: 3rem;
-  padding: 0.5rem 1.25rem;
+  padding: 0.5rem 1.4rem;
   border: var(--trait) solid var(--encre);
   border-radius: var(--rayon-pilule);
+  font-weight: 700;
   transition: background-color 180ms var(--ease-out);
 }
 

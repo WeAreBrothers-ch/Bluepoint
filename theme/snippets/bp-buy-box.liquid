@@ -1,23 +1,26 @@
 {%- comment -%}
-  Choix du format (1, 3, 6 ou 12 bouteilles) et ajout au panier.
+  Choix du nombre de cartons (1 à 4 cartons de 6 bouteilles) et ajout au panier.
+  Les vins se vendent par cartons de 6 bouteilles, au minimum un carton : pas de bouteille à l’unité.
+  Quatre pastilles sur une ligne (1, 2, 3, 4) : le prix du bouton suit le choix. Plus de grandes lignes empilées.
   Un format = une quantité de l’unique variante : prix = prix unitaire × nombre, sans remise inventée.
   Seule exception : la remise pro des clients marqués « pro » (voir snippets/bp-price.liquid).
-  Un format plus grand que le stock disponible est désactivé (« Stock insuffisant »).
+  Un format plus grand que le stock disponible est désactivé (« stock insuffisant » pour les lecteurs d’écran).
   Sans JavaScript, le formulaire Shopify ajoute au panier normalement ;
   assets/bp-product.js l’améliore (ajout sans quitter la page, confirmation, barre fixe).
-  Paramètres : product, form_id, free_shipping_from
+  La livraison n’est pas répétée ici : elle est dans le bandeau d’annonce, tout en haut de la page.
+  Paramètres : product, form_id
 {%- endcomment -%}
 {%- liquid
   assign variant = product.selected_or_first_available_variant
-  assign pack_sizes = '1,3,6,12' | split: ','
-  assign shipping_from = free_shipping_from | default: 24
+  assign pack_sizes = '6,12,18,24' | split: ','
   assign limited = false
   if variant.inventory_management == 'shopify' and variant.inventory_policy == 'deny'
     assign limited = true
   endif
   assign checked_done = false
+  assign carton_cents = variant.price | times: 6
 -%}
-{%- capture unit_price -%}{%- render 'bp-price', cents: variant.price, mode: 'plain' -%}{%- endcapture -%}
+{%- capture unit_price -%}{%- render 'bp-price', cents: carton_cents, mode: 'plain' -%}{%- endcapture -%}
 
 <div class="bp-buy-box">
   {%- if product.available -%}
@@ -25,11 +28,12 @@
       <input type="hidden" name="id" value="{{ variant.id }}">
 
       <fieldset class="bp-ui bp-pack">
-        <legend class="bp-pack__legend bp-phrase">Combien de bouteilles&#8239;?</legend>
+        <legend class="bp-pack__legend">Combien de cartons&#8239;? <span class="bp-phrase bp-tax-note">1 carton = 6&nbsp;bouteilles</span></legend>
         <div class="bp-pack__options">
           {%- for size_text in pack_sizes -%}
             {%- liquid
               assign size = size_text | plus: 0
+              assign cartons = size | divided_by: 6
               assign pack_cents = variant.price | times: size
               assign too_many = false
               if limited and variant.inventory_quantity < size
@@ -51,8 +55,8 @@
                   {%- assign checked_done = true -%}
                 {% endif %}
               >
-              <span class="bp-carre">{% if size == 1 %}1&nbsp;bouteille{% else %}Carton de&nbsp;{{ size }}{% endif %}</span>
-              <span class="bp-pack__price">{% if too_many %}Stock insuffisant{% else %}{% render 'bp-price', cents: pack_cents %}{% endif %}</span>
+              <span class="bp-pack__number" aria-hidden="true">{{ cartons }}</span>
+              <span class="bp-sr-only">{{ cartons }}&nbsp;carton{% if cartons > 1 %}s{% endif %} ({{ size }}&nbsp;bouteilles){% if too_many %}, stock insuffisant{% endif %}</span>
             </label>
           {%- endfor -%}
         </div>
@@ -66,7 +70,6 @@
       </button>
     {%- endform -%}
 
-    <p class="bp-buy-box__delivery">Livraison sous 48&nbsp;h. Offerte dès {{ shipping_from }}&nbsp;bouteilles.</p>
     <p class="bp-buy-box__status" role="status" data-bp-buy-status data-cart-url="{{ routes.cart_url }}"></p>
   {%- else -%}
     {%- assign subject = 'Retour de ' | append: product.title | url_encode -%}

@@ -1,43 +1,54 @@
 {%- comment -%}
-  Menu téléphone et tablette (<dialog> plein écran, ouvert par le bouton « Menu » ; assets/bp-chrome.js).
-  Pensé pour aller vite au bon rayon, sans sous-menus à ouvrir :
-  1. les types de vin en grandes tuiles (un seul geste vers la bonne étagère) ;
-  2. les origines en pastilles, regroupées par pays ;
-  3. les autres liens en liste simple.
-  Paramètres : products, types, countries, shop_url, bottle_count, menu_note,
-  other_links (tableau de liens <a> déjà rendus)
+  Menu téléphone et tablette : un panneau plein écran bleu (<dialog>, ouvert par le bouton « Menu » ; assets/bp-chrome.js),
+  comme celui du site de référence : de grosses pastilles claires sur un fond de couleur. Pensé pour le pouce, sans sous-menu :
+  1. le haut : le logo et « Fermer » ;
+  2. une pastille par ligne : toute la boutique, puis un type de vin, avec le nombre de bouteilles ;
+  3. les origines en petites pastilles, regroupées par pays ;
+  4. le bas, toujours visible : une pastille bleu ciel, « Espace pro ».
+  Accords, La maison, Wine bar, Instagram… ne sont plus ici : ils sont dans le pied de page.
+  Paramètres : products, types, countries, shop_url, bottle_count, pro_url, pro_label, pro_active
 {%- endcomment -%}
+{%- liquid
+  assign current_handles = '|'
+  for tag in current_tags
+    assign tag_handle = tag | handle
+    assign current_handles = current_handles | append: tag_handle | append: '|'
+  endfor
+-%}
 <dialog class="bp-menu" aria-label="Menu" data-bp-menu>
   <div class="bp-menu__top">
-    <span class="bp-ui">{{ shop.name | escape }}</span>
-    <button type="button" class="bp-ui bp-carre bp-menu__close" data-bp-menu-close>Fermer</button>
+    <a href="{{ routes.root_url }}" class="bp-menu__brand" aria-label="BluePoint, accueil">
+      {% render 'bp-logo', class: 'bp-menu__logo' %}
+    </a>
+    <button type="button" class="bp-ui bp-carre bp-menu__close" data-bp-menu-close autofocus>Fermer</button>
   </div>
 
   <nav class="bp-menu__body" aria-label="Menu principal">
-    <section class="bp-menu__group" aria-labelledby="bp-menu-vins">
-      <h2 class="bp-menu__heading" id="bp-menu-vins">Les bouteilles</h2>
-      <ul class="bp-menu__types">
-        {%- for type in types -%}
-          {%- assign typed = products | where: 'type', type -%}
-          <li>
-            <a class="bp-menu__type" href="{{ shop_url }}/{{ type | handle }}" data-teinte="{{ forloop.index | minus: 1 | modulo: 3 | plus: 1 }}">
-              <span class="bp-affiche bp-menu__type-name">{% render 'bp-type-label', type: type %}</span>
-              <span class="bp-menu__type-count">{{ typed.size }}<span class="bp-sr-only"> bouteille{% if typed.size > 1 %}s{% endif %}</span></span>
-            </a>
-          </li>
-        {%- endfor -%}
-        <li class="bp-menu__types-all">
-          <a class="bp-menu__type" href="{{ shop_url }}" data-teinte="0">
-            <span class="bp-affiche bp-menu__type-name">Tout voir</span>
-            <span class="bp-menu__type-count">{{ bottle_count }}<span class="bp-sr-only"> bouteilles</span></span>
+    <ul class="bp-menu__rows">
+      <li>
+        <a class="bp-ui bp-menu__row" href="{{ shop_url }}">
+          <span class="bp-menu__label">Toute la boutique</span>
+          <span class="bp-menu__count">{{ bottle_count }}<span class="bp-sr-only"> bouteilles</span></span>
+        </a>
+      </li>
+      {%- for type in types -%}
+        {%- liquid
+          assign typed = products | where: 'type', type
+          assign type_handle = type | handle
+          assign type_marker = '|' | append: type_handle | append: '|'
+        -%}
+        <li>
+          <a class="bp-ui bp-menu__row" href="{{ shop_url }}/{{ type_handle }}" {% if current_handles contains type_marker %}aria-current="page"{% endif %}>
+            <span class="bp-menu__label">{% render 'bp-type-label', type: type %}</span>
+            <span class="bp-menu__count">{{ typed.size }}<span class="bp-sr-only"> bouteille{% if typed.size > 1 %}s{% endif %}</span></span>
           </a>
         </li>
-      </ul>
-    </section>
+      {%- endfor -%}
+    </ul>
 
     {%- if countries.size > 0 -%}
       <section class="bp-menu__group" aria-labelledby="bp-menu-regions">
-        <h2 class="bp-menu__heading" id="bp-menu-regions">Par région</h2>
+        <h2 class="bp-rubrique bp-menu__heading" id="bp-menu-regions">Par origine</h2>
         {%- for country in countries -%}
           {%- liquid
             capture country_regions
@@ -47,28 +58,22 @@
           -%}
           <ul class="bp-menu__places">
             <li>
-              <a class="bp-menu__place bp-menu__place--country" href="{{ shop_url }}/{{ country | handle }}">
+              <a class="bp-ui bp-menu__place bp-menu__place--country" href="{{ shop_url }}/{{ country | handle }}">
                 {{- country | remove_first: 'pays:' | strip | escape -}}
               </a>
             </li>
             {%- for tag in country_regions -%}
               <li>
-                <a class="bp-menu__place" href="{{ shop_url }}/{{ tag | handle }}">{{ tag | remove_first: 'region:' | strip | escape }}</a>
+                <a class="bp-ui bp-menu__place" href="{{ shop_url }}/{{ tag | handle }}">{{ tag | remove_first: 'region:' | strip | escape }}</a>
               </li>
             {%- endfor -%}
           </ul>
         {%- endfor -%}
       </section>
     {%- endif -%}
-
-    <ul class="bp-menu__list">
-      {%- for link in other_links -%}
-        <li class="bp-menu__item">{{ link | strip }}</li>
-      {%- endfor -%}
-    </ul>
   </nav>
 
-  {%- if menu_note != blank -%}
-    <p class="bp-ui bp-menu__note">{{ menu_note | escape }}</p>
-  {%- endif -%}
+  <div class="bp-menu__foot">
+    <a class="bp-ui bp-carre bp-menu__pro" href="{{ pro_url | escape }}" {% if pro_active %}aria-current="page"{% endif %}>{{ pro_label }}</a>
+  </div>
 </dialog>

@@ -10,6 +10,8 @@
 
   /* ---------- Menu mobile (<dialog> natif : Échap et focus gérés par le navigateur) ---------- */
 
+  var desktop = window.matchMedia("(min-width: 75rem)");
+
   function setupMenu(scope) {
     var dialog = scope.querySelector("[data-bp-menu]");
     var openButton = scope.querySelector("[data-bp-menu-open]");
@@ -19,12 +21,21 @@
 
     openButton.addEventListener("click", function () {
       dialog.showModal();
+      openButton.setAttribute("aria-expanded", "true");
+    });
+    // Fermeture par n’importe quel moyen (bouton, lien, Échap) : l’état du bouton suit.
+    dialog.addEventListener("close", function () {
+      openButton.setAttribute("aria-expanded", "false");
     });
     dialog.addEventListener("click", function (event) {
       var target = event.target instanceof Element ? event.target : null;
       if (!target) return;
       // Fermer au clic sur « Fermer » ou sur un lien (ancre de la même page comprise).
       if (target.closest("[data-bp-menu-close]") || target.closest("a")) dialog.close();
+    });
+    // Tablette qu’on tourne vers la largeur d’un ordinateur : le menu plein écran n’a plus lieu d’être.
+    desktop.addEventListener("change", function (event) {
+      if (event.matches && dialog.open) dialog.close();
     });
   }
 

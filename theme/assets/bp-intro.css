@@ -1,5 +1,5 @@
 /*
- * BluePoint — intro animée de l'accueil. Minutage (≈ 5,6 s), sur le bleu BluePoint :
+ * BluePoint — intro animée de l'accueil. Minutage (≈ 5,6 s), sur le bleu vif du site (celui du haut de l'accueil) :
  * 0,0 s  Paolo entre par le bas, le nez dans le verre, les yeux fermés
  * 0,5 s  le bras descend, le verre quitte le nez ; il ouvre les yeux
  * 0,9 s  il fait tourner le vin (le bras décrit de petits cercles)
@@ -23,7 +23,8 @@
   grid-template-rows: auto 1fr auto;
   /* L'épaule prolongée dépasse du dessin : on la coupe au bord de l'écran. */
   overflow: hidden;
-  background: var(--c-bleu);
+  /* Le même bleu vif que l'accueil, pour que le rideau se lève sur le site sans changer de bleu. */
+  background: var(--c-roi);
   color: var(--c-blanc);
   /* Anneau de focus blanc : le bleu habituel serait invisible sur le rideau bleu. */
   --focus: var(--c-blanc);
