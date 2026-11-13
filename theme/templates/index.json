@@ -14,9 +14,9 @@
     "rayons": {
       "type": "bp-categories",
       "blocks": {
-        "rayon_1": { "type": "rayon", "settings": { "word": "Rouges", "url": "/collections/all/rouge", "photo": "cave" } },
-        "rayon_2": { "type": "rayon", "settings": { "word": "Blancs", "url": "/collections/all/blanc", "photo": "blanc-rose" } },
-        "rayon_3": { "type": "rayon", "settings": { "word": "Pétillants", "url": "/collections/all/effervescent", "photo": "aperitif" } },
+        "rayon_1": { "type": "rayon", "settings": { "word": "Rouges", "url": "/collections/all/rouge", "photo": "vendanges" } },
+        "rayon_2": { "type": "rayon", "settings": { "word": "Blancs", "url": "/collections/all/blanc", "photo": "service" } },
+        "rayon_3": { "type": "rayon", "settings": { "word": "Pétillants", "url": "/collections/all/effervescent", "photo": "goulot" } },
         "rayon_4": { "type": "rayon", "settings": { "word": "Spiritueux", "url": "/collections/all/spiritueux", "photo": "sante" } }
       },
       "block_order": ["rayon_1", "rayon_2", "rayon_3", "rayon_4"],

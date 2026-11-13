@@ -22,6 +22,15 @@
         assign width = 1198
         assign height = 783
         case photo
+          when 'vendanges'
+            assign width = 708
+            assign height = 1064
+          when 'service'
+            assign width = 1000
+            assign height = 1252
+          when 'goulot'
+            assign width = 1000
+            assign height = 1250
           when 'blanc-rose'
             assign width = 789
             assign height = 1200
@@ -85,6 +94,9 @@
           "id": "photo",
           "label": "Photo provisoire",
           "options": [
+            { "value": "vendanges", "label": "Les vendanges" },
+            { "value": "service", "label": "Le service" },
+            { "value": "goulot", "label": "Le goulot" },
             { "value": "cave", "label": "La cave" },
             { "value": "blanc-rose", "label": "Blanc et rosé" },
             { "value": "aperitif", "label": "L’apéritif" },
@@ -101,9 +113,9 @@
     {
       "name": "Les rayons BluePoint",
       "blocks": [
-        { "type": "rayon", "settings": { "word": "Rouges", "url": "/collections/all/rouge", "photo": "cave" } },
-        { "type": "rayon", "settings": { "word": "Blancs", "url": "/collections/all/blanc", "photo": "blanc-rose" } },
-        { "type": "rayon", "settings": { "word": "Pétillants", "url": "/collections/all/effervescent", "photo": "aperitif" } },
+        { "type": "rayon", "settings": { "word": "Rouges", "url": "/collections/all/rouge", "photo": "vendanges" } },
+        { "type": "rayon", "settings": { "word": "Blancs", "url": "/collections/all/blanc", "photo": "service" } },
+        { "type": "rayon", "settings": { "word": "Pétillants", "url": "/collections/all/effervescent", "photo": "goulot" } },
         { "type": "rayon", "settings": { "word": "Spiritueux", "url": "/collections/all/spiritueux", "photo": "sante" } }
       ]
     }

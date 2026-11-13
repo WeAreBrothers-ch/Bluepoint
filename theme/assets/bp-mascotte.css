@@ -74,12 +74,14 @@
   padding: 0.45em 0.75em 0.5em;
   border: 3px solid var(--c-encre);
   border-radius: 1.2em;
-  background: var(--c-blanc);
-  /* Blanc : la pointe (currentColor) prend la couleur du fond de la bulle. */
-  color: var(--c-blanc);
-  font-size: clamp(1rem, 2.6vw, 1.5rem);
+  /* Bleu ciel et non bleu très pâle : la bulle se détache du fond de la page (demande d'Eliott du 13/11, « pas assez lisible »). */
+  background: var(--c-ciel);
+  /* La pointe (currentColor) prend la couleur du fond de la bulle. */
+  color: var(--c-ciel);
+  font-size: clamp(1.25rem, 3.4vw, 1.75rem);
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   white-space: nowrap;
   opacity: 0;
