@@ -158,33 +158,17 @@ body.bluepoint:not(:has(.bp-header__annonce)) {
   cursor: pointer;
 }
 
-/* ---------- Ordinateur : le logo à gauche, les liens centrés, « Espace pro » et « Panier » à droite. Aucune case. ---------- */
+/* ---------- Ordinateur : des cases comme sur téléphone, logo | rayons (bp-nav.css) | Espace pro | Panier, un filet
+   pleine hauteur entre chacune (le bord gauche des cellules). Les rayons se partagent la place du milieu. ---------- */
 
 @media (min-width: 75rem) {
   .bp-header__bar {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-    padding-inline: var(--marge);
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
   button.bp-menu__toggle {
     display: none;
   }
-  .bp-header__brand {
-    justify-self: start;
-    padding: 0;
-  }
-  .bp-header__tools {
-    justify-self: end;
-    align-items: center;
-    gap: clamp(1.25rem, 2.4vw, 2.5rem);
-  }
 
-  /* Plus de filets entre les cellules : « Espace pro » et « Panier » sont de simples textes, comme les liens du centre. */
-  .bp-header__cell {
-    min-height: 2.75rem;
-    padding: 0;
-    border: 0;
-  }
   .bp-header__pro,
   .bp-header__cart-label {
     font-size: 1.0625rem;

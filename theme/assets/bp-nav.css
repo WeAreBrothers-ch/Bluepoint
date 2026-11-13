@@ -1,7 +1,7 @@
 /*
  * BluePoint — grand menu de l'ordinateur (snippets/bp-nav-desktop.liquid, bp-nav-panel.liquid, bp-nav-feature.liquid).
- * La barre : des rayons en texte, centrés. Le rayon ouvert devient une pilule cernée d'encre (même motif que les
- * pastilles de la boutique) ; celui de la page en cours est souligné.
+ * La barre : une case par rayon, entre deux filets (bp-header.css). Le rayon ouvert devient une pilule cernée
+ * d'encre qui tient dans sa case (même motif que les pastilles de la boutique) ; celui de la page en cours est souligné.
  * Le panneau : toute la largeur, sous la barre, sur le fond de la page ; des colonnes de liens calmes séparées par des
  * filets d'encre (les filets de la grille des bouteilles), puis le producteur à la une sur le panneau bleu des fiches.
  * Mouvement : le panneau apparaît en fondu avec un léger glissement (180 ms) ; d'un rayon à l'autre, rien ne bouge.
@@ -22,14 +22,22 @@
   .bp-nav {
     display: flex;
     align-self: stretch;
-    align-items: center;
   }
 
+  /* Une case par rayon, toutes de même largeur, séparée de la précédente (et du logo) par un filet pleine hauteur. */
   .bp-nav__bar {
     display: flex;
-    align-items: center;
-    gap: clamp(0.25rem, 1vw, 1rem);
+    flex: 1;
     list-style: none;
+  }
+
+  .bp-nav__entry {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.5rem;
+    border-left: var(--trait) solid var(--ligne);
   }
 
   .bp-nav__trigger {
