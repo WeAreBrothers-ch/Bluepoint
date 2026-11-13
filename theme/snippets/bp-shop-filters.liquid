@@ -6,9 +6,12 @@
   Les choix se combinent : « Rouges », « Italie » puis « Piémont » mène à /collections/all/rouge+region-piemont.
   Rien à régler : tout vient des produits (type de produit, étiquettes « pays:… » et « region:… »).
   Paramètres : current_type (handle du type choisi ou vide), current_place (handle de l'origine choisie ou vide)
-  Limite : les 50 premières bouteilles de la boutique servent à construire les rayons.
+  Tout le catalogue sert à construire les rayons : sans « paginate », Shopify ne donne que 50 bouteilles.
+  Le « paginate » lit le même paramètre « page » que la grille (sections/bp-collection.liquid, 250 par page) :
+  au-delà de 250 bouteilles, chaque page construirait ses rayons avec ses propres bouteilles.
 {%- endcomment -%}
 {{ 'bp-shop-filters.css' | asset_url | stylesheet_tag }}
+{%- paginate collections.all.products by 250 -%}
 {%- liquid
   assign shop_url = routes.all_products_collection_url
   assign products = collections.all.products
@@ -71,6 +74,7 @@
     endif
   endif
 -%}
+{%- endpaginate -%}
 
 <nav class="bp-ui bp-filters" aria-label="Rayons de la boutique">
   <div class="bp-filters__row" role="group" aria-labelledby="bp-filtres-type">
