@@ -1,7 +1,9 @@
 {%- comment -%}
-  Les textes de la fiche, ouverts et lus d'un trait : chaque bloc est amené par un filet puis un intitulé court,
-  et le texte suit. Ordre : la description (si elle existe), Dégustation, Le domaine, Service et conservation.
-  Un bloc dont le contenu est vide n'est pas affiché. La fiche d'identité suit (snippets/bp-product-identity.liquid).
+  Les textes de la fiche : chaque bloc est amené par un filet puis un intitulé court, et le texte suit.
+  Ordre : la description (si elle existe), Dégustation, Le domaine, Service et conservation, puis la fiche d'identité
+  (snippets/bp-product-identity.liquid). Un bloc dont le contenu est vide n'est pas affiché.
+  La description et la dégustation sont toujours ouvertes. Les autres blocs sont des menus déroulants natifs (<details>) :
+  fermés sur téléphone pour garder la fiche courte, ouverts sur grand écran par assets/bp-product-blocks.js.
   La livraison n'est pas répétée ici : elle est dans le bandeau d'annonce, tout en haut de la page.
   Paramètre : product
 {%- endcomment -%}
@@ -27,17 +29,17 @@
   {%- endif -%}
 
   {%- if domain != blank -%}
-    <section class="bp-product-block" aria-labelledby="bp-domaine-titre">
-      <h2 class="bp-product-block__label" id="bp-domaine-titre">Le domaine</h2>
+    <details class="bp-product-block bp-product-block--pli" data-bp-pli>
+      <summary class="bp-product-block__label">Le domaine<span class="bp-product-block__icon" aria-hidden="true"></span></summary>
       <div class="bp-product-block__text">{{ domain }}</div>
-    </section>
+    </details>
   {%- endif -%}
 
   {%- if service != blank -%}
-    <section class="bp-product-block" aria-labelledby="bp-service-titre">
-      <h2 class="bp-product-block__label" id="bp-service-titre">Service et conservation</h2>
+    <details class="bp-product-block bp-product-block--pli" data-bp-pli>
+      <summary class="bp-product-block__label">Service et conservation<span class="bp-product-block__icon" aria-hidden="true"></span></summary>
       <div class="bp-product-block__text">{{ service }}</div>
-    </section>
+    </details>
   {%- endif -%}
 
   {%- render 'bp-product-identity', product: product -%}

@@ -1,5 +1,5 @@
 {%- comment -%}
-  Fiche d'identité de la bouteille : un tableau à deux colonnes (intitulé en gras, valeur), une ligne par donnée connue.
+  Fiche d'identité de la bouteille, en menu déroulant (voir snippets/bp-product-blocks.liquid) : un tableau à deux colonnes (intitulé en gras, valeur), une ligne par donnée connue.
   Les lignes vides ne s'affichent pas ; sans aucune donnée, rien n'est écrit.
   Sources : le producteur (vendor), le type, les étiquettes « pays:… » et « millesime:… »,
   les métachamps bluepoint.region, bluepoint.cepage, bluepoint.volume_ml et bluepoint.degre.
@@ -56,8 +56,8 @@
 {%- endcapture -%}
 
 {%- if rows != blank -%}
-  <section class="bp-product-block" aria-labelledby="bp-identite-titre">
-    <h2 class="bp-product-block__label" id="bp-identite-titre">Fiche d’identité</h2>
+  <details class="bp-product-block bp-product-block--pli" data-bp-pli>
+    <summary class="bp-product-block__label">Fiche d’identité<span class="bp-product-block__icon" aria-hidden="true"></span></summary>
     <dl class="bp-identity">{{ rows }}</dl>
-  </section>
+  </details>
 {%- endif -%}

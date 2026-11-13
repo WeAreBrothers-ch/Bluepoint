@@ -12,10 +12,11 @@
   padding: var(--marge) var(--marge) var(--fin-fiche);
 }
 
-/* Téléphone : une tuile plus large que haute, pour que le prix et le bouton restent près du haut de l'écran. */
+/* Téléphone : un panneau carré, assez grand pour que la bouteille se lise, sans repousser l'achat trop bas. */
 .bp-product__visual {
-  aspect-ratio: 5 / 4;
-  max-height: 46svh;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 60svh;
 }
 
 /*
@@ -104,54 +105,6 @@
   color: var(--encre-douce);
   font-size: var(--t-ui);
   font-weight: 500;
-}
-
-/* ---------- Textes ouverts : un filet, un intitulé court, puis le texte ---------- */
-
-.bp-product-blocks {
-  display: grid;
-  margin-top: 0.75rem;
-}
-
-.bp-product-block {
-  display: grid;
-  gap: 0.6rem;
-  padding-block: var(--marge);
-  border-top: var(--trait) solid var(--ligne);
-}
-
-/* L'intitulé : petit, gras, en capitales sans interlettrage ; c'est lui qui amène le texte. */
-.bp-product-block__label {
-  font-family: var(--police);
-  font-size: var(--t-ui);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.bp-product-block__text {
-  display: grid;
-  gap: 0.75rem;
-  max-width: var(--mesure);
-  hyphens: auto;
-}
-
-/* Fiche d'identité : intitulé en gras à gauche, valeur à droite, une ligne par donnée. */
-.bp-identity {
-  display: grid;
-  gap: 0.2rem;
-  max-width: var(--mesure);
-}
-
-.bp-identity__row {
-  display: grid;
-  grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr);
-  gap: 1rem;
-}
-
-.bp-identity dt {
-  font-weight: 700;
 }
 
 @media (hover: hover) and (pointer: fine) {

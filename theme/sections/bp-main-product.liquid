@@ -4,12 +4,14 @@
   Contenus éditoriaux : métachamps bluepoint.* du produit (voir snippets/bp-product-info.liquid).
 {%- endcomment -%}
 {{ 'bp-product.css' | asset_url | stylesheet_tag }}
+{{ 'bp-product-blocks.css' | asset_url | stylesheet_tag }}
 {{ 'bp-product-extras.css' | asset_url | stylesheet_tag }}
 {{ 'bp-buy-box.css' | asset_url | stylesheet_tag }}
 {{ 'bp-buy-bar.css' | asset_url | stylesheet_tag }}
 {{ 'bp-gallery.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'bp-product.js' | asset_url }}" defer></script>
 <script src="{{ 'bp-gallery.js' | asset_url }}" defer></script>
+<script src="{{ 'bp-product-blocks.js' | asset_url }}" defer></script>
 
 {%- assign form_id = 'bp-product-form-' | append: section.id -%}
 {%- assign bar_carton_cents = product.selected_or_first_available_variant.price | times: 6 -%}
