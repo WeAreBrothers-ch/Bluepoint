@@ -22,7 +22,7 @@
       "block_order": ["rayon_1", "rayon_2", "rayon_3", "rayon_4"],
       "settings": {}
     },
-    "selection": { "type": "bp-selection", "settings": { "show_pro": false, "pro_text": "Prix pro −15 %, commande sur facture à 30 jours, et 2 % de rabais en plus si vous payez par carte tout de suite." } },
+    "selection": { "type": "bp-selection", "settings": { "show_pro": false, "pro_text": "Restaurants, cavistes, hôtels : demandez votre compte pro, nous l’étudions et vous prévenons par e-mail." } },
     "moments": {
       "type": "bp-table-moments",
       "blocks": {

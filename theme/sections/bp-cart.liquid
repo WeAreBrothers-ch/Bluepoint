@@ -20,7 +20,8 @@
     assign missing = 0
   endif
   assign is_pro_buyer = false
-  if customer
+  # Choix pro (facture, rabais carte) seulement quand la boutique pro est ouverte (réglage du thème « Afficher les prix pro »).
+  if customer and settings.bp_prix_pro
     if customer.b2b? or customer.tags contains 'pro'
       assign is_pro_buyer = true
     endif

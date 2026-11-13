@@ -3,6 +3,8 @@
   La remise est une remise automatique Shopify (« Prix pro -15 % », réservée aux clients marqués « pro »).
   Le thème ne peut pas lire son montant : il le recalcule ici. Le pourcentage ci-dessous doit donc
   rester égal à celui de la remise dans Shopify.
+  Tant que le réglage « Afficher les prix pro » (Paramètres du thème › Espace pro) est décoché,
+  tout le monde voit le seul prix public, sans réduction (demande d'Eliott du 13/11 : la boutique pro ouvrira plus tard).
 
   Paramètres :
   - cents : prix public en centimes (obligatoire, sauf pour mode 'badge')
@@ -12,7 +14,7 @@
 {%- liquid
   assign pro_percent = 15
   assign is_pro = false
-  if customer and customer.tags contains 'pro'
+  if settings.bp_prix_pro and customer and customer.tags contains 'pro'
     assign is_pro = true
   endif
 -%}

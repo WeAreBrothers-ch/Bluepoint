@@ -2116,5 +2116,17 @@
         "default": "equal-width-buttons"
       }
     ]
+  },
+  {
+    "name": "Espace pro",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "bp_prix_pro",
+        "label": "Afficher les prix pro aux clients pro",
+        "info": "Désactivé : le site n’affiche qu’un seul prix, sans réduction, même pour les clients marqués « pro ». À cocher le jour où la boutique professionnelle ouvre (et réactiver alors les remises « Prix pro -15 % » et CARTE2 dans Shopify).",
+        "default": false
+      }
+    ]
   }
 ]

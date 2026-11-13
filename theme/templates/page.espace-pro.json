@@ -12,16 +12,43 @@
     "main": {
       "type": "bp-pro-portal",
       "blocks": {
-        "prix": { "type": "condition", "settings": { "text": "Remise professionnelle de 15 % au panier" } },
-        "cartons": { "type": "condition", "settings": { "text": "Vente par cartons de 6 bouteilles" } },
-        "facture": { "type": "condition", "settings": { "text": "Paiement sur facture, à 30 jours" } },
-        "carte": { "type": "condition", "settings": { "text": "2 % de rabais en plus si vous payez par carte tout de suite, au moment de la commande" } }
+        "etude": {
+          "type": "condition",
+          "settings": {
+            "text": "Votre demande est étudiée par notre équipe"
+          }
+        },
+        "email": {
+          "type": "condition",
+          "settings": {
+            "text": "Un e-mail vous prévient dès que votre compte est validé"
+          }
+        },
+        "cartons": {
+          "type": "condition",
+          "settings": {
+            "text": "Vente par cartons de 6 bouteilles"
+          }
+        },
+        "facture": {
+          "type": "condition",
+          "settings": {
+            "text": "Paiement sur facture, à 30 jours"
+          }
+        }
       },
-      "block_order": ["prix", "cartons", "facture", "carte"],
+      "block_order": [
+        "etude",
+        "email",
+        "cartons",
+        "facture"
+      ],
       "settings": {
-        "welcome_text": "Vos conditions s’appliquent automatiquement au panier, tant que vous êtes connecté."
+        "welcome_text": "Votre compte pro est validé. Nous vous écrirons dès l’ouverture de la boutique professionnelle."
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
