@@ -1,27 +1,12 @@
 {%- comment -%}
-  Colonne d'information de la fiche. Les textes arrivent dans cet ordre, du plus petit au plus fort puis à l'achat :
-  fil d'Ariane, producteur et région en petit, le nom en grand, le prix en grand, l'achat ;
-  puis les textes ouverts, chacun amené par un filet et un intitulé, et la fiche d'identité (snippets/bp-product-blocks.liquid).
+  Colonne d'information de la fiche, dans cet ordre : le nom en grand, le prix en grand, l'achat, puis les textes
+  et la fiche d'identité (snippets/bp-product-blocks.liquid).
+  Rien au-dessus du nom (ni fil d'Ariane ni ligne producteur, retirés à la demande d'Eliott le 13/11) :
+  le producteur et la région sont dans la fiche d'identité.
   Paramètres : product, form_id
 {%- endcomment -%}
-{%- assign region = product.metafields.bluepoint.region.value -%}
-
 <div class="bp-product-info">
-  <nav aria-label="Fil d’Ariane" class="bp-ui bp-product-info__trail">
-    <a href="{{ routes.all_products_collection_url }}" class="bp-carre bp-product-info__trail-link">Boutique</a>
-    {%- if product.type != blank -%}
-      <span aria-hidden="true">/</span>
-      <span>{%- render 'bp-type-label', type: product.type -%}</span>
-    {%- endif -%}
-  </nav>
-
-  <div class="bp-product-info__heading">
-    <p class="bp-product-info__producer">
-      {{- product.vendor | escape -}}
-      {%- if region != blank %}, {{ region | escape }}{% endif -%}
-    </p>
-    <h1 class="bp-affiche bp-product-info__name">{{ product.title | escape }}</h1>
-  </div>
+  <h1 class="bp-affiche bp-product-info__name">{{ product.title | escape }}</h1>
 
   <div class="bp-product-info__pricing">
     <p class="bp-product-info__price">{% render 'bp-price', cents: product.price %} <span class="bp-product-info__unit">la bouteille</span></p>

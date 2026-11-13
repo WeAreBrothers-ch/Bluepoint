@@ -16,7 +16,7 @@
 .bp-product__visual {
   width: 100%;
   aspect-ratio: 1;
-  max-height: 60svh;
+  max-height: 66svh;
 }
 
 /*
@@ -57,35 +57,10 @@
   gap: 1.1rem;
 }
 
-.bp-product-info__trail {
-  display: flex;
-  gap: 0.5rem;
-  color: var(--encre-douce);
-  font-size: var(--t-mention);
-}
-
-.bp-product-info__trail-link {
-  color: var(--encre);
-  transition: color 180ms var(--ease-out);
-}
-
-.bp-product-info__heading {
-  display: grid;
-  gap: 0.35rem;
-}
-
-/* Le nom : en lettres d'affiche, la plus grande chose de la colonne après le producteur qui l'annonce. */
+/* Le nom : en lettres d'affiche, en tête de la colonne. */
 .bp-product-info__name {
   font-size: clamp(2rem, 1.3rem + 2.6vw, 3.5rem);
   overflow-wrap: anywhere;
-}
-
-/* Le producteur arrive en premier, en petit : il présente le vin avant son nom. */
-.bp-product-info__producer {
-  font-size: var(--t-ui);
-  font-weight: 500;
-  line-height: 1.3;
-  color: var(--encre);
 }
 
 .bp-product-info__pricing {
@@ -105,12 +80,6 @@
   color: var(--encre-douce);
   font-size: var(--t-ui);
   font-weight: 500;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .bp-product-info__trail-link:hover {
-    color: var(--accent);
-  }
 }
 
 @media (min-width: 64rem) {
@@ -140,14 +109,10 @@
     margin-top: var(--marge);
   }
 
-  .bp-product-info > .bp-product-info__trail {
-    order: 0;
-    margin-top: var(--marge);
-  }
-
-  .bp-product-info > .bp-product-info__heading {
+  /* Les lettres d'affiche débordent de leur ligne vers le haut : un peu plus d'air sous le bandeau. */
+  .bp-product-info > .bp-product-info__name {
     order: 1;
-    margin-top: 0.75rem;
+    margin-top: calc(var(--marge) * 1.5);
   }
 
   .bp-product-info > .bp-product-info__pricing {

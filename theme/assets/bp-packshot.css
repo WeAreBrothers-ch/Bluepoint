@@ -31,7 +31,7 @@
 
 /*
  * Bouteille détourée : pas de tuile cernée, un panneau arrondi dont le bleu se fond dans le fond de la page
- * aux trois quarts de la hauteur. La bouteille est posée en bas, presque à pleine hauteur.
+ * aux trois quarts de la hauteur. La bouteille est posée en bas, presque à pleine hauteur (95 % du panneau).
  * Les nuances sont adoucies (mélangées au fond) pour que l'étiquette reste lisible sur le haut du panneau.
  */
 .bp-packshot:has(.bp-packshot__bottle) {
@@ -42,9 +42,9 @@
 
 .bp-packshot__bottle {
   position: absolute;
-  inset: 5% 10% 4%;
-  width: 80%;
-  height: 91%;
+  inset: 2% 5% 3%;
+  width: 90%;
+  height: 95%;
   object-fit: contain;
   object-position: 50% 100%;
 }
