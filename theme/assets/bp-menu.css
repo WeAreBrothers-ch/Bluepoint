@@ -76,7 +76,8 @@ html:has(.bp-menu[open]) {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.5rem var(--marge) 1rem;
+  /* Les options démarrent nettement sous le logo (demande d’Eliott du 13/11). */
+  padding: clamp(1.75rem, 6svh, 3rem) var(--marge) 1rem;
 }
 
 /* De grosses pastilles claires, une par ligne : une pastille = un geste. */
