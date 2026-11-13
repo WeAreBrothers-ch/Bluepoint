@@ -13,10 +13,11 @@
 }
 
 /* Téléphone : un panneau carré, assez grand pour que la bouteille se lise, sans repousser l'achat trop bas. */
+/* Téléphone : panneau en portrait (4/5) pour une bouteille plus grande (demande d'Eliott du 13/11). */
 .bp-product__visual {
   width: 100%;
-  aspect-ratio: 1;
-  max-height: 66svh;
+  aspect-ratio: 4 / 5;
+  max-height: 76svh;
 }
 
 /*
