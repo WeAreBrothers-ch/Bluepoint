@@ -58,12 +58,6 @@
   white-space: nowrap;
 }
 
-.bp-card__unit {
-  color: var(--encre-douce);
-  font-size: var(--t-detail-carte);
-  font-weight: 500;
-}
-
 .bp-card__price .bp-price__was {
   margin-right: 0;
   font-size: 0.9375rem;

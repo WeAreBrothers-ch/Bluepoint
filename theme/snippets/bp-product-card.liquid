@@ -18,7 +18,7 @@
   <a href="{{ product.url }}" class="bp-card__info">
     {%- if product.vendor != blank -%}<span class="bp-card__vendor">{{ product.vendor | escape }}</span>{%- endif -%}
     <span class="bp-card__name">{{ product.title | escape }}</span>
-    <span class="bp-card__price">{% render 'bp-price', cents: product.price %} <span class="bp-card__unit">la bouteille</span></span>
+    <span class="bp-card__price">{% render 'bp-price', cents: product.price %} <span class="bp-sr-only">la bouteille</span></span>
   </a>
   <a href="{{ product.url }}" class="bp-card__visual-link" tabindex="-1" aria-hidden="true">
     {% render 'bp-packshot', product: product, sizes: sizes, priority: priority, teinte: teinte, class: 'bp-card__visual' %}

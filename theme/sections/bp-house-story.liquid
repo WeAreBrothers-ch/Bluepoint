@@ -1,6 +1,8 @@
 {%- comment -%}
   « La maison » : deux photos d’ambiance légendées, puis l’histoire de Paolo.
   Les coordonnées (e-mail, téléphone) ne sont écrites qu’une fois, dans le pied de page.
+  Le texte montre son premier paragraphe, le reste se déplie avec « Lire la suite » (demande d'Eliott du 13/11 :
+  trop de texte d'un coup sur téléphone). Menu déroulant natif (<details>) : marche sans JavaScript.
 {%- endcomment -%}
 {{ 'bp-house-story.css' | asset_url | stylesheet_tag }}
 
@@ -10,6 +12,8 @@
   assign fallbacks = 'bp-photo-vigne.webp,bp-photo-etiquettes.webp' | split: ','
   assign widths = '736,400' | split: ','
   assign heights = '920,400' | split: ','
+  assign body_first = s.body | split: '</p>' | first | append: '</p>'
+  assign body_rest = s.body | remove_first: body_first | strip
 -%}
 
 <section id="maison" class="bp-section" aria-labelledby="{{ heading_id }}">
@@ -40,7 +44,20 @@
 
     <div class="bp-house__text">
       <p class="bp-affiche bp-house__title">{{ s.heading | escape }}</p>
-      <div class="bp-house__body">{{ s.body }}</div>
+      <div class="bp-house__body">
+        {%- if body_rest != blank -%}
+          {{ body_first }}
+          <details class="bp-house__suite">
+            <summary class="bp-ui bp-house__lire">
+              <span class="bp-house__lire-ferme">Lire la suite</span><span class="bp-house__lire-ouvert">Réduire</span>
+              <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" class="bp-house__plus"><path d="M1 6h10"/><path class="bp-house__plus-v" d="M6 1v10"/></svg>
+            </summary>
+            <div class="bp-house__body">{{ body_rest }}</div>
+          </details>
+        {%- else -%}
+          {{ s.body }}
+        {%- endif -%}
+      </div>
     </div>
   </div>
 </section>
