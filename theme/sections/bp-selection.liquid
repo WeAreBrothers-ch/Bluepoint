@@ -1,6 +1,8 @@
 {%- comment -%}
   « La sélection » : une grille de bouteilles, des cellules séparées par des filets de bord à bord.
-  La dernière cellule invite les professionnels à l'espace pro et comble la fin de la rangée.
+  Les bouteilles retenues (les premières de la collection) sont classées par producteur, de A à Z.
+  La dernière cellule invite les professionnels à l'espace pro et comble la fin de la rangée ;
+  elle se masque avec le réglage « Afficher la cellule pro ».
   Rien n'est affiché tant que la collection est vide.
 {%- endcomment -%}
 {%- liquid
@@ -22,6 +24,11 @@
   assign span_2 = 2 | minus: rest_2
   assign span_3 = 3 | minus: rest_3
   assign span_4 = 4 | minus: rest_4
+
+  capture vendor_order
+    render 'bp-vendor-order', products: source.products, limit: s.limit
+  endcapture
+  assign vendor_order = vendor_order | strip | split: ','
 -%}
 
 {%- if source.products_count > 0 -%}
@@ -34,7 +41,9 @@
     link_label: s.link_label
   %}
   <ul class="bp-grille">
-    {%- for product in source.products limit: s.limit -%}
+    {%- for position in vendor_order -%}
+      {%- assign product_index = position | plus: 0 -%}
+      {%- assign product = source.products[product_index] -%}
       <li>
         {% render 'bp-product-card',
           product: product,
@@ -43,7 +52,7 @@
         %}
       </li>
     {%- endfor -%}
-    {%- if s.pro_title != blank -%}
+    {%- if s.show_pro and s.pro_title != blank -%}
       <li class="bp-grille__fin" style="--cellules-2: {{ span_2 }}; --cellules-3: {{ span_3 }}; --cellules-4: {{ span_4 }}">
         <p class="bp-grille__fin-titre">{{ s.pro_title | escape }}</p>
         {%- if s.pro_text != blank -%}
@@ -70,6 +79,7 @@
     { "type": "collection", "id": "collection", "label": "Collection", "info": "Sans choix, toutes les bouteilles." },
     { "type": "range", "id": "limit", "label": "Nombre maximum de bouteilles", "min": 3, "max": 24, "step": 1, "default": 12 },
     { "type": "header", "content": "Dernière cellule : les professionnels" },
+    { "type": "checkbox", "id": "show_pro", "label": "Afficher la cellule pro", "default": true },
     { "type": "text", "id": "pro_title", "label": "Titre", "info": "Vide : pas de cellule.", "default": "Vous êtes pro ?" },
     { "type": "text", "id": "pro_text", "label": "Texte", "default": "Prix pro −15 %, commande sur facture à 30 jours, et 2 % de rabais en plus si vous payez par carte tout de suite." },
     { "type": "text", "id": "pro_label", "label": "Bouton", "default": "Espace pro" },

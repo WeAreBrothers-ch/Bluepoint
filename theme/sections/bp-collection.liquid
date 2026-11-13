@@ -69,7 +69,13 @@
   -%}
   <h2 id="{{ grid_title_id }}" class="bp-sr-only">{{ grid_title | escape }}</h2>
 
-  {%- paginate collection.products by 24 -%}
+  {%- comment -%}
+    Toutes les bouteilles sur une page (250 au plus, la limite de Shopify), pour les classer par producteur de A à Z :
+    un tri ne porte que sur la page affichée.
+  {%- endcomment -%}
+  {%- paginate collection.products by 250 -%}
+    {%- capture vendor_order -%}{%- render 'bp-vendor-order', products: collection.products -%}{%- endcapture -%}
+    {%- assign vendor_order = vendor_order | strip | split: ',' -%}
     {%- if collection.products.size == 0 -%}
       <p class="bp-shop__empty">
         {{ section.settings.empty_text | escape }}
@@ -78,7 +84,9 @@
       </p>
     {%- else -%}
       <ul class="bp-grille bp-shop__grid" aria-labelledby="{{ grid_title_id }}">
-        {%- for product in collection.products -%}
+        {%- for position in vendor_order -%}
+          {%- assign product_index = position | plus: 0 -%}
+          {%- assign product = collection.products[product_index] -%}
           <li>
             {%- liquid
               assign priority = false

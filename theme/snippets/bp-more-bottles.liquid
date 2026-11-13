@@ -1,13 +1,20 @@
 {%- comment -%}
   « À découvrir aussi » : les autres bouteilles de la boutique (4 au plus), dans la même grille de cellules que
   la sélection de l’accueil (2 sur téléphone, 3 sur tablette, 4 sur ordinateur : assets/bp-product-extras.css).
-  Plus de rangée qui défile sur le côté : tout se voit d’un coup d’œil.
+  Plus de rangée qui défile sur le côté : tout se voit d’un coup d’œil. Les 4 bouteilles sont classées par producteur, de A à Z.
   Paramètres : product, section_id
 {%- endcomment -%}
 {%- liquid
   assign shown = 0
   assign others_count = collections.all.products_count | minus: 1
   assign title_id = 'bp-autres-title-' | append: section_id
+  assign pool = collections.all.products
+
+  # Les 5 premières bouteilles suffisent : 4 à montrer, plus la bouteille de la page, écartée ci-dessous.
+  capture vendor_order
+    render 'bp-vendor-order', products: pool, limit: 5
+  endcapture
+  assign vendor_order = vendor_order | strip | split: ','
 -%}
 {%- if others_count > 0 -%}
   <section class="bp-section bp-section--grille bp-more" aria-labelledby="{{ title_id }}">
@@ -18,7 +25,9 @@
       link_label: 'Toutes les bouteilles'
     -%}
     <ul class="bp-grille bp-more__grid">
-      {%- for other in collections.all.products -%}
+      {%- for position in vendor_order -%}
+        {%- assign other_index = position | plus: 0 -%}
+        {%- assign other = pool[other_index] -%}
         {%- if other.id == product.id -%}{%- continue -%}{%- endif -%}
         {%- if shown >= 4 -%}{%- break -%}{%- endif -%}
         <li>

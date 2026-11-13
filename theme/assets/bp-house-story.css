@@ -8,6 +8,7 @@
 .bp-house__gallery {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start; /* la légende reste sous sa photo, même quand le texte voisin est long */
   gap: var(--gouttiere);
 }
 
@@ -28,6 +29,15 @@
   gap: 1.25rem;
   max-width: var(--mesure);
   hyphens: auto;
+}
+
+/* Liste du texte (ex. « Ses valeurs ») : puces dans la colonne du texte, collée à la phrase qui l’annonce. */
+.bp-house__body ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: -0.5rem 0 0;
+  padding-inline-start: 1.25em;
+  list-style: disc;
 }
 
 .bp-house__title {

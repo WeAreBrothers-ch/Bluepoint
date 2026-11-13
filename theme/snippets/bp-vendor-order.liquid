@@ -1,0 +1,27 @@
+{%- comment -%}
+  L’ordre des bouteilles par producteur (champ « vendor »), de A à Z, puis par nom de vin.
+  Le tri ignore les majuscules et les accents : le filtre « handle » ramène « Frères » à « freres ».
+  Écrit les positions dans la liste reçue (0, 1, 2…), dans cet ordre, séparées par des virgules, à lire avec « split ».
+  Paramètres : products (liste de produits), limit (facultatif : seules les premières bouteilles de la liste sont classées)
+  Exemple : assign bottle = products[position] pour chaque position lue.
+{%- endcomment -%}
+{%- liquid
+  assign max = limit | default: 250
+  assign keys = ''
+  for product in products limit: max
+    assign vendor_key = product.vendor | handle
+    if vendor_key == blank
+      # Sans producteur : en fin de liste (« ~ » vient après les lettres).
+      assign vendor_key = '~'
+    endif
+    assign title_key = product.title | handle
+    assign keys = keys | append: vendor_key | append: ' ' | append: title_key | append: ' ' | append: forloop.index0 | append: '|'
+  endfor
+  assign keys = keys | split: '|' | sort
+  assign order = ''
+  for key in keys
+    assign position = key | split: ' ' | last
+    assign order = order | append: position | append: ','
+  endfor
+  echo order
+-%}

@@ -22,7 +22,7 @@
       "block_order": ["rayon_1", "rayon_2", "rayon_3", "rayon_4"],
       "settings": {}
     },
-    "selection": { "type": "bp-selection", "settings": { "pro_text": "Prix pro −15 %, commande sur facture à 30 jours, et 2 % de rabais en plus si vous payez par carte tout de suite." } },
+    "selection": { "type": "bp-selection", "settings": { "show_pro": false, "pro_text": "Prix pro −15 %, commande sur facture à 30 jours, et 2 % de rabais en plus si vous payez par carte tout de suite." } },
     "moments": {
       "type": "bp-table-moments",
       "blocks": {
@@ -33,16 +33,15 @@
       "block_order": ["moment_1", "moment_2", "moment_3"],
       "settings": {}
     },
-    "house": { "type": "bp-house-story", "settings": {} },
+    "house": { "type": "bp-house-story", "settings": { "body": "<p>Bienvenue chez Bluepoint Distribution, importateur direct de producteurs italiens et distributeur de vins suisses.</p><p>En 2003 Paolo Pioletti, passionné par le monde du vin, débute l’importation et la distribution de vins italiens en parallèle de son activité professionnelle principale.</p><p>S’ensuivent de nombreuses années de recherches de vignerons d’exception valorisant le travail artisanal (à la main) et la qualité des produits. Il développe également la promotion de vins suisses partageant les mêmes valeurs. Paolo est heureux de vivre exclusivement de sa passion depuis l’année 2020.</p><p>Ses valeurs :</p><ul><li>Qualité des produits</li><li>Valeur du travail / Passion</li><li>Petits producteurs / Rapports humains</li><li>Exclusivité pour la Suisse ou Suisse romande</li><li>Proximité (Vaud) et racines (Italie)</li></ul>" } },
     "lettre": { "type": "bp-join", "settings": {} },
     "faq": {
       "type": "bp-faq",
       "blocks": {
         "q1": { "type": "question", "settings": { "question": "Quels sont les délais et les frais de livraison ?", "answer": "<p>Livraison sous 48 h en Suisse, offerte dès 24 bouteilles.</p>" } },
-        "q2": { "type": "question", "settings": { "question": "Puis-je commander une seule bouteille ?", "answer": "<p>Non. Nos vins se vendent par cartons de 6 bouteilles, au minimum un carton (6, 12, 18…).</p>" } },
-        "q3": { "type": "question", "settings": { "question": "Je suis restaurateur, caviste ou hôtelier : y a-t-il des conditions pour les pros ?", "answer": "<p>Oui. Après validation de votre compte, vous bénéficiez d’un prix pro de −15&nbsp;% sur tout le catalogue. Vous pouvez commander sur facture, payable à 30&nbsp;jours, ou payer par carte tout de suite : dans ce cas seulement, 2&nbsp;% de rabais s’ajoutent.</p><p><a href=\"/pages/espace-pro\">Ouvrir mon espace pro</a></p>" } }
+        "q2": { "type": "question", "settings": { "question": "Puis-je commander une seule bouteille ?", "answer": "<p>Non. Nos vins se vendent par cartons de 6 bouteilles, au minimum un carton (6, 12, 18…).</p>" } }
       },
-      "block_order": ["q1", "q2", "q3"],
+      "block_order": ["q1", "q2"],
       "settings": {}
     }
   },
