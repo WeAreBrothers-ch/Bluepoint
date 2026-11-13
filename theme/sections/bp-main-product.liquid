@@ -10,7 +10,6 @@
 {{ 'bp-buy-bar.css' | asset_url | stylesheet_tag }}
 {{ 'bp-gallery.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'bp-product.js' | asset_url }}" defer></script>
-<script src="{{ 'bp-gallery.js' | asset_url }}" defer></script>
 <script src="{{ 'bp-product-blocks.js' | asset_url }}" defer></script>
 
 {%- assign form_id = 'bp-product-form-' | append: section.id -%}
@@ -22,8 +21,7 @@
       {%- render 'bp-product-gallery',
         product: product,
         sizes: '(min-width: 64rem) 45vw, 100vw',
-        class: 'bp-product__visual',
-        section_id: section.id
+        class: 'bp-product__visual'
       -%}
     </div>
     {%- render 'bp-product-info',

@@ -1,43 +1,10 @@
 {%- comment -%}
-  Photos de la fiche bouteille : la grande tuile et, s’il y a plusieurs photos,
-  une rangée de vignettes pour passer de l’une à l’autre (étiquette, dos, mise en scène…).
-  Toutes les photos du produit ajoutées dans l’admin sont visibles.
-  - Première photo : celle de bp-packshot (bouteille détourée sur bleu, sinon mise en scène, sinon photo principale).
-  - Les suivantes ne se chargent qu’au moment où on les affiche (image masquée + loading lazy).
-  - Sans script, les vignettes restent masquées et seule la première photo s’affiche.
-  assets/bp-gallery.js gère le changement de photo.
-  Paramètres : product, sizes, class, section_id
+  Photo de la fiche bouteille : une seule grande tuile, celle de bp-packshot
+  (bouteille détourée sur son panneau en dégradé, sinon mise en scène, sinon photo principale).
+  Jamais de deuxième photo ni de vignettes : demande d'Eliott du 13/11 (« ne mets jamais deux photos, ça ne sert à rien »).
+  Paramètres : product, sizes, class
 {%- endcomment -%}
-{%- liquid
-  assign photo = product.metafields.bluepoint.photo.value
-  assign gallery_id = 'bp-galerie-' | append: section_id
-
-  # La première vue reprend l’image de bp-packshot : on ne la répète pas dans les suivantes.
-  # Si elle vient d’un métachamp (bouteille détourée ou mise en scène), toutes les photos du produit suivent ;
-  # si c’est la photo principale (détourée en PNG ou non), elle n’est pas répétée.
-  capture cutout_thumb
-    render 'bp-cutout-url', product: product, width: 160
-  endcapture
-  assign cutout_field = product.metafields.bluepoint.bouteille.value
-  assign show_all = false
-  if cutout_field != blank or photo != blank
-    assign show_all = true
-  endif
-  assign first_image = photo
-  if photo == blank
-    assign first_image = product.featured_image
-  endif
-
-  assign extra_count = 0
-  for image in product.images limit: 10
-    if show_all or image.id != product.featured_image.id
-      assign extra_count = extra_count | plus: 1
-    endif
-  endfor
-  assign total = extra_count | plus: 1
--%}
-
-<div class="bp-gallery" data-bp-gallery{% if extra_count > 0 %} data-multiple{% endif %}>
+<div class="bp-gallery">
   <div class="bp-gallery__frame {{ class }}">
     {%- render 'bp-packshot',
       product: product,
@@ -45,49 +12,5 @@
       priority: true,
       class: 'bp-gallery__slide'
     -%}
-    {%- if extra_count > 0 -%}
-      {%- for image in product.images limit: 10 -%}
-        {%- if show_all or image.id != product.featured_image.id -%}
-          <div class="bp-packshot bp-gallery__slide" data-bp-gallery-slide hidden>
-            {{
-              image
-              | image_url: width: 1400
-              | image_tag:
-                class: 'bp-packshot__view',
-                widths: '360, 540, 720, 1080, 1400',
-                sizes: sizes,
-                loading: 'lazy',
-                alt: image.alt | default: product.title
-            }}
-          </div>
-        {%- endif -%}
-      {%- endfor -%}
-    {%- endif -%}
   </div>
-
-  {%- if extra_count > 0 -%}
-    <div class="bp-gallery__thumbs" role="group" aria-label="Photos de la bouteille" data-bp-gallery-thumbs hidden>
-      <button type="button" class="bp-gallery__thumb" aria-pressed="true" data-bp-gallery-thumb>
-        {%- if cutout_thumb != blank -%}
-          <img src="{{ cutout_thumb }}" width="64" height="64" alt="" loading="lazy" class="bp-gallery__thumb-image">
-        {%- else -%}
-          {{ first_image | image_url: width: 160 | image_tag: loading: 'lazy', alt: '', class: 'bp-gallery__thumb-image' }}
-        {%- endif -%}
-        <span class="bp-sr-only">Photo 1 sur {{ total }}</span>
-      </button>
-      {%- assign position = 1 -%}
-      {%- for image in product.images limit: 10 -%}
-        {%- if show_all or image.id != product.featured_image.id -%}
-          {%- assign position = position | plus: 1 -%}
-          <button type="button" class="bp-gallery__thumb" aria-pressed="false" data-bp-gallery-thumb>
-            {{ image | image_url: width: 160 | image_tag: loading: 'lazy', alt: '', class: 'bp-gallery__thumb-image' }}
-            <span class="bp-sr-only">Photo {{ position }} sur {{ total }}</span>
-          </button>
-        {%- endif -%}
-      {%- endfor -%}
-    </div>
-    <p class="bp-ui bp-gallery__count" id="{{ gallery_id }}-count" aria-live="polite" data-bp-gallery-count hidden>
-      Photo 1 sur {{ total }}
-    </p>
-  {%- endif -%}
 </div>
