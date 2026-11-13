@@ -26,6 +26,14 @@
   gap: 0.3rem;
 }
 
+/* Producteur : petite ligne calme au-dessus du nom, en casse normale, pour expliquer l'ordre de la liste sans lui voler la vedette. */
+.bp-card__vendor {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
 /* Nom : grotesque grasse en capitales, l'élément fort de la cellule. */
 .bp-card__name {
   font-family: var(--police-titre);

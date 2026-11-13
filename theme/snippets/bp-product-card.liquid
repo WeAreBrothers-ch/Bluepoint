@@ -1,7 +1,9 @@
 {%- comment -%}
-  Carte bouteille, une cellule de la grille, avec le strict nécessaire : le nom, le prix de la bouteille,
+  Carte bouteille, une cellule de la grille, avec le strict nécessaire : le producteur, le nom, le prix de la bouteille,
   la bouteille posée sur un grand rond bleu, puis le bouton « Ajouter un carton » tout en bas.
-  Ni type, ni région, ni producteur ici (le rayon, les filtres et la fiche le disent déjà) et pas de prix du carton : il est sur la fiche et au panier.
+  Le producteur est écrit au-dessus du nom parce que les listes sont classées par producteur (snippets/bp-vendor-order.liquid) :
+  sans lui, l'ordre semblerait aléatoire (demande d'Eliott du 13/11). Ni type ni région ici (le rayon et les filtres le disent déjà),
+  et pas de prix du carton : il est sur la fiche et au panier.
   Les vins se vendent par cartons de 6 bouteilles : le bouton ajoute un carton (data-quantite="6").
   Le prix est écrit hors du bouton : lisible par tous, et le bouton ne se coupe jamais en deux.
   Le nom et la bouteille mènent tous deux à la fiche. Le bouton est géré par assets/bp-cart.js
@@ -14,6 +16,7 @@
 -%}
 <article class="bp-card">
   <a href="{{ product.url }}" class="bp-card__info">
+    {%- if product.vendor != blank -%}<span class="bp-card__vendor">{{ product.vendor | escape }}</span>{%- endif -%}
     <span class="bp-card__name">{{ product.title | escape }}</span>
     <span class="bp-card__price">{% render 'bp-price', cents: product.price %} <span class="bp-card__unit">la bouteille</span></span>
   </a>
