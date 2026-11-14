@@ -41,11 +41,14 @@
 
   /* ---------- Vérification d’âge ---------- */
 
+  // L’âge confirmé vaut pour la visite (cookie de session, effacé à la fermeture du navigateur) :
+  // la question revient à chaque nouvelle visite. L’ancien souvenir de 30 jours est effacé.
   function rememberAge() {
     try {
-      window.localStorage.setItem(AGE_STORAGE_KEY, String(Date.now()));
+      document.cookie = AGE_STORAGE_KEY + "=1; path=/; SameSite=Lax" + (window.location.protocol === "https:" ? "; Secure" : "");
+      window.localStorage.removeItem(AGE_STORAGE_KEY);
     } catch (error) {
-      // Stockage indisponible : la confirmation vaut pour la page en cours uniquement.
+      // Cookies indisponibles : la confirmation vaut pour la page en cours uniquement.
     }
     document.documentElement.setAttribute(AGE_ATTRIBUTE, "");
   }

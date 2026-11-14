@@ -8,13 +8,13 @@
 >
   <head>
     {%- comment -%}
-      Avant tout affichage : âge déjà confirmé (30 jours) et intro déjà vue (cet onglet).
+      Avant tout affichage : âge déjà confirmé (pendant cette visite : jusqu’à la fermeture du navigateur) et intro déjà vue (cet onglet).
       Évite que la vérification ou l’intro clignotent chez un visiteur qui les a déjà passées.
       Mouvement réduit demandé : l’intro ne se joue jamais (vérifié en premier).
       Sinon, ?intro dans l’adresse ou un rechargement de la page (Cmd+R, Cmd+Maj+R) la rejoue.
     {%- endcomment -%}
     <script>
-      try{var t=Number(localStorage.getItem("bp-age-ok"));if(t&&Date.now()-t<2592000000){document.documentElement.setAttribute("data-age-ok","")}}catch(e){}
+      try{if((";"+document.cookie.replace(/ /g,"")+";").indexOf(";bp-age-ok=1;")>-1){document.documentElement.setAttribute("data-age-ok","")}}catch(e){}
       try{var n=performance.getEntriesByType("navigation")[0];if(matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.setAttribute("data-intro-vue","")}else if(new URLSearchParams(location.search).has("intro")||(n&&n.type==="reload")){sessionStorage.removeItem("bp-intro-vue")}else if(sessionStorage.getItem("bp-intro-vue")){document.documentElement.setAttribute("data-intro-vue","")}}catch(e){document.documentElement.setAttribute("data-intro-vue","")}
       {%- if request.design_mode -%}
         {%- comment -%} Éditeur de thème : pas de vérification d’âge, et l’intro se joue à chaque ouverture de l’aperçu. {%- endcomment -%}

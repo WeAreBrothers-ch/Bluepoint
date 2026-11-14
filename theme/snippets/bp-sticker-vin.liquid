@@ -1,7 +1,10 @@
 {%- comment -%}
-  Le sticker posé sur la photo de la fiche vin : une seule information tirée des vraies données de la bouteille,
-  dans l'ordre : « bio » (étiquette « bio » ou mot « Bio » dans le nom), puis le millésime (étiquette « millesime:… »),
-  puis le degré (métachamp bluepoint.degre). Sans aucune de ces données : « good taste ».
+  Le sticker posé sur la photo de la fiche vin : une seule information, tirée des données de la bouteille
+  (celles que « Modifier la fiche » de la page Stock de l'app enregistre) :
+  - l'année, si le vin en a une (étiquette « millesime:… ») : changer l'année dans Stock change le sticker ;
+  - sinon le degré d'alcool (métachamp bluepoint.degre), précédé de « Vol. » pour qu'on ne le prenne pas
+    pour une réduction : « VOL. 12 % », « VOL. 13,5 % » ;
+  - sans année ni degré : pas de sticker.
   La couleur suit la robe du vin : grenat pour les rouges, rose pour les rosés, vert vigne pour les blancs et les
   pétillants, ciel pour le reste. Le texte répète la fiche d'identité : il reste décoratif pour les lecteurs d'écran.
   Paramètre : product
@@ -11,26 +14,16 @@
   assign forme = 'feston'
   assign rotation = -6
 
-  assign bio = false
   assign millesime = ''
-  assign title_words = product.title | split: ' '
-  if title_words contains 'Bio' or title_words contains 'bio'
-    assign bio = true
-  endif
   for tag in product.tags
     assign tag_down = tag | downcase
-    if tag_down == 'bio'
-      assign bio = true
-    elsif tag_down contains 'millesime:'
+    if tag_down contains 'millesime:'
       assign millesime = tag | remove_first: 'millesime:' | strip
     endif
   endfor
 
   assign degre = product.metafields.bluepoint.degre.value
-  if bio
-    assign texte = 'bio'
-    assign forme = 'fleur'
-  elsif millesime != blank
+  if millesime != blank
     assign texte = millesime
   elsif degre != blank
     assign degre_text = degre | append: ''
@@ -38,11 +31,8 @@
     if degre_end == '.0'
       assign degre_text = degre | round
     endif
-    assign texte = degre_text | append: '' | replace: '.', ',' | append: ' %'
-  else
-    assign texte = 'good taste'
-    assign forme = 'etoile'
-    assign rotation = 7
+    # Espace insécable entre le nombre et « % » : « 12 % » ne se coupe pas ; « Vol. » peut passer sur sa propre ligne.
+    assign texte = degre_text | append: '' | replace: '.', ',' | prepend: 'Vol. ' | append: ' %'
   endif
 
   case product.type
