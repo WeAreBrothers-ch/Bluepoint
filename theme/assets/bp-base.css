@@ -183,7 +183,7 @@ body.bluepoint {
   line-height: 1.1; /* assez d’air pour les accents des capitales (É, À, Â) sous la ligne du dessus */
   letter-spacing: 0.005em;
   text-transform: uppercase;
-  color: var(--affiche-remplissage, var(--c-bleu));
+  color: var(--affiche-remplissage, var(--c-ciel)); /* bleu clair cerné de marine : plus lisible que le bleu du logo (demande du 14/11) */
   -webkit-text-stroke: 0.05em var(--c-encre);
   paint-order: stroke fill;
   text-shadow: 0.06em 0.07em 0 var(--c-encre);
