@@ -100,6 +100,17 @@ const RECIPES: readonly Recipe[] = [
     button: "Voir le stock",
   },
   {
+    situation: "Je veux changer l’année ou une information d’un vin",
+    steps: [
+      `Touchez ${entreGuillemets(TITRES.vins)}.`,
+      "Trouvez le vin, puis touchez « Modifier la fiche ».",
+      "Changez ce que vous voulez : nom, année, producteur, sorte, pays, région, contenance, degré, cépages ou textes du site. En changeant l’année, le nom du vin suit tout seul.",
+      "Touchez « Enregistrer la fiche ». Le site est mis à jour tout de suite. Pour le prix et la photo, il y a les boutons « Modifier le prix » et « Changer la photo ».",
+    ],
+    href: "/app/stock",
+    button: "Voir le stock",
+  },
+  {
     situation: "Un client n’est pas là le jour prévu",
     steps: [
       `Touchez ${entreGuillemets(TITRES.livraisons)}.`,

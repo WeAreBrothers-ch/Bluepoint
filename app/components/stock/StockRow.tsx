@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useFetcher } from "react-router";
 import { CARTON_SIZE } from "../../lib/commande/types";
 import { formatChf, formatInteger } from "../../lib/format/money";
+import type { FicheLoadResult, FicheResult, FicheValues } from "../../lib/stock/fiche";
 import type { PhotoResult } from "../../lib/stock/photo";
 import type { PriceResult } from "../../lib/stock/price";
 import {
@@ -19,6 +20,7 @@ import {
 } from "../../lib/stock/stock";
 import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
+import { FichePanel } from "./FichePanel";
 import { PhotoPicker } from "./PhotoPicker";
 import { parsePrice } from "../../lib/stock/price";
 import { priceLine, proCentsFromPublic, PUBLIC_MARKUP_PERCENT, publicCentsFromPro } from "../../lib/prix/pro";
@@ -27,7 +29,8 @@ import { retireWarnings } from "../../lib/stock/retire";
 /**
  * Un vin de la page Stock : combien on peut encore en vendre, puis deux boutons.
  * « Ajouter des cartons » quand du vin arrive (cartons, palettes) ; « Corriger le nombre » après avoir compté la cave.
- * « Ajouter une photo » / « Changer la photo » pour la photo du site.
+ * « Ajouter une photo » / « Changer la photo » pour la photo du site ; « Modifier la fiche » pour tout le reste
+ * (nom, année, producteur, sorte, pays, région, appellation, contenance, degré, cépages, textes du site).
  * Chaque bouton ouvre une petite question à la place des boutons, avec « Annuler ».
  */
 
@@ -41,7 +44,7 @@ interface StockRowProps {
   readonly retiring?: boolean;
 }
 
-type Panel = "aucun" | StockIntent | "photo" | "prix" | "retirer";
+type Panel = "aucun" | StockIntent | "photo" | "prix" | "fiche" | "retirer";
 
 /** « Retirer ce vin de la vente ? » : ce qui va se passer, ce qui reste en cave, et comment revenir en arrière. */
 function RetirePanel({ item, busy, onConfirm, onCancel }: { readonly item: StockItem; readonly busy: boolean; readonly onConfirm: () => void; readonly onCancel: () => void }) {
@@ -270,10 +273,14 @@ function PricePanel({ item, busy, onSubmit, onCancel }: PricePanelProps) {
 }
 
 export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }: StockRowProps) {
-  const [panel, setPanel] = useState<Panel>("aucun");
+  const [chosenPanel, setPanel] = useState<Panel>("aucun");
   const fetcher = useFetcher<StockActionResult>({ key: `stock-${item.variantId}` });
   const photoFetcher = useFetcher<PhotoResult>({ key: `photo-${item.productId}` });
   const priceFetcher = useFetcher<PriceResult>({ key: `prix-${item.variantId}` });
+  const ficheLoader = useFetcher<FicheLoadResult>({ key: `fiche-lue-${item.productId}` });
+  const ficheFetcher = useFetcher<FicheResult>({ key: `fiche-${item.productId}` });
+  // Vrai après « Enregistrer la fiche » : une ancienne erreur ne s'affiche pas quand on rouvre la fiche.
+  const [ficheSent, setFicheSent] = useState(false);
   // Shopify prépare la photo quelques secondes : en attendant, on montre celle qui vient d'être envoyée.
   const [sentPhoto, setSentPhoto] = useState<File | null>(null);
   const sentUrl = useMemo(() => (sentPhoto === null ? null : URL.createObjectURL(sentPhoto)), [sentPhoto]);
@@ -284,6 +291,12 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
   const photoResult = photoFetcher.state === "idle" ? photoFetcher.data : undefined;
   const savingPrice = priceFetcher.state !== "idle";
   const priceResult = priceFetcher.state === "idle" ? priceFetcher.data : undefined;
+  const savingFiche = ficheFetcher.state !== "idle";
+  const ficheResult = ficheFetcher.state === "idle" ? ficheFetcher.data : undefined;
+  const ficheLoaded = ficheLoader.state === "idle" ? ficheLoader.data : undefined;
+  const ficheFailure = ficheSent && ficheResult !== undefined && !ficheResult.ok ? ficheResult : undefined;
+  // Fiche enregistrée : elle se referme, et la liste se recharge avec le nouveau nom.
+  const panel: Panel = chosenPanel === "fiche" && ficheSent && ficheResult?.ok === true ? "aucun" : chosenPanel;
   const imageUrl = item.imageUrl ?? (photoResult?.ok ? sentUrl : null);
   const reserved = reservedText(item);
   const place = item.place;
@@ -307,6 +320,19 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
   const sendPrice = (price: string) => {
     void priceFetcher.submit({ intent: "prix", productId: item.productId, variantId: item.variantId, price }, { method: "post" });
     setPanel("aucun");
+  };
+
+  const numericProductId = item.productId.slice(item.productId.lastIndexOf("/") + 1);
+  const openFiche = () => {
+    // Relue à chaque ouverture : on part toujours de ce qui est en ligne.
+    void ficheLoader.load(`/app/stock/${numericProductId}/fiche`);
+    setFicheSent(false);
+    setPanel("fiche");
+  };
+
+  const sendFiche = (values: FicheValues) => {
+    void ficheFetcher.submit({ intent: "fiche", productId: item.productId, ...values }, { method: "post" });
+    setFicheSent(true);
   };
 
   const sendPhoto = (photo: File) => {
@@ -350,9 +376,14 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
       {canPrice || onRetire !== undefined ? (
         <s-stack direction="inline" gap="small-200" justifyContent="space-between">
           {canPrice ? (
-            <s-button variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
-              Modifier le prix
-            </s-button>
+            <s-stack direction="inline" gap="small-200">
+              <s-button variant="tertiary" icon="edit" onClick={openFiche} {...(savingFiche ? { loading: true } : {})}>
+                Modifier la fiche
+              </s-button>
+              <s-button variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
+                Modifier le prix
+              </s-button>
+            </s-stack>
           ) : null}
           {onRetire === undefined ? null : (
             <s-button variant="tertiary" tone="critical" icon="archive" onClick={() => setPanel("retirer")} {...(retiring ? { loading: true } : {})}>
@@ -398,6 +429,17 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
           buttons
         ) : panel === "prix" ? (
           <PricePanel item={item} busy={savingPrice} onSubmit={sendPrice} onCancel={() => setPanel("aucun")} />
+        ) : panel === "fiche" ? (
+          <FichePanel
+            loaded={ficheLoaded}
+            saving={savingFiche}
+            failure={ficheFailure}
+            onSubmit={sendFiche}
+            onCancel={() => {
+              setFicheSent(false);
+              setPanel("aucun");
+            }}
+          />
         ) : panel === "photo" ? (
           <PhotoPanel item={item} busy={sendingPhoto} onSubmit={sendPhoto} onCancel={() => setPanel("aucun")} />
         ) : panel === "retirer" ? (
@@ -422,6 +464,7 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
         {result === undefined ? null : <s-banner tone={result.ok ? "success" : "critical"} heading={result.message} />}
         {priceResult === undefined ? null : <s-banner tone={priceResult.ok ? "success" : "critical"} heading={priceResult.message} />}
         {photoResult === undefined ? null : <s-banner tone={photoResult.ok ? "success" : "critical"} heading={photoResult.message} />}
+        {panel === "aucun" && ficheResult?.ok ? <s-banner tone="success" heading={ficheResult.message} /> : null}
     </ClientCard>
   );
 }
