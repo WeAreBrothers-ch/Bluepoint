@@ -76,9 +76,11 @@
     break-inside: avoid;
   }
 
-  /* Les cépages, courts, tiennent sur une ligne : « Cabernet Sauvignon » ne se coupe pas. */
+  /* Les cépages vont à la ligne s'ils sont plus longs que leur colonne (« Refosco dal Peduncolo Rosso ») :
+     forcés sur une ligne, ils débordaient sur la colonne voisine. */
   .bp-nav__list--grapes .bp-nav__item-link {
-    white-space: nowrap;
+    white-space: normal;
+    text-wrap: balance;
   }
 
   .bp-nav__item-link {
