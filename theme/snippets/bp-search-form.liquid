@@ -1,0 +1,29 @@
+{%- comment -%}
+  Le champ de recherche des vins, une pilule et son bouton « Chercher ». Il envoie vers la page des résultats
+  (sections/bp-search.liquid) : seulement les produits, et le dernier mot compte comme un début de mot (« barb » trouve Barbera).
+  Sans script, il marche seul. Dans la barre de l'en-tête (snippets/bp-search-dialog.liquid), assets/bp-search.js
+  ajoute les suggestions pendant la frappe.
+  Paramètres : id (identifiant unique du champ), value (texte déjà cherché), live (true : champ de la barre de l'en-tête)
+{%- endcomment -%}
+<form class="bp-search-form" action="{{ routes.search_url }}" method="get" role="search">
+  <label class="bp-sr-only" for="{{ id }}">Chercher un vin</label>
+  <input
+    class="bp-search-form__input"
+    id="{{ id }}"
+    type="search"
+    name="q"
+    value="{{ value | escape }}"
+    placeholder="Vin, producteur, région…"
+    maxlength="100"
+    autocomplete="off"
+    autocapitalize="off"
+    spellcheck="false"
+    enterkeyhint="search"
+    {% if live %}
+      aria-describedby="{{ id }}-statut" data-bp-search-input
+    {% endif %}
+  >
+  <input type="hidden" name="type" value="product">
+  <input type="hidden" name="options[prefix]" value="last">
+  <button class="bp-ui bp-search-form__submit" type="submit">Chercher</button>
+</form>

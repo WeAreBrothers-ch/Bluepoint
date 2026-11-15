@@ -1,0 +1,99 @@
+/* BluePoint — les suggestions de la barre de recherche (sections/bp-search-suggest.liquid) : une liste à filets, une ligne par vin. */
+
+.bp-search__results {
+  width: min(100%, 48rem);
+  margin-inline: auto;
+  padding: 0 var(--marge) var(--marge);
+}
+
+.bp-search__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: var(--trait) solid var(--ligne);
+}
+
+.bp-search__list > li {
+  border-bottom: var(--trait) solid var(--ligne);
+}
+
+.bp-search__hit {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--encre);
+  transition: background-color 160ms var(--ease-out);
+}
+
+.bp-search__hit:focus-visible {
+  background: var(--survol);
+}
+
+.bp-search__thumb {
+  display: grid;
+  place-items: end center;
+  width: 3rem;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 0.6rem;
+  background: var(--fond-tuile);
+}
+
+.bp-search__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bp-search__hit-text {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.bp-search__vendor {
+  color: var(--encre-douce);
+  font-size: var(--t-mention);
+}
+
+.bp-search__name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.bp-search__price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bp-search__all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  margin-top: var(--marge);
+  padding: 0.5rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  color: var(--encre);
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.bp-search__none {
+  padding-block: 0.5rem 0.75rem;
+  color: var(--encre-douce);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-search__hit:hover,
+  .bp-search__all:hover {
+    background: var(--survol);
+  }
+}
+

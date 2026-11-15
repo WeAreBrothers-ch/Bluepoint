@@ -1,5 +1,5 @@
 {%- comment -%}
-  Le côté droit de l'en-tête (sections/bp-header.liquid) : « Espace pro » (ordinateur), « Panier », « Menu » (téléphone).
+  Le côté droit de l'en-tête (sections/bp-header.liquid) : « Chercher », « Espace pro » (ordinateur), « Panier », « Menu » (téléphone).
   Le panier porte l'attribut data-bp-floating-cart : assets/bp-cart.js y met à jour le nombre de bouteilles.
   Paramètres : pro_url, pro_label, pro_active
 {%- endcomment -%}
@@ -12,6 +12,14 @@
   endif
 -%}
 <div class="bp-header__tools">
+  {%- comment -%} Ouvre la barre de recherche (snippets/bp-search-dialog.liquid). Sur téléphone, la loupe seule. {%- endcomment -%}
+  <button type="button" class="bp-ui bp-header__cell bp-header__search" aria-haspopup="dialog" aria-expanded="false" aria-label="Chercher un vin" data-bp-search-open>
+    <svg class="bp-header__search-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+      <circle cx="10.5" cy="10.5" r="6.75" fill="none" stroke="currentColor" stroke-width="2.25"/>
+      <path d="m15.5 15.5 5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"/>
+    </svg>
+    <span class="bp-header__search-label" aria-hidden="true">Chercher</span>
+  </button>
   <a class="bp-ui bp-header__cell bp-header__pro" href="{{ pro_url | escape }}" {% if pro_active %}aria-current="page"{% endif %}>{{ pro_label }}</a>
   <a
     href="{{ routes.cart_url }}"

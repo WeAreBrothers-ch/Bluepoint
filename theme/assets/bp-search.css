@@ -1,0 +1,174 @@
+/* BluePoint — recherche des vins : « Chercher » dans l'en-tête, le champ en pilule (snippets/bp-search-form.liquid) et la barre
+   qui descend de l'en-tête (snippets/bp-search-dialog.liquid). Ses suggestions : bp-search-suggest.css ; la page des résultats :
+   bp-search-page.css. */
+
+/* ---------- « Chercher » dans l'en-tête (snippets/bp-header-tools.liquid) ---------- */
+
+/* La loupe seule sur téléphone, le mot à côté dès la tablette ; sur ordinateur, souligné au survol comme ses voisins. */
+.bp-header__search-icon {
+  flex: none;
+}
+
+.bp-header__search-label {
+  display: none;
+}
+
+@media (min-width: 40rem) {
+  .bp-header__search-label {
+    display: inline;
+  }
+}
+
+@media (min-width: 75rem) {
+  .bp-header__search-label {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.4em;
+    transition: text-decoration-color 160ms var(--ease-out);
+  }
+}
+
+@media (min-width: 75rem) and (hover: hover) and (pointer: fine) {
+  .bp-header__search:hover .bp-header__search-label {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* ---------- Le champ ---------- */
+
+.bp-search-form {
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* 1,0625 rem : au-dessus de 16 px, l'iPhone ne zoome pas sur le champ. */
+.bp-search-form__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.5rem 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--c-blanc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 1.0625rem;
+  appearance: none;
+}
+
+.bp-search-form__input::placeholder {
+  color: var(--encre-douce);
+  opacity: 1;
+}
+
+.bp-search-form__submit {
+  flex: none;
+  min-height: 3rem;
+  padding-inline: 1.25rem;
+  border: var(--trait) solid var(--encre);
+  border-radius: var(--rayon-pilule);
+  background: var(--pilule);
+  color: var(--encre);
+  font-weight: 700;
+  transition: background-color 160ms var(--ease-out);
+}
+
+/* ---------- La barre qui descend de l'en-tête ---------- */
+
+.bp-search {
+  position: fixed;
+  inset: 0 0 auto;
+  width: 100%;
+  max-width: none;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: var(--trait) solid var(--ligne);
+  background: var(--fond);
+  color: var(--encre);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.bp-search[open] {
+  animation: bp-search-entre 200ms var(--ease-out);
+}
+
+.bp-search::backdrop {
+  background: rgb(10 26 79 / 0.4);
+}
+
+/* Barre ouverte : la page dessous ne défile plus. */
+html:has(.bp-search[open]) {
+  overflow: hidden;
+}
+
+@keyframes bp-search-entre {
+  from {
+    opacity: 0;
+    translate: 0 -0.75rem;
+  }
+}
+
+.bp-search__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--hauteur-barre);
+  padding: 0.75rem var(--marge);
+}
+
+.bp-search__close {
+  flex: none;
+  min-height: 3rem;
+  padding-inline: 0.5rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.35em;
+  transition: text-decoration-color 160ms var(--ease-out);
+}
+
+/* Grand écran : le champ a la largeur de la liste des suggestions, centré ; « Fermer » reste à droite. */
+@media (min-width: 64rem) {
+  .bp-search__bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 48rem) minmax(0, 1fr);
+  }
+  .bp-search__bar > .bp-search-form {
+    grid-column: 2;
+    padding-inline: var(--marge);
+  }
+  .bp-search__close {
+    justify-self: end;
+  }
+}
+
+/* Sur téléphone, la touche « Rechercher » du clavier remplace le bouton : le champ garde toute la place. */
+@media (max-width: 39.999rem) {
+  .bp-search .bp-search-form__submit {
+    display: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bp-search-form__submit:hover {
+    background: var(--survol);
+  }
+  .bp-search__close:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-search[open] {
+    animation: none;
+  }
+}

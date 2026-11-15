@@ -1,0 +1,46 @@
+{%- comment -%}
+  Les suggestions de la barre de recherche (snippets/bp-search-dialog.liquid). Jamais posée dans une page : assets/bp-search.js
+  la demande à Shopify (/search/suggest?…&section_id=bp-search-suggest) à chaque mot tapé et l'insère telle quelle.
+  Six vins au plus : la petite bouteille, le producteur, le nom, le prix ; puis le lien vers tous les résultats.
+  data-bp-search-count donne au script le nombre de vins, pour l'annoncer aux lecteurs d'écran.
+{%- endcomment -%}
+{%- liquid
+  assign bottles = predictive_search.resources.products
+  assign terms = predictive_search.terms | strip
+  assign all_url = routes.search_url | append: '?type=product&options%5Bprefix%5D=last&q='
+-%}
+<div data-bp-search-count="{{ bottles.size }}">
+  {%- if bottles.size > 0 -%}
+    <ul class="bp-search__list" role="list">
+      {%- for bottle in bottles -%}
+        {%- capture cutout -%}{%- render 'bp-cutout-url', product: bottle, width: 160 -%}{%- endcapture -%}
+        {%- assign cutout = cutout | strip -%}
+        <li>
+          <a class="bp-search__hit" href="{{ bottle.url }}">
+            <span class="bp-search__thumb" aria-hidden="true">
+              {%- if cutout != blank -%}
+                <img src="{{ cutout }}" alt="" width="64" height="80" loading="lazy">
+              {%- elsif bottle.featured_image -%}
+                {{ bottle.featured_image | image_url: width: 160 | image_tag: alt: '', width: 64, height: 80, loading: 'lazy' }}
+              {%- endif -%}
+            </span>
+            <span class="bp-search__hit-text">
+              {%- if bottle.vendor != blank -%}<span class="bp-search__vendor">{{ bottle.vendor | escape }}</span>{%- endif -%}
+              <span class="bp-search__name">{{ bottle.title | escape }}</span>
+            </span>
+            <span class="bp-search__price">{% render 'bp-price', cents: bottle.price, mode: 'plain' %}</span>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+    <a class="bp-ui bp-search__all" href="{{ all_url }}{{ terms | url_encode }}">Voir tous les vins pour « {{ terms | escape }} »</a>
+  {%- else -%}
+    <p class="bp-search__none">Aucun vin pour « {{ terms | escape }} ». Essayez le nom d’un producteur, d’une région ou d’un cépage.</p>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Suggestions de recherche"
+}
+{% endschema %}

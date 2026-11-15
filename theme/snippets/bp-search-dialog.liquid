@@ -1,0 +1,16 @@
+{%- comment -%}
+  La barre de recherche, ouverte par « Chercher » dans l'en-tête (snippets/bp-header-tools.liquid) : un panneau qui
+  descend du haut de l'écran, le champ en pilule, « Fermer », puis les suggestions pendant la frappe.
+  <dialog> natif : Échap referme, le focus reste dedans. Les suggestions viennent de sections/bp-search-suggest.liquid
+  (assets/bp-search.js) ; le statut caché annonce aux lecteurs d'écran le nombre de vins trouvés.
+{%- endcomment -%}
+{{ 'bp-search-suggest.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'bp-search.js' | asset_url }}" defer></script>
+<dialog class="bp-search" aria-label="Chercher un vin" data-bp-search data-suggest-url="{{ routes.predictive_search_url }}">
+  <div class="bp-search__bar">
+    {%- render 'bp-search-form', id: 'bp-search-champ', live: true -%}
+    <button type="button" class="bp-ui bp-search__close" data-bp-search-close>Fermer</button>
+  </div>
+  <p class="bp-sr-only" id="bp-search-champ-statut" role="status" data-bp-search-status></p>
+  <div class="bp-search__results" data-bp-search-results hidden></div>
+</dialog>

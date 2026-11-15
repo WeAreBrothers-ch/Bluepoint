@@ -1,0 +1,21 @@
+/* BluePoint — la page des résultats de recherche (sections/bp-search.liquid), sur la base de la boutique (bp-collection.css). */
+
+/* Une colonne qui ne s'élargit jamais au-delà de l'écran : le champ se resserre au lieu de déborder. */
+.bp-search-page__head {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bp-search-page__title {
+  font-size: var(--t-titre);
+  overflow-wrap: anywhere;
+}
+
+.bp-search-page__form {
+  width: min(100%, 36rem);
+}
+
+.bp-search-page__grid {
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  border-top: var(--trait) solid var(--ligne);
+}
+

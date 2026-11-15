@@ -1,0 +1,84 @@
+{%- comment -%}
+  La page des résultats de recherche (/search?q=…&type=product, gabarit templates/search.json), dans la même présentation
+  que la boutique : « Recherche » en petit, ce qu'on a cherché en titre d'affiche avec le nombre de vins, le champ pour
+  chercher autre chose, puis la grille des cartes bouteille dans l'ordre de pertinence donné par Shopify.
+  24 vins par page : l'en-tête (sections/bp-header.liquid) suit la pagination de la recherche jusqu'à la page 8.
+  Les cépages ont leur propre page (sections/bp-cepage.liquid, gabarit search.cepage.json).
+{%- endcomment -%}
+{{ 'bp-collection.css' | asset_url | stylesheet_tag }}
+{{ 'bp-search-page.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign terms = search.terms | strip
+  assign grid_title_id = 'bp-search-title-' | append: section.id
+-%}
+
+<div class="bp-shop">
+  <header class="bp-shop__head bp-search-page__head">
+    <p class="bp-ui bp-shop__kicker">Recherche</p>
+    <h1 class="bp-affiche bp-shop__title bp-search-page__title">
+      {%- if search.performed and terms != blank -%}
+        « {{ terms | escape }} »
+        <sup class="bp-shop__count"><span class="bp-sr-only">{{ search.results_count }} vin{% if search.results_count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ search.results_count }}</span></sup>
+      {%- else -%}
+        Chercher un vin
+      {%- endif -%}
+    </h1>
+    <div class="bp-search-page__form">
+      {%- render 'bp-search-form', id: 'bp-search-page-champ', value: terms -%}
+    </div>
+  </header>
+
+  {%- if search.performed -%}
+    {%- paginate search.results by 24 -%}
+      <h2 id="{{ grid_title_id }}" class="bp-sr-only">Les vins trouvés pour « {{ terms | escape }} »</h2>
+      {%- if search.results_count == 0 -%}
+        <p class="bp-shop__empty">
+          Aucun vin pour « {{ terms | escape }} ». Essayez le nom d’un producteur, d’une région ou d’un cépage.
+          <a class="bp-shop__empty-link" href="{{ routes.all_products_collection_url }}">Voir toute la boutique</a>
+        </p>
+      {%- else -%}
+        <ul class="bp-grille bp-shop__grid bp-search-page__grid" aria-labelledby="{{ grid_title_id }}">
+          {%- for result in search.results -%}
+            {%- if result.object_type == 'product' -%}
+              {%- liquid
+                assign priority = false
+                if forloop.index <= 2 and paginate.current_page == 1
+                  assign priority = true
+                endif
+              -%}
+              <li>
+                {%- render 'bp-product-card',
+                  product: result,
+                  teinte: forloop.index,
+                  priority: priority,
+                  sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
+                -%}
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+
+        {%- if paginate.pages > 1 -%}
+          <nav class="bp-ui bp-shop__pages" aria-label="Pages des résultats">
+            {%- if paginate.previous -%}
+              <a class="bp-carre bp-shop__page-link" href="{{ paginate.previous.url }}">Préc.</a>
+            {%- endif -%}
+            <span>Page {{ paginate.current_page }} sur {{ paginate.pages }}</span>
+            {%- if paginate.next -%}
+              <a class="bp-carre bp-shop__page-link" href="{{ paginate.next.url }}">Suiv.</a>
+            {%- endif -%}
+          </nav>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Résultats de recherche",
+  "tag": "section",
+  "class": "bp-collection-section"
+}
+{% endschema %}
