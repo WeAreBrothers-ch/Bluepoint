@@ -10,6 +10,7 @@
 
 .bp-livraison {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* la colonne ne s'élargit jamais pour un champ trop large (Safari iPhone) */
   gap: 1rem;
   width: 100%;
   padding-block: 1rem;
@@ -26,6 +27,7 @@
 
 .bp-livraison__group {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* Toute la ligne est cliquable : 44 px de haut au minimum. */
@@ -82,6 +84,8 @@
 
 .bp-livraison__date {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 0.5rem;
 }
 
@@ -91,17 +95,49 @@
   display: none;
 }
 
+/*
+ * Champ de date. Safari sur iPhone lui donne d'office une largeur minimale (≈ 335 px) et ne compte pas
+ * le padding dans la largeur : le champ sortait de l'encadré à droite. On impose donc la taille de la
+ * colonne (min-width: 0, max-width: 100%, border-box) et le même rendu partout (appearance: none).
+ */
 .bp-livraison__input {
+  display: block;
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 2.75rem;
   padding: 0.5rem 0.75rem;
   border: var(--trait) solid var(--ligne);
   border-radius: var(--rayon);
+  -webkit-appearance: none;
+  appearance: none;
   background: var(--fond);
   color: var(--encre);
   font: inherit;
-  font-size: var(--t-corps);
+  font-size: var(--t-corps); /* au moins 16 px : iOS ne zoome pas au focus */
+  line-height: 1.5;
+  text-align: left;
   transition: border-color 180ms var(--ease-out);
+}
+
+/* Le texte de la date (Safari) : aligné à gauche, hauteur stable même quand le champ est vide. */
+.bp-livraison__input::-webkit-date-and-time-value {
+  min-height: 1.5em;
+  margin: 0;
+  text-align: left;
+}
+
+.bp-livraison__input::-webkit-datetime-edit {
+  padding: 0;
+}
+
+/* iPhone : un champ de date vide n'affiche rien du tout. On écrit un repère (retiré dès qu'une date est choisie). */
+@supports (-webkit-touch-callout: none) {
+  .bp-livraison__input[data-vide]:not(:focus)::before {
+    content: "jj.mm.aaaa";
+    color: var(--encre-douce);
+  }
 }
 
 .bp-livraison__input[aria-invalid="true"] {

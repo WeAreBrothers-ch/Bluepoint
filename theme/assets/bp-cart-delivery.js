@@ -75,6 +75,13 @@
     return checked ? checked.value : "";
   }
 
+  /* iPhone : data-vide (champ sans date) fait apparaître le repère « jj.mm.aaaa » (voir le CSS). */
+  function markEmpty(el) {
+    if (!el.date) return;
+    if (el.date.value) el.date.removeAttribute("data-vide");
+    else el.date.setAttribute("data-vide", "");
+  }
+
   function setError(el, text) {
     if (!el.error || !el.date) return;
     el.error.textContent = text;
@@ -107,6 +114,7 @@
       el.date.value = "";
       setError(el, "");
     }
+    markEmpty(el);
   }
 
   /* Erreur réseau : affichée dans le bandeau d’erreur du panier (toujours visible, même sans champ date). */
@@ -174,6 +182,7 @@
     if (!block) return;
     var el = parts(block);
     if (target.hasAttribute("data-bp-livraison-mode")) syncDateField(el);
+    markEmpty(el);
     validate(el);
     schedule(block);
   });

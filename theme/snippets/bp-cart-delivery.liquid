@@ -73,6 +73,7 @@
       min="{{ min_iso }}"
       aria-describedby="{{ uid }}-hint {{ uid }}-error"
       data-bp-livraison-date
+      {% if date_value == blank %}data-vide{% endif %}
     >
     <p class="bp-livraison__hint" id="{{ uid }}-hint" data-bp-livraison-hint>
       Au plus tôt le {{ min_label }}
