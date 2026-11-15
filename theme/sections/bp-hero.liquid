@@ -64,7 +64,11 @@
     {%- if s.photo != blank -%}
       {{ s.photo | image_url: width: 2000 | image_tag: class: 'bp-hero__image', widths: '600, 900, 1200, 1600, 2000', sizes: '(min-width: 56rem) 42vw, 100vw', loading: 'eager', fetchpriority: 'high', alt: photo_alt }}
     {%- else -%}
-      <img class="bp-hero__image" src="{{ 'bp-photo-accueil-barolo.webp' | asset_url }}" alt="{{ photo_alt | escape }}" width="1128" height="1400" fetchpriority="high">
+      {%- comment -%} Téléphone et tablette : la bouteille plus haute, pour que l'étiquette « À la une » ne cache pas la sienne. {%- endcomment -%}
+      <picture>
+        <source media="(max-width: 55.999rem)" srcset="{{ 'bp-photo-accueil-barolo-mobile.webp' | asset_url }}" width="1128" height="1400">
+        <img class="bp-hero__image" src="{{ 'bp-photo-accueil-barolo.webp' | asset_url }}" alt="{{ photo_alt | escape }}" width="1128" height="1400" fetchpriority="high">
+      </picture>
     {%- endif -%}
     {%- if s.photo_caption != blank -%}
       <figcaption class="bp-ui bp-hero__caption">{{ s.photo_caption | escape }}</figcaption>
