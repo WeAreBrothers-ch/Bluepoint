@@ -26,7 +26,7 @@
   position: absolute;
   z-index: 2;
   display: grid;
-  width: var(--sticker-largeur);
+  width: calc(var(--sticker-largeur) * var(--sticker-zoom, 1));
   container-type: inline-size;
   color: var(--sticker-texte);
   rotate: var(--sticker-rotation, 0deg);
@@ -47,7 +47,7 @@
 }
 /* Les formes en longueur sont plus larges, pour une hauteur voisine. */
 .bp-sticker:is([data-forme="bulle"], [data-forme="ticket"], [data-forme="drapeau"]) {
-  width: calc(var(--sticker-largeur) * 1.35);
+  width: calc(var(--sticker-largeur) * 1.35 * var(--sticker-zoom, 1));
 }
 
 .bp-sticker[data-couleur="vigne"] {

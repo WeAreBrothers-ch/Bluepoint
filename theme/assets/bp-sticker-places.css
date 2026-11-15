@@ -4,7 +4,7 @@
 .bp-sticker--entete {
   display: none;
 }
-@media (min-width: 87.5rem) {
+@media (min-width: 90rem) {
   .bp-sticker--entete {
     --sticker-largeur: 4.5rem;
     display: grid;
@@ -116,5 +116,24 @@
 @media (min-width: 64rem) {
   .bp-sticker--lettre {
     --sticker-largeur: 6rem;
+  }
+}
+
+/*
+ * Ordinateur : les stickers se lisent de loin (demande d'Eliott du 15/11 : « plus gros »). Toutes les formes
+ * grandissent d'une fois et demie, le mot suit (sa taille dépend de la largeur du sticker). Celui de l'en-tête
+ * ne grandit que sur les grands écrans : il doit tenir dans le vide entre le logo et les rayons.
+ */
+@media (min-width: 64rem) {
+  .bp-sticker {
+    --sticker-zoom: 1.5;
+  }
+  .bp-sticker--entete {
+    --sticker-zoom: 1;
+  }
+}
+@media (min-width: 105rem) {
+  .bp-sticker--entete {
+    --sticker-zoom: 1.3;
   }
 }
