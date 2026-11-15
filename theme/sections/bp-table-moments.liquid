@@ -1,11 +1,14 @@
 {%- comment -%}
   « À chaque moment de la table » : de grandes tuiles (blocs), chacune liée à une bouteille.
-  Le nom du moment s'écrit une seule fois, en lettres d'affiche par-dessus la bouteille ; dessous, les plats,
+  Dans la tuile, une photo du moment (celle choisie dans le bloc, sinon celle du thème pour Apéritif, Plat et Fromage),
+  sinon la bouteille ; le nom du moment s'écrit par-dessus, en lettres d'affiche. Dessous, les plats,
   puis le nom et le prix de la bouteille.
   Les blocs sans bouteille sont ignorés ; la section n'apparaît pas si aucun bloc n'a de bouteille.
 {%- endcomment -%}
 {%- liquid
   assign heading_id = 'bp-moments-title-' | append: section.id
+  # Photos fournies avec le thème (assets/bp-moment-<moment>.webp), quand le bloc n'a pas de photo choisie.
+  assign theme_photos = '|aperitif|plat|fromage|'
   assign valid_count = 0
   for block in section.blocks
     if block.settings.product != blank
@@ -26,8 +29,23 @@
       {%- if product == blank -%}{%- continue -%}{%- endif -%}
       <li {{ block.shopify_attributes }}>
         <a href="{{ product.url }}" class="bp-moments__link">
+          {%- liquid
+            assign moment_handle = block.settings.moment | handle
+            assign moment_marker = '|' | append: moment_handle | append: '|'
+            assign theme_photo = ''
+            if theme_photos contains moment_marker
+              assign theme_photo = 'bp-moment-' | append: moment_handle | append: '.webp'
+            endif
+          -%}
           <span class="bp-moments__tile">
-            {% render 'bp-packshot', product: product, sizes: '(min-width: 48rem) 30vw, 90vw', teinte: forloop.index, class: 'bp-moments__visual' %}
+            {%- comment -%} La photo est décorative : le moment et les plats sont écrits à côté. {%- endcomment -%}
+            {%- if block.settings.photo != blank -%}
+              {{ block.settings.photo | image_url: width: 1200 | image_tag: class: 'bp-moments__visual bp-moments__photo', widths: '400, 600, 800, 1000, 1200', sizes: '(min-width: 48rem) 30vw, 90vw', loading: 'lazy', alt: '' }}
+            {%- elsif theme_photo != blank -%}
+              <img class="bp-moments__visual bp-moments__photo" src="{{ theme_photo | asset_url }}" alt="" width="1000" height="1250" loading="lazy">
+            {%- else -%}
+              {% render 'bp-packshot', product: product, sizes: '(min-width: 48rem) 30vw, 90vw', teinte: forloop.index, class: 'bp-moments__visual' %}
+            {%- endif -%}
             <span class="bp-affiche bp-moments__word">{{ block.settings.moment | escape }}</span>
           </span>
           <span class="bp-moments__dishes">{{ block.settings.dishes | escape }}</span>
@@ -69,6 +87,7 @@
           ],
           "default": "Apéritif"
         },
+        { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Remplace la bouteille dans la tuile. Sans photo choisie : la photo du thème pour Apéritif, Plat et Fromage, sinon la bouteille." },
         { "type": "text", "id": "dishes", "label": "Plats", "default": "Fritto misto, olives, tomme vaudoise" },
         { "type": "product", "id": "product", "label": "Bouteille" }
       ]

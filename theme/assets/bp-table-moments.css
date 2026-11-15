@@ -1,5 +1,5 @@
 /* BluePoint — « À chaque moment de la table » (sections/bp-table-moments.liquid).
-   De grandes tuiles bleues : la bouteille détourée, et le nom du moment en lettres d'affiche par-dessus. */
+   De grandes tuiles : la photo du moment (ou la bouteille détourée), et le nom du moment en lettres d'affiche par-dessus. */
 
 .bp-moments {
   list-style: none;
@@ -23,6 +23,15 @@
 
 .bp-moments__visual {
   aspect-ratio: 4 / 5;
+}
+
+/* La photo remplit la tuile, recadrée au centre, avec les coins de la tuile. */
+.bp-moments__photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--rayon);
+  object-fit: cover;
 }
 
 /* Le mot du moment, centré sur la tuile, par-dessus la bouteille ; rempli de bleu pâle. */
