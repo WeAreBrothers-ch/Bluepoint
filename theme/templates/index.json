@@ -26,9 +26,9 @@
     "moments": {
       "type": "bp-table-moments",
       "blocks": {
-        "moment_1": { "type": "moment", "settings": { "moment": "Apéritif", "dishes": "Fritto misto, olives, tomme vaudoise", "product": "col-del-forno-prosecco" } },
-        "moment_2": { "type": "moment", "settings": { "moment": "Plat", "dishes": "Filets de perche, risotto, viande grillée", "product": "dezaley-tour-marsens" } },
-        "moment_3": { "type": "moment", "settings": { "moment": "Fromage", "dishes": "Castelmagno, gruyère d’alpage, pecorino", "product": "barolo-passione-di-re" } }
+        "moment_1": { "type": "moment", "settings": { "moment": "Apéritif", "product": "col-del-forno-prosecco" } },
+        "moment_2": { "type": "moment", "settings": { "moment": "Plat", "product": "dezaley-tour-marsens" } },
+        "moment_3": { "type": "moment", "settings": { "moment": "Fromage", "product": "barolo-passione-di-re" } }
       },
       "block_order": ["moment_1", "moment_2", "moment_3"],
       "settings": {}

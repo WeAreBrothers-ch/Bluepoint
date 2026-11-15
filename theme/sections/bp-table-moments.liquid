@@ -1,8 +1,8 @@
 {%- comment -%}
   « À chaque moment de la table » : de grandes tuiles (blocs), chacune liée à une bouteille.
   Dans la tuile, une photo du moment (celle choisie dans le bloc, sinon celle du thème pour Apéritif, Plat et Fromage),
-  sinon la bouteille ; le nom du moment s'écrit par-dessus, en lettres d'affiche. Dessous, les plats,
-  puis le nom et le prix de la bouteille.
+  sinon la bouteille ; le nom du moment s'écrit par-dessus, en lettres d'affiche. Dessous, le nom et le prix
+  de la bouteille (sans liste de plats : demande d'Eliott du 15/11).
   Les blocs sans bouteille sont ignorés ; la section n'apparaît pas si aucun bloc n'a de bouteille.
 {%- endcomment -%}
 {%- liquid
@@ -38,7 +38,7 @@
             endif
           -%}
           <span class="bp-moments__tile">
-            {%- comment -%} La photo est décorative : le moment et les plats sont écrits à côté. {%- endcomment -%}
+            {%- comment -%} La photo est décorative : le moment est écrit dessus, la bouteille dessous. {%- endcomment -%}
             {%- if block.settings.photo != blank -%}
               {{ block.settings.photo | image_url: width: 1200 | image_tag: class: 'bp-moments__visual bp-moments__photo', widths: '400, 600, 800, 1000, 1200', sizes: '(min-width: 48rem) 30vw, 90vw', loading: 'lazy', alt: '' }}
             {%- elsif theme_photo != blank -%}
@@ -48,7 +48,6 @@
             {%- endif -%}
             <span class="bp-affiche bp-moments__word">{{ block.settings.moment | escape }}</span>
           </span>
-          <span class="bp-moments__dishes">{{ block.settings.dishes | escape }}</span>
           <span class="bp-moments__bar">
             <span class="bp-moments__bottle">{{ product.title | escape }}</span>
             <span class="bp-moments__price">{% render 'bp-price', cents: product.price %}</span>
@@ -88,7 +87,6 @@
           "default": "Apéritif"
         },
         { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Remplace la bouteille dans la tuile. Sans photo choisie : la photo du thème pour Apéritif, Plat et Fromage, sinon la bouteille." },
-        { "type": "text", "id": "dishes", "label": "Plats", "default": "Fritto misto, olives, tomme vaudoise" },
         { "type": "product", "id": "product", "label": "Bouteille" }
       ]
     }
@@ -97,9 +95,9 @@
     {
       "name": "Moments de la table BluePoint",
       "blocks": [
-        { "type": "moment", "settings": { "moment": "Apéritif", "dishes": "Fritto misto, olives, tomme vaudoise" } },
-        { "type": "moment", "settings": { "moment": "Plat", "dishes": "Filets de perche, risotto, viande grillée" } },
-        { "type": "moment", "settings": { "moment": "Fromage", "dishes": "Castelmagno, gruyère d’alpage, pecorino" } }
+        { "type": "moment", "settings": { "moment": "Apéritif" } },
+        { "type": "moment", "settings": { "moment": "Plat" } },
+        { "type": "moment", "settings": { "moment": "Fromage" } }
       ]
     }
   ]

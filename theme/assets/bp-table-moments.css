@@ -49,15 +49,6 @@
   pointer-events: none;
 }
 
-/* Les plats : une seule ligne de texte sous la tuile (le moment est déjà écrit en grand dessus). */
-.bp-moments__dishes {
-  padding-inline: 0.25rem;
-  font-size: var(--t-corps);
-  font-weight: 600;
-  line-height: 1.35;
-  text-wrap: pretty;
-}
-
 /* La bouteille conseillée et son prix, en pilule. */
 .bp-moments__bar {
   display: flex;
