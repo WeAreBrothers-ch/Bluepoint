@@ -13,6 +13,7 @@
 
 <section id="lettre" class="bp-section bp-section--join" aria-labelledby="{{ heading_id }}">
   <div class="bp-join{% if s.photo != blank %} bp-join--photo{% endif %}">
+    {%- render 'bp-sticker', forme: 'bulle', texte: 'omg', couleur: 'rose', rotation: 6, taille: 'm', minuscules: true, class: 'bp-sticker--lettre' -%}
     {%- if s.photo != blank -%}
       <div class="bp-join__photo">
         {% render 'bp-photo-figure',

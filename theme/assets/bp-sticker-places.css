@@ -102,3 +102,19 @@
     left: calc(50% + 4rem);
   }
 }
+
+/* La lettre de Paolo : à cheval sur le bord haut de la tuile, à droite, loin du titre et du champ e-mail. */
+.bp-join:has(> .bp-sticker--lettre) {
+  position: relative;
+}
+.bp-sticker--lettre {
+  --sticker-largeur: 4.5rem;
+  top: 0;
+  right: clamp(1.5rem, 5vw, 4rem);
+  translate: 0 -55%;
+}
+@media (min-width: 64rem) {
+  .bp-sticker--lettre {
+    --sticker-largeur: 6rem;
+  }
+}
