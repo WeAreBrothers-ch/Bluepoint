@@ -82,7 +82,9 @@
   font-weight: 700;
   text-align: center;
   overflow-wrap: anywhere;
-  transition: background-color 160ms var(--ease-out);
+  transition:
+    background-color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
 }
 
 .bp-search__none {
@@ -119,7 +121,9 @@
   color: var(--encre);
   font-weight: 700;
   line-height: 1.2;
-  transition: background-color 160ms var(--ease-out);
+  transition:
+    background-color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
 }
 
 .bp-search__place-kind {
@@ -136,4 +140,10 @@
   .bp-search__place:hover {
     background: var(--survol);
   }
+}
+
+/* Retour au toucher : la pastille se tasse un instant quand on appuie. */
+.bp-search__all:active,
+.bp-search__place:active {
+  scale: 0.97;
 }

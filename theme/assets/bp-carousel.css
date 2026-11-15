@@ -55,7 +55,12 @@
   border-radius: var(--rayon-pilule);
   transition:
     background-color 180ms var(--ease-out),
-    opacity 180ms var(--ease-out);
+    opacity 180ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-carousel__button:not([aria-disabled="true"]):active {
+  scale: 0.97;
 }
 
 .bp-carousel__button[aria-disabled="true"] {

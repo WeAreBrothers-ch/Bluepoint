@@ -75,7 +75,13 @@
   background: var(--pilule);
   color: var(--encre);
   font-weight: 700;
-  transition: background-color 160ms var(--ease-out);
+  transition:
+    background-color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-search-form__submit:active {
+  scale: 0.97;
 }
 
 /* ---------- La barre qui descend de l'en-tête ---------- */

@@ -42,7 +42,12 @@
   font-weight: 600;
   transition:
     background-color 160ms var(--ease-out),
-    color 160ms var(--ease-out);
+    color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-filters__pill:active {
+  scale: 0.97;
 }
 
 /* Le choix actif : pastille pleine, marine. */

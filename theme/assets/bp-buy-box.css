@@ -44,7 +44,12 @@
   cursor: pointer;
   transition:
     background-color 160ms var(--ease-out),
-    color 160ms var(--ease-out);
+    color 160ms var(--ease-out),
+    scale 120ms var(--ease-out);
+}
+
+.bp-pack__option:not([data-indisponible="true"]):active {
+  scale: 0.97;
 }
 
 /* Choix actif : pastille pleine marine, lisible même sans distinguer les couleurs. */
