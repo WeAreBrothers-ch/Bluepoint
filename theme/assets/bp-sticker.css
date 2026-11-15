@@ -109,6 +109,11 @@
 }
 
 /* Le mot dans la partie pleine de chaque forme (la queue de la bulle, les encoches et la pointe restent vides). */
+/* L'étoile a des creux profonds entre ses pointes : un mot plus petit pour qu'il reste dans le plein. */
+.bp-sticker[data-forme="etoile"] .bp-sticker__texte {
+  max-width: 60%;
+  font-size: 15cqi;
+}
 .bp-sticker[data-forme="feston"] .bp-sticker__texte {
   font-size: 21cqi;
 }
