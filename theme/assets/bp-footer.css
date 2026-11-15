@@ -276,6 +276,21 @@ body:has([data-barre-achat="visible"]) .bp-footer {
   color: var(--c-blanc);
 }
 
+/* Le crédit de l'agence, sous le copyright : discret, en bleu ciel, le lien souligné. */
+.bp-footer__credit {
+  display: block;
+  margin-top: 0.25rem;
+  font-weight: 400;
+  font-size: var(--t-mention);
+  color: var(--c-ciel);
+}
+
+.bp-footer__credit a {
+  color: var(--c-blanc);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .bp-footer__legal {
   max-width: 46rem;
   font-weight: 400;

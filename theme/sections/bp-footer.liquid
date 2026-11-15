@@ -4,7 +4,7 @@
   2. le logo et l’adresse, puis deux listes de liens simples, sans cadre : « Découvrir » (boutique, accords, maison,
      espace pro, Wine bar, réseaux) et « Infos » (livraison, retours, conditions : les pages légales de Shopify).
      Tout ce qui n’est plus dans le menu du téléphone est ici ;
-  3. une barre : le copyright et la mention sur l’alcool.
+  3. une barre : le copyright, le crédit de l’agence (WeAreBrothers.ch) et la mention sur l’alcool.
   Coordonnées et liens modifiables dans l’éditeur de thème. L’ancre #contact mène ici.
 {%- endcomment -%}
 {{ 'bp-footer.css' | asset_url | stylesheet_tag }}
@@ -99,7 +99,10 @@
   </div>
 
   <div class="bp-footer__bar">
-    <p class="bp-ui bp-phrase bp-footer__copy">© {{ 'now' | date: '%Y' }} {{ s.company | escape }}</p>
+    <p class="bp-ui bp-phrase bp-footer__copy">
+      © {{ 'now' | date: '%Y' }} {{ s.company | escape }}
+      <span class="bp-footer__credit">Site conçu et réalisé par <a href="https://wearebrothers.ch" rel="noopener">WeAreBrothers.ch</a></span>
+    </p>
     <p class="bp-ui bp-phrase bp-footer__legal">
       L’abus d’alcool est dangereux pour la santé, à consommer avec modération. Vente réservée aux personnes de 18&nbsp;ans et plus.
     </p>

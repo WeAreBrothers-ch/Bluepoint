@@ -12,6 +12,32 @@
 
   var desktop = window.matchMedia("(min-width: 75rem)");
 
+  var mouvementReduit = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  // Le panneau remonte en s'effaçant (bp-menu.css, .is-sortant), puis se ferme vraiment.
+  function closeSmoothly(dialog) {
+    if (!dialog.open || dialog.classList.contains("is-sortant")) return;
+    if (mouvementReduit.matches) {
+      dialog.close();
+      return;
+    }
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      dialog.classList.remove("is-sortant");
+      dialog.close();
+    }
+    dialog.classList.add("is-sortant");
+    dialog.addEventListener("animationend", function onEnd(event) {
+      if (event.target !== dialog) return;
+      dialog.removeEventListener("animationend", onEnd);
+      finish();
+    });
+    // Filet de sécurité si l'animation ne se joue pas (onglet en arrière-plan) : le menu se ferme quand même.
+    window.setTimeout(finish, 320);
+  }
+
   function setupMenu(scope) {
     var dialog = scope.querySelector("[data-bp-menu]");
     var openButton = scope.querySelector("[data-bp-menu-open]");
@@ -31,7 +57,12 @@
       var target = event.target instanceof Element ? event.target : null;
       if (!target) return;
       // Fermer au clic sur « Fermer » ou sur un lien (ancre de la même page comprise).
-      if (target.closest("[data-bp-menu-close]") || target.closest("a")) dialog.close();
+      if (target.closest("[data-bp-menu-close]") || target.closest("a")) closeSmoothly(dialog);
+    });
+    // Échap : la même sortie en douceur que le bouton.
+    dialog.addEventListener("cancel", function (event) {
+      event.preventDefault();
+      closeSmoothly(dialog);
     });
     // Tablette qu’on tourne vers la largeur d’un ordinateur : le menu plein écran n’a plus lieu d’être.
     desktop.addEventListener("change", function (event) {

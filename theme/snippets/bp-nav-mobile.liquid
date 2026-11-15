@@ -4,7 +4,7 @@
   1. le haut : le logo et « Fermer » ;
   1 bis. « Chercher un vin », qui ouvre la barre de recherche ;
   2. une pastille par ligne : toute la boutique, puis un type de vin, avec le nombre de bouteilles ;
-  3. trois volets à déplier (<details>, sans script) : producteurs de A à Z, pays et régions, cépages,
+  3. trois volets à déplier (<details> ; assets/bp-deplie.js les ouvre en douceur) : producteurs de A à Z, pays et régions, cépages,
      chacun en petites pastilles (styles : assets/bp-menu-plis.css) ;
   4. le bas, toujours visible : une pastille bleu ciel, « Espace pro ».
   Accords, La maison, Wine bar, Instagram… ne sont plus ici : ils sont dans le pied de page.
@@ -18,6 +18,7 @@
   endfor
 -%}
 {{ 'bp-menu-plis.css' | asset_url | stylesheet_tag }}
+{{ 'bp-menu-mouvement.css' | asset_url | stylesheet_tag }}
 <dialog class="bp-menu" aria-label="Menu" data-bp-menu>
   <div class="bp-menu__top">
     <a href="{{ routes.root_url }}" class="bp-menu__brand" aria-label="BluePoint, accueil">
@@ -64,7 +65,7 @@
       endcapture
       assign grapes = grapes | split: '|'
     -%}
-    <details class="bp-menu__pli">
+    <details class="bp-menu__pli" data-bp-deplie>
       <summary class="bp-ui bp-menu__pli-titre">Producteurs<span class="bp-menu__pli-signe" aria-hidden="true"></span></summary>
       <ul class="bp-menu__places">
         {%- for vendor in vendors -%}
@@ -75,7 +76,7 @@
     </details>
 
     {%- if countries.size > 0 -%}
-      <details class="bp-menu__pli">
+      <details class="bp-menu__pli" data-bp-deplie>
         <summary class="bp-ui bp-menu__pli-titre">Pays et régions<span class="bp-menu__pli-signe" aria-hidden="true"></span></summary>
         {%- for country in countries -%}
           {%- liquid
@@ -101,7 +102,7 @@
     {%- endif -%}
 
     {%- if grapes.size > 0 -%}
-      <details class="bp-menu__pli">
+      <details class="bp-menu__pli" data-bp-deplie>
         <summary class="bp-ui bp-menu__pli-titre">Cépages<span class="bp-menu__pli-signe" aria-hidden="true"></span></summary>
         <ul class="bp-menu__places">
           {%- for grape in grapes -%}

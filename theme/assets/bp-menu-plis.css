@@ -3,7 +3,7 @@
  * en fin de fichier, « Chercher un vin » en tête du menu.
  * Sous les grosses pastilles des types de vin, trois lignes à toucher, séparées par des filets bleu ciel,
  * chacune avec un + qui devient − (le même signe que les blocs dépliables de la fiche produit).
- * Le volet s'ouvre d'un coup, sans animation : on y passe souvent, il doit répondre tout de suite.
+ * Le volet se déplie en douceur (assets/bp-deplie.js), le + tourne en − dans le même temps.
  */
 
 .bp-menu__pli {
@@ -64,14 +64,16 @@
 
 .bp-menu__pli-signe::after {
   rotate: 90deg;
+  transition: rotate 240ms var(--ease-out);
 }
 
 .bp-menu__pli[open] .bp-menu__pli-signe::after {
   rotate: 0deg;
 }
 
-.bp-menu__pli[open] {
-  padding-bottom: 1rem;
+/* L'air sous les pastilles tient dans le volet lui-même : le dépliage mesure la bonne hauteur, sans saut final. */
+.bp-menu__pli > .bp-menu__places:last-child {
+  margin-bottom: 1.5rem;
 }
 
 /* « Chercher un vin », en tête du menu : un champ dessiné (contour bleu ciel) qui ouvre la barre de recherche. */

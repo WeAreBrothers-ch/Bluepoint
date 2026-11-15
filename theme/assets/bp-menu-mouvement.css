@@ -1,0 +1,45 @@
+/*
+ * BluePoint — mouvement du menu du téléphone (snippets/bp-nav-mobile.liquid). Le panneau entre en 320 ms
+ * (assets/bp-menu.css) ; ici, ses lignes qui le suivent l'une après l'autre et sa sortie, plus vive.
+ */
+
+/* Le contenu suit le panneau, une ligne après l'autre (30 ms d'écart) : le menu se pose au lieu d'apparaître d'un bloc. */
+.bp-menu[open] :is(.bp-menu__search, .bp-menu__rows > li, .bp-menu__pli, .bp-menu__foot) {
+  animation: bp-menu-ligne 360ms var(--ease-out) backwards;
+  animation-delay: calc(60ms + var(--rang, 0) * 30ms);
+}
+.bp-menu__rows > li:nth-child(1) { --rang: 1; }
+.bp-menu__rows > li:nth-child(2) { --rang: 2; }
+.bp-menu__rows > li:nth-child(3) { --rang: 3; }
+.bp-menu__rows > li:nth-child(4) { --rang: 4; }
+.bp-menu__rows > li:nth-child(5) { --rang: 5; }
+.bp-menu__rows > li:nth-child(n + 6) { --rang: 6; }
+.bp-menu__pli { --rang: 7; }
+.bp-menu__foot { --rang: 8; }
+
+/* Fermeture (assets/bp-chrome.js) : plus vive que l'ouverture, le panneau remonte en s'effaçant. */
+.bp-menu.is-sortant {
+  animation: bp-menu-sort 200ms var(--ease-out) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-menu[open],
+  .bp-menu[open] *,
+  .bp-menu.is-sortant {
+    animation: none;
+  }
+}
+
+@keyframes bp-menu-ligne {
+  from {
+    opacity: 0;
+    translate: 0 -0.5rem;
+  }
+}
+
+@keyframes bp-menu-sort {
+  to {
+    opacity: 0;
+    translate: 0 -1rem;
+  }
+}

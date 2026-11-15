@@ -1,6 +1,7 @@
 {%- comment -%}
   Le sticker posé sur la photo de la fiche vin : une seule information, tirée des données de la bouteille
   (celles que « Modifier la fiche » de la page Stock de l'app enregistre) :
+  - un spiritueux : toujours son degré d'alcool (métachamp bluepoint.degre) ;
   - l'année, si le vin en a une (étiquette « millesime:… ») : changer l'année dans Stock change le sticker ;
   - sinon le degré d'alcool (métachamp bluepoint.degre), précédé de « Vol. » pour qu'on ne le prenne pas
     pour une réduction : « VOL. 12 % », « VOL. 13,5 % » ;
@@ -23,9 +24,16 @@
   endfor
 
   assign degre = product.metafields.bluepoint.degre.value
-  if millesime != blank
+  # Un spiritueux montre toujours son degré, même s'il porte une année.
+  assign montre_degre = false
+  if degre != blank
+    if product.type == 'Spiritueux' or millesime == blank
+      assign montre_degre = true
+    endif
+  endif
+  if montre_degre == false and millesime != blank
     assign texte = millesime
-  elsif degre != blank
+  elsif montre_degre
     assign degre_text = degre | append: ''
     assign degre_end = degre_text | slice: -2, 2
     if degre_end == '.0'
