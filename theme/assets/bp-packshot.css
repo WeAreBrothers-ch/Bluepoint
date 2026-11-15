@@ -78,3 +78,8 @@
   text-align: center;
   overflow-wrap: anywhere;
 }
+
+/* Sur le bleu moyen, l'encre marine ne ressort pas assez (3,2:1) : le nom passe en blanc (4,7:1). */
+.bp-packshot[data-teinte="4"] .bp-packshot__empty {
+  color: var(--c-blanc);
+}
