@@ -1,6 +1,6 @@
 {%- comment -%}
   Haut de l'accueil : un grand aplat bleu vif très arrondi qui porte le titre d'affiche (ses lignes montent
-  une seule fois, juste après l'intro), la photo (un tonneau dans les vignes) avec son éclat « Par cartons de 6 » et l'étiquette
+  une seule fois, juste après l'intro), la photo (la bouteille à la une posée sur un tonneau dans les vignes, montage) avec son éclat « Par cartons de 6 » et l'étiquette
   « À la une », puis, juste dessous, un bandeau marine qui défile (les trois promesses, séparées par des étoiles).
 {%- endcomment -%}
 {{ 'bp-hero.css' | asset_url | stylesheet_tag }}
@@ -64,7 +64,7 @@
     {%- if s.photo != blank -%}
       {{ s.photo | image_url: width: 2000 | image_tag: class: 'bp-hero__image', widths: '600, 900, 1200, 1600, 2000', sizes: '(min-width: 56rem) 42vw, 100vw', loading: 'eager', fetchpriority: 'high', alt: photo_alt }}
     {%- else -%}
-      <img class="bp-hero__image" src="{{ 'bp-photo-vigneron.webp' | asset_url }}" alt="{{ photo_alt | escape }}" width="1128" height="1400" fetchpriority="high">
+      <img class="bp-hero__image" src="{{ 'bp-photo-accueil-barolo.webp' | asset_url }}" alt="{{ photo_alt | escape }}" width="1128" height="1400" fetchpriority="high">
     {%- endif -%}
     {%- if s.photo_caption != blank -%}
       <figcaption class="bp-ui bp-hero__caption">{{ s.photo_caption | escape }}</figcaption>
@@ -112,8 +112,8 @@
     { "type": "text", "id": "secondary_label", "label": "Lien secondaire", "default": "Rencontrer Paolo" },
     { "type": "text", "id": "secondary_url", "label": "Adresse du lien secondaire", "default": "#maison" },
     { "type": "header", "content": "Photo" },
-    { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Sans photo choisie, la photo provisoire (un tonneau dans les vignes) s’affiche." },
-    { "type": "text", "id": "photo_alt", "label": "Description de la photo (accessibilité)", "default": "Un vieux tonneau de chêne au bout d’un rang de vigne, sous un ciel clair" },
+    { "type": "image_picker", "id": "photo", "label": "Photo", "info": "Sans photo choisie, le montage (le Barolo Passione di Re posé sur un tonneau dans les vignes) s’affiche. Il montre le Barolo : gardez-le comme bouteille « À la une »." },
+    { "type": "text", "id": "photo_alt", "label": "Description de la photo (accessibilité)", "default": "Une bouteille de Barolo Passione di Re posée sur un vieux tonneau de chêne, au bout d’un rang de vigne, sous un ciel clair" },
     { "type": "text", "id": "photo_caption", "label": "Légende", "default": "Chez le vigneron" },
     { "type": "text", "id": "sticker", "label": "Éclat sur la photo", "info": "Deux ou trois mots. Vide : pas d’éclat.", "default": "Par cartons de 6" },
     { "type": "product", "id": "featured_product", "label": "Bouteille « À la une »", "info": "Sans choix, la première bouteille du catalogue." },
