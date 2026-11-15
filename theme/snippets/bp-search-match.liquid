@@ -1,0 +1,63 @@
+{%- comment -%}
+  La recherche du site, faite par le thème sur toute la carte (Shopify ne cherche ni dans les cépages ni dans les régions,
+  rangés en métachamps). Écrit les positions (dans « products ») des bouteilles trouvées, séparées par des virgules :
+  d'abord celles où chaque mot cherché apparaît dans une information courte (nom, producteur, type, cépage, région,
+  étiquettes : pays, région, millésime…), puis celles où il faut aussi les textes (dégustation, domaine).
+  Comparaison sans majuscules ni accents (filtre « handle ») et par morceau de mot : « nebbi » trouve Nebbiolo.
+  Les mots d'une seule lettre (« d' » de « d'Alba ») ne comptent pas.
+  Paramètres : products (liste de produits), terms (texte cherché)
+  Utilisé par sections/bp-search-suggest.liquid et sections/bp-search.liquid.
+{%- endcomment -%}
+{%- liquid
+  assign words = terms | handle | split: '-'
+  assign wanted = ''
+  for word in words
+    if word.size > 1
+      assign wanted = wanted | append: word | append: ','
+    endif
+  endfor
+  assign wanted = wanted | split: ','
+
+  assign strong = ''
+  assign weak = ''
+  if wanted.size > 0
+    for product in products
+      assign tags = product.tags | join: ' '
+      capture short_text
+        echo product.title | append: ' ' | append: product.vendor | append: ' ' | append: product.type
+        echo ' ' | append: product.metafields.bluepoint.cepage.value | append: ' ' | append: product.metafields.bluepoint.region.value
+        echo ' ' | append: tags
+      endcapture
+      assign short_key = short_text | handle
+
+      assign in_short = true
+      for word in wanted
+        unless short_key contains word
+          assign in_short = false
+          break
+        endunless
+      endfor
+      if in_short
+        assign strong = strong | append: forloop.index0 | append: ','
+        continue
+      endif
+
+      capture long_text
+        echo product.metafields.bluepoint.degustation.value | append: ' ' | append: product.metafields.bluepoint.producteur.value
+      endcapture
+      assign all_key = long_text | handle | prepend: '-' | prepend: short_key
+
+      assign in_all = true
+      for word in wanted
+        unless all_key contains word
+          assign in_all = false
+          break
+        endunless
+      endfor
+      if in_all
+        assign weak = weak | append: forloop.index0 | append: ','
+      endif
+    endfor
+  endif
+  echo strong | append: weak
+-%}

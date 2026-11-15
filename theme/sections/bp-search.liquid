@@ -1,8 +1,10 @@
 {%- comment -%}
   La page des résultats de recherche (/search?q=…&type=product, gabarit templates/search.json), dans la même présentation
   que la boutique : « Recherche » en petit, ce qu'on a cherché en titre d'affiche avec le nombre de vins, le champ pour
-  chercher autre chose, puis la grille des cartes bouteille dans l'ordre de pertinence donné par Shopify.
-  24 vins par page : l'en-tête (sections/bp-header.liquid) suit la pagination de la recherche jusqu'à la page 8.
+  chercher autre chose, les raccourcis (producteurs, cépages, régions…), puis la grille des cartes bouteille.
+  Les vins sont trouvés par le thème sur toute la carte (snippets/bp-search-match.liquid : nom, producteur, cépage, région,
+  textes…), d'abord les plus proches. S'il n'en trouve aucun, la recherche de Shopify prend le relais, 24 vins par page
+  (l'en-tête, sections/bp-header.liquid, suit cette pagination jusqu'à la page 8).
   Les cépages ont leur propre page (sections/bp-cepage.liquid, gabarit search.cepage.json).
 {%- endcomment -%}
 {{ 'bp-collection.css' | asset_url | stylesheet_tag }}
@@ -11,6 +13,37 @@
 {%- liquid
   assign terms = search.terms | strip
   assign grid_title_id = 'bp-search-title-' | append: section.id
+  assign no_bottles = '' | split: ','
+  assign matches = no_bottles
+  assign places = ''
+  if search.performed and terms != blank
+    paginate collections.all.products by 250
+      assign catalog = collections.all.products | concat: no_bottles
+    endpaginate
+    capture places
+      render 'bp-search-places', products: catalog, terms: terms, limit: 12
+    endcapture
+    assign places = places | strip
+    capture positions
+      render 'bp-search-match', products: catalog, terms: terms
+    endcapture
+    assign positions = positions | strip | split: ','
+    for position in positions
+      assign index = position | plus: 0
+      assign bottle = catalog[index]
+      assign one = catalog | where: 'id', bottle.id
+      assign matches = matches | concat: one
+    endfor
+  endif
+  # Rien trouvé par le thème (faute de frappe…) : la recherche de Shopify, plus tolérante, prend le relais.
+  assign use_shopify = false
+  if search.performed and matches.size == 0 and search.results_count > 0
+    assign use_shopify = true
+  endif
+  assign count = matches.size
+  if use_shopify
+    assign count = search.results_count
+  endif
 -%}
 
 <div class="bp-shop">
@@ -19,7 +52,7 @@
     <h1 class="bp-affiche bp-shop__title bp-search-page__title">
       {%- if search.performed and terms != blank -%}
         « {{ terms | escape }} »
-        <sup class="bp-shop__count"><span class="bp-sr-only">{{ search.results_count }} vin{% if search.results_count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ search.results_count }}</span></sup>
+        <sup class="bp-shop__count"><span class="bp-sr-only">{{ count }} vin{% if count > 1 %}s{% endif %}</span><span aria-hidden="true">{{ count }}</span></sup>
       {%- else -%}
         Chercher un vin
       {%- endif -%}
@@ -27,51 +60,39 @@
     <div class="bp-search-page__form">
       {%- render 'bp-search-form', id: 'bp-search-page-champ', value: terms -%}
     </div>
+    {%- if places != blank -%}
+      <ul class="bp-search__places bp-search-page__places" role="list" aria-label="Producteurs, cépages et régions">{{ places }}</ul>
+    {%- endif -%}
   </header>
 
   {%- if search.performed -%}
-    {%- paginate search.results by 24 -%}
-      <h2 id="{{ grid_title_id }}" class="bp-sr-only">Les vins trouvés pour « {{ terms | escape }} »</h2>
-      {%- if search.results_count == 0 -%}
-        <p class="bp-shop__empty">
-          Aucun vin pour « {{ terms | escape }} ». Essayez le nom d’un producteur, d’une région ou d’un cépage.
-          <a class="bp-shop__empty-link" href="{{ routes.all_products_collection_url }}">Voir toute la boutique</a>
-        </p>
-      {%- else -%}
-        <ul class="bp-grille bp-shop__grid bp-search-page__grid" aria-labelledby="{{ grid_title_id }}">
-          {%- for result in search.results -%}
-            {%- if result.object_type == 'product' -%}
-              {%- liquid
-                assign priority = false
-                if forloop.index <= 2 and paginate.current_page == 1
-                  assign priority = true
-                endif
-              -%}
-              <li>
-                {%- render 'bp-product-card',
-                  product: result,
-                  teinte: forloop.index,
-                  priority: priority,
-                  sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
-                -%}
-              </li>
-            {%- endif -%}
-          {%- endfor -%}
-        </ul>
-
+    <h2 id="{{ grid_title_id }}" class="bp-sr-only">Les vins trouvés pour « {{ terms | escape }} »</h2>
+    {%- if count == 0 -%}
+      <p class="bp-shop__empty">
+        Aucun vin pour « {{ terms | escape }} ». Essayez le nom d’un producteur, d’une région ou d’un cépage.
+        <a class="bp-shop__empty-link" href="{{ routes.all_products_collection_url }}">Voir toute la boutique</a>
+      </p>
+    {%- elsif use_shopify -%}
+      {%- paginate search.results by 24 -%}
+        {%- liquid
+          assign found = search.results | where: 'object_type', 'product'
+          assign first_page = false
+          if paginate.current_page == 1
+            assign first_page = true
+          endif
+        -%}
+        {%- render 'bp-search-grid', products: found, title_id: grid_title_id, first_page: first_page -%}
         {%- if paginate.pages > 1 -%}
           <nav class="bp-ui bp-shop__pages" aria-label="Pages des résultats">
-            {%- if paginate.previous -%}
-              <a class="bp-carre bp-shop__page-link" href="{{ paginate.previous.url }}">Préc.</a>
-            {%- endif -%}
+            {%- if paginate.previous -%}<a class="bp-carre bp-shop__page-link" href="{{ paginate.previous.url }}">Préc.</a>{%- endif -%}
             <span>Page {{ paginate.current_page }} sur {{ paginate.pages }}</span>
-            {%- if paginate.next -%}
-              <a class="bp-carre bp-shop__page-link" href="{{ paginate.next.url }}">Suiv.</a>
-            {%- endif -%}
+            {%- if paginate.next -%}<a class="bp-carre bp-shop__page-link" href="{{ paginate.next.url }}">Suiv.</a>{%- endif -%}
           </nav>
         {%- endif -%}
-      {%- endif -%}
-    {%- endpaginate -%}
+      {%- endpaginate -%}
+    {%- else -%}
+      {%- render 'bp-search-grid', products: matches, title_id: grid_title_id, first_page: true -%}
+    {%- endif -%}
   {%- endif -%}
 </div>
 

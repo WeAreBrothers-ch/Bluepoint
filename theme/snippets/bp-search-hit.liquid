@@ -1,0 +1,22 @@
+{%- comment -%}
+  Une suggestion de la barre de recherche (sections/bp-search-suggest.liquid) : la petite bouteille, le producteur, le nom, le prix.
+  Paramètres : bottle (produit)
+{%- endcomment -%}
+{%- capture cutout -%}{%- render 'bp-cutout-url', product: bottle, width: 160 -%}{%- endcapture -%}
+{%- assign cutout = cutout | strip -%}
+<li>
+  <a class="bp-search__hit" href="{{ bottle.url }}">
+    <span class="bp-search__thumb" aria-hidden="true">
+      {%- if cutout != blank -%}
+        <img src="{{ cutout }}" alt="" width="64" height="80" loading="lazy">
+      {%- elsif bottle.featured_image -%}
+        {{ bottle.featured_image | image_url: width: 160 | image_tag: alt: '', width: 64, height: 80, loading: 'lazy' }}
+      {%- endif -%}
+    </span>
+    <span class="bp-search__hit-text">
+      {%- if bottle.vendor != blank -%}<span class="bp-search__vendor">{{ bottle.vendor | escape }}</span>{%- endif -%}
+      <span class="bp-search__name">{{ bottle.title | escape }}</span>
+    </span>
+    <span class="bp-search__price">{% render 'bp-price', cents: bottle.price, mode: 'plain' %}</span>
+  </a>
+</li>

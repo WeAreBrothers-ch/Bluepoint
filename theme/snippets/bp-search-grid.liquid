@@ -1,0 +1,22 @@
+{%- comment -%}
+  La grille des résultats de recherche (sections/bp-search.liquid), dans l'ordre reçu : les cartes bouteille de la boutique.
+  Paramètres : products (liste), title_id (id du titre de la grille), first_page (true : les deux premières images tout de suite)
+{%- endcomment -%}
+<ul class="bp-grille bp-shop__grid bp-search-page__grid" aria-labelledby="{{ title_id }}">
+  {%- for product in products -%}
+    {%- liquid
+      assign priority = false
+      if forloop.index <= 2 and first_page
+        assign priority = true
+      endif
+    -%}
+    <li>
+      {%- render 'bp-product-card',
+        product: product,
+        teinte: forloop.index,
+        priority: priority,
+        sizes: '(min-width: 90rem) 24vw, (min-width: 64rem) 25vw, (min-width: 40rem) 33vw, 50vw'
+      -%}
+    </li>
+  {%- endfor -%}
+</ul>

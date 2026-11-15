@@ -25,7 +25,8 @@
         assign name = name | remove: digit
       endfor
       # Les points d'un numéro de clone restent sans les chiffres : « Incrocio Manzoni 13.0.25 » → « Incrocio Manzoni ».
-      assign name = name | remove: '.' | strip
+      # Les espaces insécables (« 100 % », « 100 % ») deviennent normales, pour que « strip » les retire aussi.
+      assign name = name | remove: '.' | replace: ' ', ' ' | replace: ' ', ' ' | strip
       assign key = name | handle
       if key == blank
         continue

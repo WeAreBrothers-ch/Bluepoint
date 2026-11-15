@@ -1,0 +1,96 @@
+{%- comment -%}
+  Les raccourcis de la recherche : les types de vin, pays, régions, producteurs et cépages dont le nom contient chaque
+  mot cherché (sans majuscules ni accents). Un <li> par raccourci, vers la page qui les rassemble (la même que dans le menu).
+  Au plus « limit » raccourcis, dans cet ordre : types, pays, régions, producteurs, cépages.
+  Paramètres : products (tout le catalogue), terms (texte cherché), limit
+  Utilisé par sections/bp-search-suggest.liquid et sections/bp-search.liquid.
+{%- endcomment -%}
+{%- liquid
+  assign words = terms | handle | split: '-'
+  assign wanted = ''
+  for word in words
+    if word.size > 1
+      assign wanted = wanted | append: word | append: ','
+    endif
+  endfor
+  assign wanted = wanted | split: ','
+
+  assign shop_url = routes.all_products_collection_url
+  capture types
+    render 'bp-catalog-data', mode: 'types', products: products
+  endcapture
+  capture countries
+    render 'bp-catalog-data', mode: 'countries', products: products
+  endcapture
+  capture regions
+    render 'bp-catalog-data', mode: 'regions', products: products
+  endcapture
+  capture grapes
+    render 'bp-cepages', products: products
+  endcapture
+  assign types = types | split: '|'
+  assign countries = countries | split: '|'
+  assign regions = regions | split: '|'
+  assign grapes = grapes | split: '|'
+  assign vendors = products | map: 'vendor' | uniq | sort_natural
+
+  # Une ligne par candidat : genre ¦ nom affiché ¦ adresse ¦ texte comparé ; les lignes séparées par « § ».
+  assign candidates = ''
+  if wanted.size > 0
+    for type in types
+      capture label
+        render 'bp-type-label', type: type
+      endcapture
+      assign label = label | strip
+      assign url = type | handle | prepend: '/' | prepend: shop_url
+      assign candidates = candidates | append: 'Type¦' | append: label | append: '¦' | append: url | append: '¦' | append: type | append: ' ' | append: label | append: '§'
+    endfor
+    for tag in countries
+      assign name = tag | remove_first: 'pays:' | strip
+      assign url = tag | handle | prepend: '/' | prepend: shop_url
+      assign candidates = candidates | append: 'Pays¦' | append: name | append: '¦' | append: url | append: '¦' | append: name | append: '§'
+    endfor
+    for tag in regions
+      assign name = tag | remove_first: 'region:' | strip
+      assign url = tag | handle | prepend: '/' | prepend: shop_url
+      assign candidates = candidates | append: 'Région¦' | append: name | append: '¦' | append: url | append: '¦' | append: name | append: '§'
+    endfor
+    for vendor in vendors
+      if vendor == blank
+        continue
+      endif
+      assign url = vendor | url_for_vendor
+      assign candidates = candidates | append: 'Producteur¦' | append: vendor | append: '¦' | append: url | append: '¦' | append: vendor | append: '§'
+    endfor
+    for grape in grapes
+      assign url = grape | url_encode | prepend: '?view=cepage&q=' | prepend: routes.search_url
+      assign candidates = candidates | append: 'Cépage¦' | append: grape | append: '¦' | append: url | append: '¦' | append: grape | append: '§'
+    endfor
+  endif
+
+  assign shown = 0
+  assign lines = candidates | split: '§'
+  for line in lines
+    if shown >= limit
+      break
+    endif
+    assign parts = line | split: '¦'
+    if parts.size < 4
+      continue
+    endif
+    assign key = parts[3] | handle
+    assign found = true
+    for word in wanted
+      unless key contains word
+        assign found = false
+        break
+      endunless
+    endfor
+    if found
+      assign shown = shown | plus: 1
+      assign href = parts[2] | escape
+      assign name = parts[1] | escape
+      echo '<li><a class="bp-ui bp-search__place" href="' | append: href | append: '"><span class="bp-search__place-kind">' | append: parts[0] | append: '</span> ' | append: name | append: '</a></li>'
+    endif
+  endfor
+-%}

@@ -1,40 +1,58 @@
 {%- comment -%}
   Les suggestions de la barre de recherche (snippets/bp-search-dialog.liquid). Jamais posée dans une page : assets/bp-search.js
   la demande à Shopify (/search/suggest?…&section_id=bp-search-suggest) à chaque mot tapé et l'insère telle quelle.
-  Six vins au plus : la petite bouteille, le producteur, le nom, le prix ; puis le lien vers tous les résultats.
-  data-bp-search-count donne au script le nombre de vins, pour l'annoncer aux lecteurs d'écran.
+  1. Les raccourcis (types, pays, régions, producteurs, cépages : snippets/bp-search-places.liquid), 4 au plus ;
+  2. six vins au plus, trouvés par le thème sur toute la carte (snippets/bp-search-match.liquid) ; s'il n'en trouve aucun
+     (faute de frappe…), ceux de la recherche prédictive de Shopify, plus tolérante ;
+  3. le lien vers tous les résultats.
+  data-bp-search-count donne au script le nombre de suggestions, pour l'annoncer aux lecteurs d'écran.
 {%- endcomment -%}
 {%- liquid
-  assign bottles = predictive_search.resources.products
   assign terms = predictive_search.terms | strip
-  assign all_url = routes.search_url | append: '?type=product&options%5Bprefix%5D=last&q='
+  assign no_bottles = '' | split: ','
+  paginate collections.all.products by 250
+    assign catalog = collections.all.products | concat: no_bottles
+  endpaginate
+
+  capture places
+    render 'bp-search-places', products: catalog, terms: terms, limit: 4
+  endcapture
+  assign places = places | strip
+  assign place_count = places | split: '<li>' | size | minus: 1
+  if place_count < 0
+    assign place_count = 0
+  endif
+
+  capture positions
+    render 'bp-search-match', products: catalog, terms: terms
+  endcapture
+  assign positions = positions | strip | split: ','
+  assign bottles = no_bottles
+  for position in positions limit: 6
+    assign index = position | plus: 0
+    assign bottle = catalog[index]
+    assign one = catalog | where: 'id', bottle.id
+    assign bottles = bottles | concat: one
+  endfor
+  if bottles.size == 0
+    assign bottles = predictive_search.resources.products
+  endif
+
+  assign total = bottles.size | plus: place_count
+  assign all_url = terms | url_encode | prepend: '?type=product&options%5Bprefix%5D=last&q=' | prepend: routes.search_url
 -%}
-<div data-bp-search-count="{{ bottles.size }}">
+<div data-bp-search-count="{{ total }}">
+  {%- if places != blank -%}
+    <ul class="bp-search__places" role="list">{{ places }}</ul>
+  {%- endif -%}
   {%- if bottles.size > 0 -%}
     <ul class="bp-search__list" role="list">
       {%- for bottle in bottles -%}
-        {%- capture cutout -%}{%- render 'bp-cutout-url', product: bottle, width: 160 -%}{%- endcapture -%}
-        {%- assign cutout = cutout | strip -%}
-        <li>
-          <a class="bp-search__hit" href="{{ bottle.url }}">
-            <span class="bp-search__thumb" aria-hidden="true">
-              {%- if cutout != blank -%}
-                <img src="{{ cutout }}" alt="" width="64" height="80" loading="lazy">
-              {%- elsif bottle.featured_image -%}
-                {{ bottle.featured_image | image_url: width: 160 | image_tag: alt: '', width: 64, height: 80, loading: 'lazy' }}
-              {%- endif -%}
-            </span>
-            <span class="bp-search__hit-text">
-              {%- if bottle.vendor != blank -%}<span class="bp-search__vendor">{{ bottle.vendor | escape }}</span>{%- endif -%}
-              <span class="bp-search__name">{{ bottle.title | escape }}</span>
-            </span>
-            <span class="bp-search__price">{% render 'bp-price', cents: bottle.price, mode: 'plain' %}</span>
-          </a>
-        </li>
+        {%- render 'bp-search-hit', bottle: bottle -%}
       {%- endfor -%}
     </ul>
-    <a class="bp-ui bp-search__all" href="{{ all_url }}{{ terms | url_encode }}">Voir tous les vins pour « {{ terms | escape }} »</a>
-  {%- else -%}
+    <a class="bp-ui bp-search__all" href="{{ all_url }}">Voir tous les vins pour « {{ terms | escape }} »</a>
+  {%- elsif places == blank -%}
     <p class="bp-search__none">Aucun vin pour « {{ terms | escape }} ». Essayez le nom d’un producteur, d’une région ou d’un cépage.</p>
   {%- endif -%}
 </div>

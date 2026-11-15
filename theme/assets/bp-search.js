@@ -2,8 +2,8 @@
  * BluePoint — barre de recherche des vins (snippets/bp-search-dialog.liquid), ouverte par « Chercher » dans l'en-tête
  * ou « Chercher un vin » dans le menu du téléphone.
  * - <dialog> natif : Échap referme (même depuis le champ), le focus reste dedans ; un clic sur le fond assombri referme aussi.
- * - Pendant la frappe (dès 2 lettres, après une courte pause), les suggestions viennent de Shopify
- *   (recherche prédictive, rendue par sections/bp-search-suggest.liquid) ; la demande précédente est annulée.
+ * - Pendant la frappe (dès 2 lettres, après une courte pause), les suggestions (raccourcis vers producteurs, cépages,
+ *   régions… puis vins) sont rendues par sections/bp-search-suggest.liquid ; la demande précédente est annulée.
  * - Flèches haut et bas : du champ aux suggestions et entre elles. Entrée envoie vers la page des résultats.
  * - Si Shopify ne répond pas, un message le dit ; Entrée mène toujours à la page des résultats.
  */
@@ -59,9 +59,9 @@
     function show(fragment, count) {
       results.replaceChildren(fragment.cloneNode(true));
       results.hidden = false;
-      if (count === 0) status.textContent = "Aucun vin trouvé.";
-      else if (count === 1) status.textContent = "1 vin trouvé. Flèche du bas pour le choisir.";
-      else status.textContent = count + " vins trouvés. Flèche du bas pour les parcourir.";
+      if (count === 0) status.textContent = "Aucun résultat.";
+      else if (count === 1) status.textContent = "1 résultat. Flèche du bas pour le choisir.";
+      else status.textContent = count + " résultats. Flèche du bas pour les parcourir.";
     }
 
     function showError() {

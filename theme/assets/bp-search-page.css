@@ -19,3 +19,8 @@
   border-top: var(--trait) solid var(--ligne);
 }
 
+
+.bp-search-page__places {
+  justify-content: center;
+  margin-bottom: 0;
+}
