@@ -2,6 +2,7 @@
   Menu téléphone et tablette : un panneau plein écran bleu (<dialog>, ouvert par le bouton « Menu » ; assets/bp-chrome.js),
   comme celui du site de référence : de grosses pastilles claires sur un fond de couleur. Pensé pour le pouce :
   1. le haut : le logo et « Fermer » ;
+  1 bis. « Chercher un vin », qui ouvre la barre de recherche ;
   2. une pastille par ligne : toute la boutique, puis un type de vin, avec le nombre de bouteilles ;
   3. trois volets à déplier (<details>, sans script) : producteurs de A à Z, pays et régions, cépages,
      chacun en petites pastilles (styles : assets/bp-menu-plis.css) ;
@@ -26,6 +27,14 @@
   </div>
 
   <nav class="bp-menu__body" aria-label="Menu principal">
+    {%- comment -%} Ouvre la barre de recherche (snippets/bp-search-dialog.liquid, assets/bp-search.js) : le menu se ferme, la recherche s'ouvre. {%- endcomment -%}
+    <button type="button" class="bp-ui bp-menu__search" aria-haspopup="dialog" aria-expanded="false" data-bp-search-open>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <circle cx="10.5" cy="10.5" r="6.75" fill="none" stroke="currentColor" stroke-width="2.25"/>
+        <path d="m15.5 15.5 5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"/>
+      </svg>
+      Chercher un vin
+    </button>
     <ul class="bp-menu__rows">
       <li>
         <a class="bp-ui bp-menu__row" href="{{ shop_url }}">

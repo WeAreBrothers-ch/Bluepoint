@@ -1,6 +1,7 @@
 /**
- * BluePoint — barre de recherche des vins (snippets/bp-search-dialog.liquid), ouverte par « Chercher » dans l'en-tête.
- * - <dialog> natif : Échap referme, le focus reste dedans ; un clic sur le fond assombri referme aussi.
+ * BluePoint — barre de recherche des vins (snippets/bp-search-dialog.liquid), ouverte par « Chercher » dans l'en-tête
+ * ou « Chercher un vin » dans le menu du téléphone.
+ * - <dialog> natif : Échap referme (même depuis le champ), le focus reste dedans ; un clic sur le fond assombri referme aussi.
  * - Pendant la frappe (dès 2 lettres, après une courte pause), les suggestions viennent de Shopify
  *   (recherche prédictive, rendue par sections/bp-search-suggest.liquid) ; la demande précédente est annulée.
  * - Flèches haut et bas : du champ aux suggestions et entre elles. Entrée envoie vers la page des résultats.
@@ -28,6 +29,7 @@
     var cache = new Map();
     var pending = null;
     var timer = 0;
+    var returnTo = null;
 
     function setExpanded(isOpen) {
       openButtons.forEach(function (button) {
@@ -35,8 +37,13 @@
       });
     }
 
-    function open() {
+    function open(event) {
       if (dialog.open) return;
+      // Depuis le menu du téléphone : le menu se ferme d'abord, sinon il rendrait le focus à « Menu » par-dessus la recherche.
+      var trigger = event && event.currentTarget instanceof Element ? event.currentTarget : null;
+      var host = trigger ? trigger.closest("dialog") : null;
+      if (host && host.open) host.close();
+      returnTo = host ? document.querySelector("[data-bp-menu-open]") : null;
       dialog.showModal();
       setExpanded(true);
       input.focus();
@@ -147,8 +154,18 @@
       if (target === dialog || target.closest("[data-bp-search-close]")) dialog.close();
     });
 
+    // Échap ferme tout de suite (sinon le champ de recherche se vide d'abord, et il faut appuyer deux fois).
+    input.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      dialog.close();
+    });
+
     dialog.addEventListener("close", function () {
       setExpanded(false);
+      // Ouverte depuis le menu (fermé entre-temps) : le focus revient sur « Menu », pas en haut de la page.
+      if (returnTo instanceof HTMLElement) returnTo.focus();
+      returnTo = null;
     });
   }
 
