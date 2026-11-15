@@ -24,7 +24,8 @@
 
 /* Menu déroulant (Le domaine, Service, Fiche d'identité) : l'intitulé devient une ligne à toucher, avec un + qui devient −. */
 .bp-product-block--pli {
-  display: block;
+  /* flow-root : la marge du texte reste dans le pli, la hauteur ne saute pas à la fin du dépliage. */
+  display: flow-root;
   padding-block: 0;
 }
 

@@ -14,7 +14,7 @@
   {% render 'bp-section-head', id: heading_id, title: s.title, kicker: s.kicker %}
   <div class="bp-faq">
     {%- for block in section.blocks -%}
-      <details class="bp-faq__item" {{ block.shopify_attributes }}>
+      <details class="bp-faq__item" data-bp-deplie {{ block.shopify_attributes }}>
         <summary class="bp-faq__question">
           <span>{{ block.settings.question | escape }}</span>
           <span class="bp-faq__marque" aria-hidden="true"></span>

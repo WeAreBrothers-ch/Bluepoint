@@ -29,14 +29,14 @@
   {%- endif -%}
 
   {%- if domain != blank -%}
-    <details class="bp-product-block bp-product-block--pli" data-bp-pli>
+    <details class="bp-product-block bp-product-block--pli" data-bp-pli data-bp-deplie>
       <summary class="bp-product-block__label">Le domaine<span class="bp-product-block__icon" aria-hidden="true"></span></summary>
       <div class="bp-product-block__text">{{ domain }}</div>
     </details>
   {%- endif -%}
 
   {%- if service != blank -%}
-    <details class="bp-product-block bp-product-block--pli" data-bp-pli>
+    <details class="bp-product-block bp-product-block--pli" data-bp-pli data-bp-deplie>
       <summary class="bp-product-block__label">Service et conservation<span class="bp-product-block__icon" aria-hidden="true"></span></summary>
       <div class="bp-product-block__text">{{ service }}</div>
     </details>
