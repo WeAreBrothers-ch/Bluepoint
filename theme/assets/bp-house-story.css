@@ -5,10 +5,14 @@
   gap: var(--gouttiere);
 }
 
-/* Une seule grande photo (Paolo), légendée dessous. */
+/* La photo de Paolo, légendée dessous : carrée sur téléphone, cadrée sur Paolo (tête et pieds visibles). */
 .bp-house__gallery {
   display: grid;
   align-content: start; /* la légende reste sous la photo, même quand le texte voisin est long */
+}
+
+.bp-house__gallery .bp-figure__image {
+  object-position: 50% 62%;
 }
 
 /* Paolo : le texte dans une grande tuile bleu ciel arrondie, cernée d'encre. */
@@ -48,6 +52,35 @@
   .bp-house {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
+    padding-bottom: 2.25rem; /* place de la légende, posée sous la photo */
+  }
+
+  /* Deux cases de même taille (demande du 15/11) : la photo prend la hauteur de la tuile de texte,
+     34rem au moins ; la légende passe sous la case, hors de la rangée. */
+  .bp-house__gallery {
+    display: block;
+  }
+
+  .bp-house__gallery .bp-figure {
+    position: relative;
+    display: block;
+    height: 100%;
+  }
+
+  .bp-house__gallery .bp-figure__frame {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 34rem;
+  }
+
+  .bp-house__gallery .bp-figure__caption {
+    position: absolute;
+    top: calc(100% + 0.7rem);
+    left: 0;
+  }
+
+  .bp-house__text {
+    min-height: 34rem;
   }
 }
 /* « Lire la suite » : le premier paragraphe, puis un lien en pilule qui déplie le reste. */
