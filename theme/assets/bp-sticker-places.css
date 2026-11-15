@@ -124,6 +124,10 @@
  * grandissent d'une fois et demie, le mot suit (sa taille dépend de la largeur du sticker). Celui de l'en-tête
  * ne grandit que sur les grands écrans : il doit tenir dans le vide entre le logo et les rayons.
  */
+/* Téléphone et tablette : un quart plus grands (demande d'Eliott du 15/11). */
+.bp-sticker {
+  --sticker-zoom: 1.25;
+}
 @media (min-width: 64rem) {
   .bp-sticker {
     --sticker-zoom: 1.5;
