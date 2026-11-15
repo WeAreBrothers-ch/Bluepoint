@@ -1,5 +1,6 @@
 {%- comment -%}
-  « La maison » : deux photos d’ambiance légendées, puis l’histoire de Paolo.
+  « La maison » : une grande photo de Paolo légendée « Paolo Pioletti », puis son histoire
+  (demande du 15/11 : la photo de Paolo remplace « À la vigne » et « Les étiquettes »).
   Les coordonnées (e-mail, téléphone) ne sont écrites qu’une fois, dans le pied de page.
   Le texte montre son premier paragraphe, le reste se déplie avec « Lire la suite » (demande d'Eliott du 13/11 :
   trop de texte d'un coup sur téléphone). Menu déroulant natif (<details>) : marche sans JavaScript.
@@ -9,9 +10,6 @@
 {%- liquid
   assign s = section.settings
   assign heading_id = 'bp-maison-title-' | append: section.id
-  assign fallbacks = 'bp-photo-vigne.webp,bp-photo-etiquettes.webp' | split: ','
-  assign widths = '736,400' | split: ','
-  assign heights = '920,400' | split: ','
   assign body_first = s.body | split: '</p>' | first | append: '</p>'
   assign body_rest = s.body | remove_first: body_first | strip
 -%}
@@ -20,26 +18,16 @@
   {% render 'bp-section-head', id: heading_id, title: s.title %}
   <div class="bp-house">
     <div class="bp-house__gallery">
-      {%- for i in (1..2) -%}
-        {%- liquid
-          assign image_key = 'photo_' | append: i
-          assign alt_key = 'photo_' | append: i | append: '_alt'
-          assign caption_key = 'photo_' | append: i | append: '_caption'
-          assign fallback = fallbacks[forloop.index0]
-          assign fallback_width = widths[forloop.index0]
-          assign fallback_height = heights[forloop.index0]
-        -%}
-        {% render 'bp-photo-figure',
-          image: s[image_key],
-          fallback: fallback,
-          width: fallback_width,
-          height: fallback_height,
-          alt: s[alt_key],
-          caption: s[caption_key],
-          ratio: '4 / 5',
-          sizes: '(min-width: 64rem) 26vw, 46vw'
-        %}
-      {%- endfor -%}
+      {% render 'bp-photo-figure',
+        image: s.photo_1,
+        fallback: 'bp-photo-paolo.webp',
+        width: 1200,
+        height: 1600,
+        alt: s.photo_1_alt,
+        caption: s.photo_1_caption,
+        ratio: '3 / 4',
+        sizes: '(min-width: 64rem) 46vw, 92vw'
+      %}
     </div>
 
     <div class="bp-house__text">
@@ -76,13 +64,10 @@
       "label": "Texte",
       "default": "<p>Paolo Pioletti importe des vins italiens depuis 2003. Après des années à chercher des vignerons attachés au travail artisanal, il s’est ouvert aux vins suisses. Depuis 2020, il s’y consacre entièrement.</p><p>De petits domaines d’Italie et de Suisse romande, et une relation directe avec chaque vigneron.</p>"
     },
-    { "type": "header", "content": "Photos", "info": "Sans photo choisie, les photos provisoires s’affichent." },
-    { "type": "image_picker", "id": "photo_1", "label": "Photo 1" },
-    { "type": "text", "id": "photo_1_alt", "label": "Description 1", "default": "Un vigneron en t-shirt rouge taille la vigne au milieu des feuilles" },
-    { "type": "text", "id": "photo_1_caption", "label": "Légende 1", "default": "À la vigne" },
-    { "type": "image_picker", "id": "photo_2", "label": "Photo 2" },
-    { "type": "text", "id": "photo_2_alt", "label": "Description 2", "default": "Trois bouteilles de vin aux étiquettes dessinées, posées côte à côte" },
-    { "type": "text", "id": "photo_2_caption", "label": "Légende 2", "default": "Les étiquettes" }
+    { "type": "header", "content": "Photo", "info": "Sans photo choisie, la photo de Paolo devant la camionnette s’affiche." },
+    { "type": "image_picker", "id": "photo_1", "label": "Photo" },
+    { "type": "text", "id": "photo_1_alt", "label": "Description", "default": "Paolo Pioletti, souriant, appuyé contre la camionnette BluePoint Distribution dans une rue de Lutry" },
+    { "type": "text", "id": "photo_1_caption", "label": "Légende", "default": "Paolo Pioletti" }
   ],
   "presets": [{ "name": "La maison BluePoint" }]
 }

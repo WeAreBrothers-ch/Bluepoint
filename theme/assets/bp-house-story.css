@@ -5,11 +5,10 @@
   gap: var(--gouttiere);
 }
 
+/* Une seule grande photo (Paolo), légendée dessous. */
 .bp-house__gallery {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start; /* la légende reste sous sa photo, même quand le texte voisin est long */
-  gap: var(--gouttiere);
+  align-content: start; /* la légende reste sous la photo, même quand le texte voisin est long */
 }
 
 /* Paolo : le texte dans une grande tuile bleu ciel arrondie, cernée d'encre. */
