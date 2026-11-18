@@ -55,8 +55,9 @@ export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {
   return (
     <s-stack direction="block" gap="small-200">
       <s-search-field
-        label="Qui commande ?"
-        placeholder="Nom, entreprise ou numéro de téléphone"
+        label={"Qui commande\u202F?"}
+        placeholder="Ex. Monnier ou 079 123 45 67"
+        details="Nom, entreprise ou numéro de téléphone"
         value={term}
         onInput={(event) => setTerm(event.currentTarget.value)}
         {...(error === undefined ? {} : { error })}

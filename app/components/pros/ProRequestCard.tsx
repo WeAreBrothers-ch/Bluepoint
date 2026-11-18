@@ -3,6 +3,7 @@ import { useFetcher } from "react-router";
 import type { ProRequestView, ProsActionResult } from "../../lib/pros/view";
 import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
+import { IconHeading } from "../IconHeading";
 
 /**
  * Une demande de compte pro : qui, où, comment le joindre, puis « Accepter » ou « Refuser ».
@@ -25,10 +26,7 @@ export function ProRequestCard({ request, canCreate }: { readonly request: ProRe
     <ClientCard
       header={
         <>
-          <s-stack direction="inline" gap="small-200" alignItems="center">
-            <s-icon type="organization" />
-            <s-heading>{request.companyName}</s-heading>
-          </s-stack>
+          <IconHeading icon="organization">{request.companyName}</IconHeading>
           <s-text>{request.personName}</s-text>
           <s-text color="subdued">{request.receivedLabel}</s-text>
         </>
@@ -36,8 +34,20 @@ export function ProRequestCard({ request, canCreate }: { readonly request: ProRe
     >
         <s-stack direction="block" gap="small-100">
           {request.addressLines.length === 0 ? null : <s-text>{request.addressLines.join(", ")}</s-text>}
-          <s-text>{`${request.email} · ${request.phone}`}</s-text>
+          {/* Téléphone et e-mail chacun sur sa ligne : une longue adresse e-mail ne coupe plus le numéro sur un téléphone. */}
+          <s-text>{request.phone}</s-text>
+          <s-text>{request.email}</s-text>
           {request.vatNumber === null ? null : <s-text color="subdued">{`TVA\u202F: ${request.vatNumber}`}</s-text>}
+        </s-stack>
+        <s-stack direction="inline" gap="small-200">
+          {request.callHref === null ? null : (
+            <s-button icon="phone" href={request.callHref} target="_blank" accessibilityLabel={`Appeler ${request.personName}`}>
+              Appeler
+            </s-button>
+          )}
+          <s-button icon="email" href={`mailto:${request.email}`} target="_blank" accessibilityLabel={`Écrire à ${request.personName}`}>
+            Écrire
+          </s-button>
         </s-stack>
         {request.message === null ? null : (
           <s-banner tone="info" heading="Son message">

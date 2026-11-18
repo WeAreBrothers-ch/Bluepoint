@@ -9,11 +9,13 @@ Elle sert à l’équipe, pas aux clients :
 - **Agenda** : les livraisons du jour et de la semaine, à partir des commandes et de leurs dates de livraison.
 - **Nouvelle commande (téléphone)** : saisir une commande reçue par téléphone.
 - **Factures** : générer les factures PDF avec QR-facture suisse (paquet local `packages/facture-qr`).
-- **Clients pro** (`/app/pros`) : demandes reçues par le formulaire du site
+- **Clients pro** (`/app/clients/pros`) : demandes reçues par le formulaire du site
   (`https://<boutique>/apps/bon-commande/devenir-pro`, servi par le proxy d’app dans le thème) ;
   « Accepter » crée l’entreprise (paiement à N jours), rattache la personne (rôle « Commande uniquement »),
   pose l’étiquette `pro` et envoie l’e-mail d’invitation de Shopify. « Ajouter un client pro » fait de même
   pour un pro qui appelle. Demandes en base (table `ProRequest`), bandeau dans l’agenda s’il y en a.
+  Les demandes à valider sont rangées par ordre d’arrivée, la plus récente en haut, avec le jour et l’heure
+  (heure suisse) ; chaque carte a « Appeler » et « Écrire ».
 - **Bon de commande** côté boutique : paiement normal de Shopify. Un pro rattaché à une entreprise
   dont l’emplacement a « Net 30 » valide sa commande sans payer ; elle arrive non payée, avec ses
   conditions, et l’agenda l’affiche « Facture à 30 jours ». Le proxy `https://<boutique>/apps/bon-commande`
@@ -79,6 +81,13 @@ Les vins se vendent **par cartons de 6 bouteilles, au minimum un carton** (6, 12
   ancienne ligne d’une commande du site (par exemple 3 bouteilles) reste telle quelle tant qu’on n’y touche pas.
 - **Site** (thème) : l’ajout se fait par 6, le panier avance de 6 en 6, et « Commander » reste bloqué tant qu’une ligne
   n’est pas un carton complet. Shopify n’impose pas cette règle sur l’abonnement Basic : elle vit dans le thème.
+
+## Sur téléphone
+
+L’app s’ouvre aussi dans l’application Shopify du téléphone. Les pages sont faites pour un écran étroit : cartes
+l’une sous l’autre, boutons sur toute la largeur, numéros de téléphone jamais coupés (espaces insécables), aide des champs
+de recherche sous le champ plutôt que dans un texte d’exemple trop long. Les tableaux de « Litres vendus » défilent de
+côté s’ils sont trop larges, et « Vin par vin » range la sorte, le pays et la contenance sous le nom du vin.
 
 ## Noms des pages
 

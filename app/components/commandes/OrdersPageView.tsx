@@ -13,6 +13,7 @@ import { EmptyState } from "../EmptyState";
 import { FILL } from "../fill";
 import { GroupTitle } from "../GroupTitle";
 import { PaymentBadges } from "../agenda/TaskBadges";
+import { IconHeading } from "../IconHeading";
 
 /** Page « Commandes » : retrouver une commande (client, numéro, état) et l'ouvrir dans l'app. */
 
@@ -38,10 +39,7 @@ export function OrderCard({ item, clientId = null }: { readonly item: OrderListI
       header={
         <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
-            <s-stack direction="inline" gap="small-200" alignItems="center">
-              {task.mode === null ? null : <s-icon type={mode.icon} />}
-              <s-heading>{task.company ?? task.customerName}</s-heading>
-            </s-stack>
+            <IconHeading icon={task.mode === null ? null : mode.icon}>{task.company ?? task.customerName}</IconHeading>
             <s-stack direction="inline" gap="small-200" alignItems="center">
               <ClientKindBadge isPro={task.isPro} {...(task.mode === null ? {} : { detail: mode.label })} />
               <s-badge tone={badge.tone}>{badge.label}</s-badge>
@@ -93,7 +91,8 @@ export function OrdersPageView({ data }: { readonly data: OrdersPageData }) {
             <s-stack direction="block" gap="small-200">
               <s-search-field
                 label="Chercher une commande"
-                placeholder="Nom du client, entreprise, ville ou numéro"
+                placeholder="Ex. Monnier ou 1042"
+                details="Nom du client, entreprise, ville ou numéro de commande"
                 value={term}
                 onInput={(event) => setTerm(event.currentTarget.value)}
               />

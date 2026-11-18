@@ -1,4 +1,5 @@
 import { normalizePhoneE164 } from "../factures/phone";
+import { NBSP } from "../format/typography";
 import type { DeliveryTask } from "./types";
 
 /** Adresse, itinéraire et téléphone d'une livraison, prêts à afficher et à toucher. */
@@ -25,10 +26,13 @@ export function phoneHref(raw: string | null): string | null {
   return phone === null ? null : `tel:${phone}`;
 }
 
-/** Numéro suisse écrit à la suisse : « +41791234567 » → « 079 123 45 67 ». Autres numéros inchangés. */
+/**
+ * Numéro suisse écrit à la suisse : « +41791234567 » → « 079 123 45 67 ». Autres numéros inchangés.
+ * Espaces insécables : sur un téléphone, le numéro passe à la ligne d'un bloc au lieu d'être coupé en deux.
+ */
 export function phoneDisplay(raw: string): string {
   const phone = normalizePhoneE164(raw);
   if (phone === null || !phone.startsWith("+41")) return raw.trim();
   const national = `0${phone.slice(3)}`;
-  return `${national.slice(0, 3)} ${national.slice(3, 6)} ${national.slice(6, 8)} ${national.slice(8)}`;
+  return [national.slice(0, 3), national.slice(3, 6), national.slice(6, 8), national.slice(8)].join(NBSP);
 }

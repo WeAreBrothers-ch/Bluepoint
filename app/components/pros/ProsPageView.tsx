@@ -24,7 +24,7 @@ export function ProsPageView({ data }: { readonly data: ProsPageData }) {
         </s-section>
       ) : (
         <>
-          <GroupTitle title={`Demandes à valider (${data.pending.length})`} />
+          <GroupTitle title={`Demandes à valider (${data.pending.length})`} hint="Les plus récentes en haut." />
           {data.pending.map((request) => (
             <ProRequestCard key={request.id} request={request} canCreate={data.canCreate} />
           ))}
@@ -32,18 +32,21 @@ export function ProsPageView({ data }: { readonly data: ProsPageData }) {
       )}
       <s-section heading="Ajouter un client pro">
         <s-stack direction="block" gap="base">
-          <s-paragraph>Un pro vous appelle pour ouvrir un compte ? Créez-le ici directement, sans passer par le site.</s-paragraph>
+          <s-paragraph>{"Un pro vous appelle pour ouvrir un compte\u202F? Créez-le ici directement, sans passer par le site."}</s-paragraph>
           <AddProForm canCreate={data.canCreate} />
         </s-stack>
       </s-section>
       {data.decided.length === 0 ? null : (
         <s-section heading="Dernières réponses">
-          <s-stack direction="block" gap="small-200">
+          {/* Une réponse par bloc (nom, puis la décision et sa date) : se lit aussi bien sur un téléphone que sur un ordinateur. */}
+          <s-stack direction="block" gap="base">
             {data.decided.map((request) => (
-              <s-stack key={request.id} direction="inline" gap="small-200" alignItems="center">
-                <s-badge tone={request.accepted ? "success" : "neutral"}>{request.accepted ? "Acceptée" : "Refusée"}</s-badge>
-                <s-text>{`${request.companyName} — ${request.personName}`}</s-text>
-                <s-text color="subdued">{request.decisionLabel ?? ""}</s-text>
+              <s-stack key={request.id} direction="block" gap="small-100">
+                <s-text type="strong">{request.companyName}</s-text>
+                <s-text color="subdued">{request.personName}</s-text>
+                <s-stack direction="inline">
+                  <s-badge tone={request.accepted ? "success" : "neutral"}>{request.decisionLabel ?? (request.accepted ? "Acceptée" : "Refusée")}</s-badge>
+                </s-stack>
               </s-stack>
             ))}
           </s-stack>

@@ -34,3 +34,10 @@ export function formatSwissDateTime(instant: Date): string {
   });
   return formatter.format(instant);
 }
+
+const SWISS_TIME = new Intl.DateTimeFormat("fr-CH", { timeZone: SWISS_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
+
+/** Heure suisse d'un instant, ex. « 14:05 » (heure d'été comprise). */
+export function formatSwissTime(instant: Date): string {
+  return SWISS_TIME.format(instant);
+}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { IsoDate } from "../metafields/definitions";
 import { formatAmount, formatChf } from "./money";
-import { formatShortSwissDate, formatSwissDate } from "./dates";
+import { formatShortSwissDate, formatSwissDate, formatSwissTime } from "./dates";
 import { withColon } from "./typography";
 
 describe("formatChf", () => {
@@ -24,6 +24,13 @@ describe("dates suisses", () => {
   it("formate jj.mm.aaaa sans décalage de fuseau", () => {
     expect(formatSwissDate("2026-01-01" as IsoDate)).toBe("01.01.2026");
     expect(formatShortSwissDate("2026-12-31" as IsoDate)).toBe("31.12");
+  });
+});
+
+describe("heure suisse", () => {
+  it("donne l'heure de Zurich, en hiver comme en été", () => {
+    expect(formatSwissTime(new Date("2026-11-17T15:05:00Z"))).toBe("16:05");
+    expect(formatSwissTime(new Date("2026-07-17T06:05:00Z"))).toBe("08:05");
   });
 });
 

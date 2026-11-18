@@ -64,12 +64,21 @@ export function countPendingProRequests(shop: string): Promise<number> {
   return prisma.proRequest.count({ where: { shop, status: "en_attente" } });
 }
 
+/**
+ * Demandes à valider, dans l'ordre où elles sont arrivées : la plus récente en haut, comme « Toutes les commandes ».
+ * L'identifiant départage deux demandes reçues à la même milliseconde : l'ordre ne change jamais d'un affichage à l'autre.
+ */
 export function listPendingProRequests(shop: string): Promise<ProRequest[]> {
-  return prisma.proRequest.findMany({ where: { shop, status: "en_attente" }, orderBy: { createdAt: "asc" } });
+  return prisma.proRequest.findMany({ where: { shop, status: "en_attente" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
 }
 
+/** Dernières réponses, la plus récente en haut. */
 export function listDecidedProRequests(shop: string, take = 10): Promise<ProRequest[]> {
-  return prisma.proRequest.findMany({ where: { shop, status: { not: "en_attente" } }, orderBy: { decidedAt: "desc" }, take });
+  return prisma.proRequest.findMany({
+    where: { shop, status: { not: "en_attente" } },
+    orderBy: [{ decidedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }, { id: "desc" }],
+    take,
+  });
 }
 
 export function getProRequest(shop: string, id: string): Promise<ProRequest | null> {

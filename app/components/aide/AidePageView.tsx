@@ -185,7 +185,7 @@ export function AidePageView() {
       {RECIPES.map((recipe) => (
         <RecipeBlock key={recipe.situation} recipe={recipe} />
       ))}
-      <s-section heading="Quelque chose ne marche pas ?">
+      <s-section heading={"Quelque chose ne marche pas\u202F?"}>
         <s-stack direction="block" gap="small-200">
           <s-text>Un message en rouge ou en jaune s’affiche ? Lisez-le : il dit ce qu’il faut faire.</s-text>
           <s-text>

@@ -58,7 +58,7 @@ export function DeliveryFields(props: DeliveryFieldsProps) {
           />
         ) : null}
         <s-choice-list
-          label="Comment la commande part-elle ?"
+          label={"Comment la commande part-elle\u202F?"}
           name="mode"
           values={[props.mode]}
           onChange={(event) => {
@@ -102,7 +102,7 @@ export function PaymentField({ payment, paymentTermDays, error, onPayment }: Pay
   return (
     <s-section heading="4. Paiement">
       <s-choice-list
-        label="Comment le client paie-t-il ?"
+        label={"Comment le client paie-t-il\u202F?"}
         name="payment"
         values={[payment]}
         onChange={(event) => {

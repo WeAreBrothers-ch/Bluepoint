@@ -9,6 +9,7 @@ import type { IsoDate } from "../../lib/metafields/definitions";
 import { gidToNumericId } from "../../lib/shopify";
 import { ClientCard } from "../ClientCard";
 import { ClientKindBadge, clientKind } from "../ClientKindBadge";
+import { IconHeading } from "../IconHeading";
 import { ActionFeedback } from "./ActionFeedback";
 import { TaskActions } from "./TaskActions";
 import { PaymentBadges, StatusBadge } from "./TaskBadges";
@@ -96,10 +97,7 @@ export function TaskCard({ task, invoice, today }: TaskCardProps) {
       header={
         <>
           <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
-            <s-stack direction="inline" gap="small-200" alignItems="center">
-              <s-icon type={mode.icon} />
-              <s-heading>{task.company ?? task.customerName}</s-heading>
-            </s-stack>
+            <IconHeading icon={mode.icon}>{task.company ?? task.customerName}</IconHeading>
             <s-stack direction="inline" gap="small-200" alignItems="center">
               <ClientKindBadge isPro={task.isPro} detail={mode.label} />
               <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />

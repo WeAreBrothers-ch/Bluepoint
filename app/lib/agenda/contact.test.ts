@@ -16,7 +16,8 @@ describe("contact d'une livraison", () => {
   it("appelle un numéro suisse et l'affiche à la suisse", () => {
     expect(phoneHref("021 555 01 23")).toBe("tel:+41215550123");
     expect(phoneHref("pas un numéro")).toBeNull();
-    expect(phoneDisplay("+41791234567")).toBe("079 123 45 67");
+    // Espaces insécables : le numéro ne se coupe jamais en fin de ligne.
+    expect(phoneDisplay("+41791234567")).toBe("079\u00A0123\u00A045\u00A067");
     expect(phoneDisplay("+33612345678")).toBe("+33612345678");
   });
 });

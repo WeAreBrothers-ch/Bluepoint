@@ -111,7 +111,8 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
             <s-stack direction="block" gap="small-200">
               <s-search-field
                 label="Chercher un client"
-                placeholder="Nom, entreprise, ville, téléphone ou e-mail"
+                placeholder="Ex. Monnier"
+                details="Nom, entreprise, ville, téléphone ou e-mail"
                 value={term}
                 onInput={(event) => setTerm(event.currentTarget.value)}
               />

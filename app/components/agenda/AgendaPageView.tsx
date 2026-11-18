@@ -64,7 +64,8 @@ export function AgendaPageView({ data }: { readonly data: AgendaPageData }) {
       )}
       <s-section>
         <s-text>
-          Besoin d’aide\u202F? <s-link href="/app/aide">Voir les explications pas à pas</s-link>
+          {"Besoin d’aide\u202F? "}
+          <s-link href="/app/aide">Voir les explications pas à pas</s-link>
         </s-text>
       </s-section>
     </s-page>

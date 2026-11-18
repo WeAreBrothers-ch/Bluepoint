@@ -1,6 +1,7 @@
 import type { ProRequest } from "@prisma/client";
-import { phoneDisplay } from "../agenda/contact";
+import { phoneDisplay, phoneHref } from "../agenda/contact";
 import { longDay, swissIsoDate } from "../agenda/dates";
+import { formatSwissTime } from "../format/dates";
 import type { ProRequestErrors, ProRequestValues } from "./request";
 
 /** Demande de compte pro telle qu'affichée dans l'app (sérialisable, mots simples). */
@@ -11,10 +12,12 @@ export interface ProRequestView {
   readonly personName: string;
   readonly email: string;
   readonly phone: string;
+  /** Lien « tel: » pour l'appeler d'un toucher, ou null si le numéro est illisible. */
+  readonly callHref: string | null;
   readonly addressLines: readonly string[];
   readonly vatNumber: string | null;
   readonly message: string | null;
-  /** Ex. « Reçue par le site le mardi 28 octobre ». */
+  /** Ex. « Reçue par le site le mardi 28 octobre à 14:05 » (heure suisse) : on voit tout de suite l'ordre d'arrivée. */
   readonly receivedLabel: string;
   /** Ex. « Acceptée le mercredi 29 octobre », ou null tant qu'elle attend. */
   readonly decisionLabel: string | null;
@@ -33,10 +36,11 @@ export function toProRequestView(request: ProRequest): ProRequestView {
     personName: `${request.firstName} ${request.lastName}`,
     email: request.email,
     phone: phoneDisplay(request.phone),
+    callHref: phoneHref(request.phone),
     addressLines: [request.street, `${request.postalCode} ${request.city}`, ...(request.country === "LI" ? ["Liechtenstein"] : [])],
     vatNumber: request.vatNumber,
     message: request.message,
-    receivedLabel: `${via} le ${longDay(swissIsoDate(request.createdAt))}`,
+    receivedLabel: `${via} le ${longDay(swissIsoDate(request.createdAt))} à\u00A0${formatSwissTime(request.createdAt)}`,
     decisionLabel: decision,
     accepted: request.status === "acceptee",
   };

@@ -133,7 +133,7 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
           <>
             <s-box inlineSize="220px">
               <s-number-field
-                label="Combien de cartons arrivent ?"
+                label={"Combien de cartons arrivent\u202F?"}
                 value={String(fullCartons)}
                 min={0}
                 step={1}

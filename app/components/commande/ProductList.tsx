@@ -30,7 +30,7 @@ export function ProductList({ products, truncated, quantities, onSet, onAdd, hea
         <ChosenWines products={byId} quantities={quantities} onSet={onSet} />
         <s-search-field
           label="Chercher un vin"
-          placeholder="Nom du vin, par exemple « Barolo »"
+          placeholder="Ex. Barolo"
           value={filter}
           onInput={(event) => setFilter(event.currentTarget.value)}
         />

@@ -7,6 +7,7 @@ import type { IsoDate } from "../../lib/metafields/definitions";
 import { ActionFeedback } from "../agenda/ActionFeedback";
 import { TaskActions } from "../agenda/TaskActions";
 import { TaskBadges } from "../agenda/TaskBadges";
+import { IconHeading } from "../IconHeading";
 
 /**
  * Haut de la fiche commande : pour qui, quand, la remarque, puis les mêmes boutons que la carte
@@ -33,10 +34,7 @@ export function OrderSummary({ detail, invoice, today }: OrderSummaryProps) {
     <s-section>
       <s-stack direction="block" gap="base">
         <s-stack direction="block" gap="small-200">
-          <s-stack direction="inline" gap="small-200" alignItems="center">
-            <s-icon type={mode.icon} />
-            <s-heading>{task.company ?? task.customerName}</s-heading>
-          </s-stack>
+          <IconHeading icon={mode.icon}>{task.company ?? task.customerName}</IconHeading>
           <s-text type="strong" {...(detail.late ? { tone: "critical" as const } : {})}>
             {detail.headline}
           </s-text>
