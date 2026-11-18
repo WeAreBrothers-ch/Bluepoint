@@ -19,6 +19,8 @@ interface InvoiceShortcutButtonsProps {
   readonly hideSend?: boolean;
   /** Dans une carte de l'agenda : aucun bouton foncé (il n'y en a qu'un, « J'ai livré »), et le numéro de la facture dans la phrase. */
   readonly quiet?: boolean;
+  /** « Voir ou imprimer la facture » est affiché ailleurs (carte de la page Factures). */
+  readonly hideView?: boolean;
 }
 
 export function InvoiceResultBanner({ result }: { readonly result: FacturesActionResult | undefined }) {
@@ -30,7 +32,7 @@ export function InvoiceResultBanner({ result }: { readonly result: FacturesActio
   );
 }
 
-export function InvoiceShortcutButtons({ invoice, hideSend = false, quiet = false }: InvoiceShortcutButtonsProps) {
+export function InvoiceShortcutButtons({ invoice, hideSend = false, quiet = false, hideView = false }: InvoiceShortcutButtonsProps) {
   const fetcher = useFetcher<FacturesActionResult>({ key: `facture-envoi-${invoice.id}` });
   const drafts = useInvoiceDrafts(invoice.id);
   const busy = fetcher.state !== "idle";
@@ -85,11 +87,13 @@ export function InvoiceShortcutButtons({ invoice, hideSend = false, quiet = fals
           </s-grid>
         </>
       )}
-      <s-stack direction="inline">
-        <s-button icon="view" variant="tertiary" href={invoice.viewUrl} target="_blank">
-          Voir ou imprimer la facture
-        </s-button>
-      </s-stack>
+      {hideView ? null : (
+        <s-stack direction="inline">
+          <s-button icon="view" variant="tertiary" href={invoice.viewUrl} target="_blank">
+            Voir ou imprimer la facture
+          </s-button>
+        </s-stack>
+      )}
       <InvoiceResultBanner result={result} />
       {canEmail ? (
         <InvoiceEmailModal

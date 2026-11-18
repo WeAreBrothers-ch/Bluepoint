@@ -34,7 +34,7 @@ export function CustomerFields({ values, errors }: CustomerFieldsProps) {
           <Field field="email" label="E-mail (facultatif)" values={values} errors={errors} />
         </s-grid>
       </s-query-container>
-      <s-text color="subdued">Adresse de livraison (inutile si le client vient chercher au dépôt)</s-text>
+      <s-text color="subdued">Adresse de livraison</s-text>
       <s-query-container>
         <s-grid gridTemplateColumns={GRID} gap="base">
           <Field field="street" label="Rue et numéro" values={values} errors={errors} />

@@ -102,7 +102,7 @@ export function AddProForm({ canCreate }: { readonly canCreate: boolean }) {
           </s-button>
         </ChoiceButtons>
         <s-text color="subdued">
-          Le client pro est créé avec le paiement à 30 jours et les prix pros ; il reçoit un e-mail pour se connecter au site.
+          Paiement à 30 jours et prix pros. Il reçoit un e-mail pour se connecter au site.
         </s-text>
       </s-stack>
     </fetcher.Form>

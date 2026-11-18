@@ -1,27 +1,35 @@
 import { FILL } from "./fill";
 import { AGENDA_VIEWS } from "../lib/agenda/views";
 import type { AgendaView } from "../lib/agenda/types";
+import { TITRES } from "../lib/titres";
 
-/** Onglets « Aujourd’hui / Semaine » : chaque onglet est un lien, la vue vit dans l'URL. */
-interface AgendaTabsProps {
-  readonly current: AgendaView;
-}
+/**
+ * Onglets de « Livraisons » : « Aujourd’hui », « Semaine », et « Toutes » qui ouvre « Toutes les commandes »
+ * (l'historique, avec la recherche). Les mêmes onglets en haut de « Toutes les commandes » : on passe de l'un
+ * à l'autre sans menu. Chaque onglet est un lien, la vue vit dans l'URL.
+ */
+export type LivraisonsTab = AgendaView | "toutes";
 
-export function AgendaTabs({ current }: AgendaTabsProps) {
+const TABS: readonly { readonly id: LivraisonsTab; readonly label: string; readonly href: string; readonly title: string }[] = [
+  ...AGENDA_VIEWS.map((view) => ({ id: view.id, label: view.label, href: `/app?vue=${view.id}`, title: view.label })),
+  { id: "toutes", label: "Toutes", href: "/app/commandes", title: TITRES.commandes },
+];
+
+export function AgendaTabs({ current }: { readonly current: LivraisonsTab }) {
   return (
-    <s-grid gridTemplateColumns={`repeat(${AGENDA_VIEWS.length}, minmax(0, 1fr))`} gap="small-200">
-      {AGENDA_VIEWS.map((view) => {
-        const isCurrent = view.id === current;
+    <s-grid gridTemplateColumns={`repeat(${TABS.length}, minmax(0, 1fr))`} gap="small-200">
+      {TABS.map((tab) => {
+        const isCurrent = tab.id === current;
         return (
           <s-button
-            key={view.id}
+            key={tab.id}
             {...FILL}
-            href={`/app?vue=${view.id}`}
+            href={tab.href}
             variant="secondary"
             {...(isCurrent ? { icon: "check" as const } : {})}
-            accessibilityLabel={isCurrent ? `${view.label}, vue affichée` : view.label}
+            accessibilityLabel={isCurrent ? `${tab.title}, vue affichée` : tab.title}
           >
-            {view.label}
+            {tab.label}
           </s-button>
         );
       })}

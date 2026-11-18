@@ -48,9 +48,6 @@ export function OrderSummary({ detail, invoice, today }: OrderSummaryProps) {
         )}
         <TaskActions task={task} invoice={invoice} fetcher={fetcher} today={today} />
         {result === undefined ? null : <ActionFeedback result={result} />}
-        {invoice === null && beforeDelivery ? (
-          <s-text color="subdued">{`La facture se fait toute seule quand vous touchez «\u00A0${mode.doneAction}\u00A0».`}</s-text>
-        ) : null}
       </s-stack>
     </s-section>
   );

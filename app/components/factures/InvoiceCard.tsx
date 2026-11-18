@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useFetcher } from "react-router";
 import { shortDay } from "../../lib/agenda/dates";
 import type { FacturesActionResult, InvoiceListItem } from "../../lib/factures/list-item";
@@ -8,8 +9,6 @@ import { ClientCard } from "../ClientCard";
 import { FILL } from "../fill";
 import { InvoicePaymentButtons } from "./InvoicePaymentButtons";
 import { InvoiceResultBanner, InvoiceShortcutButtons } from "./InvoiceShortcutButtons";
-
-/** Une facture : montant, client, dates en toutes lettres, payée ou non, puis les actions. */
 
 interface InvoiceCardProps {
   readonly invoice: InvoiceListItem;
@@ -68,45 +67,82 @@ function Reminders({ invoice, emailConfigured }: InvoiceCardProps) {
   );
 }
 
+/** Ce qu'il faut faire maintenant avec cette facture : un seul geste mis en avant. */
+type MainAction = "relancer" | "envoyer" | "imprimer" | "encaisser" | "aucune";
+
+function mainAction(invoice: InvoiceListItem, reminding: boolean): MainAction {
+  if (invoice.paymentState === "payee") return "aucune";
+  if (reminding) return "relancer";
+  if (invoice.sentLabel !== null) return "encaisser";
+  return invoice.whatsappAvailable || invoice.customerEmail !== null ? "envoyer" : "imprimer";
+}
+
+/**
+ * Une facture : qui, combien, où on en est, puis UN bouton (relancer, envoyer, ou « Le client a payé »).
+ * Tout le reste (renvoyer, voir ou imprimer, noter le paiement, voir la commande) est sous « Autres actions » :
+ * rien n'est perdu, mais la carte reste courte et on sait tout de suite quoi faire.
+ */
 export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
+  const [open, setOpen] = useState(false);
   const late = invoice.paymentState === "en_retard";
+  const paid = invoice.paymentState === "payee";
   const reminding = canRemind({ invoice, emailConfigured });
+  const main = mainAction(invoice, reminding);
+  const view = (
+    <s-grid gridTemplateColumns="minmax(0, 1fr)">
+      <s-button {...FILL} icon="view" variant={main === "imprimer" ? "secondary" : "tertiary"} href={invoice.viewUrl} target="_blank">
+        Voir ou imprimer la facture
+      </s-button>
+    </s-grid>
+  );
+  const payment = <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />;
   return (
     <ClientCard
       id={`facture-${invoice.id}`}
       header={
         <>
-          <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
+          <s-grid gridTemplateColumns="minmax(0, 1fr) auto" gap="small-200" alignItems="center">
             <s-heading>{invoice.customerName}</s-heading>
-            <s-text type="strong">{formatChf(invoice.totalCents)}</s-text>
-          </s-stack>
+            <s-heading>{formatChf(invoice.totalCents)}</s-heading>
+          </s-grid>
           <s-text color="subdued">{`Facture ${invoice.number}`}</s-text>
-          <s-stack direction="inline" gap="small-200">
+          <s-stack direction="inline">
             <StatusBadge invoice={invoice} />
           </s-stack>
         </>
       }
     >
-      <s-stack direction="block" gap="small-200">
-        {invoice.paidOn !== null ? (
-          <s-text color="subdued">{`Payée le ${day(invoice.paidOn)} (reçu remis au client)`}</s-text>
-        ) : (
-          // Seule la date limite compte pour savoir s'il faut relancer : la date de la facture est sur la facture.
-          <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
-        )}
-      </s-stack>
-        {/* En retard : relancer d'abord ; sinon, envoyer la facture. */}
-        <Reminders invoice={invoice} emailConfigured={emailConfigured} />
-        <InvoiceShortcutButtons invoice={invoice} hideSend={reminding} />
-        {invoice.paymentState === "payee" ? null : <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />}
-        {/* En bas, en bouton (et non en petit lien) : facile à toucher sur un téléphone, sans gêner les envois. */}
-        {invoice.orderPath === null ? null : (
-          <s-stack direction="inline">
-            <s-button variant="tertiary" icon="order" href={invoice.orderPath}>
-              {`Voir la commande ${invoice.orderName}`}
-            </s-button>
+      {paid ? (
+        <s-text>{invoice.paidOn === null ? "Payée" : `Payée le ${day(invoice.paidOn)}`}</s-text>
+      ) : (
+        <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
+      )}
+      {main === "relancer" ? <Reminders invoice={invoice} emailConfigured={emailConfigured} /> : null}
+      {main === "envoyer" ? <InvoiceShortcutButtons invoice={invoice} hideView /> : null}
+      {main === "imprimer" ? view : null}
+      {main === "encaisser" ? payment : null}
+      {open ? (
+        <s-box padding="small-300" background="subdued" borderRadius="base">
+          <s-stack direction="block" gap="small-300">
+            {/* Renvoyer la facture (pas quand elle est en retard : on relance). */}
+            {main === "envoyer" || main === "imprimer" || reminding ? null : <InvoiceShortcutButtons invoice={invoice} hideView />}
+            {main === "imprimer" ? null : view}
+            {paid || main === "encaisser" ? null : payment}
+            {invoice.orderPath === null ? null : (
+              <s-grid gridTemplateColumns="minmax(0, 1fr)">
+                <s-button {...FILL} variant="tertiary" icon="order" href={invoice.orderPath}>
+                  {`Voir la commande ${invoice.orderName}`}
+                </s-button>
+              </s-grid>
+            )}
           </s-stack>
-        )}
+        </s-box>
+      ) : null}
+      <s-grid gridTemplateColumns="minmax(0, 1fr)">
+        <s-button {...FILL} variant="tertiary" icon={open ? "chevron-up" : "chevron-down"} onClick={() => setOpen((value) => !value)}>
+          {open ? "Moins d’actions" : "Autres actions"}
+        </s-button>
+      </s-grid>
     </ClientCard>
   );
 }

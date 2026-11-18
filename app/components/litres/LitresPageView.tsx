@@ -23,6 +23,10 @@ export function LitresPageView({ data }: { readonly data: LitresPageData }) {
   return (
     <s-page heading={TITRES.litres} inlineSize="base">
       <style>{LITRES_TABLE_STYLE}</style>
+      {/* La page n'est plus dans le menu : on y vient depuis « Stock », on y retourne d'un toucher. */}
+      <s-button slot="secondary-actions" href="/app/stock">
+        {`Retour au ${TITRES.vins.toLowerCase()}`}
+      </s-button>
       {report === null ? null : (
         <s-button slot="primary-action" variant="primary" icon="print" href={`/app/litres/feuille?annee=${year}`}>
           Feuille à imprimer

@@ -8,6 +8,7 @@ import { EmptyState } from "../EmptyState";
 import { NewWineForm } from "./NewWineForm";
 import { RetiredWines } from "./RetiredWines";
 import { StockRow } from "./StockRow";
+import { PageLink } from "../PageLink";
 
 /** Page « Stock » : la partie visible, séparée de la route pour pouvoir être affichée seule (aperçu, tests). */
 
@@ -62,6 +63,9 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
           Nouveau vin
         </s-button>
       ) : null}
+      <s-button slot="secondary-actions" icon="chart-vertical" href="/app/litres">
+        {TITRES.litres}
+      </s-button>
       {authorized ? null : (
         <s-banner tone="warning" heading="Certaines fonctions ne sont pas encore activées">
           Vos vins s’affichent, mais changer le nombre de bouteilles ou créer un vin n’est pas encore possible. Appelez la personne qui
@@ -103,6 +107,9 @@ export function StockPageView({ data }: { readonly data: StockPageData }) {
         </>
       )}
       <RetiredWines wines={data.retired} canRestore={data.canCreateWines} onRestore={restore} restoring={restoring} />
+      <PageLink href="/app/litres" icon="chart-vertical">
+        {TITRES.litres}
+      </PageLink>
     </s-page>
   );
 }

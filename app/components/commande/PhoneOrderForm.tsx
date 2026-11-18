@@ -5,13 +5,13 @@ import { computeTotals, stockWarnings } from "../../lib/commande/totals";
 import type { CustomerOption, ProductOption } from "../../lib/commande/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { CustomerPicker } from "./CustomerPicker";
-import { DeliveryFields, PaymentField } from "./DeliveryFields";
+import { DeliveryAndPayment } from "./DeliveryFields";
 import { OrderOutcomeBanner } from "./OrderOutcomeBanner";
 import { OrderSummary, type PriceSource } from "./OrderSummary";
 import { ProductList } from "./ProductList";
 import { usePhoneOrder, type Submission } from "./usePhoneOrder";
 
-/** Prendre une commande, dans l'ordre d'un appel : client, vins, livraison, paiement, récapitulatif. */
+/** Prendre une commande, dans l'ordre d'un appel : client, vins, livraison et paiement (déjà remplis), récapitulatif. */
 
 interface PhoneOrderFormProps {
   readonly products: readonly ProductOption[];
@@ -77,7 +77,7 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
         onAdd={order.addQuantity}
         audience={state.customer === null ? null : state.customer.isPro ? "pro" : "particulier"}
       />
-      <DeliveryFields
+      <DeliveryAndPayment
         requestedDate={state.requestedDate}
         deadline={state.deadline}
         deadlineShown={state.deadlineShown || errors.deadline !== undefined}
@@ -90,8 +90,6 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
         onDeadlineShown={(shown) => dispatch({ type: "limite_visible", shown })}
         onMode={(mode) => dispatch({ type: "mode", mode })}
         onNote={(value) => dispatch({ type: "note", value })}
-      />
-      <PaymentField
         payment={state.payment}
         paymentTermDays={props.paymentTermDays}
         error={errors.payment}

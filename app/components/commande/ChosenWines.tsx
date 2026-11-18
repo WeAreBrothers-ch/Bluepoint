@@ -17,7 +17,7 @@ interface ChosenWinesProps {
 export function ChosenWines({ products, quantities, onSet }: ChosenWinesProps) {
   const lines = toLines(quantities);
   if (lines.length === 0) {
-    return <s-text color="subdued">Aucun vin choisi pour l’instant. Cherchez un vin, puis touchez « Ajouter un carton de 6 ».</s-text>;
+    return <s-text color="subdued">Aucun vin choisi pour l’instant.</s-text>;
   }
   const bottles = lines.reduce((sum, line) => sum + line.quantity, 0);
   return (

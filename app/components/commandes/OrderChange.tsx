@@ -77,7 +77,6 @@ export function OrderChangeSection({ detail, rules, onEdit }: OrderChangeSection
           </s-box>
         ) : (
           <s-stack direction="block" gap="small-200">
-            <s-text color="subdued">{"Le client a appelé pour changer quelque chose\u202F? C’est ici."}</s-text>
             <ChoiceButtons>
               {rules.canEdit ? (
                 <s-button {...FILL} icon="edit" onClick={onEdit} {...(busy ? { disabled: true } : {})}>
@@ -138,7 +137,7 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
           {fixedLines.length === 0 ? null : (
             <s-text color="subdued">{`Ne change pas ici\u202F: ${fixedLines.map((line) => line.name).join(", ")}.`}</s-text>
           )}
-          <s-text color="subdued">La remise pro est recalculée toute seule. Le nouveau total s’affiche après l’enregistrement.</s-text>
+          <s-text color="subdued">Le total est recalculé à l’enregistrement.</s-text>
           <ChoiceButtons>
             <s-button
               {...FILL}

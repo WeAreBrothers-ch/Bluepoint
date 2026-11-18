@@ -106,11 +106,32 @@ L’app s’ouvre aussi dans l’application Shopify du téléphone, et elle est
 - **Litres vendus** : les tableaux défilent de côté s’ils sont trop larges ; « Vin par vin » range la sorte, le pays et
   la contenance sous le nom du vin.
 
-## Noms des pages
+## Noms des pages et menu
 
-Les noms du menu et des titres viennent d’une seule liste, `app/lib/titres.ts` : Livraisons, Prendre une commande,
-Factures, Stock, Clients, Aide, Toutes les commandes, Litres vendus, Informations de l’entreprise. Les phrases d’aide les
-reprennent, pour que tout le monde (le patron comme un employé) lise toujours les mêmes mots.
+Les noms du menu et des titres viennent d’une seule liste, `app/lib/titres.ts`, pour que tout le monde (le patron comme
+un employé) lise toujours les mêmes mots.
+
+Le menu n’a que **cinq pages**, le travail de tous les jours : Livraisons, Prendre une commande, Factures, Stock, Clients.
+Les autres pages existent toujours, là où on les cherche :
+
+- **Toutes les commandes** : onglet « Toutes » de Livraisons (à côté d’« Aujourd’hui » et « Semaine »), avec la recherche
+  et la liste « Afficher » (toutes, à livrer, livrées, annulées).
+- **Litres vendus** : bouton en bas de Stock (et en haut, dans les boutons de la page).
+- **Informations de l’entreprise** (et le test AbaNinja) : bouton en bas de Factures (et en haut).
+- **Clients pro** : bouton de la page Clients et bande bleue quand des demandes attendent.
+
+Il n’y a plus de page « Aide » : l’ancienne adresse `/app/aide` ramène aux livraisons.
+
+## Simplicité (aucune fonction retirée)
+
+- **Livraisons** : chaque carte dit qui, où, combien, si c’est payé, la remarque, puis le bouton à toucher.
+  « Détails » ouvre sur place la personne à demander, la date limite, l’adresse, l’itinéraire, le téléphone, les vins,
+  « Changer le jour » et « Voir la commande ».
+- **Factures** : un seul bouton mis en avant selon l’état (relancer si en retard, sinon envoyer, sinon « Le client a
+  payé ») ; « Autres actions » garde renvoyer, voir ou imprimer, noter le paiement et voir la commande.
+- **Prendre une commande** : client, vins, puis « Livraison et paiement » déjà remplis (prochain jour de livraison,
+  camion BluePoint, paiement habituel du client) en deux lignes ; « Modifier » ouvre le jour, la date limite, le mode,
+  la remarque et le paiement (une erreur les ouvre d’office).
 
 ## Rabais carte (2 % pour un paiement par carte tout de suite)
 

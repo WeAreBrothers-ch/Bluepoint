@@ -20,7 +20,7 @@ export function ProsPageView({ data }: { readonly data: ProsPageData }) {
       )}
       {data.pending.length === 0 ? (
         <s-section heading="Demandes à valider (0)">
-          <s-paragraph>Aucune demande à valider. Les demandes envoyées depuis le site apparaissent ici.</s-paragraph>
+          <s-paragraph>Aucune demande à valider.</s-paragraph>
         </s-section>
       ) : (
         <>
@@ -31,10 +31,7 @@ export function ProsPageView({ data }: { readonly data: ProsPageData }) {
         </>
       )}
       <s-section heading="Ajouter un client pro">
-        <s-stack direction="block" gap="base">
-          <s-paragraph>{"Un pro vous appelle pour ouvrir un compte\u202F? Créez-le ici directement, sans passer par le site."}</s-paragraph>
-          <AddProForm canCreate={data.canCreate} />
-        </s-stack>
+        <AddProForm canCreate={data.canCreate} />
       </s-section>
       {data.decided.length === 0 ? null : (
         <s-section heading="Dernières réponses">

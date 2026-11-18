@@ -53,6 +53,10 @@ export default function ReglagesPage() {
 
   return (
     <s-page heading={TITRES.entreprise} inlineSize="base">
+      {/* La page n'est plus dans le menu : on y vient depuis « Factures », on y retourne d'un toucher. */}
+      <s-button slot="secondary-actions" href="/app/factures">
+        {`Retour aux ${TITRES.factures.toLowerCase()}`}
+      </s-button>
       {result?.ok ? <s-banner tone="success" heading="C’est enregistré." /> : null}
       {result !== undefined && !result.ok ? <s-banner tone="critical" heading={result.message} /> : null}
       {!complete && result === undefined ? (

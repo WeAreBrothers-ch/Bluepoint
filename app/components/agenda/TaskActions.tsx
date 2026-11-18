@@ -25,6 +25,11 @@ interface TaskActionsProps {
   readonly today: IsoDate;
   /** Lien « Voir la commande », sur la carte de l'agenda seulement (sur la fiche commande, on y est déjà). */
   readonly viewOrderHref?: string;
+  /**
+   * Faux : seul LE bouton à toucher est montré (carte repliée de « Livraisons ») ; les petits liens
+   * (« Changer le jour », « Voir la commande »…) apparaissent avec « Détails ». Vrai par défaut.
+   */
+  readonly showLinks?: boolean;
 }
 
 /** Panneau ouvert à la place des boutons : confirmation de la livraison ou choix du jour. */
@@ -41,7 +46,7 @@ function pendingIntent(fetcher: FetcherWithComponents<AgendaActionResult>): Agen
   return intent === "livrer" || intent === "facturer" || intent === "dater" ? intent : null;
 }
 
-export function TaskActions({ task, invoice, fetcher, today, viewOrderHref }: TaskActionsProps) {
+export function TaskActions({ task, invoice, fetcher, today, viewOrderHref, showLinks = true }: TaskActionsProps) {
   const [panel, setPanel] = useState<Panel>("aucun");
   const pending = pendingIntent(fetcher);
   const busy = pending !== null;
@@ -160,7 +165,7 @@ export function TaskActions({ task, invoice, fetcher, today, viewOrderHref }: Ta
   const todo = [...(undated ? [chooseDay, deliver] : [deliver, chooseDay]), makeInvoice].filter((action) => action !== null);
   const links = [seeInvoice, viewOrder].filter((action) => action !== null);
   const [main, ...secondary] = todo;
-  const smaller = [...secondary, ...links];
+  const smaller = showLinks ? [...secondary, ...links] : [];
 
   return (
     <s-stack direction="block" gap="base">

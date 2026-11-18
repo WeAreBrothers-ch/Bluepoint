@@ -9,9 +9,9 @@ import { FILL } from "../fill";
 export type PriceSource = "normal" | "calcul" | "client" | "indisponible";
 
 const PRICE_NOTES: Readonly<Record<PriceSource, string>> = {
-  normal: "Prix normaux. La livraison s’ajoute sur la facture s’il y en a. TVA comprise.",
+  normal: "TVA comprise. Frais de livraison en plus s’il y en a.",
   calcul: "Calcul des prix de ce client…",
-  client: "Prix de ce client, remises comprises. TVA comprise.",
+  client: "Prix de ce client, remises et TVA comprises.",
   indisponible: "Prix normaux affichés\u202F: les remises de ce client seront appliquées à l’enregistrement.",
 };
 
@@ -33,12 +33,13 @@ interface OrderSummaryProps {
 function Row({ label, amount, strong = false }: { readonly label: string; readonly amount: string; readonly strong?: boolean }) {
   const type = strong ? { type: "strong" as const } : {};
   return (
-    <s-stack direction="inline" justifyContent="space-between" gap="base">
+    // Le montant reste à droite même quand le nom du vin passe sur deux lignes.
+    <s-grid gridTemplateColumns="minmax(0, 1fr) auto" gap="base" alignItems="start">
       <s-text {...type}>{label}</s-text>
       <s-text fontVariantNumeric="tabular-nums" {...type}>
         {amount}
       </s-text>
-    </s-stack>
+    </s-grid>
   );
 }
 
@@ -46,7 +47,7 @@ export function OrderSummary(props: OrderSummaryProps) {
   const { totals, warnings, discountCents } = props;
   const bottles = `${formatInteger(totals.totalQuantity)} bouteille${totals.totalQuantity > 1 ? "s" : ""}`;
   return (
-    <s-section heading="5. Récapitulatif">
+    <s-section heading="4. Récapitulatif">
       <s-stack direction="block" gap="base">
         {totals.lines.length === 0 ? (
           <s-text color="subdued">Aucun vin choisi pour l’instant.</s-text>

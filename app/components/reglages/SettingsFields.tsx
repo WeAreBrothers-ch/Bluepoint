@@ -33,7 +33,6 @@ export function SellerFields(props: FieldsProps) {
   return (
     <s-section heading="1. L’entreprise (nom et adresse sur les factures)">
       <s-stack direction="block" gap="base">
-        <s-paragraph color="subdued">Ces informations sont imprimées en haut de chaque facture.</s-paragraph>
         <Text {...props} field="legalName" label="Nom de l’entreprise" details="Ex. Blue Point Distribution Sàrl" />
         <s-query-container>
           <s-grid gridTemplateColumns={GRID} gap="base">
@@ -69,7 +68,6 @@ export function PaymentFields(props: FieldsProps) {
   return (
     <s-section heading="2. Le compte en banque (pour être payé)">
       <s-stack direction="block" gap="base">
-        <s-paragraph color="subdued">Le QR code de chaque facture envoie l’argent sur ce compte.</s-paragraph>
         <Text {...props} field="iban" label="IBAN" details="Il commence par CH et se trouve sur vos relevés de banque." />
         <Text
           {...props}

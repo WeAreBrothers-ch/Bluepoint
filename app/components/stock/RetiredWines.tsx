@@ -15,7 +15,7 @@ export function RetiredWines({ wines, canRestore, onRestore, restoring }: Retire
   return (
     <s-section heading={`Vins retirés de la vente (${wines.length})`}>
       <s-stack direction="block" gap="base">
-        <s-text color="subdued">Ils ne sont plus sur le site ni dans « Prendre une commande ». Leurs ventes passées sont gardées.</s-text>
+        <s-text color="subdued">Ils ne sont plus en vente. Leurs ventes passées sont gardées.</s-text>
         {wines.map((wine) => (
           <s-stack key={wine.productId} direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
             <s-stack direction="inline" gap="small-200" alignItems="center">

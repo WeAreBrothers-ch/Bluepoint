@@ -1,13 +1,15 @@
 import { orderHref } from "../../lib/navigation";
+import { useState } from "react";
 import { useFetcher } from "react-router";
 import type { AgendaActionResult } from "../../lib/agenda/action-result";
 import { addressText, directionsUrl, phoneDisplay, phoneHref } from "../../lib/agenda/contact";
-import { bottleCountText, cardDateLine, modeLabel } from "../../lib/agenda/labels";
+import { bottleCountText, cardDateLine, modeLabel, paymentBadge } from "../../lib/agenda/labels";
 import type { InvoiceRef, ScheduledTask } from "../../lib/agenda/types";
 import { formatChf } from "../../lib/format/money";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { gidToNumericId } from "../../lib/shopify";
 import { ClientCard } from "../ClientCard";
+import { FILL } from "../fill";
 import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { IconHeading } from "../IconHeading";
 import { ActionFeedback } from "./ActionFeedback";
@@ -15,9 +17,8 @@ import { TaskActions } from "./TaskActions";
 import { PaymentBadges, StatusBadge } from "./TaskBadges";
 
 /**
- * Une livraison, dans l'ordre où on en a besoin : qui, où (itinéraire, téléphone), quels vins,
- * combien, la remarque, puis l'action. Le jour n'est répété que s'il apprend quelque chose
- * (retard, date limite) : le titre de la partie le dit déjà.
+ * Carte d'une livraison (Livraisons, aujourd'hui et semaine). Le jour n'est répété que s'il apprend
+ * quelque chose (retard, date limite) : le titre de la partie le dit déjà.
  */
 
 interface TaskCardProps {
@@ -61,75 +62,106 @@ export function ContactButtons({ task }: { readonly task: ScheduledTask }) {
   );
 }
 
-/** Ce qu'il y a à livrer. Une fois livrée, seul le total compte : la liste des vins ne sert plus. */
+/** Ce qu'il y a à livrer, vin par vin (pour charger le camion). */
 function WineList({ task }: { readonly task: ScheduledTask }) {
-  if (task.items.length === 0) return <PaymentBadges task={task} />;
-  const done = task.status === "livree";
-  const bottles = task.items.reduce((sum, item) => sum + item.quantity, 0);
-  const total = task.totalCents === null ? "" : ` · ${formatChf(task.totalCents)}`;
+  if (task.items.length === 0) return null;
   return (
-    <s-stack direction="block" gap="small-200">
-      {done ? null : <s-divider />}
-      {done
-        ? null
-        : task.items.map((item, index) => <s-text key={`${index}-${item.name}`}>{`${item.quantity} × ${item.name}`}</s-text>)}
-      <s-stack direction="inline" gap="small-200" alignItems="center">
-        <s-text type="strong">{`${bottleCountText(bottles)}${total}`}</s-text>
-        <PaymentBadges task={task} />
-      </s-stack>
+    <s-stack direction="block" gap="small-100">
+      {task.items.map((item, index) => (
+        <s-text key={`${index}-${item.name}`}>{`${item.quantity} × ${item.name}`}</s-text>
+      ))}
     </s-stack>
   );
 }
 
+/** En une ligne : où, combien de bouteilles, combien d'argent. Ex. « Cully · 18 bouteilles · CHF 648.00 ». */
+function summaryLine(task: ScheduledTask): string {
+  const bottles = task.items.reduce((sum, item) => sum + item.quantity, 0);
+  return [
+    task.mode === "retrait" ? null : task.city,
+    task.items.length === 0 ? null : bottleCountText(bottles),
+    task.totalCents === null ? null : formatChf(task.totalCents),
+  ]
+    .filter((part) => part !== null && part !== "")
+    .join(" · ");
+}
+
+/**
+ * Une livraison, en court : qui, où, combien, si c'est payé, la remarque, puis LE bouton à toucher.
+ * « Détails » ouvre sur place le reste (personne à demander, date limite, adresse, itinéraire, téléphone,
+ * vins, changer le jour, voir la commande) : rien n'est perdu, mais la liste reste courte sur un téléphone.
+ */
 export function TaskCard({ task, invoice, today }: TaskCardProps) {
   const fetcher = useFetcher<AgendaActionResult>({ key: `agenda-${task.orderId}` });
+  const [open, setOpen] = useState(false);
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
   const optimisticDelivered = fetcher.state !== "idle" && fetcher.formData?.get("intent") === "livrer";
   const mode = modeLabel(task.mode);
   const late = task.urgency === "en_retard" && task.status !== "livree";
+  const delivered = task.status === "livree";
   const dateLine = cardDateLine(task, today);
-  // Sous le nom de l'entreprise, la personne à demander. Le numéro de commande est sur la fiche (« Voir la commande »).
   const who = task.company === null ? null : task.customerName;
+  const summary = summaryLine(task);
 
   return (
     <ClientCard
       kind={clientKind(task.isPro)}
       header={
         <>
-          <s-stack direction="inline" gap="small-200" alignItems="center" justifyContent="space-between">
+          <s-grid gridTemplateColumns="minmax(0, 1fr) auto" gap="small-200" alignItems="center">
             <IconHeading icon={mode.icon}>{task.company ?? task.customerName}</IconHeading>
-            <s-stack direction="inline" gap="small-200" alignItems="center">
-              <ClientKindBadge isPro={task.isPro} detail={mode.label} />
-              <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
-            </s-stack>
+            <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
+          </s-grid>
+          <s-stack direction="inline">
+            <ClientKindBadge isPro={task.isPro} detail={mode.label} />
           </s-stack>
-          {who === null ? null : <s-text color="subdued">{who}</s-text>}
-          {dateLine === null ? null : (
-            <s-text type="strong" {...(late ? { tone: "critical" as const } : {})}>
-              {dateLine}
-            </s-text>
-          )}
         </>
       }
     >
-        {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
-        {task.status === "livree" ? null : <ContactButtons task={task} />}
-        <WineList task={task} />
-        {/* Une fois livrée, la remarque pour la livraison ne sert plus. */}
-        {task.note === null || task.status === "livree" ? null : <s-banner tone="info">{`Remarque : ${task.note}`}</s-banner>}
-        {task.cardDiscountToCheck ? (
-          <s-banner tone="warning" heading="Rabais de 2 % pas dû">
-            Le client a pris le rabais « paiement par carte », mais il n’a pas payé par carte. Appelez-le pour le lui expliquer.
-          </s-banner>
-        ) : null}
-        <TaskActions
-          task={task}
-          invoice={invoice}
-          fetcher={fetcher}
-          today={today}
-          viewOrderHref={orderHref(gidToNumericId(task.orderId), "livraisons")}
-        />
-        {result === undefined ? null : <ActionFeedback result={result} />}
+      <s-stack direction="block" gap="small-200">
+        {summary === "" ? null : <s-text type="strong">{summary}</s-text>}
+        {paymentBadge(task) === null ? null : (
+          <s-stack direction="inline">
+            <PaymentBadges task={task} />
+          </s-stack>
+        )}
+      </s-stack>
+      {/* Une fois livrée, la remarque pour la livraison ne sert plus. */}
+      {task.note === null || delivered ? null : <s-banner tone="info">{`Remarque : ${task.note}`}</s-banner>}
+      {task.cardDiscountToCheck ? (
+        <s-banner tone="warning" heading="Rabais de 2 % pas dû">
+          Le client a pris le rabais « paiement par carte » sans payer par carte. Appelez-le pour le lui expliquer.
+        </s-banner>
+      ) : null}
+      {open ? (
+        <s-box padding="small-300" background="subdued" borderRadius="base">
+          <s-stack direction="block" gap="small-300">
+            {who === null ? null : <s-text>{`Personne à demander\u202F: ${who}`}</s-text>}
+            {dateLine === null ? null : (
+              <s-text type="strong" {...(late ? { tone: "critical" as const } : {})}>
+                {dateLine}
+              </s-text>
+            )}
+            {/* Une fois livrée, l'adresse et l'itinéraire ne servent plus. */}
+            {delivered ? null : <ContactButtons task={task} />}
+            {delivered ? null : <WineList task={task} />}
+          </s-stack>
+        </s-box>
+      ) : null}
+      <TaskActions
+        task={task}
+        invoice={invoice}
+        fetcher={fetcher}
+        today={today}
+        showLinks={open}
+        viewOrderHref={orderHref(gidToNumericId(task.orderId), "livraisons")}
+      />
+      {result === undefined ? null : <ActionFeedback result={result} />}
+      <s-grid gridTemplateColumns="minmax(0, 1fr)">
+        <s-button {...FILL} variant="tertiary" icon={open ? "chevron-up" : "chevron-down"} onClick={() => setOpen((value) => !value)}>
+          {open ? "Moins de détails" : delivered ? "Détails" : "Détails : adresse, téléphone, vins"}
+        </s-button>
+      </s-grid>
     </ClientCard>
   );
 }

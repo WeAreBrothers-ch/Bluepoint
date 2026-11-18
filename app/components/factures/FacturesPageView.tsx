@@ -11,6 +11,7 @@ import { EmptyState } from "../EmptyState";
 import { GroupTitle } from "../GroupTitle";
 import { FILL } from "../fill";
 import { InvoiceCard } from "./InvoiceCard";
+import { PageLink } from "../PageLink";
 
 /** Page « Factures » : la partie visible, séparée de la route pour pouvoir être affichée seule (aperçu, tests). */
 
@@ -56,6 +57,9 @@ const EMPTY_TEXT: Readonly<Record<FacturesView, string>> = {
 export function FacturesPageView({ data }: { readonly data: FacturesPageData }) {
   return (
     <s-page heading={TITRES.factures} inlineSize="base">
+      <s-button slot="secondary-actions" icon="settings" href="/app/reglages">
+        {TITRES.entreprise}
+      </s-button>
       {data.settingsComplete ? null : (
         <s-banner tone="warning" heading="Les nouvelles factures ne peuvent pas être faites">
           Il manque vos coordonnées ou votre compte bancaire. <s-link href="/app/reglages">{COMPLETER_ENTREPRISE}</s-link>
@@ -87,6 +91,9 @@ export function FacturesPageView({ data }: { readonly data: FacturesPageData }) 
           ) : null}
         </>
       )}
+      <PageLink href="/app/reglages" icon="settings">
+        {TITRES.entreprise}
+      </PageLink>
     </s-page>
   );
 }

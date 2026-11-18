@@ -3,10 +3,11 @@ import { TITRES } from "../../lib/titres";
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { bottleCountText, modeLabel, type BadgeLabel } from "../../lib/agenda/labels";
-import { ORDERS_TABS, ordersHref, type OrderListItem } from "../../lib/commandes/list";
+import { isOrdersTab, ORDERS_TABS, ordersHref, type OrderListItem } from "../../lib/commandes/list";
 import type { OrdersPageData } from "../../lib/commandes/list.server";
 import { formatChf } from "../../lib/format/money";
 import { gidToNumericId } from "../../lib/shopify";
+import { AgendaTabs } from "../AgendaTabs";
 import { ClientCard } from "../ClientCard";
 import { ClientKindBadge, clientKind } from "../ClientKindBadge";
 import { EmptyState } from "../EmptyState";
@@ -87,6 +88,8 @@ export function OrdersPageView({ data }: { readonly data: OrdersPageData }) {
       </s-button>
       <s-section>
         <s-stack direction="block" gap="base">
+          {/* Les onglets de « Livraisons » : cette page en est l'onglet « Toutes ». */}
+          <AgendaTabs current="toutes" />
           <form onSubmit={search}>
             <s-stack direction="block" gap="small-200">
               <s-search-field
@@ -103,13 +106,21 @@ export function OrdersPageView({ data }: { readonly data: OrdersPageData }) {
               </s-grid>
             </s-stack>
           </form>
-          <s-grid gridTemplateColumns={`repeat(${ORDERS_TABS.length}, minmax(0, 1fr))`} gap="small-200">
+          {/* Une liste déroulante plutôt qu'une deuxième rangée d'onglets sous ceux de « Livraisons ». */}
+          <s-select
+            label="Afficher"
+            value={data.tab}
+            onChange={(event) => {
+              const tab = event.currentTarget.value;
+              if (isOrdersTab(tab)) void navigate(ordersHref(tab, data.term));
+            }}
+          >
             {ORDERS_TABS.map((tab) => (
-              <s-button key={tab.id} {...FILL} href={ordersHref(tab.id, data.term)} variant="secondary" {...(tab.id === data.tab ? { icon: "check" as const } : {})}>
-                {tab.label}
-              </s-button>
+              <s-option key={tab.id} value={tab.id}>
+                {tab.id === "toutes" ? "Toutes les commandes" : tab.label}
+              </s-option>
             ))}
-          </s-grid>
+          </s-select>
         </s-stack>
       </s-section>
       {data.loadError === null ? null : <s-banner tone="critical" heading={data.loadError} />}
