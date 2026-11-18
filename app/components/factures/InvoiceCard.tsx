@@ -91,10 +91,8 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
         {invoice.paidOn !== null ? (
           <s-text color="subdued">{`Payée le ${day(invoice.paidOn)} (reçu remis au client)`}</s-text>
         ) : (
-          <>
-            <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
-            <s-text color="subdued">{`Facture faite le ${day(invoice.issueDate)}`}</s-text>
-          </>
+          // Seule la date limite compte pour savoir s'il faut relancer : la date de la facture est sur la facture.
+          <s-text {...(late ? { tone: "critical" as const } : {})} type="strong">{`À payer avant le ${day(invoice.dueDate)}`}</s-text>
         )}
       </s-stack>
         {/* En retard : relancer d'abord ; sinon, envoyer la facture. */}

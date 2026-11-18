@@ -176,7 +176,8 @@ export function availableText(item: Pick<StockItem, "available">): string {
 export function reservedText(item: Pick<StockItem, "onHand" | "committed">): string | null {
   if (item.committed <= 0) return null;
   const reserved = item.committed > 1 ? "réservées" : "réservée";
-  return `En cave\u202F: ${cartonsText(item.onHand)}, dont ${bottles(item.committed)} ${reserved} pour des commandes pas encore livrées`;
+  // Court, pour un téléphone : « En cave : 9 cartons, dont 12 bouteilles réservées (commandes à livrer) ».
+  return `En cave\u202F: ${cartonsText(item.onHand)}, dont ${bottles(item.committed)} ${reserved} (commandes à livrer)`;
 }
 
 // --- Changements demandés depuis la page ---

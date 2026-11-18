@@ -32,10 +32,12 @@ const PILL_STYLE: CSSProperties = {
   gap: "0.4em",
   padding: "0.15em 0.7em",
   borderRadius: "999px",
-  fontSize: "0.8125rem",
+  // Grandit avec le texte sur un téléphone (variable posée dans app-style.ts).
+  fontSize: "var(--bp-pill-font-size, 0.8125rem)",
   fontWeight: 650,
   lineHeight: 1.4,
-  whiteSpace: "nowrap",
+  // Peut passer à la ligne : « Particulier · Envoi par la Poste » ne dépasse jamais de la carte sur un petit téléphone.
+  maxWidth: "100%",
 };
 
 const DOT_STYLE: CSSProperties = { width: "0.6em", height: "0.6em", borderRadius: "50%", flex: "none" };

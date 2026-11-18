@@ -53,7 +53,7 @@ describe("stock des vins", () => {
     expect(item).toMatchObject({ label: "Passione di Re", priceCents: 4500, available: 5, onHand: 11, committed: 6, level: "bas" });
     expect(item.place).toEqual({ inventoryItemId: "gid://shopify/InventoryItem/7", locationId: "gid://shopify/Location/3" });
     expect(availableText(item)).toBe("5 bouteilles disponibles");
-    expect(reservedText(item)).toBe("En cave\u202F: 1 carton et 5 bouteilles, dont 6 bouteilles réservées pour des commandes pas encore livrées");
+    expect(reservedText(item)).toBe("En cave\u202F: 1 carton et 5 bouteilles, dont 6 bouteilles réservées (commandes à livrer)");
   });
 
   it("signale les vins épuisés et bientôt épuisés, ignore ceux qui ne sont pas comptés", () => {

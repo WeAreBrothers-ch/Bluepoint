@@ -87,12 +87,15 @@ Les vins se vendent **par cartons de 6 bouteilles, au minimum un carton** (6, 12
 L’app s’ouvre aussi dans l’application Shopify du téléphone, et elle est pensée d’abord pour lui (vérifié de 320 à
 414 px de large, et sur ordinateur) :
 
+- **Lisible d’abord** : sur un téléphone, texte courant ≈ 17 px (comme les apps de l’iPhone), noms des clients et des
+  vins plus grands que le texte, gris secondaire plus foncé que celui de Shopify (`app/app-style.ts`). Cartes réduites
+  à l’essentiel : qui, où, quoi, combien, puis un seul gros bouton ; le numéro de téléphone est écrit dans le bouton
+  qui appelle.
 - **Une colonne, de gros boutons** : cartes l’une sous l’autre ; les décisions (« Oui, … » / « Non, … »,
   « Enregistrer » / « Annuler ») sont l’une sous l’autre sur toute la largeur, côte à côte sur un écran large
   (`app/components/ChoiceButtons.tsx`).
-- **Pas de zoom involontaire** : sur un téléphone, le texte des champs passe à 15 px (≈ 17 px avec l’agrandissement
-  de l’app) pour que l’iPhone ne zoome plus la page quand on touche un champ ; clavier « @ » pour les e-mails
-  (`app/app-style.ts`).
+- **Pas de zoom involontaire** : le texte des champs dépasse 16 px sur un téléphone, l’iPhone ne zoome plus la page
+  quand on touche un champ ; clavier « @ » pour les e-mails.
 - **Prendre une commande** : seul le prix du client choisi (pro ou particulier), à la bouteille et au carton ; pas de
   case grise sans photo ; les 6 premiers vins puis « Voir tous les vins » (un vin choisi reste toujours visible) ;
   −, nombre de cartons, + et corbeille sur une seule ligne.

@@ -34,15 +34,14 @@ export function ProRequestCard({ request, canCreate }: { readonly request: ProRe
     >
         <s-stack direction="block" gap="small-100">
           {request.addressLines.length === 0 ? null : <s-text>{request.addressLines.join(", ")}</s-text>}
-          {/* Téléphone et e-mail chacun sur sa ligne : une longue adresse e-mail ne coupe plus le numéro sur un téléphone. */}
-          <s-text>{request.phone}</s-text>
+          {/* L'e-mail sur sa ligne (il servira à se connecter au site) ; le numéro est écrit dans le bouton « Appeler ». */}
           <s-text>{request.email}</s-text>
           {request.vatNumber === null ? null : <s-text color="subdued">{`TVA\u202F: ${request.vatNumber}`}</s-text>}
         </s-stack>
         <s-stack direction="inline" gap="small-200">
           {request.callHref === null ? null : (
-            <s-button icon="phone" href={request.callHref} target="_blank" accessibilityLabel={`Appeler ${request.personName}`}>
-              Appeler
+            <s-button icon="phone" href={request.callHref} target="_blank" accessibilityLabel={`Appeler ${request.personName} au ${request.phone}`}>
+              {request.phone}
             </s-button>
           )}
           <s-button icon="email" href={`mailto:${request.email}`} target="_blank" accessibilityLabel={`Écrire à ${request.personName}`}>

@@ -37,12 +37,12 @@ export function TodayView({ groups, invoices, today }: TodayViewProps) {
   const list = { invoices, today };
   return (
     <>
-      <TaskList heading="Livraisons en retard" hint="À livrer en premier." tasks={groups.late} {...list} />
+      <TaskList heading="Livraisons en retard" tasks={groups.late} {...list} />
       <TaskList heading="À livrer aujourd’hui" tasks={groups.today} {...list} />
       <TaskList heading="À livrer demain" tasks={groups.tomorrow} {...list} />
       <TaskList
         heading="Commandes sans jour de livraison"
-        hint="Souvent des commandes du site. Appelez le client, puis touchez « Choisir le jour »."
+        hint="Appelez le client pour choisir le jour."
         tasks={groups.undated}
         {...list}
       />

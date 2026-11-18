@@ -48,8 +48,8 @@ function ClientRow({ item }: { readonly item: ClientListItem }) {
       }
     >
       <s-stack direction="block" gap="small-200">
+        {/* L'essentiel seulement : où il habite et ce qu'il a commandé. Téléphone dans « Appeler », e-mail sur sa fiche. */}
         {place === null ? <s-text color="subdued">Pas d’adresse enregistrée</s-text> : <s-text>{place}</s-text>}
-        <s-text color="subdued">{[customer.phone === null ? null : phoneDisplay(customer.phone), customer.email].filter((part) => part !== null).join(" · ") || "Ni téléphone ni e-mail"}</s-text>
         <s-text type="strong">{clientStats(item)}</s-text>
       </s-stack>
       <s-stack direction="block" gap="small-200">
@@ -62,9 +62,9 @@ function ClientRow({ item }: { readonly item: ClientListItem }) {
           <s-button variant="tertiary" icon="order" href={`/app/commande?client=${gidToNumericId(customer.id)}`}>
             Prendre une commande
           </s-button>
-          {call === null ? null : (
-            <s-button variant="tertiary" icon="phone" href={call} target="_blank">
-              Appeler
+          {call === null || customer.phone === null ? null : (
+            <s-button variant="tertiary" icon="phone" href={call} target="_blank" accessibilityLabel={`Appeler le ${phoneDisplay(customer.phone)}`}>
+              {phoneDisplay(customer.phone)}
             </s-button>
           )}
         </s-stack>

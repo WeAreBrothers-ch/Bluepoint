@@ -5,6 +5,7 @@
  */
 
 import { entreGuillemets, TITRES } from "../../lib/titres";
+import { FILL } from "../fill";
 
 interface Recipe {
   readonly situation: string;
@@ -146,7 +147,7 @@ const RECIPES: readonly Recipe[] = [
       "Corrigez ce qui a changé, puis touchez « Enregistrer ».",
     ],
     href: "/app/reglages",
-    button: "Voir les informations de l’entreprise",
+    button: TITRES.entreprise,
   },
 ];
 
@@ -159,9 +160,11 @@ function RecipeBlock({ recipe }: { readonly recipe: Recipe }) {
             <s-text key={step}>{`${index + 1}.\u2002${step}`}</s-text>
           ))}
         </s-stack>
-        <s-stack direction="inline">
-          <s-button href={recipe.href}>{recipe.button}</s-button>
-        </s-stack>
+        <s-grid gridTemplateColumns="minmax(0, 1fr)">
+          <s-button {...FILL} href={recipe.href}>
+            {recipe.button}
+          </s-button>
+        </s-grid>
       </s-stack>
     </s-section>
   );
@@ -170,7 +173,7 @@ function RecipeBlock({ recipe }: { readonly recipe: Recipe }) {
 export function AidePageView() {
   return (
     <s-page heading={TITRES.aide} inlineSize="base">
-      <s-banner tone="info" heading="Vous êtes perdu(e) ?">
+      <s-banner tone="info" heading={"Vous êtes perdu(e)\u202F?"}>
         <s-stack direction="block" gap="small-200">
           <s-text>Pas de panique : pour livrer, annuler une commande, noter un paiement ou corriger le nombre de bouteilles, l’application vous demande toujours de confirmer.</s-text>
           <s-text>{`Pour revenir au début, touchez ${entreGuillemets(TITRES.livraisons)} dans le menu.`}</s-text>
@@ -178,7 +181,7 @@ export function AidePageView() {
       </s-banner>
       <s-section>
         <s-stack direction="block" gap="small-200">
-          <s-heading>Que voulez-vous faire ?</s-heading>
+          <s-heading>{"Que voulez-vous faire\u202F?"}</s-heading>
           <s-text>Choisissez ce qui vous arrive. Les étapes sont écrites juste en dessous.</s-text>
         </s-stack>
       </s-section>

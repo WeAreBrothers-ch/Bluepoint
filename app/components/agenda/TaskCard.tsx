@@ -43,16 +43,15 @@ export function ContactButtons({ task }: { readonly task: ScheduledTask }) {
       </s-button>
     ),
     call === null || task.phone === null ? null : (
-      <s-button key="call" href={call} target="_blank" icon="phone" accessibilityLabel={`Appeler ${phoneDisplay(task.phone)}`}>
-        Appeler
+      <s-button key="call" href={call} target="_blank" icon="phone" accessibilityLabel={`Appeler le ${phoneDisplay(task.phone)}`}>
+        {phoneDisplay(task.phone)}
       </s-button>
     ),
   ].filter((button) => button !== null);
-  // Une seule ligne : l'adresse, puis le numéro (le bouton « Appeler » le compose).
-  const line = [address, task.phone === null ? null : phoneDisplay(task.phone)].filter((part) => part !== null).join(" · ");
+  // L'adresse seule ; le numéro est écrit dans le bouton « Appeler » (un toucher le compose).
   return (
     <s-stack direction="block" gap="small-200">
-      <s-text>{line}</s-text>
+      {address === null ? null : <s-text>{address}</s-text>}
       {buttons.length === 0 ? null : (
         <s-stack direction="inline" gap="small-200">
           {buttons}
@@ -89,7 +88,8 @@ export function TaskCard({ task, invoice, today }: TaskCardProps) {
   const mode = modeLabel(task.mode);
   const late = task.urgency === "en_retard" && task.status !== "livree";
   const dateLine = cardDateLine(task, today);
-  const who = task.company === null ? `Commande ${task.name}` : `${task.customerName} · commande ${task.name}`;
+  // Sous le nom de l'entreprise, la personne à demander. Le numéro de commande est sur la fiche (« Voir la commande »).
+  const who = task.company === null ? null : task.customerName;
 
   return (
     <ClientCard
@@ -103,7 +103,7 @@ export function TaskCard({ task, invoice, today }: TaskCardProps) {
               <StatusBadge task={task} optimisticDelivered={optimisticDelivered} />
             </s-stack>
           </s-stack>
-          <s-text color="subdued">{who}</s-text>
+          {who === null ? null : <s-text color="subdued">{who}</s-text>}
           {dateLine === null ? null : (
             <s-text type="strong" {...(late ? { tone: "critical" as const } : {})}>
               {dateLine}

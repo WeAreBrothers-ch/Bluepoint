@@ -33,7 +33,7 @@ export function WeekView({ groups, invoices, today }: WeekViewProps) {
   const list = { invoices, today };
   return (
     <>
-      <TaskList heading="Livraisons en retard (semaines passées)" hint="À livrer en premier." tasks={groups.overdueBefore} {...list} />
+      <TaskList heading="Livraisons en retard (semaines passées)" tasks={groups.overdueBefore} {...list} />
       {busyDays.length === 0 ? (
         <s-section>
           <s-paragraph>Aucune livraison prévue cette semaine-là.</s-paragraph>
@@ -43,7 +43,7 @@ export function WeekView({ groups, invoices, today }: WeekViewProps) {
       )}
       <TaskList
         heading="Commandes sans jour de livraison"
-        hint="Souvent des commandes du site. Appelez le client, puis touchez « Choisir le jour »."
+        hint="Appelez le client pour choisir le jour."
         tasks={groups.undated}
         {...list}
       />
