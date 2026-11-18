@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { OrderTotals, StockWarning } from "../../lib/commande/totals";
 import { formatChf, formatInteger } from "../../lib/format/money";
+import { FILL } from "../fill";
 
 /** Récapitulatif : vins, remise (ex. prix pro), total, alertes de stock et bouton « Enregistrer la commande ». */
 
@@ -75,15 +76,18 @@ export function OrderSummary(props: OrderSummaryProps) {
         {props.linesError === undefined ? null : <s-banner tone="critical" heading={props.linesError} />}
         {props.outcome}
         {props.missing === null ? null : <s-text color="subdued">{props.missing}</s-text>}
-        <s-button
-          variant="primary"
-          icon="check"
-          onClick={props.onSubmit}
-          {...(props.submitting ? { loading: true } : {})}
-          {...(props.missing === null && !props.submitting ? {} : { disabled: true })}
-        >
-          Enregistrer la commande
-        </s-button>
+        <s-grid gridTemplateColumns="minmax(0, 1fr)">
+          <s-button
+            {...FILL}
+            variant="primary"
+            icon="check"
+            onClick={props.onSubmit}
+            {...(props.submitting ? { loading: true } : {})}
+            {...(props.missing === null && !props.submitting ? {} : { disabled: true })}
+          >
+            Enregistrer la commande
+          </s-button>
+        </s-grid>
       </s-stack>
     </s-section>
   );

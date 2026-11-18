@@ -8,6 +8,7 @@ import { InvoicePaymentButtons } from "../factures/InvoicePaymentButtons";
 import { InvoiceShortcutButtons } from "../factures/InvoiceShortcutButtons";
 import { FILL } from "../fill";
 import { DayChoicePanel } from "./DeliveryDayPicker";
+import { ChoiceButtons } from "../ChoiceButtons";
 
 /**
  * Boutons d'une tâche : un seul gros bouton foncé (ce qu'il faut faire maintenant), les autres en simples liens
@@ -59,8 +60,9 @@ export function TaskActions({ task, invoice, fetcher, today, viewOrderHref }: Ta
         <s-stack direction="block" gap="small-200">
           <s-text type="strong">{mode.doneQuestion(task.name)}</s-text>
           <s-text>La facture sera faite tout de suite après.</s-text>
-          <s-stack direction="inline" gap="small-200">
+          <ChoiceButtons>
             <s-button
+              {...FILL}
               variant="primary"
               icon="check"
               onClick={() => {
@@ -70,10 +72,10 @@ export function TaskActions({ task, invoice, fetcher, today, viewOrderHref }: Ta
             >
               {`Oui, ${mode.doneAction.charAt(0).toLocaleLowerCase("fr-CH")}${mode.doneAction.slice(1)}`}
             </s-button>
-            <s-button icon="x" onClick={() => setPanel("aucun")}>
+            <s-button {...FILL} icon="x" onClick={() => setPanel("aucun")}>
               Non, annuler
             </s-button>
-          </s-stack>
+          </ChoiceButtons>
         </s-stack>
       </s-box>
     );

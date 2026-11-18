@@ -88,7 +88,6 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
       }
     >
       <s-stack direction="block" gap="small-200">
-        {invoice.orderPath === null ? null : <s-link href={invoice.orderPath}>{`Voir la commande ${invoice.orderName}`}</s-link>}
         {invoice.paidOn !== null ? (
           <s-text color="subdued">{`Payée le ${day(invoice.paidOn)} (reçu remis au client)`}</s-text>
         ) : (
@@ -102,6 +101,14 @@ export function InvoiceCard({ invoice, emailConfigured }: InvoiceCardProps) {
         <Reminders invoice={invoice} emailConfigured={emailConfigured} />
         <InvoiceShortcutButtons invoice={invoice} hideSend={reminding} />
         {invoice.paymentState === "payee" ? null : <InvoicePaymentButtons invoiceId={invoice.id} invoiceNumber={invoice.number} />}
+        {/* En bas, en bouton (et non en petit lien) : facile à toucher sur un téléphone, sans gêner les envois. */}
+        {invoice.orderPath === null ? null : (
+          <s-stack direction="inline">
+            <s-button variant="tertiary" icon="order" href={invoice.orderPath}>
+              {`Voir la commande ${invoice.orderName}`}
+            </s-button>
+          </s-stack>
+        )}
     </ClientCard>
   );
 }

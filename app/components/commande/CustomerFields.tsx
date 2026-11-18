@@ -11,15 +11,15 @@ interface CustomerFieldsProps {
 
 function Field(props: CustomerFieldsProps & { readonly field: NewCustomerField; readonly label: string; readonly details?: string }) {
   const error = props.errors[props.field];
-  return (
-    <s-text-field
-      label={props.label}
-      name={props.field}
-      value={props.values[props.field]}
-      {...(props.details === undefined ? {} : { details: props.details })}
-      {...(error === undefined ? {} : { error })}
-    />
-  );
+  const field = {
+    label: props.label,
+    name: props.field,
+    value: props.values[props.field],
+    ...(props.details === undefined ? {} : { details: props.details }),
+    ...(error === undefined ? {} : { error }),
+  };
+  // L'e-mail dans un champ e-mail : le téléphone affiche le clavier avec « @ ».
+  return props.field === "email" ? <s-email-field {...field} /> : <s-text-field {...field} />;
 }
 
 export function CustomerFields({ values, errors }: CustomerFieldsProps) {

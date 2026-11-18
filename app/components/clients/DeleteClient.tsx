@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { cannotDeleteMessage, type DeleteClientResult } from "../../lib/clients/delete";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /**
  * En bas de la fiche client : « Supprimer ce client », avec deux questions avant d'effacer pour qu'on ne se trompe pas.
@@ -49,14 +51,14 @@ export function DeleteClient({ name, orders }: DeleteClientProps) {
             <s-stack direction="block" gap="small-200">
               <s-text type="strong">{`Supprimer « ${name} »\u202F?`}</s-text>
               <s-text>Sa fiche, son adresse et ses coordonnées seront effacées. S’il est client pro, il perd aussi son accès pro.</s-text>
-              <s-stack direction="inline" gap="small-200">
-                <s-button variant="primary" tone="critical" icon="delete" onClick={() => setStep("derniere")}>
+              <ChoiceButtons>
+                <s-button {...FILL} variant="primary" tone="critical" icon="delete" onClick={() => setStep("derniere")}>
                   Oui, je veux le supprimer
                 </s-button>
-                <s-button icon="arrow-left" onClick={() => setStep("rien")}>
+                <s-button {...FILL} icon="arrow-left" onClick={() => setStep("rien")}>
                   Non, garder ce client
                 </s-button>
-              </s-stack>
+              </ChoiceButtons>
             </s-stack>
           </s-box>
         ) : null}
@@ -65,8 +67,9 @@ export function DeleteClient({ name, orders }: DeleteClientProps) {
             <s-stack direction="block" gap="small-200">
               <s-text type="strong">Êtes-vous vraiment sûr ?</s-text>
               <s-text>{`C’est définitif : « ${name} » ne pourra pas être récupéré.`}</s-text>
-              <s-stack direction="inline" gap="small-200">
+              <ChoiceButtons>
                 <s-button
+                  {...FILL}
                   variant="primary"
                   tone="critical"
                   icon="delete"
@@ -75,10 +78,10 @@ export function DeleteClient({ name, orders }: DeleteClientProps) {
                 >
                   Oui, supprimer définitivement
                 </s-button>
-                <s-button icon="arrow-left" onClick={() => setStep("rien")} {...(busy ? { disabled: true } : {})}>
+                <s-button {...FILL} icon="arrow-left" onClick={() => setStep("rien")} {...(busy ? { disabled: true } : {})}>
                   Non, garder ce client
                 </s-button>
-              </s-stack>
+              </ChoiceButtons>
             </s-stack>
           </s-box>
         ) : null}

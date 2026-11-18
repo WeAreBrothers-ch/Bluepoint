@@ -8,6 +8,7 @@ import { ClientKindBadge } from "../ClientKindBadge";
 import { useDebouncedValue } from "../useDebouncedValue";
 import { NewCustomerForm } from "./NewCustomerForm";
 import { TouchButton } from "./TouchButton";
+import { phoneDisplay } from "../../lib/agenda/contact";
 
 /**
  * Recherche d'un client (nom, entreprise, téléphone, e-mail), lancée 300 ms après la frappe.
@@ -23,7 +24,8 @@ interface CustomerSearchProps {
 
 function summary(customer: CustomerOption): string {
   const company = customer.b2b[0]?.companyName ?? customer.address?.company ?? null;
-  return [company, customer.phone, customer.email].filter((part) => part !== null && part !== "").join(" · ");
+  const phone = customer.phone === null ? null : phoneDisplay(customer.phone);
+  return [company, phone, customer.email].filter((part) => part !== null && part !== "").join(" · ");
 }
 
 export function CustomerSearch({ error, onSelect }: CustomerSearchProps) {

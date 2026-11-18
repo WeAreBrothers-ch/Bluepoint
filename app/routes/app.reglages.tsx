@@ -10,6 +10,7 @@ import { toFormValues, type SettingsActionResult, type SettingsFormValues } from
 import { formDataToRecord, parseSettings } from "../lib/reglages/schema";
 import { completeSettings } from "../lib/reglages/seller";
 import { loadStoredSettings, saveSettings } from "../lib/reglages/settings.server";
+import { FILL } from "../components/fill";
 
 /** Réglages de facturation : coordonnées de l'entreprise, compte en banque, ce qui se fait tout seul. */
 
@@ -63,11 +64,12 @@ export default function ReglagesPage() {
         <SellerFields values={values} errors={errors} />
         <PaymentFields values={values} errors={errors} />
         <AutomationFields values={values} />
-        <s-stack direction="inline" justifyContent="end" padding="base none">
-          <s-button type="submit" variant="primary" {...(saving ? { loading: true } : {})}>
+        {/* Sur toute la largeur : au bout d'un long formulaire, sur un téléphone, on ne le cherche pas dans un coin. */}
+        <s-grid gridTemplateColumns="minmax(0, 1fr)" padding="base none">
+          <s-button {...FILL} type="submit" variant="primary" icon="check" {...(saving ? { loading: true } : {})}>
             Enregistrer
           </s-button>
-        </s-stack>
+        </s-grid>
       </Form>
       <s-section heading="Connexion à AbaNinja">
         <s-stack direction="block" gap="small-200">
@@ -75,7 +77,11 @@ export default function ReglagesPage() {
             Vérifie que l’application peut créer des factures dans AbaNinja, avec une facture fictive de 1 CHF qui
             n’est envoyée à personne et qui est effacée à la fin.
           </s-paragraph>
-          <s-link href="/app/abaninja">Tester la connexion à AbaNinja</s-link>
+          <s-stack direction="inline">
+            <s-button icon="connect" href="/app/abaninja">
+              Tester la connexion à AbaNinja
+            </s-button>
+          </s-stack>
         </s-stack>
       </s-section>
     </s-page>

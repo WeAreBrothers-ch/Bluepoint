@@ -33,15 +33,11 @@ export function TaskBadges({ task, optimisticDelivered }: TaskBadgesProps) {
   );
 }
 
-/** Poste ou retrait, et si le client a payé : les deux infos qui changent ce qu'on fait à la livraison. */
+/**
+ * Si le client a payé : ce qui change ce qu'on fait à la livraison. Poste ou retrait est déjà écrit dans le bandeau
+ * de la carte (« Particulier · Envoi par la Poste ») : pas de second badge qui répète la même chose sur un petit écran.
+ */
 export function PaymentBadges({ task }: { readonly task: TaskBadgesProps["task"] }) {
   const payment = paymentBadge(task);
-  const special = task.mode === "poste" || task.mode === "retrait";
-  if (payment === null && !special) return null;
-  return (
-    <s-stack direction="inline" gap="small-200">
-      {special ? <s-badge>{modeLabel(task.mode).label}</s-badge> : null}
-      {payment === null ? null : <s-badge tone={payment.tone}>{payment.label}</s-badge>}
-    </s-stack>
-  );
+  return payment === null ? null : <s-badge tone={payment.tone}>{payment.label}</s-badge>;
 }

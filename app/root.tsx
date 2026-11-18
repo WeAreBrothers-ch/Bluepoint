@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useRouteError } from "react-router";
+import { APP_STYLE } from "./app-style";
 import { PlainProblemPage } from "./components/ProblemPage";
 
 export function Layout({ children }: { readonly children: ReactNode }) {
@@ -13,8 +14,7 @@ export function Layout({ children }: { readonly children: ReactNode }) {
           rel="stylesheet"
           href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
         />
-        {/* Texte et boutons plus grands : l'application est lue et touchée par des personnes peu à l'aise avec l'informatique. */}
-        <style>{"body{zoom:1.15}"}</style>
+        <style>{APP_STYLE}</style>
         <Meta />
         <Links />
       </head>

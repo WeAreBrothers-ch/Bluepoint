@@ -6,6 +6,8 @@ import { quantitiesFromLines, type ChangeRules, type OrderChangeResult } from ".
 import type { OrderDetail } from "../../lib/commandes/detail";
 import { formatChf } from "../../lib/format/money";
 import { ProductList } from "../commande/ProductList";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /**
  * Le client change d'avis sur une commande pas encore livrée : « Modifier les vins » (le même choix
@@ -56,8 +58,9 @@ export function OrderChangeSection({ detail, rules, onEdit }: OrderChangeSection
               {rules.paid ? (
                 <s-text>{`Le client a déjà payé${total}. S’il a payé par carte sur le site, l’argent lui revient tout seul. S’il a payé par virement, en espèces ou par TWINT, rendez-lui l’argent vous-même.`}</s-text>
               ) : null}
-              <s-stack direction="inline" gap="small-200">
+              <ChoiceButtons>
                 <s-button
+                  {...FILL}
                   variant="primary"
                   tone="critical"
                   icon="x"
@@ -68,23 +71,23 @@ export function OrderChangeSection({ detail, rules, onEdit }: OrderChangeSection
                 >
                   Oui, annuler la commande
                 </s-button>
-                <s-button onClick={() => setConfirming(false)}>Non, garder la commande</s-button>
-              </s-stack>
+                <s-button {...FILL} onClick={() => setConfirming(false)}>Non, garder la commande</s-button>
+              </ChoiceButtons>
             </s-stack>
           </s-box>
         ) : (
           <s-stack direction="block" gap="small-200">
-            <s-text color="subdued">Le client a appelé pour changer quelque chose ? C’est ici.</s-text>
-            <s-stack direction="inline" gap="small-200">
+            <s-text color="subdued">{"Le client a appelé pour changer quelque chose\u202F? C’est ici."}</s-text>
+            <ChoiceButtons>
               {rules.canEdit ? (
-                <s-button icon="edit" onClick={onEdit} {...(busy ? { disabled: true } : {})}>
+                <s-button {...FILL} icon="edit" onClick={onEdit} {...(busy ? { disabled: true } : {})}>
                   Modifier les vins
                 </s-button>
               ) : null}
-              <s-button tone="critical" icon="x" onClick={() => setConfirming(true)} {...(busy ? { loading: true } : {})}>
+              <s-button {...FILL} tone="critical" icon="x" onClick={() => setConfirming(true)} {...(busy ? { loading: true } : {})}>
                 Annuler la commande
               </s-button>
-            </s-stack>
+            </ChoiceButtons>
             {rules.editBlocked === null ? null : <s-text color="subdued">{rules.editBlocked}</s-text>}
           </s-stack>
         )}
@@ -123,6 +126,7 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
     <>
       <ProductList
         heading="Modifier les vins"
+        audience={detail.task.isPro ? "pro" : "particulier"}
         products={editable}
         truncated={truncated}
         quantities={quantities}
@@ -135,8 +139,9 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
             <s-text color="subdued">{`Ne change pas ici\u202F: ${fixedLines.map((line) => line.name).join(", ")}.`}</s-text>
           )}
           <s-text color="subdued">La remise pro est recalculée toute seule. Le nouveau total s’affiche après l’enregistrement.</s-text>
-          <s-stack direction="inline" gap="small-200">
+          <ChoiceButtons>
             <s-button
+              {...FILL}
               variant="primary"
               icon="check"
               onClick={() => {
@@ -147,10 +152,10 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
             >
               Enregistrer les changements
             </s-button>
-            <s-button icon="x" onClick={onClose} {...(busy ? { disabled: true } : {})}>
+            <s-button {...FILL} icon="x" onClick={onClose} {...(busy ? { disabled: true } : {})}>
               Laisser comme avant
             </s-button>
-          </s-stack>
+          </ChoiceButtons>
           {submitted && result !== undefined && !result.ok ? <ResultBanner result={result} /> : null}
         </s-stack>
       </s-section>

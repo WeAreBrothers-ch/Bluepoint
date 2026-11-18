@@ -3,6 +3,8 @@ import type { InvoiceRef } from "../../lib/agenda/types";
 import type { IsoDate } from "../../lib/metafields/definitions";
 import { EmptyState } from "../EmptyState";
 import { TaskList } from "./TaskList";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /** Vue « Aujourd’hui » : retards, livraisons du jour, celles de demain, sans date, déjà livrées. */
 
@@ -20,12 +22,12 @@ export function TodayView({ groups, invoices, today }: TodayViewProps) {
       <EmptyState
         heading="Rien à livrer aujourd’hui ni demain."
         action={
-          <s-stack direction="inline" gap="small-200">
-            <s-button href="/app?vue=semaine" variant="primary">
+          <ChoiceButtons>
+            <s-button {...FILL} href="/app?vue=semaine" variant="primary">
               Voir la semaine
             </s-button>
-            <s-button href="/app/commande">Prendre une commande</s-button>
-          </s-stack>
+            <s-button {...FILL} href="/app/commande">Prendre une commande</s-button>
+          </ChoiceButtons>
         }
       >
         Les commandes à livrer apparaîtront ici dès qu’elles ont une date de livraison.

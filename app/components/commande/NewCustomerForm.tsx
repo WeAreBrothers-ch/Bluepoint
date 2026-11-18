@@ -4,6 +4,8 @@ import type { NewCustomerValues } from "../../lib/commande/new-customer";
 import type { CustomerOption } from "../../lib/commande/types";
 import type { NewCustomerResult } from "../../routes/app.nouveau-client";
 import { CustomerFields } from "./CustomerFields";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /**
  * Fiche d'un nouveau client, créée sans quitter « Prendre une commande ».
@@ -39,14 +41,14 @@ export function NewCustomerForm({ initial, onCreated, onCancel }: NewCustomerFor
             <CustomerFields values={values} errors={errors} />
           </s-stack>
           {failed === undefined ? null : <s-banner tone="critical" heading={failed.message} />}
-          <s-stack direction="inline" gap="small-200">
-            <s-button type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
+          <ChoiceButtons>
+            <s-button {...FILL} type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
               Créer le client et continuer
             </s-button>
-            <s-button onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+            <s-button {...FILL} onClick={onCancel} {...(busy ? { disabled: true } : {})}>
               Annuler
             </s-button>
-          </s-stack>
+          </ChoiceButtons>
         </s-stack>
       </fetcher.Form>
     </s-box>

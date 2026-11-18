@@ -84,10 +84,24 @@ Les vins se vendent **par cartons de 6 bouteilles, au minimum un carton** (6, 12
 
 ## Sur téléphone
 
-L’app s’ouvre aussi dans l’application Shopify du téléphone. Les pages sont faites pour un écran étroit : cartes
-l’une sous l’autre, boutons sur toute la largeur, numéros de téléphone jamais coupés (espaces insécables), aide des champs
-de recherche sous le champ plutôt que dans un texte d’exemple trop long. Les tableaux de « Litres vendus » défilent de
-côté s’ils sont trop larges, et « Vin par vin » range la sorte, le pays et la contenance sous le nom du vin.
+L’app s’ouvre aussi dans l’application Shopify du téléphone, et elle est pensée d’abord pour lui (vérifié de 320 à
+414 px de large, et sur ordinateur) :
+
+- **Une colonne, de gros boutons** : cartes l’une sous l’autre ; les décisions (« Oui, … » / « Non, … »,
+  « Enregistrer » / « Annuler ») sont l’une sous l’autre sur toute la largeur, côte à côte sur un écran large
+  (`app/components/ChoiceButtons.tsx`).
+- **Pas de zoom involontaire** : sur un téléphone, le texte des champs passe à 15 px (≈ 17 px avec l’agrandissement
+  de l’app) pour que l’iPhone ne zoome plus la page quand on touche un champ ; clavier « @ » pour les e-mails
+  (`app/app-style.ts`).
+- **Prendre une commande** : seul le prix du client choisi (pro ou particulier), à la bouteille et au carton ; pas de
+  case grise sans photo ; les 6 premiers vins puis « Voir tous les vins » (un vin choisi reste toujours visible) ;
+  −, nombre de cartons, + et corbeille sur une seule ligne.
+- **Stock** : « Ajouter des cartons » et « Corriger le nombre » visibles ; photo, fiche, prix et retrait de la vente
+  rangés sous « Photo, fiche, prix… ». Raccourcis « + 1 carton … + 1 palette » deux par ligne.
+- **Partout** : numéros de téléphone jamais coupés, icône toujours à côté du nom, aide des recherches sous le champ,
+  liens transformés en boutons faciles à toucher, pas de badge qui répète le mode de livraison.
+- **Litres vendus** : les tableaux défilent de côté s’ils sont trop larges ; « Vin par vin » range la sorte, le pays et
+  la contenance sous le nom du vin.
 
 ## Noms des pages
 

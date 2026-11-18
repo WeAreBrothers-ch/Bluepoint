@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useFetcher } from "react-router";
 import { EMPTY_PRO_REQUEST, PRO_COUNTRIES, type ProRequestErrors, type ProRequestField, type ProRequestValues } from "../../lib/pros/request";
 import type { ProsActionResult } from "../../lib/pros/view";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /** « Ajouter un client pro » : pour un pro qui appelle, son compte est créé tout de suite, sans passer par le site. */
 
@@ -17,15 +19,15 @@ interface FieldProps {
 
 function Field({ field, label, values, errors, details }: FieldProps) {
   const error = errors[field];
-  return (
-    <s-text-field
-      label={label}
-      name={field}
-      value={values[field]}
-      {...(details === undefined ? {} : { details })}
-      {...(error === undefined ? {} : { error })}
-    />
-  );
+  const props = {
+    label,
+    name: field,
+    value: values[field],
+    ...(details === undefined ? {} : { details }),
+    ...(error === undefined ? {} : { error }),
+  };
+  // L'e-mail dans un champ e-mail : le téléphone affiche le clavier avec « @ ».
+  return field === "email" ? <s-email-field {...props} /> : <s-text-field {...props} />;
 }
 
 function Fields({ values, errors }: { readonly values: ProRequestValues; readonly errors: ProRequestErrors }) {
@@ -91,14 +93,14 @@ export function AddProForm({ canCreate }: { readonly canCreate: boolean }) {
         {/* Remonté à neuf après une erreur pour réafficher les valeurs tapées. */}
         <Fields key={result === undefined ? "vide" : JSON.stringify(values)} values={values} errors={errors} />
         {result !== undefined && !result.ok ? <s-banner tone="critical" heading={result.message} /> : null}
-        <s-stack direction="inline" gap="small-200">
-          <s-button type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
+        <ChoiceButtons>
+          <s-button {...FILL} type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
             Créer le client pro
           </s-button>
-          <s-button onClick={() => setOpen(false)} {...(busy ? { disabled: true } : {})}>
+          <s-button {...FILL} onClick={() => setOpen(false)} {...(busy ? { disabled: true } : {})}>
             Annuler
           </s-button>
-        </s-stack>
+        </ChoiceButtons>
         <s-text color="subdued">
           Le client pro est créé avec le paiement à 30 jours et les prix pros ; il reçoit un e-mail pour se connecter au site.
         </s-text>

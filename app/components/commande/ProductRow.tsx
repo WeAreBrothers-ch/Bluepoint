@@ -1,40 +1,36 @@
 import { memo } from "react";
-import { cartonsOf, isFullCartons } from "../../lib/commande/cart";
+import { winePriceText, type PriceAudience } from "../../lib/commande/price-text";
 import { isOverStock, productLabel } from "../../lib/commande/totals";
-import { CARTON_SIZE, type ProductOption, type VariantGid } from "../../lib/commande/types";
-import { formatChf, formatInteger } from "../../lib/format/money";
-import { proCentsFromPublic } from "../../lib/prix/pro";
+import type { ProductOption, VariantGid } from "../../lib/commande/types";
+import { formatInteger } from "../../lib/format/money";
 import { QuantityStepper } from "./QuantityStepper";
 
 /**
- * Un vin : vignette, nom, prix, stock, puis les boutons de quantité.
- * Un vin choisi se voit tout de suite : fond grisé, bord marqué et « ✓ 3 bouteilles dans la commande ».
+ * Un vin : son nom, son prix (celui du client choisi), le stock, puis « Ajouter un carton de 6 ».
+ * Pensé pour un téléphone : la photo seulement si le vin en a une (pas de case grise vide), à côté du nom.
+ * Un vin choisi se voit tout de suite : fond grisé, bord marqué, et le nombre de cartons entre − et +.
  */
 
 interface ProductRowProps {
   readonly product: ProductOption;
   readonly quantity: number;
+  /** Pro ou particulier : seul le prix de ce client est affiché. `null` : pas encore de client, les deux prix. */
+  readonly audience: PriceAudience;
   readonly onSet: (variantId: VariantGid, quantity: number) => void;
   readonly onAdd: (variantId: VariantGid, delta: number) => void;
 }
 
-function stockText(available: number | null): string | null {
+function StockLine({ available }: { readonly available: number | null }) {
   if (available === null) return null;
-  return available <= 0 ? "Plus de bouteilles" : `${formatInteger(available)} en cave`;
+  if (available <= 0) return <s-text tone="critical">Plus de bouteilles en cave</s-text>;
+  return <s-text color="subdued">{`${bottlesText(available)} en cave`}</s-text>;
 }
 
 export function bottlesText(quantity: number): string {
   return `${formatInteger(quantity)} bouteille${quantity > 1 ? "s" : ""}`;
 }
 
-/** « 2 cartons (12 bouteilles) » : le nombre de cartons d'abord, car c'est ainsi qu'on commande. */
-export function cartonsText(quantity: number): string {
-  if (!isFullCartons(quantity)) return bottlesText(quantity);
-  const cartons = cartonsOf(quantity);
-  return `${cartons} carton${cartons > 1 ? "s" : ""} (${bottlesText(quantity)})`;
-}
-
-function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
+function ProductRowView({ product, quantity, audience, onSet, onAdd }: ProductRowProps) {
   const label = productLabel(product);
   const overStock = isOverStock(product, quantity);
   const chosen = quantity > 0;
@@ -42,31 +38,14 @@ function ProductRowView({ product, quantity, onSet, onAdd }: ProductRowProps) {
   return (
     <s-box padding="base" borderRadius="base" border={chosen ? "large strong" : "base"} background={chosen ? "subdued" : "base"}>
       <s-stack direction="block" gap="small-200">
-        <s-stack direction="inline" gap="small-200" alignItems="center">
-          {product.imageUrl === null ? (
-            <s-thumbnail alt="" size="small" />
-          ) : (
-            <s-thumbnail src={product.imageUrl} alt={product.imageAlt} size="small" />
-          )}
+        <s-grid gridTemplateColumns={product.imageUrl === null ? "minmax(0, 1fr)" : "auto minmax(0, 1fr)"} gap="small-200" alignItems="center">
+          {product.imageUrl === null ? null : <s-thumbnail src={product.imageUrl} alt={product.imageAlt} size="small" />}
           <s-stack direction="block" gap="small-500">
             <s-text type="strong">{label}</s-text>
-            <s-text color="subdued">
-              {[
-                // Shopify garde le prix particulier ; le prix pro (sans les 15 %) est celui que le patron connaît.
-                `Bouteille : ${formatChf(proCentsFromPublic(product.priceCents))} pro, ${formatChf(product.priceCents)} particulier`,
-                `carton de ${CARTON_SIZE}\u202F: ${formatChf(proCentsFromPublic(product.priceCents) * CARTON_SIZE)} pro`,
-                stockText(product.available),
-              ]
-                .filter((part) => part !== null)
-                .join(" · ")}
-            </s-text>
+            <s-text>{winePriceText(product.priceCents, audience)}</s-text>
+            <StockLine available={product.available} />
           </s-stack>
-          {chosen ? (
-            <s-badge tone="success" icon="check" size="large">
-              {`${cartonsText(quantity)} dans la commande`}
-            </s-badge>
-          ) : null}
-        </s-stack>
+        </s-grid>
         <QuantityStepper
           productLabel={label}
           quantity={quantity}

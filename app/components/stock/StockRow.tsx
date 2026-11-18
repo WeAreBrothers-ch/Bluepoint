@@ -25,13 +25,14 @@ import { PhotoPicker } from "./PhotoPicker";
 import { parsePrice } from "../../lib/stock/price";
 import { priceLine, proCentsFromPublic, PUBLIC_MARKUP_PERCENT, publicCentsFromPro } from "../../lib/prix/pro";
 import { retireWarnings } from "../../lib/stock/retire";
+import { ChoiceButtons } from "../ChoiceButtons";
 
 /**
  * Un vin de la page Stock : combien on peut encore en vendre, puis deux boutons.
  * « Ajouter des cartons » quand du vin arrive (cartons, palettes) ; « Corriger le nombre » après avoir compté la cave.
- * « Ajouter une photo » / « Changer la photo » pour la photo du site ; « Modifier la fiche » pour tout le reste
- * (nom, année, producteur, sorte, pays, région, appellation, contenance, degré, cépages, textes du site).
- * Chaque bouton ouvre une petite question à la place des boutons, avec « Annuler ».
+ * Plus rarement, sous « Photo, fiche, prix… » : la photo du site, « Modifier la fiche » pour tout le reste
+ * (nom, année, producteur, sorte, pays, région, appellation, contenance, degré, cépages, textes du site),
+ * le prix et le retrait de la vente. Chaque bouton ouvre une petite question à la place des boutons, avec « Annuler ».
  */
 
 interface StockRowProps {
@@ -59,14 +60,14 @@ function RetirePanel({ item, busy, onConfirm, onCancel }: { readonly item: Stock
         <s-text color="subdued">
           Ses ventes passées restent dans les factures et les litres vendus. Vous pourrez le remettre en vente en bas de cette page.
         </s-text>
-        <s-stack direction="inline" gap="small-200">
-          <s-button variant="primary" tone="critical" icon="archive" onClick={onConfirm} {...(busy ? { loading: true } : {})}>
+        <ChoiceButtons>
+          <s-button {...FILL} variant="primary" tone="critical" icon="archive" onClick={onConfirm} {...(busy ? { loading: true } : {})}>
             Oui, retirer de la vente
           </s-button>
-          <s-button icon="arrow-left" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+          <s-button {...FILL} icon="arrow-left" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
             Non, garder ce vin
           </s-button>
-        </s-stack>
+        </ChoiceButtons>
       </s-stack>
     </s-box>
   );
@@ -91,7 +92,8 @@ const CARTON_STEPS: readonly { readonly cartons: number; readonly label: string 
   { cartons: 1, label: "+ 1 carton" },
   { cartons: 5, label: "+ 5 cartons" },
   { cartons: 10, label: "+ 10 cartons" },
-  { cartons: PALLET_CARTONS, label: `+ 1 palette (${PALLET_CARTONS} cartons)` },
+  // « (100 cartons) » est écrit sous les boutons : sur un téléphone, il ne tiendrait pas dans le bouton.
+  { cartons: PALLET_CARTONS, label: "+ 1 palette" },
 ];
 
 function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProps) {
@@ -114,14 +116,14 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
       <s-box padding="base" background="subdued" borderRadius="base">
         <s-stack direction="block" gap="small-200">
           <s-text type="strong">{asking}</s-text>
-          <s-stack direction="inline" gap="small-200">
-            <s-button variant="primary" icon="check" onClick={submit} {...(busy ? { loading: true } : {})}>
+          <ChoiceButtons>
+            <s-button {...FILL} variant="primary" icon="check" onClick={submit} {...(busy ? { loading: true } : {})}>
               Oui, enregistrer
             </s-button>
-            <s-button icon="arrow-left" onClick={() => setAsking(null)} {...(busy ? { disabled: true } : {})}>
+            <s-button {...FILL} icon="arrow-left" onClick={() => setAsking(null)} {...(busy ? { disabled: true } : {})}>
               Non, corriger
             </s-button>
-          </s-stack>
+          </ChoiceButtons>
         </s-stack>
       </s-box>
     );
@@ -131,7 +133,7 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
       <s-stack direction="block" gap="base">
         {adding ? (
           <>
-            <s-box inlineSize="220px">
+            <s-box maxInlineSize="220px">
               <s-number-field
                 label={"Combien de cartons arrivent\u202F?"}
                 value={String(fullCartons)}
@@ -142,23 +144,27 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
                 onInput={(event) => setFullCartons(parseCount(event.currentTarget.value, MAX_CARTONS))}
               />
             </s-box>
-            <s-stack direction="inline" gap="small-200">
+            {/* Deux par ligne : de gros boutons faciles à toucher, même sur un téléphone. */}
+            <s-grid gridTemplateColumns="minmax(0, 1fr) minmax(0, 1fr)" gap="small-200">
               {CARTON_STEPS.map((step) => (
-                <s-button key={step.cartons} onClick={() => setFullCartons((value) => Math.min(value + step.cartons, MAX_CARTONS))}>
+                <s-button {...FILL} key={step.cartons} onClick={() => setFullCartons((value) => Math.min(value + step.cartons, MAX_CARTONS))}>
                   {step.label}
                 </s-button>
               ))}
-              {fullCartons === 0 ? null : (
+            </s-grid>
+            <s-text color="subdued">{`1 palette = ${PALLET_CARTONS} cartons`}</s-text>
+            {fullCartons === 0 ? null : (
+              <s-stack direction="inline">
                 <s-button variant="tertiary" icon="reset" onClick={() => setFullCartons(0)}>
                   Remettre à zéro
                 </s-button>
-              )}
-            </s-stack>
+              </s-stack>
+            )}
           </>
         ) : (
           <>
-            <s-stack direction="inline" gap="base" alignItems="end">
-              <s-box inlineSize="200px">
+            <s-grid gridTemplateColumns="minmax(0, 1fr) minmax(0, 1fr)" gap="base" alignItems="end">
+              <s-box>
                 <s-number-field
                   label="Cartons pleins"
                   value={String(fullCartons)}
@@ -168,7 +174,7 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
                   onInput={(event) => setFullCartons(parseCount(event.currentTarget.value, MAX_CARTONS))}
                 />
               </s-box>
-              <s-box inlineSize="200px">
+              <s-box>
                 <s-number-field
                   label="Bouteilles en plus"
                   value={String(loose)}
@@ -180,13 +186,14 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
                   onInput={(event) => setLoose(parseCount(event.currentTarget.value, CARTON_SIZE - 1))}
                 />
               </s-box>
-            </s-stack>
+            </s-grid>
             <s-text color="subdued">Comptez aussi les cartons des commandes pas encore livrées.</s-text>
           </>
         )}
         <s-text type="strong">{quantity === 0 ? "Total : aucune bouteille" : `Total : ${cartonsText(quantity)} = ${bottles(quantity)}`}</s-text>
-        <s-stack direction="inline" gap="small-200">
+        <ChoiceButtons>
           <s-button
+            {...FILL}
             variant="primary"
             icon="check"
             onClick={submit}
@@ -195,10 +202,10 @@ function ChangePanel({ item, intent, busy, onSubmit, onCancel }: ChangePanelProp
           >
             {adding ? (quantity > 0 ? `Ajouter ${cartonsText(quantity)}` : "Ajouter") : "Enregistrer ce comptage"}
           </s-button>
-          <s-button icon="x" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+          <s-button {...FILL} icon="x" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
             Annuler
           </s-button>
-        </s-stack>
+        </ChoiceButtons>
       </s-stack>
     </s-box>
   );
@@ -217,8 +224,9 @@ function PhotoPanel({ item, busy, onSubmit, onCancel }: PhotoPanelProps) {
     <s-box padding="base" background="subdued" borderRadius="base">
       <s-stack direction="block" gap="small-200">
         <PhotoPicker photo={photo} onChange={setPhoto} currentUrl={item.imageUrl} disabled={busy} />
-        <s-stack direction="inline" gap="small-200">
+        <ChoiceButtons>
           <s-button
+            {...FILL}
             variant="primary"
             icon="check"
             onClick={() => (photo === null ? undefined : onSubmit(photo))}
@@ -227,10 +235,10 @@ function PhotoPanel({ item, busy, onSubmit, onCancel }: PhotoPanelProps) {
           >
             Enregistrer la photo
           </s-button>
-          <s-button icon="x" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+          <s-button {...FILL} icon="x" onClick={onCancel} {...(busy ? { disabled: true } : {})}>
             Annuler
           </s-button>
-        </s-stack>
+        </ChoiceButtons>
       </s-stack>
     </s-box>
   );
@@ -274,6 +282,7 @@ function PricePanel({ item, busy, onSubmit, onCancel }: PricePanelProps) {
 
 export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }: StockRowProps) {
   const [chosenPanel, setPanel] = useState<Panel>("aucun");
+  const [showMore, setShowMore] = useState(false);
   const fetcher = useFetcher<StockActionResult>({ key: `stock-${item.variantId}` });
   const photoFetcher = useFetcher<PhotoResult>({ key: `photo-${item.productId}` });
   const priceFetcher = useFetcher<PriceResult>({ key: `prix-${item.variantId}` });
@@ -350,68 +359,84 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
   const restock = item.level === "epuise" || item.level === "bas";
   const canChange = place !== null && canEdit;
   const canPrice = canPhoto; // même autorisation que « Nouveau vin » et la photo (écrire les produits)
+  // Tous les jours : ajouter ou compter les cartons. Le reste (photo, fiche, prix, retrait) se règle rarement :
+  // rangé derrière « Modifier ce vin » pour qu'un téléphone n'affiche pas six boutons par vin.
+  const moreCount = (canPhoto ? 1 : 0) + (canPrice ? 2 : 0) + (onRetire === undefined ? 0 : 1);
   const buttons = (
     <s-stack direction="block" gap="small-200">
       {canChange ? (
-        <s-grid gridTemplateColumns="minmax(0, 1fr)" gap="small-200">
+        <ChoiceButtons>
           <s-button {...FILL} variant={restock ? "primary" : "secondary"} icon="plus" onClick={() => setPanel("ajouter")} {...(busy ? { loading: true } : {})}>
             Ajouter des cartons
           </s-button>
-        </s-grid>
+          <s-button {...FILL} icon="edit" onClick={() => setPanel("corriger")} {...(busy ? { disabled: true } : {})}>
+            Corriger le nombre
+          </s-button>
+        </ChoiceButtons>
       ) : null}
-      {canChange || canPhoto ? (
-        <s-grid gridTemplateColumns={canChange && canPhoto ? "minmax(0, 1fr) minmax(0, 1fr)" : "minmax(0, 1fr)"} gap="small-200">
-          {canChange ? (
-            <s-button {...FILL} icon="edit" onClick={() => setPanel("corriger")} {...(busy ? { disabled: true } : {})}>
-              Corriger le nombre
-            </s-button>
-          ) : null}
-          {canPhoto ? (
-            <s-button {...FILL} icon="image" onClick={() => setPanel("photo")} {...(sendingPhoto ? { loading: true } : {})}>
-              {imageUrl === null ? "Ajouter une photo" : "Changer la photo"}
-            </s-button>
-          ) : null}
-        </s-grid>
-      ) : null}
-      {canPrice || onRetire !== undefined ? (
-        <s-stack direction="inline" gap="small-200" justifyContent="space-between">
-          {canPrice ? (
-            <s-stack direction="inline" gap="small-200">
-              <s-button variant="tertiary" icon="edit" onClick={openFiche} {...(savingFiche ? { loading: true } : {})}>
-                Modifier la fiche
+      {moreCount === 0 ? null : showMore ? (
+        <s-box padding="small-200" background="subdued" borderRadius="base">
+          <s-stack direction="block" gap="small-100">
+            {canPhoto ? (
+              <s-button {...FILL} variant="tertiary" icon="image" onClick={() => setPanel("photo")} {...(sendingPhoto ? { loading: true } : {})}>
+                {imageUrl === null ? "Ajouter une photo" : "Changer la photo"}
               </s-button>
-              <s-button variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
-                Modifier le prix
+            ) : null}
+            {canPrice ? (
+              <>
+                <s-button {...FILL} variant="tertiary" icon="edit" onClick={openFiche} {...(savingFiche ? { loading: true } : {})}>
+                  Modifier la fiche
+                </s-button>
+                <s-button {...FILL} variant="tertiary" icon="cash-dollar" onClick={() => setPanel("prix")} {...(savingPrice ? { loading: true } : {})}>
+                  Modifier le prix
+                </s-button>
+              </>
+            ) : null}
+            {onRetire === undefined ? null : (
+              <s-button {...FILL} variant="tertiary" tone="critical" icon="archive" onClick={() => setPanel("retirer")} {...(retiring ? { loading: true } : {})}>
+                Retirer ce vin de la vente
               </s-button>
-            </s-stack>
-          ) : null}
-          {onRetire === undefined ? null : (
-            <s-button variant="tertiary" tone="critical" icon="archive" onClick={() => setPanel("retirer")} {...(retiring ? { loading: true } : {})}>
-              Retirer ce vin de la vente
+            )}
+            <s-button {...FILL} variant="tertiary" icon="chevron-up" onClick={() => setShowMore(false)}>
+              Fermer
             </s-button>
-          )}
-        </s-stack>
-      ) : null}
+          </s-stack>
+        </s-box>
+      ) : (
+        <s-grid gridTemplateColumns="minmax(0, 1fr)">
+          <s-button
+            {...FILL}
+            variant="tertiary"
+            icon="chevron-down"
+            onClick={() => setShowMore(true)}
+            {...(sendingPhoto || savingFiche || savingPrice || retiring ? { loading: true } : {})}
+          >
+            Photo, fiche, prix…
+          </s-button>
+        </s-grid>
+      )}
     </s-stack>
   );
 
   return (
     <ClientCard
       header={
-        <s-stack direction="inline" gap="small-200" alignItems="center">
-          {imageUrl === null ? <s-thumbnail alt="" size="small" /> : <s-thumbnail src={imageUrl} alt={item.imageAlt} size="small" />}
+        <s-grid gridTemplateColumns={imageUrl === null ? "minmax(0, 1fr)" : "auto minmax(0, 1fr)"} gap="small-200" alignItems="center">
+          {/* Pas de case grise vide quand le vin n'a pas encore de photo : le nom prend toute la place. */}
+          {imageUrl === null ? null : <s-thumbnail src={imageUrl} alt={item.imageAlt} size="small" />}
           <s-stack direction="block" gap="small-500">
             <s-heading>{item.label}</s-heading>
             {item.priceCents === null ? null : <s-text color="subdued">{priceLine(item.priceCents)}</s-text>}
           </s-stack>
-        </s-stack>
+        </s-grid>
       }
     >
         {place === null ? (
           <s-text color="subdued">Les bouteilles de ce vin ne sont pas comptées.</s-text>
         ) : (
           <s-stack direction="block" gap="small-200">
-            <s-stack direction="inline" gap="small-200" alignItems="center">
+            {/* Le gros chiffre à gauche, l'explication à côté (elle passe à la ligne sous elle-même, pas sous le chiffre). */}
+            <s-grid gridTemplateColumns="auto minmax(0, 1fr)" gap="small-200" alignItems="center">
               <s-text type="strong" {...(item.level === "epuise" ? { tone: "critical" as const } : {})}>
                 <span style={{ fontSize: "32px", lineHeight: 1.1 }}>{formatInteger(splitCartons(item.available).cartons)}</span>
               </s-text>
@@ -420,8 +445,12 @@ export function StockRow({ item, canEdit, canPhoto, onRetire, retiring = false }
                   splitCartons(item.available).loose > 0 ? ` + ${bottles(splitCartons(item.available).loose)}` : ""
                 } (${bottles(Math.max(item.available, 0))})`}
               </s-text>
-              <LevelBadge item={item} />
-            </s-stack>
+            </s-grid>
+            {item.level === "epuise" || item.level === "bas" ? (
+              <s-stack direction="inline">
+                <LevelBadge item={item} />
+              </s-stack>
+            ) : null}
             {reserved === null ? null : <s-text color="subdued">{reserved}</s-text>}
           </s-stack>
         )}

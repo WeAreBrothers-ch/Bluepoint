@@ -75,6 +75,7 @@ export function PhoneOrderForm(props: PhoneOrderFormProps) {
         quantities={state.quantities}
         onSet={order.setQuantity}
         onAdd={order.addQuantity}
+        audience={state.customer === null ? null : state.customer.isPro ? "pro" : "particulier"}
       />
       <DeliveryFields
         requestedDate={state.requestedDate}

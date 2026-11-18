@@ -3,6 +3,7 @@ import { productLabel } from "../../lib/commande/totals";
 import type { B2bOption, CustomerOption, PhoneOrderLine, ProductOption } from "../../lib/commande/types";
 import { ClientKindBadge } from "../ClientKindBadge";
 import { CustomerSearch } from "./CustomerSearch";
+import { phoneDisplay } from "../../lib/agenda/contact";
 
 /** Client de la commande : recherche, puis fiche (adresse, téléphone, entreprise) et reprise de sa dernière commande. */
 
@@ -99,14 +100,16 @@ function CustomerCard(props: CardProps) {
           ) : (
             customer.addressLines.map((line) => <s-text key={line}>{line}</s-text>)
           )}
-          <s-text color="subdued">{customer.phone ?? "Pas de téléphone enregistré"}</s-text>
+          <s-text color="subdued">{customer.phone === null ? "Pas de téléphone enregistré" : phoneDisplay(customer.phone)}</s-text>
           {customer.email === null ? null : <s-text color="subdued">{customer.email}</s-text>}
         </s-stack>
       </s-box>
       <CompanyLine {...props} />
       <RepeatLastOrder {...props} />
       <s-stack direction="inline">
-        <s-button onClick={() => onSelect(null)}>Choisir un autre client</s-button>
+        <s-button icon="arrow-left" onClick={() => onSelect(null)}>
+          Choisir un autre client
+        </s-button>
       </s-stack>
     </s-stack>
   );

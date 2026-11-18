@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useFetcher } from "react-router";
 import { BOTTLE_SIZE_CHOICES, COUNTRY_CHOICES, EMPTY_NEW_WINE, isChampagneChoice, WINE_TYPES, type NewWineErrors, type NewWineField, type NewWineResult, type NewWineValues } from "../../lib/stock/new-wine";
 import { PhotoPicker } from "./PhotoPicker";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /**
  * « Nouveau vin », en haut de la page Stock : nom, producteur, sorte, pays, contenance, prix, bouteilles en cave et photo.
@@ -107,14 +109,14 @@ export function NewWineForm({ onCreated, onCancel }: NewWineFormProps) {
           </s-query-container>
           <PhotoPicker photo={photo} onChange={setPhoto} disabled={busy} />
           {failed === undefined ? null : <s-banner tone="critical" heading={failed.message} />}
-          <s-stack direction="inline" gap="small-200">
-            <s-button type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
+          <ChoiceButtons>
+            <s-button {...FILL} type="submit" variant="primary" icon="check" {...(busy ? { loading: true } : {})}>
               Créer le vin
             </s-button>
-            <s-button onClick={onCancel} {...(busy ? { disabled: true } : {})}>
+            <s-button {...FILL} onClick={onCancel} {...(busy ? { disabled: true } : {})}>
               Annuler
             </s-button>
-          </s-stack>
+          </ChoiceButtons>
         </s-stack>
       </fetcher.Form>
     </s-section>

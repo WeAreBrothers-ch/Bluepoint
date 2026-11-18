@@ -3,6 +3,8 @@ import { addDays, capitalize, longDay, nextDeliveryDay } from "../../lib/agenda/
 import { modeLabel } from "../../lib/agenda/labels";
 import type { ScheduledTask } from "../../lib/agenda/types";
 import { parseIsoDate, type IsoDate } from "../../lib/metafields/definitions";
+import { ChoiceButtons } from "../ChoiceButtons";
+import { FILL } from "../fill";
 
 /**
  * Choix du jour d'une commande (surtout celles du site, arrivées sans date) : deux raccourcis
@@ -31,16 +33,17 @@ export function DayChoicePanel({ task, today, onChoose, onCancel }: DayChoicePan
     <s-box padding="base" background="subdued" borderRadius="base">
       <s-stack direction="block" gap="small-200">
         <s-text type="strong">{modeLabel(task.mode).dayQuestion(task.name)}</s-text>
-        <s-stack direction="inline" gap="small-200">
+        <ChoiceButtons>
           {shortcuts.map((date) => (
-            <s-button key={date} onClick={() => onChoose(date)}>
+            <s-button {...FILL} key={date} onClick={() => onChoose(date)}>
               {shortcutLabel(date, today)}
             </s-button>
           ))}
-        </s-stack>
+        </ChoiceButtons>
         <s-date-field label="Ou un autre jour" value={day} allow={`${today}--`} onChange={(event) => setDay(event.currentTarget.value)} />
-        <s-stack direction="inline" gap="small-200">
+        <ChoiceButtons>
           <s-button
+            {...FILL}
             variant="primary"
             icon="check"
             onClick={() => {
@@ -50,10 +53,10 @@ export function DayChoicePanel({ task, today, onChoose, onCancel }: DayChoicePan
           >
             Valider ce jour
           </s-button>
-          <s-button icon="x" onClick={onCancel}>
+          <s-button {...FILL} icon="x" onClick={onCancel}>
             Annuler
           </s-button>
-        </s-stack>
+        </ChoiceButtons>
       </s-stack>
     </s-box>
   );
