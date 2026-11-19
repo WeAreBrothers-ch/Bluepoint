@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { interpretInvoiceStatus, todayInZurich, type InvoiceReadState } from "./invoice-status";
+import { interpretInvoiceStatus, isGoneDocument, todayInZurich, type InvoiceReadState } from "./invoice-status";
 
 const TODAY = "2026-11-10";
 const FUTURE = "2026-12-10";
@@ -86,5 +86,19 @@ describe("todayInZurich : format", () => {
   it("donne toujours AAAA-MM-JJ avec zéros, en heure d'hiver et d'été", () => {
     expect(todayInZurich(new Date("2026-01-05T10:00:00Z"))).toBe("2026-01-05");
     expect(todayInZurich(new Date("2026-06-30T22:30:00Z"))).toBe("2026-07-01");
+  });
+});
+
+describe("document disparu d'AbaNinja (supprimé, archivé ou annulé)", () => {
+  it.each(["deleted", "archived", "cancelled"])("« %s » : disparu", (status) => {
+    expect(isGoneDocument({ status })).toBe(true);
+  });
+
+  it("annulation signalée à part : disparu", () => {
+    expect(isGoneDocument({ status: "sent", isCancelled: true })).toBe(true);
+  });
+
+  it.each(["draft", "sent", "paid", "inconnu-jamais-vu"])("« %s » : toujours là", (status) => {
+    expect(isGoneDocument({ status })).toBe(false);
   });
 });

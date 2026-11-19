@@ -2,7 +2,7 @@ import prisma from "../../db.server";
 import { logError } from "../core/logger.server";
 import type { AbaNinjaConfig } from "./config.server";
 import { deleteCompany, deleteInvoice } from "./invoice-cleanup.server";
-import { interpretInvoiceStatus, todayInZurich } from "./invoice-status";
+import { interpretInvoiceStatus, isGoneDocument, todayInZurich } from "./invoice-status";
 import { getInvoice } from "./invoices.server";
 import type { AbaNinjaInvoice } from "./repository-types";
 import { findTestSaleRows, saleLabel } from "./vente-essai-liste.server";
@@ -54,6 +54,8 @@ async function eraseInAbaNinja(config: AbaNinjaConfig, row: AbaNinjaInvoice, now
   }
   const status = interpretInvoiceStatus(read.value, todayInZurich(now));
   if (status === "annulee") return removeClient(config, row, read.value.companyUuid, `${label} déjà annulée`);
+  // Supprimée à la main dans AbaNinja : il ne reste que le client d'essai et la copie de l'app.
+  if (isGoneDocument(read.value)) return removeClient(config, row, read.value.companyUuid, `${label} déjà supprimée`);
   if (status !== "brouillon") {
     return { kind: "a_la_main", text: `${row.orderName} : la ${label} n’est plus un brouillon dans AbaNinja, l’app ne l’efface pas. Annulez-la dans AbaNinja.` };
   }

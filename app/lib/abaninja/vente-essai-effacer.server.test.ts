@@ -85,6 +85,16 @@ describe("effacer les factures d'essai de « J'ai livré »", () => {
     expect(outcome.details.join(" ")).toContain("Annulez-la dans AbaNinja");
   });
 
+  it.each(["deleted", "archived"])("facture déjà supprimée à la main (%s) : retire le client d'essai et oublie l'essai", async (status) => {
+    api.getInvoice.mockResolvedValue(details(status));
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    expect(api.deleteInvoice).not.toHaveBeenCalled();
+    expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
+    expect(outcome).toMatchObject({ tone: "success", heading: "Factures d’essai effacées" });
+    expect(outcome.details.join(" ")).toContain("déjà supprimée");
+    expect(tx.abaNinjaInvoice.deleteMany).toHaveBeenCalledWith({ where: { id: "ligne-1" } });
+  });
+
   it("ne touche à rien si la facture d'AbaNinja ne porte pas la référence de l'essai", async () => {
     api.getInvoice.mockResolvedValue(details("draft", "R-VRAIE-FACTURE"));
     await eraseTestSales(testConfig(), "test.myshopify.com", NOW);

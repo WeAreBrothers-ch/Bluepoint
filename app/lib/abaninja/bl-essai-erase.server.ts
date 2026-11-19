@@ -3,16 +3,13 @@ import { DELIVERY_NOTE_TRIAL_PREFIX, type DeliveryNoteTrialOutcome, type TrialDo
 import type { AbaNinjaConfig } from "./config.server";
 import { deleteDeliveryNote, getDeliveryNote } from "./delivery-notes.server";
 import { deleteCompany, deleteInvoice } from "./invoice-cleanup.server";
-import { interpretInvoiceStatus, todayInZurich } from "./invoice-status";
+import { interpretInvoiceStatus, isGoneDocument, todayInZurich } from "./invoice-status";
 import { getInvoice } from "./invoices.server";
 
 /**
  * Étape 3 de l'essai : efface la facture, le bon, puis le client d'essai, dans cet ordre
  * (AbaNinja refuse d'effacer un client encore lié à un document). Chaque document est relu avant.
  */
-
-/** AbaNinja ne documente pas l'effacement : ces statuts prouvent que le document a disparu. */
-const GONE_STATUSES: ReadonlySet<string> = new Set(["archived", "deleted", "cancelled"]);
 
 interface EraseLog {
   readonly done: string[];
@@ -34,7 +31,7 @@ function byHand(log: EraseLog, text: string): false {
 async function invoiceIsGone(config: AbaNinjaConfig, invoiceUuid: string): Promise<boolean> {
   const after = await getInvoice(config, invoiceUuid);
   if (!after.ok) return isNotFound(after.error);
-  return GONE_STATUSES.has(after.value.status) || after.value.isCancelled === true;
+  return isGoneDocument(after.value);
 }
 
 async function eraseInvoice(config: AbaNinjaConfig, documents: TrialDocuments, invoiceUuid: string, now: Date, log: EraseLog): Promise<boolean> {
@@ -60,7 +57,7 @@ async function eraseInvoice(config: AbaNinjaConfig, documents: TrialDocuments, i
 async function eraseNote(config: AbaNinjaConfig, documents: TrialDocuments, log: EraseLog): Promise<boolean> {
   const deleted = await deleteDeliveryNote(config, documents.noteUuid);
   const after = await getDeliveryNote(config, documents.noteUuid);
-  const gone = after.ok ? GONE_STATUSES.has(after.value.status) : isNotFound(after.error);
+  const gone = after.ok ? isGoneDocument({ status: after.value.status }) : isNotFound(after.error);
   if (gone) return erased(log, "Bon de livraison d’essai effacé.");
   const why = deleted.ok ? "AbaNinja le montre encore" : "AbaNinja a refusé de l’effacer";
   return byHand(log, `Le bon ${documents.reference} reste dans AbaNinja (${why}) : supprimez-le à la main dans « Bulletins de livraison ».`);

@@ -31,6 +31,14 @@ const ISSUED = new Set(["open", "sending", "sent", "viewed", "in-payment", "awai
 
 const ISO_DATE_START = /^\d{4}-\d{2}-\d{2}/;
 
+/** AbaNinja ne documente pas l'effacement : ces statuts prouvent que le document a disparu. */
+const GONE = new Set(["archived", "deleted", "cancelled"]);
+
+/** Facture ou bon supprimé, archivé ou annulé dans AbaNinja (à la main ou par l'app). */
+export function isGoneDocument(input: { readonly status: string; readonly isCancelled?: boolean | undefined }): boolean {
+  return input.isCancelled === true || GONE.has(input.status);
+}
+
 /** Date du jour AAAA-MM-JJ à Zurich (le retard se juge sur le calendrier suisse). */
 export function todayInZurich(now: Date): string {
   const parts = new Intl.DateTimeFormat("en-US", {
