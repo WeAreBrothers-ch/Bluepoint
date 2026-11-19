@@ -4,11 +4,12 @@ import { logError, logInfo } from "../core/logger.server";
 import { ShopifyUserErrors, type ShopifyGraphqlError } from "../shopify/errors";
 import { runAdminGraphql, runAdminMutation } from "../shopify/graphql.server";
 import { plainShopifyRefusal } from "../shopify/plain-refusal";
+import { pickCustomerWithEmail } from "./customer-match";
 import type { ProRequestInput } from "./request";
 
 /**
  * « Accepter » une demande de compte pro dans Shopify (Admin API 2026-10, `write_customers`) :
- * 1. retrouver le client par son e-mail (il a peut-être déjà un compte de particulier) ;
+ * 1. retrouver le client par son e-mail, identique à celui de la demande (il a peut-être déjà un compte de particulier) ;
  * 2. créer l'entreprise et son établissement, avec le paiement à N jours (bon de commande) ;
  * 3. rattacher la personne à l'établissement (rôle « Commande uniquement ») ;
  * 4. poser l'étiquette « pro » (remise automatique « Prix pro ») ;
@@ -28,8 +29,8 @@ query AutorisationsApp { currentAppInstallation { accessScopes { handle } } }`;
 
 const CUSTOMER_BY_EMAIL_QUERY = `#graphql
 query ClientParEmail($query: String!) {
-  customers(first: 1, query: $query) {
-    nodes { id companyContactProfiles { id company { id name } } }
+  customers(first: 10, query: $query) {
+    nodes { id defaultEmailAddress { emailAddress } companyContactProfiles { id company { id name } } }
   }
 }`;
 
@@ -100,6 +101,7 @@ interface CustomerByEmailData {
   readonly customers: {
     readonly nodes: readonly {
       readonly id: string;
+      readonly defaultEmailAddress: { readonly emailAddress: string } | null;
       readonly companyContactProfiles: readonly { readonly id: string; readonly company: { readonly id: string; readonly name: string } }[];
     }[];
   };
@@ -164,7 +166,7 @@ function plainFailure(step: string, error: ShopifyGraphqlError, companyId: strin
 
 async function findCustomer(admin: AdminApiContext, email: string) {
   const result = await runAdminGraphql<CustomerByEmailData>(admin, CUSTOMER_BY_EMAIL_QUERY, { query: `email:"${email}"` });
-  return result.ok ? success(result.value.customers.nodes[0] ?? null) : result;
+  return result.ok ? success(pickCustomerWithEmail(result.value.customers.nodes, email)) : result;
 }
 
 async function readCompany(admin: AdminApiContext, id: string): Promise<Result<CompanyNode, ShopifyGraphqlError>> {

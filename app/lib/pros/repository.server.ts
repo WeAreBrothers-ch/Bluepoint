@@ -27,13 +27,18 @@ function fields(input: ProRequestInput) {
   };
 }
 
-/** Une seule demande en attente par e-mail : renvoyer le formulaire met la demande à jour. */
+/** Une seule demande en attente par e-mail. */
 function findPending(shop: string, email: string): Promise<ProRequest | null> {
   return prisma.proRequest.findFirst({ where: { shop, status: "en_attente", email: { equals: email, mode: "insensitive" } } });
 }
 
-async function updatePending(id: string, input: ProRequestInput): Promise<SaveResult> {
-  await prisma.proRequest.update({ where: { id }, data: fields(input) });
+/**
+ * Demande déjà en attente pour cet e-mail. Depuis le site, on la garde telle quelle : n'importe qui peut taper
+ * l'e-mail d'un autre, il ne doit pas pouvoir remplacer son adresse ou son téléphone. Le visiteur voit le même
+ * « Merci » que d'habitude. Seule l'équipe corrige une demande, depuis l'app.
+ */
+async function keepOrUpdatePending(id: string, input: ProRequestInput, source: ProRequestSource): Promise<SaveResult> {
+  if (source === "app") await prisma.proRequest.update({ where: { id }, data: fields(input) });
   return { ok: true, id };
 }
 
@@ -44,7 +49,7 @@ function isUniqueViolation(error: unknown): boolean {
 
 export async function saveProRequest(shop: string, input: ProRequestInput, source: ProRequestSource): Promise<SaveResult> {
   const existing = await findPending(shop, input.email);
-  if (existing !== null) return updatePending(existing.id, input);
+  if (existing !== null) return keepOrUpdatePending(existing.id, input, source);
   if (source === "site" && (await countPendingProRequests(shop)) >= MAX_PENDING_REQUESTS) {
     return { ok: false, reason: "trop_de_demandes" };
   }
@@ -52,11 +57,11 @@ export async function saveProRequest(shop: string, input: ProRequestInput, sourc
     const created = await prisma.proRequest.create({ data: { shop, source, ...fields(input) } });
     return { ok: true, id: created.id };
   } catch (error) {
-    // Deux envois au même moment (clics répétés) : la base refuse le second (index unique), on met à jour le premier.
+    // Deux envois au même moment (clics répétés) : la base refuse le second (index unique), le premier reste.
     if (!isUniqueViolation(error)) throw error;
     const winner = await findPending(shop, input.email);
     if (winner === null) throw error;
-    return updatePending(winner.id, input);
+    return keepOrUpdatePending(winner.id, input, source);
   }
 }
 
