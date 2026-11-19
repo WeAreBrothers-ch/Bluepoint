@@ -51,7 +51,7 @@ export const INVOICE_BODY = valueOf(saleInvoiceBody(INPUT, { reference: REF, ord
 export const PAID: SalePayment = { amountChf: 1551, paymentDate: "2026-11-18", paymentType: "DEBIT_CREDIT_CARD", info: "Payée dans Shopify (shopify_payments)" };
 
 export function request(payment: SalePayment | null = null, sale: AbaNinjaSale = SALE): SaleConversionRequest {
-  return { sale, note: NOTE_BODY, invoice: INVOICE_BODY, payment };
+  return { sale, note: NOTE_BODY, invoice: INVOICE_BODY, payment, datedFromAbaNinja: false };
 }
 
 /** Ordre des appels à AbaNinja : chaque faux appel note son nom dans `calls`. */

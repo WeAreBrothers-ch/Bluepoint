@@ -19,9 +19,9 @@ import type { SaleInvoiceBody } from "./vente-plan";
 import { claimPayment, markInvoice, markPayment, releasePayment, type AbaNinjaSale } from "./vente-repository.server";
 
 /**
- * Fin de la facture née d'un bon : complétée (client, compte QR, dates, conditions), paiement inscrit si la
- * commande est payée (une seule fois : réservé en base AVANT l'envoi), puis son PDF. Jamais d'aperçu à
- * QR pour une commande payée. Rejouable : rien ici ne crée de facture.
+ * Fin de la facture née d'un bon : complétée (client, compte QR, dates, conditions) une seule fois, paiement
+ * inscrit si la commande est payée (une seule fois : réservé en base AVANT l'envoi), puis son PDF. Jamais
+ * d'aperçu à QR pour une commande payée. Rejouable : rien ici ne crée de facture.
  */
 
 export interface SalePayment {
@@ -38,6 +38,8 @@ export interface SaleConversionRequest {
   readonly note: SaleNoteBody;
   readonly invoice: SaleInvoiceBody;
   readonly payment: SalePayment | null;
+  /** Reprise : la facture garde la date lue dans AbaNinja (faux : date du jour, AbaNinja la reçoit à nouveau). */
+  readonly datedFromAbaNinja: boolean;
 }
 
 export type SaleOutcome = Result<SaleInvoiceDocument, SaleInvoiceError>;
@@ -125,6 +127,16 @@ async function pdfOf(config: AbaNinjaConfig, invoiceUuid: string, input: AbaNinj
     : failure(new SaleInvoiceError("refusee", `La facture ${label} est faite dans AbaNinja, mais l’app n’a pas pu récupérer son PDF.`, [preview.error.message, RETRY_HINT]));
 }
 
+/**
+ * La facture est déjà complétée dans AbaNinja quand son numéro ou son paiement est noté (ils viennent après) :
+ * on ne la remet pas à jour, ni après son paiement, ni pour changer sa date. Seule exception : à payer et sans
+ * sa date d'origine, elle est remise au jour comme avant, pour que l'aperçu et AbaNinja disent la même date.
+ */
+function needsUpdate(request: SaleConversionRequest): boolean {
+  const completed = request.sale.invoiceNumber !== null || request.sale.paymentState !== null;
+  return !completed || (request.payment === null && !request.datedFromAbaNinja);
+}
+
 export async function finishSaleInvoice(config: AbaNinjaConfig, request: SaleConversionRequest, invoiceUuid: string, options: CallOptions = {}): Promise<SaleOutcome> {
   const { sale } = request;
   const receiver = receiverOf(sale);
@@ -132,8 +144,10 @@ export async function finishSaleInvoice(config: AbaNinjaConfig, request: SaleCon
   const bank = await findQrBankAccount(config, options);
   if (!bank.ok) return incomplete(sale.reference, "compte bancaire de la QR-facture", bank.error);
   const input: AbaNinjaInvoiceInput = { ...request.invoice, receiver, bankAccountUuid: bank.value.uuid };
-  const updated = await updateInvoice(config, invoiceUuid, input, options);
-  if (!updated.ok) return incomplete(sale.reference, "client, dates, conditions et compte de la QR-facture", updated.error);
+  if (needsUpdate(request)) {
+    const updated = await updateInvoice(config, invoiceUuid, input, options);
+    if (!updated.ok) return incomplete(sale.reference, "client, dates, conditions et compte de la QR-facture", updated.error);
+  }
   const read = await getInvoice(config, invoiceUuid, options);
   const number = read.ok ? read.value.systemInvoiceNumber : null;
   const label = number ?? sale.reference;

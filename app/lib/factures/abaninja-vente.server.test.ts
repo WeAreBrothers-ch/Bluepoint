@@ -10,7 +10,14 @@ import type { ShopSettingsValues } from "../reglages/schema";
 import { parseGid } from "../shopify/ids";
 
 const created = vi.hoisted(() => ({ invoices: [] as Record<string, unknown>[] }));
-const deps = vi.hoisted(() => ({ readAbaNinjaConfig: vi.fn(), convertSaleNote: vi.fn(), resumeSaleInvoice: vi.fn(), findInvoiceByOrder: vi.fn() }));
+const deps = vi.hoisted(() => ({
+  readAbaNinjaConfig: vi.fn(),
+  convertSaleNote: vi.fn(),
+  resumeSaleInvoice: vi.fn(),
+  findInvoiceByOrder: vi.fn(),
+  getInvoice: vi.fn(),
+  logInfo: vi.fn(),
+}));
 
 const tx = {
   storedFile: { create: vi.fn(async (): Promise<unknown> => ({})) },
@@ -18,7 +25,8 @@ const tx = {
 };
 
 vi.mock("../../db.server", () => ({ default: { $transaction: async (work: (client: typeof tx) => Promise<unknown>) => work(tx) } }));
-vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() }));
+vi.mock("../core/logger.server", () => ({ logInfo: deps.logInfo, logError: vi.fn() }));
+vi.mock("../abaninja/invoices.server", () => ({ getInvoice: deps.getInvoice }));
 vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE }));
 vi.mock("../abaninja/config.server", () => ({ readAbaNinjaConfig: deps.readAbaNinjaConfig }));
 vi.mock("../abaninja/vente-conversion.server", () => ({ convertSaleNote: deps.convertSaleNote, resumeSaleInvoice: deps.resumeSaleInvoice }));
@@ -79,7 +87,10 @@ beforeEach(() => {
   deps.readAbaNinjaConfig.mockReturnValue(CONFIG);
   deps.convertSaleNote.mockResolvedValue(success(DOCUMENT));
   deps.resumeSaleInvoice.mockResolvedValue(success(DOCUMENT));
+  deps.getInvoice.mockResolvedValue(success({ uuid: DOCUMENT.uuid, status: "draft", invoiceDate: "2026-11-19", systemInvoiceNumber: "R02292", reference: REF }));
 });
+
+const RESUMED: AbaNinjaSale = { ...SALE, noteState: "converti", invoiceState: "creee", invoiceUuid: DOCUMENT.uuid, invoiceNumber: "R02292" };
 
 describe("facture d'une commande d'essai née de son bon de livraison", () => {
   it("à payer : transforme le bon (date du bon gardée, livraison réelle) et garde une copie à envoyer", async () => {
@@ -93,6 +104,28 @@ describe("facture d'une commande d'essai née de son bon de livraison", () => {
       payment: null,
     });
     expect(created.invoices).toEqual([expect.objectContaining({ number: "R02292", totalCents: 155_100, paidOn: null, orderName: "#1042" })]);
+    expect(deps.getInvoice).not.toHaveBeenCalled();
+  });
+
+  it("reprise : garde la date de la facture déjà dans AbaNinja, et l'échéance en découle", async () => {
+    await ensureAbaNinjaSaleInvoice(RESUMED, CONTEXT, null);
+    const [, request] = deps.resumeSaleInvoice.mock.calls[0] ?? [];
+    expect(request).toMatchObject({ invoice: { invoiceDate: "2026-11-19", dueDate: "2026-12-19" }, datedFromAbaNinja: true });
+    expect(created.invoices).toEqual([expect.objectContaining({ issueDate: "2026-11-19", dueDate: "2026-12-19" })]);
+  });
+
+  it("reprise le jour même : la date lue dans AbaNinja compte quand même comme lue", async () => {
+    deps.getInvoice.mockResolvedValue(success({ uuid: DOCUMENT.uuid, status: "draft", invoiceDate: "2026-11-20", systemInvoiceNumber: "R02292", reference: REF }));
+    await ensureAbaNinjaSaleInvoice(RESUMED, CONTEXT, null);
+    expect(deps.resumeSaleInvoice.mock.calls[0]?.[1]).toMatchObject({ datedFromAbaNinja: true });
+  });
+
+  it("reprise sans date lisible dans AbaNinja : la date du jour, comme avant, et le journal le dit", async () => {
+    deps.getInvoice.mockResolvedValue(success({ uuid: DOCUMENT.uuid, status: "draft", invoiceDate: null, systemInvoiceNumber: "R02292", reference: REF }));
+    await ensureAbaNinjaSaleInvoice(RESUMED, CONTEXT, null);
+    const [, request] = deps.resumeSaleInvoice.mock.calls[0] ?? [];
+    expect(request).toMatchObject({ invoice: { invoiceDate: "2026-11-20", dueDate: "2026-12-20" }, datedFromAbaNinja: false });
+    expect(deps.logInfo).toHaveBeenCalledWith(expect.stringContaining("date d’origine"), expect.objectContaining({ orderId: ORDER }));
   });
 
   it("payée : la facture dit « Payée » et le paiement part avec elle", async () => {

@@ -25,6 +25,8 @@ const invoiceRecord = z.looseObject({
   sentStatus: z.string().nullish(),
   openAmount: looseNumber.nullish(),
   dueDate: z.string().nullish(),
+  /** Date de la facture : la doc lue par le projet ne dit pas qu'elle est renvoyée ; l'app s'en passe si elle manque. */
+  invoiceDate: z.string().nullish(),
   systemInvoiceNumber: z.string().nullish(),
   reference: z.string().nullish(),
   isCancelled: z.boolean().optional(),

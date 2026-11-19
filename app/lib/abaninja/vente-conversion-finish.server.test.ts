@@ -107,10 +107,23 @@ describe("compléter la facture née du bon : paiement et PDF", () => {
     expect(result).toMatchObject({ ok: false, error: { message: "Facture R02292 faite et payée dans AbaNinja : téléchargez son PDF depuis AbaNinja." } });
   });
 
-  it("n'inscrit pas deux fois un paiement déjà inscrit", async () => {
+  it("reprise après paiement inscrit : ni nouveau paiement, ni nouvelle mise à jour de la facture", async () => {
     await finishSaleInvoice(testConfig(), request(PAID, { ...MADE, paymentState: "inscrit" }), INVOICE);
     expect(deps.recordPayment).not.toHaveBeenCalled();
-    expect(calls).toEqual(["facture", "pdf"]);
+    expect(deps.updateInvoice).not.toHaveBeenCalled();
+    expect(calls).toEqual(["pdf"]);
+  });
+
+  it("à payer, reprise avec numéro noté et date d'origine lue : pas de mise à jour, l'aperçu garde la date d'origine", async () => {
+    const resumed = { ...request(null, { ...MADE, invoiceNumber: "R02292" }), datedFromAbaNinja: true };
+    expect(await finishSaleInvoice(testConfig(), resumed, INVOICE)).toMatchObject({ ok: true });
+    expect(deps.updateInvoice).not.toHaveBeenCalled();
+    expect(deps.downloadDraftInvoicePdf).toHaveBeenCalledWith(expect.anything(), INVOICE, expect.objectContaining({ invoiceDate: resumed.invoice.invoiceDate }), {});
+  });
+
+  it("à payer, reprise avec numéro noté mais date illisible : remise à jour comme avant (aperçu et AbaNinja à la même date)", async () => {
+    await finishSaleInvoice(testConfig(), request(null, { ...MADE, invoiceNumber: "R02292" }), INVOICE);
+    expect(calls).toEqual(["facture", "apercu"]);
   });
 
   it("s'arrête sur un paiement à vérifier", async () => {

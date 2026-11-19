@@ -1,4 +1,5 @@
 import { failure, success, type Result } from "../core/result";
+import { parseIsoDate, type IsoDate } from "../metafields/definitions";
 import type { CallOptions } from "./call-options";
 import type { AbaNinjaConfig } from "./config.server";
 import { AbaNinjaError } from "./errors";
@@ -22,6 +23,8 @@ export interface InvoiceDetails {
   readonly sentStatus: string | null;
   readonly openAmount: number | null;
   readonly dueDate: string | null;
+  /** Date de la facture (AAAA-MM-JJ) ; null si AbaNinja ne la renvoie pas ou sous une forme inconnue. */
+  readonly invoiceDate: IsoDate | null;
   readonly systemInvoiceNumber: string | null;
   /** Référence choisie à la création (ex. « BP-1042 ») ; null si AbaNinja n'en renvoie pas. */
   readonly reference: string | null;
@@ -91,6 +94,7 @@ export async function getInvoice(
     sentStatus: record.sentStatus ?? null,
     openAmount: record.openAmount ?? null,
     dueDate: record.dueDate ?? null,
+    invoiceDate: parseIsoDate(record.invoiceDate?.slice(0, 10)),
     systemInvoiceNumber: record.systemInvoiceNumber ?? null,
     reference: record.reference ?? null,
     isCancelled: record.isCancelled,

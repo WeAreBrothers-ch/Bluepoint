@@ -1,7 +1,8 @@
 import type { AbaNinjaSale } from "@prisma/client";
 import type { InvoiceInput } from "@bluepoint/facture-qr";
-import { readAbaNinjaConfig } from "../abaninja/config.server";
+import { readAbaNinjaConfig, type AbaNinjaConfig } from "../abaninja/config.server";
 import { todayInZurich } from "../abaninja/invoice-status";
+import { getInvoice } from "../abaninja/invoices.server";
 import { plannedDeliveryDate, saleNoteBody } from "../abaninja/vente-bon-plan";
 import { convertSaleNote, resumeSaleInvoice, type SaleConversionRequest } from "../abaninja/vente-conversion.server";
 import { RETRY_HINT, SALE_ERASE_HINT } from "../abaninja/vente-errors";
@@ -44,16 +45,37 @@ function blockedBy(sale: AbaNinjaSale, now: Date): InvoiceError | null {
   return new InvoiceError("abaninja_incertain", [`Le bon de livraison est à vérifier dans AbaNinja (référence ${sale.reference}) : la facture attend.`, SALE_ERASE_HINT]);
 }
 
-function requestOf(sale: AbaNinjaSale, lines: InvoiceInput, ctx: AbaNinjaSaleContext, paid: SalePaid | null): Result<SaleConversionRequest, InvoiceError> {
+/**
+ * Reprise d'une facture déjà née du bon : la date qu'elle a dans AbaNinja, pour ne pas la changer à chaque essai.
+ * null (première fois, ou date illisible) : la date du jour, comme avant.
+ */
+async function originalIssueDate(config: AbaNinjaConfig, sale: AbaNinjaSale): Promise<IsoDate | null> {
+  if (sale.invoiceState !== "creee" || sale.invoiceUuid === null) return null;
+  const read = await getInvoice(config, sale.invoiceUuid);
+  if (read.ok && read.value.invoiceDate !== null) return read.value.invoiceDate;
+  logInfo("Facture du bon AbaNinja reprise : date d’origine illisible, date du jour gardée", { orderId: sale.orderId, cause: read.ok ? "date absente" : read.error.code });
+  return null;
+}
+
+interface RequestParts {
+  readonly sale: AbaNinjaSale;
+  /** Lignes datées du jour de la facture (celui d'AbaNinja à la reprise, sinon aujourd'hui). */
+  readonly lines: InvoiceInput;
+  readonly ctx: AbaNinjaSaleContext;
+  readonly paid: SalePaid | null;
+  readonly datedFromAbaNinja: boolean;
+}
+
+function requestOf({ sale, lines, ctx, paid, datedFromAbaNinja }: RequestParts): Result<SaleConversionRequest, InvoiceError> {
   const noteDate = todayInZurich(sale.createdAt);
   const meta = { reference: sale.reference, orderName: sale.orderName };
   const note = saleNoteBody(lines, { ...meta, noteDate, deliveryDate: plannedDeliveryDate(ctx.deliveryDate, noteDate) });
   const invoice = saleInvoiceBody(lines, { ...meta, deliveryDate: ctx.deliveryDate });
   if (!note.ok) return failure(new InvoiceError("abaninja_echec", [note.error.message]));
   if (!invoice.ok) return failure(new InvoiceError("abaninja_echec", [invoice.error.message]));
-  if (paid === null) return success({ sale, note: note.value, invoice: invoice.value, payment: null });
+  if (paid === null) return success({ sale, note: note.value, invoice: invoice.value, payment: null, datedFromAbaNinja });
   const payment = { amountChf: lines.totalCents / 100, paymentDate: paid.paidOn, paymentType: paymentTypeOf(paid.gateway), info: `Payée dans Shopify (${paid.gateway})` };
-  return success({ sale, note: note.value, invoice: { ...invoice.value, terms: "Payée", dueDate: ctx.issueDate }, payment });
+  return success({ sale, note: note.value, invoice: { ...invoice.value, terms: "Payée", dueDate: lines.issueDate }, payment, datedFromAbaNinja });
 }
 
 export async function ensureAbaNinjaSaleInvoice(sale: AbaNinjaSale, ctx: AbaNinjaSaleContext, paid: SalePaid | null): Promise<Result<EnsuredInvoice, InvoiceError>> {
@@ -61,9 +83,10 @@ export async function ensureAbaNinjaSaleInvoice(sale: AbaNinjaSale, ctx: AbaNinj
   if (blocked !== null) return failure(blocked);
   const config = readAbaNinjaConfig();
   if (!config.ok) return failure(new InvoiceError("abaninja_echec", [config.error.message]));
-  const lines = abaNinjaLinesOf(ctx.source.order, ctx.settings, { issueDate: ctx.issueDate, deliveryDate: ctx.deliveryDate });
+  const original = await originalIssueDate(config.value, sale);
+  const lines = abaNinjaLinesOf(ctx.source.order, ctx.settings, { issueDate: original ?? ctx.issueDate, deliveryDate: ctx.deliveryDate });
   if (!lines.ok) return lines;
-  const request = requestOf(sale, lines.value, ctx, paid);
+  const request = requestOf({ sale, lines: lines.value, ctx, paid, datedFromAbaNinja: original !== null });
   if (!request.ok) return request;
   const made = sale.invoiceState === null ? await convertSaleNote(config.value, request.value) : await resumeSaleInvoice(config.value, request.value);
   if (!made.ok) return failure(toInvoiceError(made.error));
