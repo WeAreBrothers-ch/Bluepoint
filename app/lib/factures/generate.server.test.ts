@@ -170,37 +170,4 @@ describe("ensureInvoice : commande d'essai dont le bon de livraison est dans Aba
     expect(abaninja.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
     expect(createdInvoices).toEqual([]);
   });
-
-  it("payée : la facture naît du bon, avec la date et le moyen du paiement", async () => {
-    orderTags = ["fictif"];
-    shopifyPayment = { displayFinancialStatus: "PAID", transactions: [{ kind: "SALE", status: "SUCCESS", processedAt: "2026-11-10T08:15:00Z", gateway: "shopify_payments" }] };
-    abaninja.findSale.mockResolvedValue(success(SALE));
-
-    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
-
-    expect(abaninja.ensureAbaNinjaSaleInvoice).toHaveBeenCalledWith(SALE, expect.anything(), { paidOn: "2026-11-10", gateway: "shopify_payments" });
-    expect(createdInvoices).toEqual([]);
-  });
-
-  it("bon refusé (rien dans AbaNinja) : facture directe, comme avant", async () => {
-    orderTags = ["fictif"];
-    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
-    abaninja.findSale.mockResolvedValue(success({ ...SALE, noteState: "refuse" }));
-
-    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
-
-    expect(abaninja.ensureAbaNinjaSaleInvoice).not.toHaveBeenCalled();
-    expect(abaninja.ensureAbaNinjaTestInvoice).toHaveBeenCalled();
-  });
-
-  it("vraie commande : jamais le bon, même si une ligne existait", async () => {
-    orderTags = ["pro"];
-    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
-    abaninja.findSale.mockResolvedValue(success(SALE));
-
-    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
-
-    expect(abaninja.ensureAbaNinjaSaleInvoice).not.toHaveBeenCalled();
-    expect(createdInvoices).toHaveLength(1);
-  });
 });

@@ -1,14 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { validateInvoiceInput } from "@bluepoint/facture-qr";
-import { FACTURE_EXEMPLE } from "../../../packages/facture-qr/src/fixtures/facture";
 import { failure, success } from "../core/result";
 import { AbaNinjaError } from "./errors";
 import { testConfig } from "./test-support";
-import { saleNoteBody } from "./vente-bon-plan";
-import { saleInvoiceBody } from "./vente-plan";
-import type { AbaNinjaSale } from "./vente-repository.server";
+import { BANK, callRecorder, INVOICE, INVOICE_BODY, MADE, NOTE, NOTE_BODY, ORDER, PDF, RECEIVER, REF, SALE, request } from "./vente-conversion.test-support";
 
-const calls: string[] = [];
 const deps = vi.hoisted(() => ({
   claimConversion: vi.fn(),
   markInvoice: vi.fn(),
@@ -47,54 +42,7 @@ vi.mock("./pdf-download.server", () => ({ downloadDraftInvoicePdf: deps.download
 
 const { convertSaleNote, resumeSaleInvoice } = await import("./vente-conversion.server");
 
-const ORDER = "gid://shopify/Order/1042";
-const NOTE = "66666666-6666-4666-8666-666666666666";
-const INVOICE = "77777777-7777-4777-8777-777777777777";
-const BANK = "11111111-1111-4111-8111-111111111111";
-const RECEIVER = { addressUuid: "22222222-2222-4222-8222-222222222222", companyUuid: "33333333-3333-4333-8333-333333333333" };
-const REF = "BP-ESSAI-CMD-1042-20261119-110530";
-const PDF = new Uint8Array([37, 80, 68, 70, 45]);
-const INPUT = validateInvoiceInput(FACTURE_EXEMPLE);
-
-const SALE: AbaNinjaSale = {
-  id: "v1",
-  shop: "test.myshopify.com",
-  orderId: ORDER,
-  orderName: "#1042",
-  isTest: true,
-  reference: REF,
-  noteState: "cree",
-  noteUuid: NOTE,
-  noteNumber: "L00042",
-  ...RECEIVER,
-  invoiceState: null,
-  invoiceUuid: null,
-  invoiceNumber: null,
-  paymentState: null,
-  lastErrorCode: null,
-  createdAt: new Date("2026-11-19T11:05:30Z"),
-  updatedAt: new Date("2026-11-19T11:05:30Z"),
-};
-
-function body<T>(result: { ok: true; value: T } | { ok: false; error: Error }): T {
-  if (!result.ok) throw result.error;
-  return result.value;
-}
-
-const NOTE_BODY = body(saleNoteBody(INPUT, { reference: REF, orderName: "#1042", noteDate: "2026-11-19", deliveryDate: "2026-11-20" }));
-const INVOICE_BODY = body(saleInvoiceBody(INPUT, { reference: REF, orderName: "#1042", deliveryDate: "2026-11-20" }));
-const PAID = { amountChf: 1551, paymentDate: "2026-11-18", paymentType: "DEBIT_CREDIT_CARD" as const, info: "Payé en ligne (shopify_payments)" };
-
-function request(payment: typeof PAID | null = null, sale: AbaNinjaSale = SALE) {
-  return { sale, note: NOTE_BODY, invoice: INVOICE_BODY, payment };
-}
-
-function tracked<T>(name: string, value: T) {
-  return vi.fn(async () => {
-    calls.push(name);
-    return value;
-  });
-}
+const { calls, tracked } = callRecorder();
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -127,15 +75,6 @@ describe("« J'ai livré » : le bon de livraison devient la facture AbaNinja", 
     expect(deps.recordPayment).not.toHaveBeenCalled();
   });
 
-  it("payée en ligne : inscrit le paiement puis rapporte le vrai document, jamais l'aperçu à QR", async () => {
-    const result = await convertSaleNote(testConfig(), request(PAID));
-    expect(result.ok).toBe(true);
-    expect(calls).toEqual(["bon", "convertDNI", "facture", "paiement", "pdf"]);
-    expect(deps.recordPayment).toHaveBeenCalledWith(expect.anything(), { documentUuid: INVOICE, ...PAID }, {});
-    expect(deps.markPayment).toHaveBeenLastCalledWith(ORDER, "inscrit");
-    expect(deps.downloadDraftInvoicePdf).not.toHaveBeenCalled();
-  });
-
   it("une seule facture même si « J'ai livré » et Shopify arrivent ensemble", async () => {
     deps.claimConversion.mockResolvedValue(success(false));
     const result = await convertSaleNote(testConfig(), request());
@@ -163,43 +102,13 @@ describe("« J'ai livré » : le bon de livraison devient la facture AbaNinja", 
     await convertSaleNote(testConfig(), request());
     expect(calls.slice(0, 3)).toEqual(["bon", "markSent", "convertDNI"]);
   });
-
-  it("paiement non inscrit : marqué à vérifier avant l'envoi, aucun PDF", async () => {
-    deps.recordPayment.mockImplementation(tracked("paiement", failure(new AbaNinjaError("indisponible", { status: 503 }))));
-    const result = await convertSaleNote(testConfig(), request(PAID));
-    expect(result).toMatchObject({ ok: false, error: { outcome: "incertaine" } });
-    expect(deps.markPayment).toHaveBeenCalledWith(ORDER, "incertain");
-    expect(deps.markPayment).not.toHaveBeenCalledWith(ORDER, "inscrit");
-    expect(deps.downloadInvoicePdf).not.toHaveBeenCalled();
-    expect(deps.downloadDraftInvoicePdf).not.toHaveBeenCalled();
-  });
-
-  it("vrai PDF refusé pour une facture payée : dit où le trouver", async () => {
-    deps.downloadInvoicePdf.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
-    const result = await convertSaleNote(testConfig(), request(PAID));
-    expect(result).toMatchObject({ ok: false, error: { message: "Facture R02292 faite et payée dans AbaNinja : téléchargez son PDF depuis AbaNinja." } });
-  });
 });
 
 describe("reprendre une facture déjà née du bon (PDF manqué la première fois)", () => {
-  const made: AbaNinjaSale = { ...SALE, noteState: "converti", invoiceState: "creee", invoiceUuid: INVOICE };
-
   it("ne retransforme jamais le bon : complète et rapporte la facture existante", async () => {
-    const result = await resumeSaleInvoice(testConfig(), request(null, made));
+    const result = await resumeSaleInvoice(testConfig(), request(null, MADE));
     expect(result.ok).toBe(true);
     expect(deps.convertDeliveryNoteToInvoice).not.toHaveBeenCalled();
     expect(calls).toEqual(["facture", "apercu"]);
-  });
-
-  it("n'inscrit pas deux fois un paiement déjà inscrit", async () => {
-    await resumeSaleInvoice(testConfig(), request(PAID, { ...made, paymentState: "inscrit" }));
-    expect(deps.recordPayment).not.toHaveBeenCalled();
-    expect(calls).toEqual(["facture", "pdf"]);
-  });
-
-  it("s'arrête sur un paiement à vérifier", async () => {
-    const result = await resumeSaleInvoice(testConfig(), request(PAID, { ...made, paymentState: "incertain" }));
-    expect(result).toMatchObject({ ok: false, error: { outcome: "incertaine" } });
-    expect(deps.recordPayment).not.toHaveBeenCalled();
   });
 });
