@@ -24,7 +24,7 @@ import type { OrderForInvoice } from "./shopify-order.server";
  * commandes restent sur les factures BluePoint tant qu'AbaNinja n'est pas allumé pour elles.
  */
 
-export interface AbaNinjaSale {
+export interface AbaNinjaSaleContext {
   readonly shop: string;
   readonly orderId: OrderGid;
   readonly source: OrderForInvoice;
@@ -42,7 +42,7 @@ export function goesToAbaNinja(source: OrderForInvoice): boolean {
 const PLACEHOLDER_NUMBER = "ABANINJA-1";
 
 /** Mêmes lignes, même TVA et même total que la facture BluePoint de cette commande. */
-function invoiceLinesOf(sale: AbaNinjaSale): Result<InvoiceInput, InvoiceError> {
+function invoiceLinesOf(sale: AbaNinjaSaleContext): Result<InvoiceInput, InvoiceError> {
   try {
     const meta = { invoiceNumber: PLACEHOLDER_NUMBER, issueDate: sale.issueDate, deliveryDate: sale.deliveryDate, paymentTermDays: sale.settings.paymentTermDays };
     return success(mapShopifyOrderToInvoiceInput(sale.source.order, toInvoiceSeller(sale.settings), meta));
@@ -57,7 +57,7 @@ function toInvoiceError(error: SaleInvoiceError): InvoiceError {
   return new InvoiceError(error.outcome === "incertaine" ? "abaninja_incertain" : "abaninja_echec", [error.message, ...error.details]);
 }
 
-async function saveCopy(sale: AbaNinjaSale, lines: InvoiceInput, document: SaleInvoiceDocument): Promise<Result<Invoice, InvoiceError>> {
+async function saveCopy(sale: AbaNinjaSaleContext, lines: InvoiceInput, document: SaleInvoiceDocument): Promise<Result<Invoice, InvoiceError>> {
   const number = document.number ?? document.reference;
   const pdfKey = invoicePdfKey(sale.shop, number);
   const contact = contactOf(sale.source.contact);
@@ -88,7 +88,7 @@ async function saveCopy(sale: AbaNinjaSale, lines: InvoiceInput, document: SaleI
   }
 }
 
-export async function ensureAbaNinjaTestInvoice(sale: AbaNinjaSale): Promise<Result<EnsuredInvoice, InvoiceError>> {
+export async function ensureAbaNinjaTestInvoice(sale: AbaNinjaSaleContext): Promise<Result<EnsuredInvoice, InvoiceError>> {
   const config = readAbaNinjaConfig();
   if (!config.ok) return failure(new InvoiceError("abaninja_echec", [config.error.message]));
   const lines = invoiceLinesOf(sale);

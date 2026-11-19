@@ -180,3 +180,30 @@ model AbaNinjaInvoice {
 
   @@index([shop, state])
 }
+
+// Une vente passée dans AbaNinja : une ligne par commande Shopify (verrou contre les doublons, AbaNinja
+// n'a pas d'idempotence) et la mémoire du bon de livraison, de la facture issue du bon et du paiement.
+// noteState : en_cours | cree | incertain | refuse | annule | converti
+// invoiceState : null (pas encore) | en_cours | creee | incertaine ; paymentState : null | inscrit | incertain
+model AbaNinjaSale {
+  id            String   @id @default(cuid())
+  shop          String
+  orderId       String   @unique
+  orderName     String
+  isTest        Boolean
+  reference     String   @unique
+  noteState     String   @default("en_cours")
+  noteUuid      String?
+  noteNumber    String?
+  addressUuid   String?
+  companyUuid   String?
+  invoiceState  String?
+  invoiceUuid   String?
+  invoiceNumber String?
+  paymentState  String?
+  lastErrorCode String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([shop, isTest])
+}
