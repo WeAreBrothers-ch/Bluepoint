@@ -46,7 +46,8 @@ const SALE = {
   invoiceState: null,
   createdAt: new Date("2026-11-19T11:05:30Z"),
 };
-const CONVERTING = "le bon est déjà en train de devenir une facture : il ne se modifie plus.";
+const CONVERTING = "il est déjà en train de devenir une facture et ne se modifie plus.";
+const NOT_CANCELLED = "il est déjà en train de devenir une facture et ne s’annule plus. Annulez la facture dans AbaNinja.";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -121,6 +122,12 @@ describe("le bon de livraison suit l'annulation de la commande", () => {
     expect(deps.logError).toHaveBeenCalledWith(expect.any(String), expect.any(Error), expect.objectContaining({ orderId: ORDER }));
   });
 
+  it("« J'ai livré » pendant l'annulation : le bon devient une facture entre-temps, Eliott doit l'annuler", async () => {
+    deps.findSale.mockResolvedValueOnce(success(SALE)).mockResolvedValue(success({ ...SALE, invoiceState: "en_cours" }));
+    deps.markNote.mockResolvedValue(success(false));
+    expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "echec", message: "il est devenu une facture pendant l’annulation. Annulez la facture dans AbaNinja." });
+  });
+
   it("ne refait rien à la deuxième annulation (bouton puis webhook)", async () => {
     deps.findSale.mockResolvedValue(success({ ...SALE, noteState: "annule" }));
     expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "rien" });
@@ -129,7 +136,7 @@ describe("le bon de livraison suit l'annulation de la commande", () => {
 
   it("bon en train de devenir une facture : pas annulé, rien n'est demandé à AbaNinja", async () => {
     deps.findSale.mockResolvedValue(success({ ...SALE, invoiceState: "en_cours" }));
-    expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "echec", message: CONVERTING });
+    expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "echec", message: NOT_CANCELLED });
     expect(deps.cancelDeliveryNote).not.toHaveBeenCalled();
     expect(deps.markNote).not.toHaveBeenCalled();
   });

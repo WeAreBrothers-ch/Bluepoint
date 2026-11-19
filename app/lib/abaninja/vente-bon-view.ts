@@ -43,7 +43,7 @@ function stillFresh(since: Date, now: Date): boolean {
   return now.getTime() - since.getTime() < STUCK_AFTER_MS;
 }
 
-/** La facture née du bon est en doute (en cours, incertaine, ou paiement pas sûr) ; null si rien ne l'est. */
+/** La facture née du bon est en doute (en cours, incertaine, ou paiement en cours ou pas sûr) ; null si rien ne l'est. */
 function invoiceDoubt(sale: AbaNinjaSale, now: Date): SaleNoteView | null {
   if (sale.invoiceState === "en_cours" && stillFresh(sale.updatedAt, now)) return shown("Facture en cours…", "info");
   if (sale.invoiceState === "en_cours" || sale.invoiceState === "incertaine") {
@@ -51,6 +51,8 @@ function invoiceDoubt(sale: AbaNinjaSale, now: Date): SaleNoteView | null {
   }
   if (sale.paymentState !== "incertain") return null;
   const invoice = sale.invoiceNumber === null ? "la facture" : `la facture ${sale.invoiceNumber}`;
+  // Réservé juste avant l'envoi : pendant l'inscription, le dire à la main ferait un deuxième paiement.
+  if (stillFresh(sale.updatedAt, now)) return shown(`Paiement de ${invoice} en cours d’inscription dans AbaNinja…`, "info");
   return shown(`Paiement de ${invoice} à vérifier dans AbaNinja : inscrivez-le à la main s’il manque, avant de l’envoyer.`, "warning");
 }
 

@@ -25,13 +25,19 @@ function failed(message: string): FollowOutcome {
   return { kind: "echec", message };
 }
 
+/** Pourquoi un bon qui devient une facture ne suit plus, et quoi faire (affiché après « … n’a pas suivi : »). */
+const CONVERTING = {
+  modifier: "il est déjà en train de devenir une facture et ne se modifie plus.",
+  annuler: "il est déjà en train de devenir une facture et ne s’annule plus. Annulez la facture dans AbaNinja.",
+} as const;
+
 /** La ligne de la commande quand son bon est fait dans AbaNinja, sans facture commencée (et relève de cette boutique). */
-async function madeNoteOf(shop: string, orderId: string): Promise<MadeNote | FollowOutcome> {
+async function madeNoteOf(shop: string, orderId: string, intent: keyof typeof CONVERTING): Promise<MadeNote | FollowOutcome> {
   const sale = await findSale(orderId);
   if (!sale.ok) return failed("l’app n’a pas pu relire le bon.");
   const row = sale.value;
   if (row === null || row.shop !== shop || row.noteState !== "cree") return NOTHING;
-  if (row.invoiceState !== null) return failed("le bon est déjà en train de devenir une facture : il ne se modifie plus.");
+  if (row.invoiceState !== null) return failed(CONVERTING[intent]);
   const { noteUuid, addressUuid, companyUuid } = row;
   if (noteUuid === null || addressUuid === null || companyUuid === null) return failed("le bon n’est pas complet dans l’app.");
   return { ...row, noteUuid, addressUuid, companyUuid };
@@ -42,7 +48,7 @@ function isOutcome(value: MadeNote | FollowOutcome): value is FollowOutcome {
 }
 
 export async function syncSaleNote(admin: AdminApiContext, shop: string, orderId: OrderGid, now: Date = new Date()): Promise<FollowOutcome> {
-  const sale = await madeNoteOf(shop, orderId);
+  const sale = await madeNoteOf(shop, orderId, "modifier");
   if (isOutcome(sale)) return sale;
   const config = readAbaNinjaConfig();
   if (!config.ok) return failed(config.error.message);
@@ -64,16 +70,27 @@ async function cancelledMeanwhile(orderId: string, message: string): Promise<Fol
   return again.ok && again.value?.noteState === "annule" ? { kind: "fait" } : failed(message);
 }
 
+/**
+ * Bon annulé dans AbaNinja : la ligne le note. Si elle ne le peut plus parce que la facture est née du bon
+ * entre-temps (« J'ai livré » au même moment), cette facture est à annuler à la main.
+ */
+async function cancelNoted(orderId: string): Promise<FollowOutcome> {
+  const problem = unsavedChange(await markNote(orderId, { state: "annule" }));
+  if (problem === null) return { kind: "fait" };
+  logError("Bon AbaNinja annulé, état non enregistré", problem, { orderId });
+  const again = await findSale(orderId);
+  const becameInvoice = again.ok && again.value !== null && again.value.invoiceState !== null;
+  return becameInvoice ? failed("il est devenu une facture pendant l’annulation. Annulez la facture dans AbaNinja.") : { kind: "fait" };
+}
+
 /** Rejouable : le bouton « Annuler » puis le webhook orders/cancelled n'annulent qu'une fois. */
 export async function cancelSaleNote(shop: string, orderId: string): Promise<FollowOutcome> {
-  const sale = await madeNoteOf(shop, orderId);
+  const sale = await madeNoteOf(shop, orderId, "annuler");
   if (isOutcome(sale)) return sale;
   const config = readAbaNinjaConfig();
   if (!config.ok) return failed(config.error.message);
   const cancelled = await cancelDeliveryNote(config.value, sale.noteUuid);
   if (!cancelled.ok) return cancelledMeanwhile(orderId, cancelled.error.message);
-  const problem = unsavedChange(await markNote(orderId, { state: "annule" }));
-  if (problem !== null) logError("Bon AbaNinja annulé, état non enregistré", problem, { orderId });
   logInfo("Bon de livraison AbaNinja annulé", { orderId, reference: sale.reference });
-  return { kind: "fait" };
+  return cancelNoted(orderId);
 }

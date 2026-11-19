@@ -99,11 +99,16 @@ describe("état du bon de livraison AbaNinja sur la fiche commande", () => {
     expect(saleNoteView(sale({ noteState: "cree", invoiceState: "incertaine" }), TEST_ORDER, NOW)).toEqual(toCheck);
   });
 
-  it("paiement pas sûr d'être inscrit : avertit, même une fois le bon réglé", () => {
+  it("paiement pas sûr d'être inscrit depuis plus de deux minutes : avertit, même une fois le bon réglé", () => {
     const toCheck = view("Paiement de la facture R02292 à vérifier dans AbaNinja : inscrivez-le à la main s’il manque, avant de l’envoyer.", "warning");
-    const unsure = { invoiceState: "creee", invoiceNumber: "R02292", paymentState: "incertain" };
+    const unsure = { invoiceState: "creee", invoiceNumber: "R02292", paymentState: "incertain", updatedAt: new Date("2026-11-19T11:03:00Z") };
     expect(saleNoteView(sale({ noteState: "cree", ...unsure }), TEST_ORDER, NOW)).toEqual(toCheck);
     expect(saleNoteView(sale({ noteState: "converti", ...unsure }), TEST_ORDER, NOW)).toEqual(toCheck);
+  });
+
+  it("paiement en train d'être inscrit : patienter, ne surtout pas l'inscrire à la main", () => {
+    const running = sale({ noteState: "converti", invoiceState: "creee", invoiceNumber: "R02292", paymentState: "incertain", updatedAt: new Date("2026-11-19T11:04:30Z") });
+    expect(saleNoteView(running, TEST_ORDER, NOW)).toEqual(view("Paiement de la facture R02292 en cours d’inscription dans AbaNinja…", "info"));
   });
 
   it("dit que le bon est réglé par sa facture", () => {
