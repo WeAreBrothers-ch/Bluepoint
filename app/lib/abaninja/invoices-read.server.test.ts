@@ -8,7 +8,7 @@ const INVOICE_UUID = "44444444-4444-4444-8444-444444444444";
 
 describe("getInvoice", () => {
   const record = { uuid: INVOICE_UUID, status: "sent", sentStatus: "SENT", openAmount: 120.5, dueDate: "2026-12-10", systemInvoiceNumber: "2026-0042" };
-  const expected = { ...record, isCancelled: undefined, reference: null };
+  const expected = { ...record, isCancelled: undefined, reference: null, companyUuid: null };
 
   it("lit la forme data = objet", async () => {
     const { fetchImpl, calls } = scriptedFetch([jsonResponse({ data: { ...record, extra: 1 } })]);
@@ -27,6 +27,12 @@ describe("getInvoice", () => {
     const { fetchImpl } = scriptedFetch([jsonResponse({ data: { ...record, reference: "BP-ESSAI-BL-1028-20261119-101500" } })]);
     const result = await getInvoice(testConfig(), INVOICE_UUID, { fetchImpl });
     expect(result.ok && result.value.reference).toBe("BP-ESSAI-BL-1028-20261119-101500");
+  });
+
+  it("lit la société destinataire, pour retirer le client d'essai avec la facture", async () => {
+    const { fetchImpl } = scriptedFetch([jsonResponse({ data: { ...record, receiver: { companyUuid: OTHER_UUID, addressUuid: OTHER_UUID } } })]);
+    const result = await getInvoice(testConfig(), INVOICE_UUID, { fetchImpl });
+    expect(result.ok && result.value.companyUuid).toBe(OTHER_UUID);
   });
 
   it("accepte un montant en texte et des champs absents", async () => {

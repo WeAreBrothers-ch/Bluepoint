@@ -14,6 +14,8 @@ export type InvoiceErrorCode =
   | "destinataire_manquant"
   | "telephone_manquant"
   | "envoi_echoue"
+  | "abaninja_echec"
+  | "abaninja_incertain"
   | "erreur_interne";
 
 const MESSAGES: Readonly<Record<InvoiceErrorCode, string>> = {
@@ -32,6 +34,8 @@ const MESSAGES: Readonly<Record<InvoiceErrorCode, string>> = {
   destinataire_manquant: "Ce client n’a pas d’adresse e-mail.",
   telephone_manquant: "Ce client n’a pas de numéro de portable valable.",
   envoi_echoue: "L’e-mail n’est pas parti. Vérifiez l’adresse du client, puis réessayez.",
+  abaninja_echec: "La facture AbaNinja n’est pas prête.",
+  abaninja_incertain: "À vérifier dans AbaNinja avant de réessayer.",
   erreur_interne: "Ça n’a pas marché. Réessayez dans un instant.",
 };
 

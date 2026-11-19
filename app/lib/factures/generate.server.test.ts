@@ -18,6 +18,9 @@ let shopifyPayment: { displayFinancialStatus: string | null; transactions: reado
   transactions: [],
 };
 
+let orderTags: readonly string[] = [];
+const abaninja = vi.hoisted(() => ({ ensureAbaNinjaTestInvoice: vi.fn() }));
+
 const tx = {
   storedFile: { create: vi.fn(async () => ({})) },
   invoice: {
@@ -49,6 +52,7 @@ vi.mock("./shopify-order.server", () => ({
     success({
       order: COMMANDE_SHOPIFY,
       contact: {
+        tags: orderTags,
         email: "client@exemple.test",
         phone: null,
         customer: null,
@@ -60,6 +64,11 @@ vi.mock("./shopify-order.server", () => ({
     }),
 }));
 
+vi.mock("./abaninja-facture.server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./abaninja-facture.server")>()),
+  ensureAbaNinjaTestInvoice: abaninja.ensureAbaNinjaTestInvoice,
+}));
+
 const { ensureInvoice } = await import("./generate.server");
 
 const admin = {} as Parameters<typeof ensureInvoice>[0];
@@ -67,6 +76,8 @@ const ORDER = parseGid("gid://shopify/Order/1042", "Order") ?? expect.unreachabl
 const NOW = new Date("2026-11-19T10:00:00Z");
 
 beforeEach(() => {
+  orderTags = [];
+  abaninja.ensureAbaNinjaTestInvoice.mockResolvedValue(success({ invoice: { id: "aba-1", number: "R02291" }, created: true, inAbaNinja: true }));
   createdInvoices.length = 0;
   renderedInputs.length = 0;
   vi.clearAllMocks();
@@ -101,5 +112,40 @@ describe("ensureInvoice : facture d'une commande livrée", () => {
 
     expect(result).toMatchObject({ ok: false, error: { code: "paiement_partiel" } });
     expect(createdInvoices).toEqual([]);
+  });
+});
+
+describe("ensureInvoice : commandes d'essai faites dans AbaNinja", () => {
+  it("commande fictive à payer : la facture se fait dans AbaNinja, sans numéro BluePoint", async () => {
+    orderTags = ["fictif"];
+    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
+
+    const result = await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(result).toMatchObject({ ok: true, value: { inAbaNinja: true } });
+    expect(abaninja.ensureAbaNinjaTestInvoice).toHaveBeenCalledWith(
+      expect.objectContaining({ shop: "boutique.myshopify.com", orderId: ORDER, deliveryDate: "2026-11-18", issueDate: "2026-11-19" }),
+    );
+    expect(createdInvoices).toEqual([]);
+  });
+
+  it("commande fictive déjà payée : facture acquittée BluePoint, comme avant", async () => {
+    orderTags = ["fictif"];
+    shopifyPayment = { displayFinancialStatus: "PAID", transactions: [{ kind: "SALE", status: "SUCCESS", processedAt: "2026-11-10T08:15:00Z" }] };
+
+    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(abaninja.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
+    expect(createdInvoices).toHaveLength(1);
+  });
+
+  it("vraie commande à payer : jamais AbaNinja", async () => {
+    orderTags = ["pro"];
+    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
+
+    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(abaninja.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
+    expect(createdInvoices).toHaveLength(1);
   });
 });

@@ -1,6 +1,6 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError } from "../core/logger.server";
-import { ensureInvoice } from "../factures/generate.server";
+import { ensureInvoice, type EnsuredInvoice } from "../factures/generate.server";
 import type { InvoiceError } from "../factures/errors";
 import { markOrderDelivered } from "../livraison/service.server";
 import { forOwner } from "../commande/payload";
@@ -28,6 +28,11 @@ function invoiceFailure(orderId: string, error: InvoiceError): AgendaActionResul
   };
 }
 
+/** « dans AbaNinja (brouillon d’essai) » pour une facture faite dans AbaNinja, rien sinon. */
+function whereMade(ensured: EnsuredInvoice): string {
+  return ensured.inAbaNinja === true ? " dans AbaNinja (brouillon d’essai)" : "";
+}
+
 async function generate(admin: AdminApiContext, shop: string, orderId: OrderGid): Promise<AgendaActionResult> {
   const result = await ensureInvoice(admin, shop, orderId);
   if (!result.ok) return invoiceFailure(orderId, result.error);
@@ -35,7 +40,7 @@ async function generate(admin: AdminApiContext, shop: string, orderId: OrderGid)
   return {
     ok: true,
     orderId,
-    message: created ? `Facture ${invoice.number} faite.` : `La facture ${invoice.number} était déjà faite.`,
+    message: created ? `Facture ${invoice.number} faite${whereMade(result.value)}.` : `La facture ${invoice.number} était déjà faite.`,
     invoice: { id: invoice.id, number: invoice.number },
     warning: null,
     warningDetails: [],
@@ -54,7 +59,8 @@ async function deliver(admin: AdminApiContext, shop: string, orderId: OrderGid):
   const invoice = await ensureInvoice(admin, shop, orderId);
   if (invoice.ok) {
     const { number, id } = invoice.value.invoice;
-    return { ok: true, orderId, message: `${message} La facture ${number} est prête.`, invoice: { id, number }, warning: null, warningDetails: [], settingsLink: false };
+    const where = whereMade(invoice.value);
+    return { ok: true, orderId, message: `${message} La facture ${number} est prête${where}.`, invoice: { id, number }, warning: null, warningDetails: [], settingsLink: false };
   }
   return {
     ok: true,

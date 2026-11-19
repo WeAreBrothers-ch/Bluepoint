@@ -28,6 +28,8 @@ const invoiceRecord = z.looseObject({
   systemInvoiceNumber: z.string().nullish(),
   reference: z.string().nullish(),
   isCancelled: z.boolean().optional(),
+  /** Client de la facture : sert à retirer le client d'essai avec elle. */
+  receiver: z.looseObject({ companyUuid: uuidField.nullish() }).nullish(),
 });
 
 export type InvoiceRecord = z.infer<typeof invoiceRecord>;

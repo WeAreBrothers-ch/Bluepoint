@@ -15,6 +15,7 @@ export interface InvoiceOrderData {
 export const INVOICE_CONTACT_QUERY = `#graphql
 query ContactFacture($id: ID!) {
   order(id: $id) {
+    tags
     email
     phone
     customer {
@@ -48,7 +49,10 @@ export interface InvoiceContactDetails {
   readonly fulfillments: readonly InvoiceFulfillment[];
 }
 
-export interface InvoiceContactOrder extends InvoiceContactDetails, OrderPaymentFacts {}
+export interface InvoiceContactOrder extends InvoiceContactDetails, OrderPaymentFacts {
+  /** Étiquettes de la commande (« fictif » : commande d'essai). */
+  readonly tags: readonly string[];
+}
 
 export interface InvoiceContactData {
   readonly order: InvoiceContactOrder | null;

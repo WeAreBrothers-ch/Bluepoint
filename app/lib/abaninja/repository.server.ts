@@ -90,3 +90,10 @@ export async function recordCleanupIssue(orderId: string, code: CleanupIssueCode
     if (count !== 1) throw new AbaNinjaRepositoryError("Essai introuvable en base.", "essai_introuvable");
   });
 }
+
+/** Retire une tentative refusée (rien n'existe chez AbaNinja), pour que la commande puisse être refacturée. */
+export async function releaseRefused(orderId: string): Promise<Result<void, Error>> {
+  return guarded(async () => {
+    await prisma.abaNinjaInvoice.deleteMany({ where: { orderId, state: "refusee" } });
+  });
+}

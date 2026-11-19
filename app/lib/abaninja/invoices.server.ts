@@ -26,6 +26,8 @@ export interface InvoiceDetails {
   /** Référence choisie à la création (ex. « BP-1042 ») ; null si AbaNinja n'en renvoie pas. */
   readonly reference: string | null;
   readonly isCancelled: boolean | undefined;
+  /** Société destinataire (null pour une personne, ou si AbaNinja ne la renvoie pas). */
+  readonly companyUuid: string | null;
 }
 
 function toSegments(config: AbaNinjaConfig, ...tail: readonly (string | { readonly uuid: string })[]) {
@@ -92,6 +94,7 @@ export async function getInvoice(
     systemInvoiceNumber: record.systemInvoiceNumber ?? null,
     reference: record.reference ?? null,
     isCancelled: record.isCancelled,
+    companyUuid: record.receiver?.companyUuid ?? null,
   });
 }
 
