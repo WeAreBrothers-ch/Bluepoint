@@ -6,4 +6,6 @@ export interface EnsuredInvoice {
   readonly created: boolean;
   /** Faite dans AbaNinja (commande d'essai) : l'app n'en garde qu'une copie pour l'envoyer. */
   readonly inAbaNinja?: true;
+  /** Née du bon de livraison AbaNinja de la commande (le bon est alors réglé). */
+  readonly fromNote?: true;
 }

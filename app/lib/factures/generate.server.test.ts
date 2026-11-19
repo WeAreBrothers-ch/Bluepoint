@@ -19,7 +19,7 @@ let shopifyPayment: { displayFinancialStatus: string | null; transactions: reado
 };
 
 let orderTags: readonly string[] = [];
-const abaninja = vi.hoisted(() => ({ ensureAbaNinjaTestInvoice: vi.fn() }));
+const abaninja = vi.hoisted(() => ({ ensureAbaNinjaTestInvoice: vi.fn(), ensureAbaNinjaSaleInvoice: vi.fn(), findSale: vi.fn() }));
 
 const tx = {
   storedFile: { create: vi.fn(async () => ({})) },
@@ -69,6 +69,9 @@ vi.mock("./abaninja-facture.server", async (importOriginal) => ({
   ensureAbaNinjaTestInvoice: abaninja.ensureAbaNinjaTestInvoice,
 }));
 
+vi.mock("./abaninja-vente.server", () => ({ ensureAbaNinjaSaleInvoice: abaninja.ensureAbaNinjaSaleInvoice }));
+vi.mock("../abaninja/vente-repository.server", () => ({ findSale: abaninja.findSale }));
+
 const { ensureInvoice } = await import("./generate.server");
 
 const admin = {} as Parameters<typeof ensureInvoice>[0];
@@ -77,10 +80,12 @@ const NOW = new Date("2026-11-19T10:00:00Z");
 
 beforeEach(() => {
   orderTags = [];
+  vi.clearAllMocks();
   abaninja.ensureAbaNinjaTestInvoice.mockResolvedValue(success({ invoice: { id: "aba-1", number: "R02291" }, created: true, inAbaNinja: true }));
+  abaninja.ensureAbaNinjaSaleInvoice.mockResolvedValue(success({ invoice: { id: "aba-2", number: "R02292" }, created: true, inAbaNinja: true, fromNote: true }));
+  abaninja.findSale.mockResolvedValue(success(null));
   createdInvoices.length = 0;
   renderedInputs.length = 0;
-  vi.clearAllMocks();
 });
 
 describe("ensureInvoice : facture d'une commande livrée", () => {
@@ -146,6 +151,56 @@ describe("ensureInvoice : commandes d'essai faites dans AbaNinja", () => {
     await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
 
     expect(abaninja.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
+    expect(createdInvoices).toHaveLength(1);
+  });
+});
+
+describe("ensureInvoice : commande d'essai dont le bon de livraison est dans AbaNinja", () => {
+  const SALE = { shop: "boutique.myshopify.com", orderId: ORDER, noteState: "cree", invoiceState: null };
+
+  it("à payer : la facture naît du bon (jamais une deuxième facture directe)", async () => {
+    orderTags = ["fictif"];
+    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
+    abaninja.findSale.mockResolvedValue(success(SALE));
+
+    const result = await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(result).toMatchObject({ ok: true, value: { fromNote: true } });
+    expect(abaninja.ensureAbaNinjaSaleInvoice).toHaveBeenCalledWith(SALE, expect.objectContaining({ orderId: ORDER, deliveryDate: "2026-11-18" }), null);
+    expect(abaninja.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
+    expect(createdInvoices).toEqual([]);
+  });
+
+  it("payée : la facture naît du bon, avec la date et le moyen du paiement", async () => {
+    orderTags = ["fictif"];
+    shopifyPayment = { displayFinancialStatus: "PAID", transactions: [{ kind: "SALE", status: "SUCCESS", processedAt: "2026-11-10T08:15:00Z", gateway: "shopify_payments" }] };
+    abaninja.findSale.mockResolvedValue(success(SALE));
+
+    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(abaninja.ensureAbaNinjaSaleInvoice).toHaveBeenCalledWith(SALE, expect.anything(), { paidOn: "2026-11-10", gateway: "shopify_payments" });
+    expect(createdInvoices).toEqual([]);
+  });
+
+  it("bon refusé (rien dans AbaNinja) : facture directe, comme avant", async () => {
+    orderTags = ["fictif"];
+    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
+    abaninja.findSale.mockResolvedValue(success({ ...SALE, noteState: "refuse" }));
+
+    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(abaninja.ensureAbaNinjaSaleInvoice).not.toHaveBeenCalled();
+    expect(abaninja.ensureAbaNinjaTestInvoice).toHaveBeenCalled();
+  });
+
+  it("vraie commande : jamais le bon, même si une ligne existait", async () => {
+    orderTags = ["pro"];
+    shopifyPayment = { displayFinancialStatus: "PENDING", transactions: [] };
+    abaninja.findSale.mockResolvedValue(success(SALE));
+
+    await ensureInvoice(admin, "boutique.myshopify.com", ORDER, NOW);
+
+    expect(abaninja.ensureAbaNinjaSaleInvoice).not.toHaveBeenCalled();
     expect(createdInvoices).toHaveLength(1);
   });
 });

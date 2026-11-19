@@ -118,17 +118,26 @@ export async function updateDeliveryNote(
   return result.ok ? success(undefined) : result;
 }
 
-/** Annule le bon pour de bon (« cancelPermanently » : plus modifiable ensuite), rejouable sans risque. */
-export async function cancelDeliveryNote(config: AbaNinjaConfig, noteUuid: string, options: CallOptions = {}): Promise<Result<void, AbaNinjaError>> {
+async function noteAction(config: AbaNinjaConfig, noteUuid: string, action: string, options: CallOptions): Promise<Result<void, AbaNinjaError>> {
   const result = await abaNinjaRequest({
     ...options,
     config,
     method: "PATCH",
-    path: noteSegments(config, { uuid: noteUuid }, "actions", "cancelPermanently"),
+    path: noteSegments(config, { uuid: noteUuid }, "actions", action),
     idempotent: true,
     schema: z.unknown(),
   });
   return result.ok ? success(undefined) : result;
+}
+
+/** Annule le bon pour de bon (« cancelPermanently » : plus modifiable ensuite), rejouable sans risque. */
+export function cancelDeliveryNote(config: AbaNinjaConfig, noteUuid: string, options: CallOptions = {}): Promise<Result<void, AbaNinjaError>> {
+  return noteAction(config, noteUuid, "cancelPermanently", options);
+}
+
+/** Marque le bon comme envoyé (« markSent ») : change son statut, n'envoie rien à personne. Rejouable. */
+export function markDeliveryNoteSent(config: AbaNinjaConfig, noteUuid: string, options: CallOptions = {}): Promise<Result<void, AbaNinjaError>> {
+  return noteAction(config, noteUuid, "markSent", options);
 }
 
 /** Supprime un bon (action « delete », rejouable sans risque). */

@@ -37,11 +37,24 @@ function invoiceLinesOf(sale: AbaNinjaSaleContext): Result<InvoiceInput, Invoice
   return abaNinjaLinesOf(sale.source.order, sale.settings, { issueDate: sale.issueDate, deliveryDate: sale.deliveryDate });
 }
 
-function toInvoiceError(error: SaleInvoiceError): InvoiceError {
+export function toInvoiceError(error: SaleInvoiceError): InvoiceError {
   return new InvoiceError(error.outcome === "incertaine" ? "abaninja_incertain" : "abaninja_echec", [error.message, ...error.details]);
 }
 
-async function saveCopy(sale: AbaNinjaSaleContext, lines: InvoiceInput, document: SaleInvoiceDocument): Promise<Result<Invoice, InvoiceError>> {
+export interface CopyOptions {
+  /** Jour du paiement d'une commande déjà payée (facture acquittée). */
+  readonly paidOn: IsoDate | null;
+  /** Marche à suivre si la copie ne s'enregistre pas. */
+  readonly hint: string;
+}
+
+/** Copie de la facture AbaNinja dans l'app (numéro AbaNinja, PDF), pour qu'Eliott l'envoie avec les boutons habituels. */
+export async function saveCopy(
+  sale: AbaNinjaSaleContext,
+  lines: InvoiceInput,
+  document: SaleInvoiceDocument,
+  options: CopyOptions = { paidOn: null, hint: ERASE_HINT },
+): Promise<Result<Invoice, InvoiceError>> {
   const number = document.number ?? document.reference;
   const pdfKey = invoicePdfKey(sale.shop, number);
   const contact = contactOf(sale.source.contact);
@@ -55,9 +68,9 @@ async function saveCopy(sale: AbaNinjaSaleContext, lines: InvoiceInput, document
           orderName: sale.source.order.name,
           number,
           issueDate: lines.issueDate,
-          dueDate: lines.dueDate,
+          dueDate: options.paidOn === null ? lines.dueDate : lines.issueDate,
           totalCents: lines.totalCents,
-          paidOn: null,
+          paidOn: options.paidOn,
           customerName: lines.buyer.company ?? lines.buyer.name,
           customerEmail: contact.email,
           customerPhone: contact.phone,
@@ -68,7 +81,7 @@ async function saveCopy(sale: AbaNinjaSaleContext, lines: InvoiceInput, document
     return success(invoice);
   } catch (error) {
     logError("Facture AbaNinja faite mais non enregistrée dans l’app", error, { orderId: sale.orderId });
-    return failure(new InvoiceError("abaninja_echec", [`La facture ${number} est faite dans AbaNinja, mais l’app n’a pas pu l’enregistrer.`, ERASE_HINT]));
+    return failure(new InvoiceError("abaninja_echec", [`La facture ${number} est faite dans AbaNinja, mais l’app n’a pas pu l’enregistrer.`, options.hint]));
   }
 }
 

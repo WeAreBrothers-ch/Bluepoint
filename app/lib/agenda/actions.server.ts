@@ -28,8 +28,9 @@ function invoiceFailure(orderId: string, error: InvoiceError): AgendaActionResul
   };
 }
 
-/** « dans AbaNinja (brouillon d’essai) » pour une facture faite dans AbaNinja, rien sinon. */
+/** Où la facture a été faite : dans AbaNinja depuis le bon (réglé), dans AbaNinja directement, ou ici (rien). */
 function whereMade(ensured: EnsuredInvoice): string {
+  if (ensured.fromNote === true) return " dans AbaNinja, depuis le bon de livraison (réglé)";
   return ensured.inAbaNinja === true ? " dans AbaNinja (brouillon d’essai)" : "";
 }
 

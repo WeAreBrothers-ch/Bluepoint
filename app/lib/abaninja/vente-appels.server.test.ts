@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AbaNinjaDeliveryNoteInput } from "./delivery-note-input";
-import { cancelDeliveryNote, createDeliveryNote, updateDeliveryNote } from "./delivery-notes.server";
+import { cancelDeliveryNote, createDeliveryNote, markDeliveryNoteSent, updateDeliveryNote } from "./delivery-notes.server";
 import type { AbaNinjaInvoiceInput } from "./invoice-input";
 import { updateInvoice } from "./invoice-update.server";
 import { recordPayment } from "./payments.server";
@@ -57,6 +57,13 @@ describe("bon de livraison : mise à jour et annulation", () => {
     const { options, calls } = run([emptyResponse(500)]);
     expect((await updateDeliveryNote(testConfig(), NOTE, { ...note, positions: [] }, options)).ok).toBe(false);
     expect(calls).toHaveLength(0);
+  });
+
+  it("marque le bon comme envoyé, sans rien envoyer à personne (markSent)", async () => {
+    const { options, calls } = run([jsonResponse({ data: {} })]);
+    expect(await markDeliveryNoteSent(testConfig(), NOTE, options)).toEqual({ ok: true, value: undefined });
+    expect(calls[0]?.url).toBe(`${ROOT}/documents/v2/delivery-notes/${NOTE}/actions/markSent`);
+    expect(calls[0]?.init.method).toBe("PATCH");
   });
 
   it("annule le bon pour de bon (cancelPermanently)", async () => {

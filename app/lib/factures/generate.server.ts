@@ -16,8 +16,7 @@ import { formatInvoiceNumber, yearOfIsoDate } from "./numbering";
 import { nextInvoiceSequence } from "./numbering.server";
 import { findInvoiceByOrder, invoicePdfKey, type Invoice } from "./repository.server";
 import { invoicePaymentOf } from "./order-payment";
-import { ensureAbaNinjaTestInvoice } from "./abaninja-facture.server";
-import { goesToAbaNinja } from "./abaninja-lines";
+import { ensureViaAbaNinja } from "./abaninja-route.server";
 import type { EnsuredInvoice } from "./ensured";
 import { fetchOrderForInvoice, type OrderForInvoice } from "./shopify-order.server";
 import { plainInvoiceProblems } from "./plain-problems";
@@ -136,10 +135,9 @@ export async function ensureInvoice(
     // Déjà payée : facture acquittée, jamais une QR-facture qui ferait payer le client une seconde fois.
     const payment = invoicePaymentOf(source.value.contact, issueDate);
     if (payment.kind === "bloquee") return failure(new InvoiceError(payment.code));
-    // Commande d'essai à payer : la facture se fait dans AbaNinja (les vraies commandes restent ici).
-    if (payment.kind === "a_payer" && goesToAbaNinja(source.value)) {
-      return await ensureAbaNinjaTestInvoice({ shop, orderId, source: source.value, settings, deliveryDate, issueDate, now });
-    }
+    // Commande d'essai : la facture se fait dans AbaNinja, depuis son bon s'il existe (les vraies commandes restent ici).
+    const viaAbaNinja = await ensureViaAbaNinja({ shop, orderId, source: source.value, settings, deliveryDate, issueDate, now }, payment);
+    if (viaAbaNinja !== null) return viaAbaNinja;
     const paid = payment.kind === "payee" ? { paidOn: payment.paidOn, terms: "Payée" } : null;
     return await createOrRecover({ shop, orderId, source: source.value, settings, deliveryDate, issueDate, paid });
   } catch (error) {
