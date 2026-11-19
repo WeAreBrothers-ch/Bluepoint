@@ -16,9 +16,12 @@ import { plainInvoiceProblems } from "./plain-problems";
 const PLACEHOLDER_NUMBER = "ABANINJA-1";
 
 /** Commande d'essai : étiquette « fictif » sur la commande, ou sur le client (une commande passée sur le site n'hérite pas de ses étiquettes). */
+export function isTestOrder(orderTags: readonly string[], customerTags: readonly string[] | undefined): boolean {
+  return orderTags.includes(FICTITIOUS_TAG) || (customerTags ?? []).includes(FICTITIOUS_TAG);
+}
+
 export function goesToAbaNinja(source: { readonly contact: Pick<InvoiceContactOrder, "tags" | "customer"> }): boolean {
-  const { tags, customer } = source.contact;
-  return tags.includes(FICTITIOUS_TAG) || (customer?.tags ?? []).includes(FICTITIOUS_TAG);
+  return isTestOrder(source.contact.tags, source.contact.customer?.tags);
 }
 
 export function abaNinjaLinesOf(

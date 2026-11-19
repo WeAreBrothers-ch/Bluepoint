@@ -17,6 +17,7 @@ query FicheCommande($id: ID!) {
   order(id: $id) {${AGENDA_ORDER_FIELDS}
       createdAt
       email
+      tags
       customer { id defaultEmailAddress { emailAddress } }
       currentTotalDiscountsSet { shopMoney { amount } }
       currentShippingPriceSet { shopMoney { amount } }
@@ -40,6 +41,8 @@ interface Money {
 }
 
 export interface OrderDetailNode extends Omit<AgendaOrderNode, "customer"> {
+  /** Étiquettes de la commande (« fictif » : commande d'essai). */
+  readonly tags?: readonly string[];
   readonly customer:
     | (NonNullable<AgendaOrderNode["customer"]> & { readonly id?: string; readonly defaultEmailAddress?: { readonly emailAddress: string } | null })
     | null;
