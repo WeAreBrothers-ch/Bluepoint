@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState, type ReactNode } from "react";
 import { quantityOf, type Quantities } from "../../lib/commande/cart";
 import { filterProducts } from "../../lib/commande/catalog";
 import type { PriceAudience } from "../../lib/commande/price-text";
@@ -27,9 +27,11 @@ interface ProductListProps {
   readonly audience: PriceAudience;
   /** Titre de la partie ; « 2. Vins » dans « Prendre une commande ». */
   readonly heading?: string;
+  /** Montré sous les vins choisis (« Modifier les vins » : les vins écrits à la main dans la commande). */
+  readonly extra?: ReactNode;
 }
 
-export function ProductList({ products, truncated, quantities, onSet, onAdd, audience, heading = "2. Vins" }: ProductListProps) {
+export function ProductList({ products, truncated, quantities, onSet, onAdd, audience, heading = "2. Vins", extra }: ProductListProps) {
   const [filter, setFilter] = useState("");
   const [showAll, setShowAll] = useState(false);
   const deferredFilter = useDeferredValue(filter);
@@ -44,7 +46,8 @@ export function ProductList({ products, truncated, quantities, onSet, onAdd, aud
   return (
     <s-section heading={heading}>
       <s-stack direction="block" gap="base">
-        <ChosenWines products={byId} quantities={quantities} onSet={onSet} />
+        <ChosenWines products={byId} quantities={quantities} onSet={onSet} {...(extra === undefined ? {} : { emptyText: null })} />
+        {extra}
         <s-search-field
           label="Chercher un vin"
           placeholder="Ex. Barolo"

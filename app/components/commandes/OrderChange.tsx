@@ -3,11 +3,13 @@ import { useFetcher } from "react-router";
 import { addQuantity, setQuantity, type Quantities } from "../../lib/commande/cart";
 import type { ProductOption, VariantGid } from "../../lib/commande/types";
 import { quantitiesFromLines, type ChangeRules, type OrderChangeResult } from "../../lib/commandes/change";
+import { HAND_LINES_FIELD, handQuantitiesFromLines, isHandWrittenWine, setHandQuantity, type HandQuantities } from "../../lib/commandes/hand-lines";
 import type { OrderDetail } from "../../lib/commandes/detail";
 import { formatChf } from "../../lib/format/money";
 import { ProductList } from "../commande/ProductList";
 import { ChoiceButtons } from "../ChoiceButtons";
 import { FILL } from "../fill";
+import { HandWrittenWines } from "./HandWrittenWines";
 
 /**
  * Le client change d'avis sur une commande pas encore livrée : « Modifier les vins » (le même choix
@@ -107,6 +109,8 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
   const fetcher = useFetcher<OrderChangeResult>({ key: fetcherKey(detail.task.orderId) });
   const initial = useMemo(() => quantitiesFromLines(detail.lines), [detail.lines]);
   const [quantities, setQuantities] = useState<Quantities>(initial);
+  const initialHand = useMemo(() => handQuantitiesFromLines(detail.lines), [detail.lines]);
+  const [handQuantities, setHandQuantities] = useState<HandQuantities>(initialHand);
   const [submitted, setSubmitted] = useState(false);
   const busy = fetcher.state !== "idle";
   const result = fetcher.state === "idle" ? fetcher.data : undefined;
@@ -115,7 +119,13 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
     () => products.map((product) => (product.available === null ? product : { ...product, available: product.available + (initial[product.variantId] ?? 0) })),
     [products, initial],
   );
-  const fixedLines = detail.lines.filter((line) => line.variantId === null);
+  const handWines = useMemo(() => detail.lines.filter(isHandWrittenWine), [detail.lines]);
+  // Frais et autres articles écrits à la main, pas en cartons : ils restent tels quels.
+  const fixedLines = detail.lines.filter((line) => line.variantId === null && !isHandWrittenWine(line));
+  const handBlock =
+    handWines.length === 0 ? undefined : (
+      <HandWrittenWines wines={handWines} quantities={handQuantities} onSet={(lineItemId, quantity) => setHandQuantities((current) => setHandQuantity(current, lineItemId, quantity))} />
+    );
 
   useEffect(() => {
     if (submitted && result?.ok === true && result.intent === "modifier") onClose();
@@ -131,6 +141,7 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
         quantities={quantities}
         onSet={(variantId: VariantGid, quantity: number) => setQuantities((current) => setQuantity(current, variantId, quantity))}
         onAdd={(variantId: VariantGid, delta: number) => setQuantities((current) => addQuantity(current, variantId, delta))}
+        {...(handBlock === undefined ? {} : { extra: handBlock })}
       />
       <s-section>
         <s-stack direction="block" gap="base">
@@ -145,7 +156,8 @@ export function OrderEditor({ detail, products, truncated, onClose }: OrderEdito
               icon="check"
               onClick={() => {
                 setSubmitted(true);
-                fetcher.submit({ intent: "modifier", orderId: detail.task.orderId, quantities: JSON.stringify(quantities) }, { method: "post" });
+                const wanted = { intent: "modifier", orderId: detail.task.orderId, quantities: JSON.stringify(quantities) };
+                fetcher.submit({ ...wanted, [HAND_LINES_FIELD]: JSON.stringify(handQuantities) }, { method: "post" });
               }}
               {...(busy ? { loading: true } : {})}
             >

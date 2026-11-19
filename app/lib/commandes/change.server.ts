@@ -1,59 +1,33 @@
-import { PAS_ENCORE_ACTIVE } from "../titres";
-import { isFullCartons } from "../commande/cart";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
+import { isFullCartons } from "../commande/cart";
+import { decimalToCents } from "../commande/totals";
 import { logError, logInfo } from "../core/logger.server";
 import { failure, type Result } from "../core/result";
-import { findInvoiceByOrder } from "../factures/repository.server";
 import { formatChf } from "../format/money";
-import { decimalToCents } from "../commande/totals";
 import { ShopifyUserErrors, type ShopifyGraphqlError } from "../shopify/errors";
-import { runAdminGraphql, runAdminMutation } from "../shopify/graphql.server";
+import { runAdminMutation } from "../shopify/graphql.server";
 import { parseGid } from "../shopify/ids";
-import { plainShopifyRefusal } from "../shopify/plain-refusal";
+import { cancelOrder } from "./cancel.server";
 import {
   bottlesAfter,
   calculatedLineId,
-  changeRules,
   EMPTY_ORDER_MESSAGE,
   isEmptyPlan,
   isOrderChangeIntent,
   NOTHING_CHANGED_MESSAGE,
   parseWantedQuantities,
-  planOrderEdit,
-  type ChangeRules,
-  type EditableLine,
   type OrderChangeResult,
   type OrderEditPlan,
 } from "./change";
+import { HAND_LINES_FIELD, parseWantedHandLines, planWithHandLines } from "./hand-lines";
+import { loadOrder, plainError, refusal } from "./order-state.server";
 
-/** Modifier les vins d'une commande pas encore livrée, ou l'annuler (Admin API, schéma 2026-10). */
+/**
+ * Modifier les vins d'une commande pas encore livrée (Admin API, schéma 2026-10) : vins du catalogue et vins
+ * écrits à la main. L'annulation est dans cancel.server.ts, l'état de la commande dans order-state.server.ts.
+ */
 
 export const ORDER_EDIT_SCOPE = "write_order_edits";
-
-const ORDER_STATE_QUERY = `#graphql
-query CommandeAvantChangement($id: ID!) {
-  order(id: $id) {
-    id
-    name
-    cancelledAt
-    displayFinancialStatus
-    displayFulfillmentStatus
-    currentTotalPriceSet { shopMoney { amount } }
-    lineItems(first: 100) { nodes { id currentQuantity variant { id } } }
-  }
-}`;
-
-interface OrderStateNode {
-  readonly id: string;
-  readonly name: string;
-  readonly cancelledAt: string | null;
-  readonly displayFinancialStatus: string | null;
-  readonly displayFulfillmentStatus: string | null;
-  readonly currentTotalPriceSet: { readonly shopMoney: { readonly amount: string } } | null;
-  readonly lineItems: {
-    readonly nodes: readonly { readonly id: string; readonly currentQuantity: number; readonly variant: { readonly id: string } | null }[];
-  };
-}
 
 const BEGIN_MUTATION = `#graphql
 mutation DebutModification($id: ID!) {
@@ -87,24 +61,6 @@ mutation EnregistrerModification($id: ID!) {
   }
 }`;
 
-const CANCEL_MUTATION = `#graphql
-mutation AnnulerCommande($orderId: ID!, $refund: OrderCancelRefundMethodInput) {
-  orderCancel(
-    orderId: $orderId
-    reason: CUSTOMER
-    restock: true
-    notifyCustomer: false
-    refundMethod: $refund
-    staffNote: "Annulée depuis l’app BluePoint"
-  ) {
-    job { id done }
-    orderCancelUserErrors { field message code }
-  }
-}`;
-
-const JOB_QUERY = `#graphql
-query AnnulationTerminee($id: ID!) { job(id: $id) { done } }`;
-
 interface CalculatedOrderPayload {
   readonly calculatedOrder: {
     readonly id: string;
@@ -116,52 +72,6 @@ interface CalculatedOrderPayload {
 interface CommitPayload {
   readonly order: { readonly id: string; readonly currentTotalPriceSet: { readonly shopMoney: { readonly amount: string } } | null } | null;
   readonly userErrors: readonly { readonly field: readonly string[] | null; readonly message: string }[];
-}
-
-interface CancelPayload {
-  readonly job: { readonly id: string; readonly done: boolean } | null;
-  readonly orderCancelUserErrors: readonly { readonly field: readonly string[] | null; readonly message: string; readonly code: string | null }[];
-}
-
-interface LoadedOrder {
-  readonly node: OrderStateNode;
-  readonly rules: ChangeRules;
-  readonly lines: readonly EditableLine[];
-}
-
-const RETRY = "Shopify ne répond pas pour le moment. Réessayez dans un instant\u202F: rien n’a été changé.";
-
-function refusal(intent: OrderChangeResult["intent"], message: string): OrderChangeResult {
-  return { ok: false, intent, message };
-}
-
-type Loaded = { readonly ok: true; readonly order: LoadedOrder } | { readonly ok: false; readonly message: string };
-
-async function loadOrder(admin: AdminApiContext, orderId: string): Promise<Loaded> {
-  const result = await runAdminGraphql<{ readonly order: OrderStateNode | null }>(admin, ORDER_STATE_QUERY, { id: orderId });
-  if (!result.ok) {
-    logError("Commande illisible avant changement", result.error, { orderId });
-    return { ok: false, message: RETRY };
-  }
-  const node = result.value.order;
-  if (node === null) return { ok: false, message: "Cette commande n’existe plus." };
-  const invoice = await findInvoiceByOrder(orderId);
-  const rules = changeRules({
-    cancelled: node.cancelledAt !== null,
-    financialStatus: node.displayFinancialStatus,
-    fulfillmentStatus: node.displayFulfillmentStatus,
-    hasInvoice: invoice !== null,
-  });
-  const lines = node.lineItems.nodes.map((line) => ({ lineItemId: line.id, variantId: line.variant?.id ?? null, quantity: line.currentQuantity }));
-  return { ok: true, order: { node, rules, lines } };
-}
-
-function plainError(error: ShopifyGraphqlError): string {
-  if (/access denied|access scope/i.test(error.message)) {
-    return PAS_ENCORE_ACTIVE;
-  }
-  const detail = error instanceof ShopifyUserErrors ? plainShopifyRefusal(error.message) : null;
-  return detail ?? RETRY;
 }
 
 /** Applique les changements pendant une session de modification, puis l'enregistre. Rien n'est gardé en cas d'échec. */
@@ -196,12 +106,13 @@ async function applyEdit(admin: AdminApiContext, orderId: string, plan: OrderEdi
 
 async function editOrder(admin: AdminApiContext, orderId: string, form: FormData): Promise<OrderChangeResult> {
   const wanted = parseWantedQuantities(form.get("quantities"));
-  if (wanted === null) return refusal("modifier", "Ça n’a pas marché. Rechargez la page, puis réessayez.");
+  const wantedHand = parseWantedHandLines(form.get(HAND_LINES_FIELD));
+  if (wanted === null || wantedHand === null) return refusal("modifier", "Ça n’a pas marché. Rechargez la page, puis réessayez.");
   const loaded = await loadOrder(admin, orderId);
   if (!loaded.ok) return refusal("modifier", loaded.message);
   const { node, rules, lines } = loaded.order;
   if (!rules.canEdit) return refusal("modifier", rules.editBlocked ?? "Cette commande est déjà livrée ou annulée : elle ne peut plus être modifiée.");
-  const plan = planOrderEdit(lines, wanted);
+  const plan = planWithHandLines(lines, wanted, wantedHand);
   if (isEmptyPlan(plan)) return { ok: true, intent: "modifier", message: NOTHING_CHANGED_MESSAGE };
   if (bottlesAfter(lines, plan) <= 0) return refusal("modifier", EMPTY_ORDER_MESSAGE);
   // Une ligne qu'on change doit être un nombre entier de cartons de 6 (une ancienne ligne laissée telle quelle reste permise).
@@ -218,46 +129,6 @@ async function editOrder(admin: AdminApiContext, orderId: string, form: FormData
   logInfo("Commande modifiée", { orderId, set: plan.set.length, add: plan.add.length });
   const total = totalCents === null ? "" : ` Nouveau total\u202F: ${formatChf(totalCents)}.`;
   return { ok: true, intent: "modifier", message: `C’est noté\u202F: la commande ${node.name} est modifiée.${total}` };
-}
-
-/** L'annulation est traitée par Shopify en arrière-plan : on attend un peu qu'elle soit finie. */
-async function waitForJob(admin: AdminApiContext, jobId: string): Promise<void> {
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const job = await runAdminGraphql<{ readonly job: { readonly done: boolean } | null }>(admin, JOB_QUERY, { id: jobId });
-    if (!job.ok || job.value.job === null || job.value.job.done) return;
-  }
-}
-
-async function cancelOrder(admin: AdminApiContext, orderId: string): Promise<OrderChangeResult> {
-  const loaded = await loadOrder(admin, orderId);
-  if (!loaded.ok) return refusal("annuler", loaded.message);
-  const { node, rules } = loaded.order;
-  if (!rules.changeable) return refusal("annuler", "Cette commande est déjà livrée, facturée ou annulée : elle ne peut plus être annulée ici.");
-  const result = await runAdminGraphql<{ readonly orderCancel: CancelPayload | null }>(admin, CANCEL_MUTATION, {
-    orderId,
-    refund: rules.paid ? { originalPaymentMethodsRefund: true } : null,
-  });
-  if (!result.ok) {
-    logError("Commande non annulée", result.error, { orderId });
-    return refusal("annuler", plainError(result.error));
-  }
-  const payload = result.value.orderCancel;
-  const errors = payload?.orderCancelUserErrors ?? [];
-  if (payload === null || errors.length > 0) {
-    const shopifyError = new ShopifyUserErrors(errors.length > 0 ? errors : [{ field: null, message: "Annulation sans réponse" }]);
-    logError("Annulation refusée", shopifyError, { orderId });
-    return refusal("annuler", plainError(shopifyError));
-  }
-  if (payload.job !== null && !payload.job.done) await waitForJob(admin, payload.job.id);
-  const totalCents = decimalToCents(node.currentTotalPriceSet?.shopMoney.amount);
-  logInfo("Commande annulée", { orderId, refunded: rules.paid });
-  // Shopify ne rend l'argent tout seul que pour un paiement par carte ; un virement, des espèces ou TWINT se rendent à la main.
-  const amount = totalCents === null ? "" : ` (${formatChf(totalCents)})`;
-  const refund = rules.paid
-    ? ` Le client avait payé${amount} : par carte sur le site, l’argent lui revient tout seul ; par virement, en espèces ou par TWINT, rendez-le-lui vous-même.`
-    : "";
-  return { ok: true, intent: "annuler", message: `Commande ${node.name} annulée. Les bouteilles sont remises en cave.${refund}` };
 }
 
 export async function handleOrderChange(admin: AdminApiContext, form: FormData): Promise<OrderChangeResult> {

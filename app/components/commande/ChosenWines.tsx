@@ -12,12 +12,14 @@ interface ChosenWinesProps {
   readonly products: ReadonlyMap<string, ProductOption>;
   readonly quantities: Quantities;
   readonly onSet: (variantId: VariantGid, quantity: number) => void;
+  /** Texte quand rien n'est choisi ; `null` pour ne rien dire (d'autres vins sont montrés juste dessous). */
+  readonly emptyText?: string | null;
 }
 
-export function ChosenWines({ products, quantities, onSet }: ChosenWinesProps) {
+export function ChosenWines({ products, quantities, onSet, emptyText = "Aucun vin choisi pour l’instant." }: ChosenWinesProps) {
   const lines = toLines(quantities);
   if (lines.length === 0) {
-    return <s-text color="subdued">Aucun vin choisi pour l’instant.</s-text>;
+    return emptyText === null ? null : <s-text color="subdued">{emptyText}</s-text>;
   }
   const bottles = lines.reduce((sum, line) => sum + line.quantity, 0);
   return (
