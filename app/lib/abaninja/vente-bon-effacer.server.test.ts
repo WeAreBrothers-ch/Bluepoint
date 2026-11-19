@@ -1,8 +1,8 @@
-import type { AbaNinjaSale } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { failure, success } from "../core/result";
 import { AbaNinjaError } from "./errors";
 import { testConfig } from "./test-support";
+import { answerAsUsual, COMPANY, invoice, INVOICE, NO_INVOICE, NOTE, NOW, REF, sale } from "./vente-bon-effacer.test-support";
 
 const api = vi.hoisted(() => ({
   listTestSales: vi.fn(),
@@ -27,51 +27,9 @@ vi.mock("./delivery-notes.server", () => ({ getDeliveryNote: api.getDeliveryNote
 
 const { eraseTestSaleNotes } = await import("./vente-bon-effacer.server");
 
-const NOW = new Date("2026-11-19T15:00:00Z");
-const NOTE = "66666666-6666-4666-8666-666666666666";
-const INVOICE = "77777777-7777-4777-8777-777777777777";
-const COMPANY = "33333333-3333-4333-8333-333333333333";
-const REF = "BP-ESSAI-CMD-1035-20261119-110530";
-
-function sale(changes: Partial<AbaNinjaSale> = {}): AbaNinjaSale {
-  return {
-    id: "v1",
-    shop: "test.myshopify.com",
-    orderId: "gid://shopify/Order/1035",
-    orderName: "#1035",
-    isTest: true,
-    reference: REF,
-    noteState: "converti",
-    noteUuid: NOTE,
-    noteNumber: "L00042",
-    addressUuid: "22222222-2222-4222-8222-222222222222",
-    companyUuid: COMPANY,
-    invoiceState: "creee",
-    invoiceUuid: INVOICE,
-    invoiceNumber: "R02292",
-    paymentState: null,
-    lastErrorCode: null,
-    createdAt: new Date("2026-11-19T11:05:30Z"),
-    updatedAt: new Date("2026-11-19T11:05:30Z"),
-    ...changes,
-  };
-}
-
-const NO_INVOICE = { invoiceState: null, invoiceUuid: null, invoiceNumber: null };
-
-function invoice(status: string, reference = REF) {
-  return success({ uuid: INVOICE, status, sentStatus: null, openAmount: 1551, dueDate: "2026-12-19", systemInvoiceNumber: "R02292", reference, isCancelled: false, companyUuid: COMPANY });
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
-  api.listTestSales.mockResolvedValue(success([sale()]));
-  api.getInvoice.mockResolvedValue(invoice("draft"));
-  api.deleteInvoice.mockResolvedValue(success(undefined));
-  api.getDeliveryNote.mockResolvedValue(success({ uuid: NOTE, status: "converted", reference: REF, number: "L00042", companyUuid: COMPANY }));
-  api.deleteDeliveryNote.mockResolvedValue(success(undefined));
-  api.deleteCompany.mockResolvedValue(success(undefined));
-  tx.invoice.findFirst.mockResolvedValue({ id: "copie-2", pdfKey: "test.myshopify.com/R02292.pdf" });
+  answerAsUsual(api, tx);
 });
 
 describe("effacer les essais faits par les commandes fictives (bon, facture, client)", () => {
