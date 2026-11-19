@@ -93,6 +93,14 @@ describe("facture AbaNinja d'une commande d'essai, vue depuis l'app", () => {
     const request = deps.createTestSaleInvoice.mock.calls[0]?.[1];
     expect(request).toMatchObject({ shop: "test.myshopify.com", orderId: ORDER, orderName: "#1042" });
     expect(request.plan.reference.startsWith("BP-ESSAI-FACT-1042-")).toBe(true);
+    expect(request).toMatchObject({ now: sale.now, plan: { sharedClient: false } });
+  });
+
+  it("commande fictive d'un pro : la facture va au client pro fictif, le même que celui des bons", async () => {
+    const customer = { defaultEmailAddress: null, defaultPhoneNumber: null, tags: ["fictif", "pro"] };
+    await ensureAbaNinjaTestInvoice({ ...sale, source: { ...sale.source, contact: { ...contact, customer } } });
+    const request = deps.createTestSaleInvoice.mock.calls[0]?.[1];
+    expect(request.plan).toMatchObject({ sharedClient: true, clientName: "Client pro fictif · essai BluePoint" });
   });
 
   it("prend la référence d'essai comme numéro quand AbaNinja n'en donne pas au brouillon", async () => {

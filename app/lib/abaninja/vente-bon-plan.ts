@@ -1,9 +1,8 @@
 import type { InvoiceInput } from "@bluepoint/facture-qr";
 import { success, type Result } from "../core/result";
-import type { AddressInput } from "./address-input";
 import type { AbaNinjaDeliveryNoteInput } from "./delivery-note-input";
 import { todayInZurich } from "./invoice-status";
-import { orderNameOf, salePositions, saleStamp, testClientAddress, testClientName, testReference } from "./vente-positions";
+import { orderNameOf, salePositions, saleStamp, testClientOf, testReference, type TestClient } from "./vente-positions";
 
 /**
  * Bon de livraison AbaNinja d'une commande fictive, fait dès qu'elle arrive : prépare, sans rien envoyer,
@@ -18,10 +17,8 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /** Le bon, sans son destinataire (connu une fois le client créé dans AbaNinja). */
 export type SaleNoteBody = Omit<AbaNinjaDeliveryNoteInput, "receiver">;
 
-export interface SaleNotePlan {
+export interface SaleNotePlan extends TestClient {
   readonly reference: string;
-  readonly clientName: string;
-  readonly clientAddress: AddressInput;
   readonly note: SaleNoteBody;
 }
 
@@ -54,12 +51,12 @@ export function plannedDeliveryDate(plannedDate: string | null, today: string): 
   return plannedDate !== null && ISO_DATE.test(plannedDate) && plannedDate >= today ? plannedDate : today;
 }
 
-export function planTestSaleNote(input: InvoiceInput, plannedDate: string | null, now: Date): Result<SaleNotePlan, Error> {
+/** `forPro` : commande d'un pro, son bon va au client pro fictif (toujours le même). */
+export function planTestSaleNote(input: InvoiceInput, plannedDate: string | null, now: Date, forPro: boolean): Result<SaleNotePlan, Error> {
   const stamp = saleStamp(now);
   const today = todayInZurich(now);
   const reference = testReference(SALE_NOTE_TEST_PREFIX, input, stamp);
   const note = saleNoteBody(input, { reference, orderName: orderNameOf(input), noteDate: today, deliveryDate: plannedDeliveryDate(plannedDate, today) });
   if (!note.ok) return note;
-  const clientName = testClientName(input, stamp);
-  return success({ reference, clientName, clientAddress: testClientAddress(clientName, `essai-cmd-${stamp}@example.com`), note: note.value });
+  return success({ reference, ...testClientOf(input, forPro, stamp, "essai-cmd"), note: note.value });
 }

@@ -6,6 +6,7 @@ import type { ShopSettingsValues } from "../reglages/schema";
 import { InvoiceError } from "./errors";
 import type { InvoiceContactOrder } from "./order-query";
 import { plainInvoiceProblems } from "./plain-problems";
+import { hasProTag } from "./pro-tag";
 
 /**
  * Ce qui décide qu'une commande passe par AbaNinja, et ses lignes (mêmes prix, même TVA, même total que
@@ -22,6 +23,11 @@ export function isTestOrder(orderTags: readonly string[], customerTags: readonly
 
 export function goesToAbaNinja(source: { readonly contact: Pick<InvoiceContactOrder, "tags" | "customer"> }): boolean {
   return isTestOrder(source.contact.tags, source.contact.customer?.tags);
+}
+
+/** Commande fictive d'un pro (client marqué « pro ») : ses bons et factures vont au client pro fictif d'AbaNinja. */
+export function isProTestBuyer(source: { readonly contact: Pick<InvoiceContactOrder, "customer"> }): boolean {
+  return hasProTag(source.contact.customer?.tags ?? []);
 }
 
 export function abaNinjaLinesOf(

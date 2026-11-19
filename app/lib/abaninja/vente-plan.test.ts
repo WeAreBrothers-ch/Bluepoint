@@ -10,14 +10,14 @@ function order(changes: Partial<InvoiceInputRaw> = {}): InvoiceInput {
   return validateInvoiceInput({ ...FACTURE_EXEMPLE, ...changes });
 }
 
-function planOf(input: InvoiceInput) {
-  const result = planTestSaleInvoice(input, NOW);
+function planOf(input: InvoiceInput, forPro = false) {
+  const result = planTestSaleInvoice(input, NOW, forPro);
   if (!result.ok) throw result.error;
   return result.value;
 }
 
 function refusalOf(input: InvoiceInput): string {
-  const result = planTestSaleInvoice(input, NOW);
+  const result = planTestSaleInvoice(input, NOW, false);
   if (result.ok) throw new Error("La commande aurait dû être refusée.");
   return result.error.message;
 }
@@ -49,6 +49,14 @@ describe("facture AbaNinja d'une commande fictive livrée", () => {
     expect(plan.invoice.reference).toBe(plan.reference);
     expect(plan.clientName).toBe("Restaurant Le Pressoir · essai BluePoint 20261119-110530 (à supprimer)");
     expect(plan.clientAddress).toMatchObject({ kind: "company", name: plan.clientName, email: "essai-fact-20261119-110530@example.com" });
+    expect(plan.sharedClient).toBe(false);
+  });
+
+  it("commande fictive d'un pro : la facture va au client pro fictif, le même que celui des bons", () => {
+    const plan = planOf(order(), true);
+    expect(plan.sharedClient).toBe(true);
+    expect(plan.clientName).toBe("Client pro fictif · essai BluePoint");
+    expect(plan.clientAddress).toMatchObject({ kind: "company", name: plan.clientName, email: "client-pro-fictif@example.com" });
   });
 
   it("produit une facture que la validation AbaNinja accepte", () => {

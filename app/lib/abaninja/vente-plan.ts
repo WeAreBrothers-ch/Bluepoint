@@ -1,8 +1,7 @@
 import type { InvoiceInput } from "@bluepoint/facture-qr";
 import { success, type Result } from "../core/result";
-import type { AddressInput } from "./address-input";
 import type { AbaNinjaInvoiceInput } from "./invoice-input";
-import { orderNameOf, salePositions, saleStamp, swissDate, testClientAddress, testClientName, testReference } from "./vente-positions";
+import { orderNameOf, salePositions, saleStamp, swissDate, testClientOf, testReference, type TestClient } from "./vente-positions";
 
 /**
  * Facture AbaNinja d'une commande fictive livrée (« J'ai livré ») : prépare, sans rien envoyer, le client
@@ -15,10 +14,8 @@ export const SALE_TEST_PREFIX = "BP-ESSAI-FACT-";
 
 export type SaleInvoiceBody = Omit<AbaNinjaInvoiceInput, "receiver" | "bankAccountUuid">;
 
-export interface SaleInvoicePlan {
+export interface SaleInvoicePlan extends TestClient {
   readonly reference: string;
-  readonly clientName: string;
-  readonly clientAddress: AddressInput;
   /** La facture, sans destinataire ni compte bancaire (connus une fois le client créé dans AbaNinja). */
   readonly invoice: SaleInvoiceBody;
 }
@@ -43,16 +40,11 @@ export function saleInvoiceBody(
   });
 }
 
-export function planTestSaleInvoice(input: InvoiceInput, now: Date): Result<SaleInvoicePlan, Error> {
+/** `forPro` : commande d'un pro, sa facture va au client pro fictif (le même que celui des bons). */
+export function planTestSaleInvoice(input: InvoiceInput, now: Date, forPro: boolean): Result<SaleInvoicePlan, Error> {
   const stamp = saleStamp(now);
   const reference = testReference(SALE_TEST_PREFIX, input, stamp);
   const invoice = saleInvoiceBody(input, { reference, orderName: orderNameOf(input), deliveryDate: input.deliveryDate });
   if (!invoice.ok) return invoice;
-  const clientName = testClientName(input, stamp);
-  return success({
-    reference,
-    clientName,
-    clientAddress: testClientAddress(clientName, `essai-fact-${stamp}@example.com`),
-    invoice: invoice.value,
-  });
+  return success({ reference, ...testClientOf(input, forPro, stamp, "essai-fact"), invoice: invoice.value });
 }

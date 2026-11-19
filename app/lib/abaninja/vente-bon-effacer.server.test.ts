@@ -34,7 +34,7 @@ beforeEach(() => {
 
 describe("effacer les essais faits par les commandes fictives (bon, facture, client)", () => {
   it("efface la facture brouillon, le bon, le client d'essai, puis la copie et la ligne de l'app", async () => {
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("effacee");
     expect(api.deleteInvoice).toHaveBeenCalledWith(expect.anything(), INVOICE);
     expect(api.deleteDeliveryNote).toHaveBeenCalledWith(expect.anything(), NOTE);
@@ -46,7 +46,7 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
 
   it("facture déjà envoyée : rien n'est effacé dans AbaNinja, Eliott l'annule à la main", async () => {
     api.getInvoice.mockResolvedValue(invoice("sent"));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome).toMatchObject({ kind: "a_la_main" });
     expect(outcome?.text).toContain("Annulez-la dans AbaNinja");
     expect(api.deleteInvoice).not.toHaveBeenCalled();
@@ -56,7 +56,7 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
 
   it("AbaNinja ne répond pas : tout est gardé pour réessayer", async () => {
     api.getInvoice.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("gardee");
     expect(api.deleteDeliveryNote).not.toHaveBeenCalled();
     expect(tx.abaNinjaSale.deleteMany).not.toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
 
   it("facture à une autre référence que l'essai : l'app n'y touche pas, Eliott la vérifie (numéro et référence attendue)", async () => {
     api.getInvoice.mockResolvedValue(invoice("draft", "BP-1035"));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("a_la_main");
     expect(outcome?.text).toContain("R02292");
     expect(outcome?.text).toContain(REF);
@@ -76,14 +76,14 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
   it("bon à une autre référence que l'essai : l'app n'y touche pas, Eliott le vérifie", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "cree", ...NO_INVOICE })]));
     api.getDeliveryNote.mockResolvedValue(success({ uuid: NOTE, status: "draft", reference: "BL-1035", number: "L00042", companyUuid: COMPANY }));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome).toMatchObject({ kind: "a_la_main", text: expect.stringContaining(REF) });
     expect(api.deleteDeliveryNote).not.toHaveBeenCalled();
   });
 
   it("facture payée : Eliott supprime d'abord le paiement dans AbaNinja, puis annule la facture", async () => {
     api.getInvoice.mockResolvedValue(invoice("paid"));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("a_la_main");
     expect(outcome?.text).toContain("Supprimez d’abord son paiement dans AbaNinja, puis annulez la facture.");
     expect(api.deleteInvoice).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
   it("bon sans facture : efface le bon et le client d'essai", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "cree", invoiceState: null, invoiceUuid: null, invoiceNumber: null })]));
     api.getDeliveryNote.mockResolvedValue(success({ uuid: NOTE, status: "draft", reference: REF, number: "L00042", companyUuid: COMPANY }));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("effacee");
     expect(api.getInvoice).not.toHaveBeenCalled();
     expect(api.deleteDeliveryNote).toHaveBeenCalled();
@@ -101,7 +101,7 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
 
   it("bon refusé : rien n'avait été créé, l'app oublie la ligne", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "refuse", noteUuid: null, companyUuid: null, invoiceState: null, invoiceUuid: null })]));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome).toEqual({ kind: "effacee", text: "#1035 : rien n’avait été créé dans AbaNinja." });
     expect(api.deleteCompany).not.toHaveBeenCalled();
     expect(api.deleteDeliveryNote).not.toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
 
   it("bon refusé qui a laissé son client d'essai : le client est effacé", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "refuse", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
     expect(outcome).toEqual({ kind: "effacee", text: "#1035 : client d’essai effacé." });
     expect(tx.abaNinjaSale.deleteMany).toHaveBeenCalled();
@@ -119,14 +119,14 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
   it("client d'essai encore utilisé dans AbaNinja (409) : à faire à la main", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "refuse", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
     api.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 409 })));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("a_la_main");
     expect(outcome?.text).not.toContain("rien n’avait été créé");
   });
 
   it("bon non confirmé : le client noté est effacé, Eliott cherche le bon à la main", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "incertain", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
     expect(outcome?.kind).toBe("a_la_main");
     expect(outcome?.text).toContain(REF);
@@ -136,14 +136,14 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
   it("bon non confirmé dont le client sert encore (409) : bon puis client à supprimer à la main", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "incertain", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
     api.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 409 })));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("a_la_main");
     expect(outcome?.text).toContain("sert encore");
   });
 
   it("bon dont la suppression est refusée : l'app oublie, Eliott le supprime à la main", async () => {
     api.deleteDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
-    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome?.kind).toBe("a_la_main");
     expect(outcome?.text).toContain(REF);
   });

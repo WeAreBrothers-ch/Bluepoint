@@ -11,8 +11,9 @@ import type { AbaNinjaInvoiceInput } from "./invoice-input";
 import { createInvoice } from "./invoices.server";
 import { downloadDraftInvoicePdf } from "./pdf-download.server";
 import type { InvoiceReceiver } from "./receiver";
+import { proTestClient, type ProClientError } from "./vente-client-pro.server";
 import { markCreated, markRefused, markUncertain } from "./repository.server";
-import { ERASE_HINT, SaleInvoiceError } from "./vente-errors";
+import { ERASE_HINT, SaleInvoiceError, SHARED_CLIENT_HINT } from "./vente-errors";
 import type { SaleInvoicePlan } from "./vente-plan";
 import { claimSaleInvoice } from "./vente-verrou.server";
 
@@ -27,6 +28,8 @@ export interface SaleInvoiceRequest {
   readonly orderId: string;
   readonly orderName: string;
   readonly plan: SaleInvoicePlan;
+  /** Heure de la demande : dit si la création du client pro fictif par un autre appelant est restée en plan. */
+  readonly now: Date;
 }
 
 export interface SaleInvoiceDocument {
@@ -38,18 +41,19 @@ export interface SaleInvoiceDocument {
 }
 
 type Outcome = Result<SaleInvoiceDocument, SaleInvoiceError>;
+type Refusal = Result<never, SaleInvoiceError>;
 
 async function settle(task: Promise<Result<unknown, Error>>, what: string, orderId: string): Promise<void> {
   const result = await task;
   if (!result.ok) logError(`Facture AbaNinja : ${what}`, result.error, { orderId });
 }
 
-async function refuse(orderId: string, code: string, message: string, details: readonly string[]): Promise<Outcome> {
+async function refuse(orderId: string, code: string, message: string, details: readonly string[]): Promise<Refusal> {
   await settle(markRefused(orderId, code), "verrou non libéré", orderId);
   return failure(new SaleInvoiceError("refusee", message, details));
 }
 
-async function clientFailed(request: SaleInvoiceRequest, error: AbaNinjaError): Promise<Outcome> {
+async function clientFailed(request: SaleInvoiceRequest, error: AbaNinjaError): Promise<Refusal> {
   if (classifyCreateFailure(error) === "refusee") {
     return refuse(request.orderId, "adresse", "AbaNinja n’a pas créé le client d’essai.", [error.message]);
   }
@@ -73,6 +77,8 @@ async function invoiceFailed(config: AbaNinjaConfig, request: SaleInvoiceRequest
       ]),
     );
   }
+  // Le client pro fictif sert aux autres essais : il ne part qu'avec l'effacement des essais.
+  if (request.plan.sharedClient) return refuse(request.orderId, error.code, "AbaNinja a refusé la facture.", [error.message, SHARED_CLIENT_HINT]);
   const removed = "companyUuid" in receiver ? (await deleteCompany(config, receiver.companyUuid)).ok : false;
   const leftover = removed
     ? "Le client d’essai a été retiré d’AbaNinja : il ne reste rien."
@@ -99,14 +105,29 @@ async function fetchPdf(config: AbaNinjaConfig, uuid: string, label: string, inp
   return failure(new SaleInvoiceError("refusee", `La facture ${label} est faite dans AbaNinja, mais l’app n’a pas pu récupérer son PDF.`, [pdf.error.message, ERASE_HINT]));
 }
 
+function sharedClientFailed(request: SaleInvoiceRequest, error: ProClientError): Promise<Refusal> {
+  return refuse(request.orderId, error.code, "Le client pro fictif n’est pas prêt.", [error.message]);
+}
+
+/** Le client de la facture : le client pro fictif (créé une fois, puis repris), ou un client fait pour cette seule facture. */
+async function invoiceClient(config: AbaNinjaConfig, request: SaleInvoiceRequest, options: CallOptions): Promise<Result<InvoiceReceiver, SaleInvoiceError>> {
+  const { plan } = request;
+  if (plan.sharedClient) {
+    const shared = await proTestClient(config, request.shop, plan.clientAddress, request.now, options);
+    return shared.ok ? shared : sharedClientFailed(request, shared.error);
+  }
+  const receiver = await createAddress(config, plan.clientAddress, { ...options, force: true });
+  return receiver.ok ? receiver : clientFailed(request, receiver.error);
+}
+
 export async function createTestSaleInvoice(config: AbaNinjaConfig, request: SaleInvoiceRequest, options: CallOptions = {}): Promise<Outcome> {
   const { orderId, plan } = request;
   const claimed = await claimSaleInvoice({ shop: request.shop, orderId, orderName: request.orderName, reference: plan.reference, isTest: true });
   if (!claimed.ok) return claimed;
   const bank = await findQrBankAccount(config, options);
   if (!bank.ok) return refuse(orderId, "compte_bancaire", "AbaNinja n’a pas donné le compte bancaire de la QR-facture.", [bank.error.message]);
-  const receiver = await createAddress(config, plan.clientAddress, { ...options, force: true });
-  if (!receiver.ok) return clientFailed(request, receiver.error);
+  const receiver = await invoiceClient(config, request, options);
+  if (!receiver.ok) return receiver;
   const input: AbaNinjaInvoiceInput = { ...plan.invoice, receiver: receiver.value, bankAccountUuid: bank.value.uuid };
   const created = await createInvoice(config, input, options);
   if (!created.ok) return invoiceFailed(config, request, receiver.value, created.error);

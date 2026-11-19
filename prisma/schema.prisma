@@ -207,3 +207,19 @@ model AbaNinjaSale {
 
   @@index([shop, isTest])
 }
+
+// Le client pro fictif d'AbaNinja : un seul par boutique, repris par tous les bons et factures d'essai d'un pro.
+// La ligne est prise AVANT de créer le client : deux commandes fictives qui arrivent ensemble n'en créent qu'un.
+// Effacé par « Effacer les factures d'essai », une fois que plus aucune pièce ne s'en sert.
+// kind : pro ; state : en_cours (création réservée) | cree | incertain (création sans réponse claire, à vérifier)
+model AbaNinjaTestClient {
+  shop        String
+  kind        String
+  state       String   @default("en_cours")
+  addressUuid String?
+  companyUuid String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@id([shop, kind])
+}

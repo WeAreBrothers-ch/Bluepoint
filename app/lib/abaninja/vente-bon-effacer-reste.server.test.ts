@@ -32,7 +32,7 @@ const { eraseTestSaleNotes } = await import("./vente-bon-effacer.server");
 const NOTE_NAME = `le bon L00042 (référence ${REF})`;
 
 async function eraseOne() {
-  const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+  const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", null, NOW);
   return outcome;
 }
 

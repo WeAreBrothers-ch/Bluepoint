@@ -1,5 +1,6 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
+import { isProTestBuyer } from "../factures/abaninja-lines";
 import { findInvoiceByOrder } from "../factures/repository.server";
 import type { OrderForInvoice } from "../factures/shopify-order.server";
 import type { OrderGid } from "../shopify/ids";
@@ -10,8 +11,9 @@ import type { AbaNinjaError } from "./errors";
 import { deleteCompany } from "./invoice-cleanup.server";
 import { classifyCreateFailure } from "./invoice-errors";
 import { NOTE_TOO_LATE, planTestSaleNote, tooLateForNote, type SaleNotePlan } from "./vente-bon-plan";
+import { proTestClient } from "./vente-client-pro.server";
 import { loadSaleOrder, saleInputOf } from "./vente-bon-source.server";
-import { NOTE_ERASE_HINT, unsavedChange } from "./vente-errors";
+import { NOTE_ERASE_HINT, SHARED_CLIENT_HINT, unsavedChange } from "./vente-errors";
 import { claimSale, findSale, markNote, releaseRefusedSale, type LeftClient, type NoteUpdate } from "./vente-repository.server";
 
 /**
@@ -27,6 +29,9 @@ export type SaleNoteOutcome =
   | { readonly kind: "refuse" | "incertain"; readonly message: string };
 
 type Receiver = Required<LeftClient>;
+
+/** Le client du bon, ou la réponse quand il n'a pas pu être obtenu (la ligne est alors déjà marquée refusée). */
+type ClientStep = { readonly ok: true; readonly client: Receiver } | { readonly ok: false; readonly outcome: SaleNoteOutcome };
 
 const CHECK_HINT = "Regardez dans AbaNinja, menu « Bulletins de livraison », avant de recommencer.";
 
@@ -55,25 +60,41 @@ async function uncertain(orderId: OrderGid, errorCode: string, reference: string
 }
 
 async function noteRefused(config: AbaNinjaConfig, orderId: OrderGid, client: Receiver, plan: SaleNotePlan, error: AbaNinjaError): Promise<SaleNoteOutcome> {
-  const removed = await deleteCompany(config, client.companyUuid);
   const message = `AbaNinja a refusé le bon de livraison : ${error.message}`;
+  // Le client pro fictif sert aux autres essais : il ne part qu'avec l'effacement des essais.
+  if (plan.sharedClient) return refuse(orderId, error.code, `${message} ${SHARED_CLIENT_HINT}`);
+  const removed = await deleteCompany(config, client.companyUuid);
   if (removed.ok) return refuse(orderId, error.code, message);
   return refuse(orderId, error.code, `${message} Le client d’essai « ${plan.clientName} » reste dans AbaNinja. ${NOTE_ERASE_HINT}`, client);
 }
 
-/** Le client d'essai puis le bon, en brouillon. Rien n'est envoyé à personne. */
-async function makeNote(config: AbaNinjaConfig, orderId: OrderGid, plan: SaleNotePlan): Promise<SaleNoteOutcome> {
+/** Un client d'essai fait pour ce seul bon (commande fictive d'un particulier). */
+async function ownClient(config: AbaNinjaConfig, orderId: OrderGid, plan: SaleNotePlan): Promise<ClientStep> {
   const receiver = await createAddress(config, plan.clientAddress, { force: true });
   if (!receiver.ok) {
     const hint = `Si un client « ${plan.clientName} » apparaît quand même dans AbaNinja, supprimez-le.`;
-    return refuse(orderId, receiver.error.code, `AbaNinja n’a pas créé le client d’essai : ${receiver.error.message} ${hint}`);
+    return { ok: false, outcome: await refuse(orderId, receiver.error.code, `AbaNinja n’a pas créé le client d’essai : ${receiver.error.message} ${hint}`) };
   }
   if (!("companyUuid" in receiver.value)) {
     // L'app ne sait pas supprimer une personne dans AbaNinja : elle la nomme, sinon chaque essai en ajouterait une.
     const person = `AbaNinja a créé une personne « ${plan.clientName} » au lieu d’une entreprise : le bon n’est pas fait.`;
-    return refuse(orderId, "client_personne", `${person} Supprimez-la dans AbaNinja avant de réessayer.`);
+    return { ok: false, outcome: await refuse(orderId, "client_personne", `${person} Supprimez-la dans AbaNinja avant de réessayer.`) };
   }
-  const client = { addressUuid: receiver.value.addressUuid, companyUuid: receiver.value.companyUuid };
+  return { ok: true, client: { addressUuid: receiver.value.addressUuid, companyUuid: receiver.value.companyUuid } };
+}
+
+/** Le client du bon : le client pro fictif (créé une fois, puis repris), ou un client fait pour ce seul bon. */
+async function noteClient(config: AbaNinjaConfig, shop: string, orderId: OrderGid, plan: SaleNotePlan, now: Date): Promise<ClientStep> {
+  if (!plan.sharedClient) return ownClient(config, orderId, plan);
+  const shared = await proTestClient(config, shop, plan.clientAddress, now);
+  return shared.ok ? { ok: true, client: shared.value } : { ok: false, outcome: await refuse(orderId, shared.error.code, shared.error.message) };
+}
+
+/** Le client d'essai puis le bon, en brouillon. Rien n'est envoyé à personne. */
+async function makeNote(config: AbaNinjaConfig, shop: string, orderId: OrderGid, plan: SaleNotePlan, now: Date): Promise<SaleNoteOutcome> {
+  const step = await noteClient(config, shop, orderId, plan, now);
+  if (!step.ok) return step.outcome;
+  const { client } = step;
   const created = await createDeliveryNote(config, { ...plan.note, receiver: client });
   if (!created.ok) {
     if (classifyCreateFailure(created.error) === "refusee") return noteRefused(config, orderId, client, plan, created.error);
@@ -140,12 +161,12 @@ export async function createSaleNoteForOrder(
   if (!config.ok) return refused(config.error.message);
   const input = await saleInputOf(shop, order.value, now);
   if (!input.ok) return refused(input.error.message);
-  const plan = planTestSaleNote(input.value, order.value.plannedDate, now);
+  const plan = planTestSaleNote(input.value, order.value.plannedDate, now, isProTestBuyer(order.value.source));
   if (!plan.ok) return refused(`${plan.error.message} Le bon de livraison n’est pas fait.`);
   const orderName = order.value.source.order.name;
   const claim = await claimSale({ shop, orderId, orderName, reference: plan.value.reference, isTest: true });
   if (!claim.ok) throw claim.error;
   if (!claim.value.claimed) return { kind: "deja_fait" };
   logInfo("Bon de livraison AbaNinja : création", { orderId, reference: plan.value.reference });
-  return makeNote(config.value, orderId, plan.value);
+  return makeNote(config.value, shop, orderId, plan.value, now);
 }

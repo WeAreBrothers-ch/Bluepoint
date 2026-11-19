@@ -1,13 +1,12 @@
 import { parseIsoDate, type IsoDate } from "../metafields/definitions";
 import { isTestOrder } from "./abaninja-lines";
+import { hasProTag } from "./pro-tag";
 
 /**
  * Commande d'un professionnel et état de son paiement, tels que Shopify les décrit.
  * Un pro est un client marqué « pro » (c'est aussi ce qui donne droit aux prix pro)
  * ou un acheteur rattaché à une entreprise Shopify (B2B).
  */
-
-export const PRO_TAG = "pro";
 
 const COMPANY_ENTITY = "PurchasingCompany";
 const PAID_STATUS = "PAID";
@@ -24,8 +23,7 @@ export interface ReceiptFacts {
 }
 
 export function isProOrder(facts: Pick<ReceiptFacts, "customerTags" | "purchasingEntityType">): boolean {
-  const tagged = facts.customerTags.some((tag) => tag.trim().toLowerCase() === PRO_TAG);
-  return tagged || facts.purchasingEntityType === COMPANY_ENTITY;
+  return hasProTag(facts.customerTags) || facts.purchasingEntityType === COMPANY_ENTITY;
 }
 
 export function isFullyPaid(facts: Pick<ReceiptFacts, "financialStatus">): boolean {

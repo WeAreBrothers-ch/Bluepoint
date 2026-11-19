@@ -69,7 +69,7 @@ beforeEach(() => {
 
 describe("effacer les factures d'essai de « J'ai livré »", () => {
   it("efface le brouillon, son client d'essai, puis la copie de l'app et la ligne", async () => {
-    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome).toMatchObject({ tone: "success", heading: "Factures d’essai effacées" });
     expect(api.deleteInvoice).toHaveBeenCalledWith(expect.anything(), INVOICE);
     expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
@@ -83,7 +83,7 @@ describe("effacer les factures d'essai de « J'ai livré »", () => {
 
   it("n'efface jamais une facture qui n'est plus un brouillon", async () => {
     api.getInvoice.mockResolvedValue(details("sent"));
-    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(api.deleteInvoice).not.toHaveBeenCalled();
     expect(api.deleteCompany).not.toHaveBeenCalled();
     expect(outcome.tone).toBe("warning");
@@ -92,7 +92,7 @@ describe("effacer les factures d'essai de « J'ai livré »", () => {
 
   it.each(["deleted", "archived"])("facture déjà supprimée à la main (%s) : retire le client d'essai et oublie l'essai", async (status) => {
     api.getInvoice.mockResolvedValue(details(status));
-    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(api.deleteInvoice).not.toHaveBeenCalled();
     expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
     expect(outcome).toMatchObject({ tone: "success", heading: "Factures d’essai effacées" });
@@ -102,21 +102,21 @@ describe("effacer les factures d'essai de « J'ai livré »", () => {
 
   it("ne touche à rien si la facture d'AbaNinja ne porte pas la référence de l'essai", async () => {
     api.getInvoice.mockResolvedValue(details("draft", "R-VRAIE-FACTURE"));
-    await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(api.deleteInvoice).not.toHaveBeenCalled();
     expect(tx.abaNinjaInvoice.deleteMany).not.toHaveBeenCalled();
   });
 
   it("garde l'essai quand AbaNinja ne répond pas, pour réessayer plus tard", async () => {
     api.getInvoice.mockResolvedValue(failure(new AbaNinjaError("indisponible")));
-    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome.heading).toBe("Une partie n’a pas pu être effacée");
     expect(tx.abaNinjaInvoice.deleteMany).not.toHaveBeenCalled();
   });
 
   it("oublie une tentative refusée sans appeler AbaNinja", async () => {
     api.findTestSaleRows.mockResolvedValue([row({ state: "refusee", invoiceUuid: null, systemInvoiceNumber: null })]);
-    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome.tone).toBe("success");
     expect(api.getInvoice).not.toHaveBeenCalled();
     expect(tx.abaNinjaInvoice.deleteMany).toHaveBeenCalled();
@@ -124,15 +124,37 @@ describe("effacer les factures d'essai de « J'ai livré »", () => {
 
   it("laisse tranquille une facture encore en train d'être faite", async () => {
     api.findTestSaleRows.mockResolvedValue([row({ state: "en_cours", invoiceUuid: null, systemInvoiceNumber: null, updatedAt: new Date(NOW.getTime() - 30_000) })]);
-    await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(tx.abaNinjaInvoice.deleteMany).not.toHaveBeenCalled();
   });
 
   it("une tentative incertaine : l'app l'oublie et dit quoi chercher dans AbaNinja", async () => {
     api.findTestSaleRows.mockResolvedValue([row({ state: "incertaine", invoiceUuid: null, systemInvoiceNumber: null })]);
-    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", NOW);
+    const outcome = await eraseTestSales(testConfig(), "test.myshopify.com", null, NOW);
     expect(outcome.details.join(" ")).toContain(REFERENCE);
     expect(outcome.details.join(" ")).toContain("essai BluePoint 20261119-110530");
     expect(tx.abaNinjaInvoice.deleteMany).toHaveBeenCalled();
+  });
+});
+
+describe("facture d'essai faite au client pro fictif", () => {
+  it("la facture part, le client pro fictif reste pour la fin", async () => {
+    const [outcome] = await eraseTestInvoices(testConfig(), "test.myshopify.com", COMPANY, NOW);
+    expect(outcome).toEqual({ kind: "effacee", text: "#1036 : facture R02291 effacée." });
+    expect(api.deleteCompany).not.toHaveBeenCalled();
+  });
+
+  it("client de la facture inconnu : le texte dit de ne pas toucher au client pro fictif", async () => {
+    api.findTestSaleRows.mockResolvedValue([row({ state: "incertaine", invoiceUuid: null, systemInvoiceNumber: null })]);
+    const [outcome] = await eraseTestInvoices(testConfig(), "test.myshopify.com", COMPANY, NOW);
+    expect(outcome?.text).toContain("Ne supprimez pas le « Client pro fictif » : l’app s’en charge.");
+    const [alone] = await eraseTestInvoices(testConfig(), "test.myshopify.com", null, NOW);
+    expect(alone?.text).not.toContain("Client pro fictif");
+  });
+
+  it("facture déjà annulée ou supprimée à la main : rien d'autre à faire, le client pro fictif reste", async () => {
+    api.getInvoice.mockResolvedValue(details("cancelled"));
+    expect(await eraseTestInvoices(testConfig(), "test.myshopify.com", COMPANY, NOW)).toEqual([{ kind: "effacee", text: "#1036 : facture R02291 déjà annulée." }]);
+    expect(api.deleteCompany).not.toHaveBeenCalled();
   });
 });

@@ -40,7 +40,7 @@ const INVOICE = "44444444-4444-4444-8444-444444444444";
 const PDF = new Uint8Array([37, 80, 68, 70, 45]);
 
 const plan = (() => {
-  const result = planTestSaleInvoice(validateInvoiceInput(FACTURE_EXEMPLE), new Date("2026-11-19T11:05:30Z"));
+  const result = planTestSaleInvoice(validateInvoiceInput(FACTURE_EXEMPLE), new Date("2026-11-19T11:05:30Z"), false);
   if (!result.ok) throw result.error;
   return result.value;
 })();
@@ -50,7 +50,7 @@ function row(state: string) {
 }
 
 function run() {
-  return createTestSaleInvoice(testConfig(), { shop: "test.myshopify.com", orderId: ORDER_ID, orderName: "#1042", plan });
+  return createTestSaleInvoice(testConfig(), { shop: "test.myshopify.com", orderId: ORDER_ID, orderName: "#1042", plan, now: new Date("2026-11-19T11:05:30Z") });
 }
 
 beforeEach(() => {

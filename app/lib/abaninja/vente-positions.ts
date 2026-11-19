@@ -40,6 +40,27 @@ export function testClientName(input: InvoiceInput, stamp: string): string {
   return `${(input.buyer.company ?? input.buyer.name).slice(0, 80)} · essai BluePoint ${stamp} (à supprimer)`;
 }
 
+/**
+ * Le client pro fictif : un seul dans AbaNinja, repris par tous les bons et factures d'essai d'un pro. Son nom
+ * n'invite pas à le supprimer à la main : « Effacer les factures d'essai » s'en charge, une fois tout le reste effacé.
+ */
+export const PRO_TEST_CLIENT_NAME = "Client pro fictif · essai BluePoint";
+
+/** Client d'essai d'une pièce : le client pro fictif, partagé, ou un client fait pour cette seule commande. */
+export interface TestClient {
+  readonly clientName: string;
+  readonly clientAddress: AddressInput;
+  /** Vrai pour le client pro fictif : il n'est jamais effacé avec une seule pièce, seulement par l'effacement des essais. */
+  readonly sharedClient: boolean;
+}
+
+/** Client d'essai d'une commande fictive : le client pro fictif pour un pro, sinon un client unique à cette pièce. */
+export function testClientOf(input: InvoiceInput, forPro: boolean, stamp: string, emailPrefix: string): TestClient {
+  if (forPro) return { clientName: PRO_TEST_CLIENT_NAME, clientAddress: testClientAddress(PRO_TEST_CLIENT_NAME, "client-pro-fictif@example.com"), sharedClient: true };
+  const clientName = testClientName(input, stamp);
+  return { clientName, clientAddress: testClientAddress(clientName, `${emailPrefix}-${stamp}@example.com`), sharedClient: false };
+}
+
 /** Client d'essai fictif, à supprimer avec l'essai. */
 export function testClientAddress(clientName: string, email: string): AddressInput {
   return {

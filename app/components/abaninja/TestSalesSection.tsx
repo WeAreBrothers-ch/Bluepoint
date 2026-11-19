@@ -8,7 +8,7 @@ import { FILL } from "../fill";
 const COPY = {
   heading: frenchTypography("Essais faits par les commandes fictives"),
   intro: frenchTypography(
-    "Une commande étiquetée « fictif » fait son bon de livraison dans AbaNinja dès qu’elle arrive, avec un client d’essai. « J’ai livré la commande » transforme ce bon en facture (le bon passe réglé), que vous envoyez depuis l’app avec les boutons habituels. Les vraies commandes ne changent pas. Après vos essais, effacez tout ici : factures en brouillon, bons et clients d’essai.",
+    "Une commande étiquetée « fictif » fait son bon de livraison dans AbaNinja dès qu’elle arrive. Pour un client pro, tous les essais vont au même « Client pro fictif » ; pour un particulier, chaque essai a son client d’essai. « J’ai livré la commande » transforme ce bon en facture (le bon passe réglé), que vous envoyez depuis l’app avec les boutons habituels. Les vraies commandes ne changent pas. Après vos essais, effacez tout ici : factures en brouillon, bons et clients d’essai.",
   ),
   none: frenchTypography("Aucun essai pour l’instant."),
   unavailable: frenchTypography("La liste n’a pas pu être lue. Rechargez la page dans un instant."),

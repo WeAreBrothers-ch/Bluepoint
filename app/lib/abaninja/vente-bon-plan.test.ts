@@ -11,14 +11,14 @@ function order(changes: Partial<InvoiceInputRaw> = {}): InvoiceInput {
   return validateInvoiceInput({ ...FACTURE_EXEMPLE, ...changes });
 }
 
-function planOf(input: InvoiceInput, plannedDate: string | null = null) {
-  const result = planTestSaleNote(input, plannedDate, NOW);
+function planOf(input: InvoiceInput, plannedDate: string | null = null, forPro = false, now = NOW) {
+  const result = planTestSaleNote(input, plannedDate, now, forPro);
   if (!result.ok) throw result.error;
   return result.value;
 }
 
 function refusalOf(input: InvoiceInput): string {
-  const result = planTestSaleNote(input, null, NOW);
+  const result = planTestSaleNote(input, null, NOW, false);
   if (result.ok) throw new Error("La commande aurait dû être refusée.");
   return result.error.message;
 }
@@ -42,6 +42,17 @@ describe("bon de livraison AbaNinja d'une commande fictive", () => {
     expect(plan.note.title).toBe("Bon de livraison #1042 (essai)");
     expect(plan.clientName).toBe("Restaurant Le Pressoir · essai BluePoint 20261119-110530 (à supprimer)");
     expect(plan.clientAddress).toMatchObject({ kind: "company", name: plan.clientName, email: "essai-cmd-20261119-110530@example.com" });
+    expect(plan.sharedClient).toBe(false);
+  });
+
+  it("commande fictive d'un pro : toujours le même client pro fictif, d'une commande à l'autre", () => {
+    const first = planOf(order(), null, true);
+    const later = planOf(order(), null, true, new Date("2026-11-20T08:00:00Z"));
+    expect(first.sharedClient).toBe(true);
+    expect(first.clientName).toBe("Client pro fictif · essai BluePoint");
+    expect(first.clientAddress).toMatchObject({ kind: "company", name: first.clientName, email: "client-pro-fictif@example.com" });
+    expect(later.clientAddress).toEqual(first.clientAddress);
+    expect(later.reference).not.toBe(first.reference);
   });
 
   it("date le bon du jour ; livraison prévue au jour choisi, jamais dans le passé", () => {

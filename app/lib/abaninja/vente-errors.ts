@@ -16,6 +16,10 @@ export const SALE_ERASE_HINT =
 export const NOTE_ERASE_HINT =
   "Pour recommencer : page « Connexion AbaNinja », bouton « Effacer les factures d’essai » (il efface aussi les bons), puis « Créer le bon de livraison » sur la commande.";
 
+/** Pièce d'un pro refusée : le client pro fictif gardé par l'app a peut-être été supprimé à la main dans AbaNinja. */
+export const SHARED_CLIENT_HINT =
+  "Si le « Client pro fictif » a été supprimé dans AbaNinja, touchez « Effacer les factures d’essai » sur la page « Connexion AbaNinja » (tous les essais partent avec) : l’app l’oubliera et en refera un au prochain essai.";
+
 /** Une facture née du bon existe déjà : « Faire la facture » la reprend sans en refaire une. */
 export const RETRY_HINT = "Touchez « Faire la facture » pour réessayer : la facture déjà faite sera reprise, jamais refaite.";
 
