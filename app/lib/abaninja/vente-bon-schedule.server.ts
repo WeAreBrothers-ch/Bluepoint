@@ -2,20 +2,30 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { waitUntil } from "@vercel/functions";
 import { logError, logInfo } from "../core/logger.server";
 import type { OrderGid } from "../shopify/ids";
-import { createSaleNoteForOrder, type SaleNoteOutcome } from "./vente-bon.server";
+import { createSaleNoteForOrder } from "./vente-bon.server";
+import { cancelSaleNote } from "./vente-bon-suivi.server";
 
 /**
- * Le bon se fait APRÈS la réponse au webhook : Shopify attend une réponse rapide, AbaNinja peut prendre
- * plusieurs secondes. La plateforme garde la fonction en vie jusqu'à la fin ; une erreur est journalisée,
- * jamais relancée (la fiche commande propose alors « Créer le bon de livraison »).
+ * Le bon se fait (ou s'annule) APRÈS la réponse au webhook : Shopify attend une réponse rapide, AbaNinja
+ * peut prendre plusieurs secondes. La plateforme garde la fonction en vie jusqu'à la fin ; une erreur est
+ * journalisée, jamais relancée (la fiche commande dit alors où en est le bon).
  */
-export function scheduleSaleNote(admin: AdminApiContext, shop: string, orderId: OrderGid): void {
-  const work = createSaleNoteForOrder(admin, shop, orderId)
-    .then((outcome: SaleNoteOutcome) => {
-      logInfo("Bon de livraison AbaNinja à l’arrivée de la commande", { orderId, outcome: outcome.kind });
+
+function runAfterResponse(work: () => Promise<{ readonly kind: string }>, done: string, failed: string, orderId: OrderGid): void {
+  const task = work()
+    .then((outcome) => {
+      logInfo(done, { orderId, outcome: outcome.kind });
     })
     .catch((error: unknown) => {
-      logError("Bon de livraison AbaNinja non fait", error, { orderId });
+      logError(failed, error, { orderId });
     });
-  waitUntil(work);
+  waitUntil(task);
+}
+
+export function scheduleSaleNote(admin: AdminApiContext, shop: string, orderId: OrderGid): void {
+  runAfterResponse(() => createSaleNoteForOrder(admin, shop, orderId), "Bon de livraison AbaNinja à l’arrivée de la commande", "Bon de livraison AbaNinja non fait", orderId);
+}
+
+export function scheduleSaleNoteCancel(shop: string, orderId: OrderGid): void {
+  runAfterResponse(() => cancelSaleNote(shop, orderId), "Bon de livraison AbaNinja à l’annulation de la commande", "Bon de livraison AbaNinja non annulé", orderId);
 }

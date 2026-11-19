@@ -12,7 +12,7 @@ import type { SaleNoteActionResult } from "../lib/abaninja/vente-bon-view";
 import { handleAgendaAction } from "../lib/agenda/actions.server";
 import type { AgendaActionResult } from "../lib/agenda/action-result";
 import { isOrderChangeIntent, type OrderChangeResult } from "../lib/commandes/change";
-import { handleOrderChange } from "../lib/commandes/change.server";
+import { handleOrderChangeWithSale } from "../lib/commandes/change-followup.server";
 import { loadOrderPage, type OrderPageData } from "../lib/commandes/detail.server";
 import { backLink } from "../lib/navigation";
 
@@ -32,7 +32,7 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<AgendaAct
   const intent = form.get("intent");
   // « Créer le bon de livraison » (AbaNinja), « Modifier les vins » et « Annuler la commande » ; le reste vient des boutons de l'agenda.
   if (isSaleNoteIntent(intent)) return handleSaleNoteAction(admin, session.shop, form);
-  return isOrderChangeIntent(intent) ? handleOrderChange(admin, form) : handleAgendaAction(admin, session.shop, form);
+  return isOrderChangeIntent(intent) ? handleOrderChangeWithSale(admin, session.shop, form) : handleAgendaAction(admin, session.shop, form);
 };
 
 export default function CommandePage() {

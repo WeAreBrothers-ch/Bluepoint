@@ -55,6 +55,11 @@ export function readOrderPaid(payload: unknown): OrderGid | null {
   return gid === null ? null : parseGid(gid, "Order");
 }
 
+/** Commande annulée (webhook orders/cancelled) : même lecture que pour une commande payée. */
+export function readOrderCancelled(payload: unknown): OrderGid | null {
+  return readOrderPaid(payload);
+}
+
 export interface FulfillmentCreatedPayload {
   readonly fulfillmentId: ShopifyGid<"Fulfillment">;
   readonly orderId: OrderGid | null;
