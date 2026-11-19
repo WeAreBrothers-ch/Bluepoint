@@ -95,8 +95,28 @@ export function markInvoice(orderId: string, update: InvoiceUpdate): Promise<Res
   return guarded(() => updated(orderId, data));
 }
 
-export function markPayment(orderId: string, state: "inscrit" | "incertain"): Promise<Result<AbaNinjaSale, Error>> {
+/** Le paiement est dans AbaNinja (inscrit par l'app, ou trouvé déjà payé). */
+export function markPayment(orderId: string, state: "inscrit"): Promise<Result<AbaNinjaSale, Error>> {
   return guarded(() => updated(orderId, { paymentState: state }));
+}
+
+/**
+ * Réserve l'inscription du paiement AVANT de l'envoyer (il passe « à vérifier ») : si « J'ai livré » et le
+ * webhook de livraison arrivent ensemble, une seule exécution l'envoie. Faux : quelqu'un l'a déjà réservé.
+ */
+export function claimPayment(orderId: string): Promise<Result<boolean, Error>> {
+  return guarded(async () => {
+    const { count } = await prisma.abaNinjaSale.updateMany({ where: { orderId, paymentState: null }, data: { paymentState: "incertain" } });
+    return count === 1;
+  });
+}
+
+/** AbaNinja a refusé le paiement (rien n'est inscrit) : la réservation est rendue pour un nouvel essai. */
+export function releasePayment(orderId: string): Promise<Result<boolean, Error>> {
+  return guarded(async () => {
+    const { count } = await prisma.abaNinjaSale.updateMany({ where: { orderId, paymentState: "incertain" }, data: { paymentState: null } });
+    return count === 1;
+  });
 }
 
 /** Les essais de la boutique, plus récents d'abord (page « Connexion AbaNinja »). */

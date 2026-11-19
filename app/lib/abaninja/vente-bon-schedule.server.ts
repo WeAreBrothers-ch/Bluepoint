@@ -11,10 +11,16 @@ import { cancelSaleNote } from "./vente-bon-suivi.server";
  * journalisée, jamais relancée (la fiche commande dit alors où en est le bon).
  */
 
-function runAfterResponse(work: () => Promise<{ readonly kind: string }>, done: string, failed: string, orderId: OrderGid): void {
+interface Outcome {
+  readonly kind: string;
+  /** Raison d'un refus ou d'un doute, gardée dans le journal. */
+  readonly message?: string;
+}
+
+function runAfterResponse(work: () => Promise<Outcome>, done: string, failed: string, orderId: OrderGid): void {
   const task = work()
     .then((outcome) => {
-      logInfo(done, { orderId, outcome: outcome.kind });
+      logInfo(done, outcome.message === undefined ? { orderId, outcome: outcome.kind } : { orderId, outcome: outcome.kind, message: outcome.message });
     })
     .catch((error: unknown) => {
       logError(failed, error, { orderId });

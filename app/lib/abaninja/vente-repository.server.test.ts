@@ -27,7 +27,7 @@ beforeEach(() => {
   Object.assign(fakePrisma.abaNinjaSale, {
     create: vi.fn(async ({ data }: { data: Row }) => {
       if ([...rows.values()].some((row) => row.orderId === data.orderId || row.reference === data.reference)) throw uniqueError();
-      const row = { noteState: "en_cours", invoiceState: null, ...data };
+      const row = { noteState: "en_cours", invoiceState: null, paymentState: null, ...data };
       rows.set(data.orderId, row);
       return { ...row };
     }),
@@ -80,6 +80,15 @@ describe("une commande, une seule ligne de vente AbaNinja", () => {
       data: { invoiceState: "en_cours" },
     });
     expect(await repo.claimConversion(CLAIM.orderId)).toEqual({ ok: true, value: false });
+  });
+
+  it("le paiement ne se réserve qu'une fois, et se rend quand AbaNinja le refuse", async () => {
+    await repo.claimSale(CLAIM);
+    expect(await repo.claimPayment(CLAIM.orderId)).toEqual({ ok: true, value: true });
+    expect(fakePrisma.abaNinjaSale["updateMany"]).toHaveBeenLastCalledWith({ where: { orderId: CLAIM.orderId, paymentState: null }, data: { paymentState: "incertain" } });
+    expect(await repo.claimPayment(CLAIM.orderId)).toEqual({ ok: true, value: false });
+    expect(await repo.releasePayment(CLAIM.orderId)).toEqual({ ok: true, value: true });
+    expect(await repo.claimPayment(CLAIM.orderId)).toEqual({ ok: true, value: true });
   });
 
   it("une facture refusée (rien créé) libère la réservation pour réessayer", async () => {

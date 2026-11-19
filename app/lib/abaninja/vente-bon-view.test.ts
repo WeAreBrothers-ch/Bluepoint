@@ -42,7 +42,7 @@ describe("état du bon de livraison AbaNinja sur la fiche commande", () => {
   });
 
   it("propose de créer le bon d'une commande d'essai qui n'en a pas", () => {
-    expect(saleNoteView(null, true, NOW)).toEqual(view("Pas encore de bon de livraison dans AbaNinja.", "info", true));
+    expect(saleNoteView(null, true, NOW)).toEqual(view("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true));
   });
 
   it("dit que le bon est en cours pendant les deux premières minutes", () => {
@@ -56,7 +56,7 @@ describe("état du bon de livraison AbaNinja sur la fiche commande", () => {
   });
 
   it("propose de recommencer un bon refusé", () => {
-    expect(saleNoteView(sale({ noteState: "refuse" }), true, NOW)).toEqual(view("Le bon de livraison n’a pas pu être fait.", "critical", true));
+    expect(saleNoteView(sale({ noteState: "refuse" }), true, NOW)).toEqual(view("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true));
   });
 
   it("donne le numéro du bon fait, ou sa référence s'il n'a pas encore de numéro", () => {

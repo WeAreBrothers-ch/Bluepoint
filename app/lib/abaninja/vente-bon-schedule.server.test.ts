@@ -30,6 +30,13 @@ describe("bon de livraison fait après la réponse au webhook", () => {
     expect(deps.logInfo).toHaveBeenCalledWith("Bon de livraison AbaNinja à l’arrivée de la commande", { orderId: ORDER, outcome: "cree" });
   });
 
+  it("journalise la raison d'un bon refusé", async () => {
+    deps.createSaleNoteForOrder.mockResolvedValue({ kind: "refuse", message: "Rabais pas pris en charge." });
+    scheduleSaleNote({} as AdminApiContext, "test.myshopify.com", ORDER);
+    await scheduled();
+    expect(deps.logInfo).toHaveBeenCalledWith("Bon de livraison AbaNinja à l’arrivée de la commande", { orderId: ORDER, outcome: "refuse", message: "Rabais pas pris en charge." });
+  });
+
   it("journalise une exception sans jamais la relancer", async () => {
     deps.createSaleNoteForOrder.mockRejectedValue(new Error("panne"));
     scheduleSaleNote({} as AdminApiContext, "test.myshopify.com", ORDER);

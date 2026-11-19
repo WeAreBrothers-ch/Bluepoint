@@ -5,6 +5,7 @@ import { todayInZurich } from "../abaninja/invoice-status";
 import { plannedDeliveryDate, saleNoteBody } from "../abaninja/vente-bon-plan";
 import { convertSaleNote, resumeSaleInvoice, type SaleConversionRequest } from "../abaninja/vente-conversion.server";
 import { RETRY_HINT, SALE_ERASE_HINT } from "../abaninja/vente-errors";
+import { STALE_MS } from "../abaninja/vente-essai-resume";
 import { paymentTypeOf } from "../abaninja/vente-paiement";
 import { saleInvoiceBody } from "../abaninja/vente-plan";
 import { logInfo } from "../core/logger.server";
@@ -26,10 +27,13 @@ export interface SalePaid {
   readonly gateway: string;
 }
 
-/** Ce que l'état de la vente empêche, avec la marche à suivre ; null si la facture peut se faire (ou se reprendre). */
-function blockedBy(sale: AbaNinjaSale): InvoiceError | null {
+/**
+ * Ce que l'état de la vente empêche, avec la marche à suivre ; null si la facture peut se faire (ou se reprendre).
+ * « En cours » depuis plus de deux minutes : la fonction s'est arrêtée en route, la facture est peut-être faite.
+ */
+function blockedBy(sale: AbaNinjaSale, now: Date): InvoiceError | null {
   if (sale.invoiceState === "creee" && sale.invoiceUuid !== null) return null;
-  if (sale.invoiceState === "en_cours") {
+  if (sale.invoiceState === "en_cours" && now.getTime() - sale.updatedAt.getTime() < STALE_MS) {
     return new InvoiceError("abaninja_incertain", ["La facture de ce bon est déjà en train d’être faite. Attendez une minute, puis rechargez la page."]);
   }
   if (sale.invoiceState !== null) {
@@ -53,7 +57,7 @@ function requestOf(sale: AbaNinjaSale, lines: InvoiceInput, ctx: AbaNinjaSaleCon
 }
 
 export async function ensureAbaNinjaSaleInvoice(sale: AbaNinjaSale, ctx: AbaNinjaSaleContext, paid: SalePaid | null): Promise<Result<EnsuredInvoice, InvoiceError>> {
-  const blocked = blockedBy(sale);
+  const blocked = blockedBy(sale, ctx.now);
   if (blocked !== null) return failure(blocked);
   const config = readAbaNinjaConfig();
   if (!config.ok) return failure(new InvoiceError("abaninja_echec", [config.error.message]));

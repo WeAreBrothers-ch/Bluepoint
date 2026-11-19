@@ -9,6 +9,7 @@ import { toReceiptFacts, type ReceiptFacts, type ReceiptOrderData } from "./pro-
 const RECEIPT_QUERY = `#graphql
 query RecuPro($id: ID!) {
   order(id: $id) {
+    tags
     displayFinancialStatus
     customer { tags }
     purchasingEntity { __typename }

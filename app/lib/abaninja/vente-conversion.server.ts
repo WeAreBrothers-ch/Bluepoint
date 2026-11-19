@@ -63,7 +63,7 @@ export async function convertSaleNote(config: AbaNinjaConfig, request: SaleConve
   const converted = await convertDeliveryNoteToInvoice(config, noteUuid, options);
   if (!converted.ok) return conversionFailed(request, converted.error);
   const invoiceUuid = converted.value;
-  logInfo("Bon AbaNinja transformé en facture", { orderId, reference });
+  logInfo("Bon AbaNinja transformé en facture", { orderId, reference, invoiceUuid });
   const noted = await remember(markInvoice(orderId, { state: "creee", invoiceUuid, invoiceNumber: null }), "facture non notée", orderId);
   await remember(markNote(orderId, { state: "converti" }), "bon réglé non noté", orderId);
   if (!noted) {

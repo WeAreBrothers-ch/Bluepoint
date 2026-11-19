@@ -40,7 +40,7 @@ function converted(sale: AbaNinjaSale): SaleNoteView {
 }
 
 export function saleNoteView(sale: AbaNinjaSale | null, isTest: boolean, now: Date): SaleNoteView | null {
-  if (sale === null) return isTest ? shown("Pas encore de bon de livraison dans AbaNinja.", "info", true) : null;
+  if (sale === null) return isTest ? shown("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true) : null;
   switch (sale.noteState) {
     case "en_cours":
       return now.getTime() - sale.createdAt.getTime() < STUCK_AFTER_MS ? shown("Bon de livraison en cours dans AbaNinja…", "info") : toCheck(sale);
@@ -51,7 +51,7 @@ export function saleNoteView(sale: AbaNinjaSale | null, isTest: boolean, now: Da
     case "converti":
       return converted(sale);
     case "refuse":
-      return shown("Le bon de livraison n’a pas pu être fait.", "critical", true);
+      return shown("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true);
     case "annule":
       return shown("Bon de livraison annulé dans AbaNinja.", "info");
     default:

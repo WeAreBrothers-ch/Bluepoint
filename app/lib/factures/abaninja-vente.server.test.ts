@@ -111,8 +111,16 @@ describe("facture d'une commande d'essai née de son bon de livraison", () => {
   });
 
   it("attend quand la facture est déjà en train de se faire", async () => {
-    const result = await ensureAbaNinjaSaleInvoice({ ...SALE, invoiceState: "en_cours" }, CONTEXT, null);
-    expect(result).toMatchObject({ ok: false, error: { code: "abaninja_incertain" } });
+    const running = { ...SALE, invoiceState: "en_cours", updatedAt: new Date(CONTEXT.now.getTime() - 30_000) };
+    const result = await ensureAbaNinjaSaleInvoice(running, CONTEXT, null);
+    expect(result).toMatchObject({ ok: false, error: { code: "abaninja_incertain", details: [expect.stringContaining("Attendez une minute")] } });
+    expect(deps.convertSaleNote).not.toHaveBeenCalled();
+  });
+
+  it("« en cours » depuis plus de deux minutes : à vérifier dans AbaNinja, avec la référence", async () => {
+    const stuck = { ...SALE, invoiceState: "en_cours", updatedAt: new Date(CONTEXT.now.getTime() - 10 * 60_000) };
+    const result = await ensureAbaNinjaSaleInvoice(stuck, CONTEXT, null);
+    expect(result).toMatchObject({ ok: false, error: { code: "abaninja_incertain", details: [expect.stringContaining(REF), expect.stringContaining("Effacer les factures d’essai")] } });
     expect(deps.convertSaleNote).not.toHaveBeenCalled();
   });
 
