@@ -1,10 +1,12 @@
 import prisma from "../../db.server";
 import { logError } from "../core/logger.server";
 import type { AbaNinjaInvoice } from "./repository-types";
+import { saleSummaryLabel } from "./vente-essai-resume";
 import type { TestSaleSummary, TestSales } from "./vente-essai-types";
 import { SALE_TEST_PREFIX } from "./vente-plan";
+import { listTestSales } from "./vente-repository.server";
 
-/** Lignes du verrou qui appartiennent aux factures d'essai de « J'ai livré » (jamais les vraies, jamais l'essai à 1 CHF). */
+/** Lignes du verrou qui appartiennent aux essais (factures directes de « J'ai livré », bons des commandes fictives) ; jamais les vraies, jamais l'essai à 1 CHF. */
 
 const LIMIT = 50;
 
@@ -33,11 +35,22 @@ function summaryOf(row: AbaNinjaInvoice): TestSaleSummary {
   return { orderName: row.orderName, label };
 }
 
+interface Dated {
+  readonly createdAt: Date;
+  readonly summary: TestSaleSummary;
+}
+
 export async function loadTestSales(shop: string): Promise<TestSales> {
   try {
-    return { available: true, items: (await findTestSaleRows(shop)).map(summaryOf) };
+    const [invoices, notes] = await Promise.all([findTestSaleRows(shop), listTestSales(shop)]);
+    if (!notes.ok) throw notes.error;
+    const dated: Dated[] = [
+      ...invoices.map((row) => ({ createdAt: row.createdAt, summary: summaryOf(row) })),
+      ...notes.value.map((sale) => ({ createdAt: sale.createdAt, summary: { orderName: sale.orderName, label: saleSummaryLabel(sale) } })),
+    ];
+    return { available: true, items: dated.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).map((item) => item.summary) };
   } catch (error) {
-    logError("Factures d’essai AbaNinja illisibles", error, { shop });
+    logError("Essais AbaNinja illisibles", error, { shop });
     return { available: false, items: [] };
   }
 }

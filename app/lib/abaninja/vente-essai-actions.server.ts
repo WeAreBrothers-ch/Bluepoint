@@ -1,17 +1,19 @@
 import { logError } from "../core/logger.server";
 import { readAbaNinjaConfig } from "./config.server";
 import { frenchTypography } from "./trial-typography";
-import { eraseTestSales } from "./vente-essai-effacer.server";
+import { eraseTestSaleNotes } from "./vente-bon-effacer.server";
+import { eraseTestInvoices } from "./vente-essai-effacer.server";
+import { summarize } from "./vente-essai-resume";
 import type { TestSalesEraseOutcome } from "./vente-essai-types";
 
-/** Bouton « Effacer les factures d'essai » de la page Connexion AbaNinja. */
+/** Bouton « Effacer les factures d'essai » de la page Connexion AbaNinja : factures directes, puis bons et leurs factures. */
 
 export interface TestSalesActionOutcome {
   readonly result: TestSalesEraseOutcome;
   readonly status: number;
 }
 
-const UNEXPECTED = "Un problème inattendu a interrompu l’effacement. Regardez dans AbaNinja ce qui reste (référence BP-ESSAI-FACT-…) avant de réessayer.";
+const UNEXPECTED = "Un problème inattendu a interrompu l’effacement. Regardez dans AbaNinja ce qui reste (référence BP-ESSAI-FACT-… ou BP-ESSAI-CMD-…) avant de réessayer.";
 
 function typeset(outcome: TestSalesEraseOutcome): TestSalesEraseOutcome {
   return { ...outcome, heading: frenchTypography(outcome.heading), details: outcome.details.map(frenchTypography) };
@@ -25,7 +27,9 @@ export async function runEraseTestSales(shop: string, now: Date = new Date()): P
   const config = readAbaNinjaConfig();
   if (!config.ok) return stop(config.error.message, 409);
   try {
-    return { result: typeset(await eraseTestSales(config.value, shop, now)), status: 200 };
+    const invoices = await eraseTestInvoices(config.value, shop, now);
+    const notes = await eraseTestSaleNotes(config.value, shop, now);
+    return { result: typeset(summarize([...invoices, ...notes])), status: 200 };
   } catch (error) {
     logError("Factures d’essai AbaNinja : effacement interrompu", error, { shop });
     return stop(UNEXPECTED, 500);

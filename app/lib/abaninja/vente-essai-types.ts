@@ -1,8 +1,8 @@
-/** Factures d'essai faites par « J'ai livré » sur des commandes fictives : ce que la page Connexion AbaNinja montre. */
+/** Essais faits par les commandes fictives (bons, factures) : ce que la page Connexion AbaNinja montre. */
 
 export interface TestSaleSummary {
   readonly orderName: string;
-  /** « facture R02291, brouillon dans AbaNinja », « à vérifier dans AbaNinja »… */
+  /** « facture R02291, brouillon dans AbaNinja », « bon n° L00042 réglé · facture R02292 »… */
   readonly label: string;
 }
 

@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import prisma from "../../db.server";
 import { logError } from "../core/logger.server";
 import type { AbaNinjaConfig } from "./config.server";
@@ -6,18 +7,13 @@ import { interpretInvoiceStatus, isGoneDocument, todayInZurich } from "./invoice
 import { getInvoice } from "./invoices.server";
 import type { AbaNinjaInvoice } from "./repository-types";
 import { findTestSaleRows, saleLabel } from "./vente-essai-liste.server";
-import type { TestSalesEraseOutcome } from "./vente-essai-types";
+import { STALE_MS, type RowOutcome } from "./vente-essai-resume";
 
 /**
  * « Effacer les factures d'essai » : retire de AbaNinja chaque facture d'essai encore en brouillon et son
  * client d'essai, puis la copie gardée dans l'app. Ne touche jamais une facture dont la référence n'est pas
  * celle de l'essai, ni une facture qui n'est plus un brouillon.
  */
-
-/** effacee : plus rien nulle part ; a_la_main : l'app oublie l'essai, Eliott vérifie dans AbaNinja ; gardee : à refaire plus tard. */
-type RowOutcome = { readonly kind: "effacee" | "a_la_main" | "gardee"; readonly text: string };
-
-const STALE_MS = 2 * 60_000;
 
 function clientHint(row: AbaNinjaInvoice): string {
   return `le client « … essai BluePoint ${row.reference.slice(-15)} (à supprimer) »`;
@@ -65,15 +61,19 @@ async function eraseInAbaNinja(config: AbaNinjaConfig, row: AbaNinjaInvoice, now
   return removeClient(config, row, read.value.companyUuid, label);
 }
 
-/** Retire la copie de l'app (seulement si c'est bien celle de l'essai) et la ligne du verrou. */
+/** Retire la copie de l'app d'une facture d'essai et son PDF, seulement si son numéro est celui de l'essai. */
+export async function removeTestCopy(tx: Prisma.TransactionClient, row: { readonly shop: string; readonly orderId: string }, numbers: readonly (string | null)[]): Promise<void> {
+  const known = numbers.filter((number): number is string => number !== null && number !== "");
+  const copy = await tx.invoice.findFirst({ where: { shop: row.shop, orderId: row.orderId, number: { in: known } } });
+  if (copy === null) return;
+  await tx.invoice.delete({ where: { id: copy.id } });
+  await tx.storedFile.deleteMany({ where: { key: copy.pdfKey } });
+}
+
+/** Retire la copie de l'app et la ligne du verrou. */
 async function forget(row: AbaNinjaInvoice): Promise<void> {
-  const numbers = [row.systemInvoiceNumber ?? "", row.reference].filter((number) => number !== "");
   await prisma.$transaction(async (tx) => {
-    const copy = await tx.invoice.findFirst({ where: { shop: row.shop, orderId: row.orderId, number: { in: numbers } } });
-    if (copy !== null) {
-      await tx.invoice.delete({ where: { id: copy.id } });
-      await tx.storedFile.deleteMany({ where: { key: copy.pdfKey } });
-    }
+    await removeTestCopy(tx, row, [row.systemInvoiceNumber, row.reference]);
     await tx.abaNinjaInvoice.deleteMany({ where: { id: row.id } });
   });
 }
@@ -90,18 +90,11 @@ async function eraseRow(config: AbaNinjaConfig, row: AbaNinjaInvoice, now: Date)
   }
 }
 
-function summarize(outcomes: readonly RowOutcome[]): TestSalesEraseOutcome {
-  const details = outcomes.map((outcome) => outcome.text);
-  if (outcomes.every((outcome) => outcome.kind === "effacee")) return { tone: "success", heading: "Factures d’essai effacées", details };
-  if (outcomes.some((outcome) => outcome.kind === "gardee")) return { tone: "warning", heading: "Une partie n’a pas pu être effacée", details };
-  return { tone: "warning", heading: "Effacé, avec des choses à vérifier dans AbaNinja", details };
-}
-
-export async function eraseTestSales(config: AbaNinjaConfig, shop: string, now: Date = new Date()): Promise<TestSalesEraseOutcome> {
+/** Factures d'essai faites directement par « J'ai livré » (sans bon de livraison). */
+export async function eraseTestInvoices(config: AbaNinjaConfig, shop: string, now: Date = new Date()): Promise<RowOutcome[]> {
   const rows = await findTestSaleRows(shop);
-  if (rows.length === 0) return { tone: "success", heading: "Aucune facture d’essai à effacer", details: [] };
   const outcomes: RowOutcome[] = [];
   // Une par une : AbaNinja n'aime pas les rafales, et l'ordre du rapport suit la liste.
   for (const row of rows) outcomes.push(await eraseRow(config, row, now));
-  return summarize(outcomes);
+  return outcomes;
 }

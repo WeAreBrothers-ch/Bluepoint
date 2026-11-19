@@ -3,14 +3,14 @@ import { frenchTypography } from "../../lib/abaninja/trial-typography";
 import { ERASE_TEST_SALES_INTENT, type TestSales, type TestSalesEraseOutcome } from "../../lib/abaninja/vente-essai-types";
 import { FILL } from "../fill";
 
-/** Factures faites dans AbaNinja par « J'ai livré » sur des commandes fictives, et le bouton qui les efface. */
+/** Essais faits dans AbaNinja par les commandes fictives (bons, factures, clients d'essai), et le bouton qui les efface. */
 
 const COPY = {
-  heading: "Factures d’essai faites par « J’ai livré »",
+  heading: frenchTypography("Essais faits par les commandes fictives"),
   intro: frenchTypography(
-    "Sur une commande étiquetée « fictif » et pas encore payée, « J’ai livré la commande » fait la facture dans AbaNinja : un client d’essai et une facture en brouillon, que vous envoyez depuis l’app avec les boutons habituels. Les vraies commandes ne changent pas. Après vos essais, effacez tout ici.",
+    "Une commande étiquetée « fictif » fait son bon de livraison dans AbaNinja dès qu’elle arrive, avec un client d’essai. « J’ai livré la commande » transforme ce bon en facture (le bon passe réglé), que vous envoyez depuis l’app avec les boutons habituels. Les vraies commandes ne changent pas. Après vos essais, effacez tout ici : factures en brouillon, bons et clients d’essai.",
   ),
-  none: frenchTypography("Aucune facture d’essai pour l’instant."),
+  none: frenchTypography("Aucun essai pour l’instant."),
   unavailable: frenchTypography("La liste n’a pas pu être lue. Rechargez la page dans un instant."),
   erase: "Effacer les factures d’essai",
   busy: frenchTypography("Effacement en cours, ne quittez pas la page."),
@@ -22,7 +22,7 @@ function SalesList({ sales }: { readonly sales: TestSales }) {
   return (
     <s-unordered-list>
       {sales.items.map((item) => (
-        <s-list-item key={`${item.orderName}-${item.label}`}>{frenchTypography(`${item.orderName} : ${item.label}`)}</s-list-item>
+        <s-list-item key={`${item.orderName}-${item.label}`}>{frenchTypography(`${item.orderName} · ${item.label}`)}</s-list-item>
       ))}
     </s-unordered-list>
   );

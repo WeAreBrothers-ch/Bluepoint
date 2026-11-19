@@ -20,7 +20,12 @@ vi.mock("./vente-essai-liste.server", async (importOriginal) => ({
   findTestSaleRows: api.findTestSaleRows,
 }));
 
-const { eraseTestSales } = await import("./vente-essai-effacer.server");
+const { eraseTestInvoices } = await import("./vente-essai-effacer.server");
+const { summarize } = await import("./vente-essai-resume");
+
+async function eraseTestSales(...args: Parameters<typeof eraseTestInvoices>) {
+  return summarize(await eraseTestInvoices(...args));
+}
 
 const NOW = new Date("2026-11-19T12:00:00Z");
 const INVOICE = "44444444-4444-4444-8444-444444444444";
