@@ -13,23 +13,22 @@ query CommandePourFacture($id: ID!) {
         variantTitle
         vendor
         quantity
+        currentQuantity
         originalUnitPriceSet { shopMoney { amount currencyCode } }
         discountedTotalSet { shopMoney { amount currencyCode } }
       }
     }
-    shippingLine {
-      title
-      discountedPriceSet { shopMoney { amount currencyCode } }
-    }
-    taxLines {
+    shippingLine { title }
+    currentShippingPriceSet { shopMoney { amount currencyCode } }
+    currentTaxLines {
       title
       rate
       ratePercentage
       priceSet { shopMoney { amount currencyCode } }
     }
     taxesIncluded
-    subtotalPriceSet { shopMoney { amount currencyCode } }
-    totalPriceSet { shopMoney { amount currencyCode } }
+    currentSubtotalPriceSet { shopMoney { amount currencyCode } }
+    currentTotalPriceSet { shopMoney { amount currencyCode } }
     discountCodes
     discountApplications(first: 5) {
       nodes { ... on AutomaticDiscountApplication { title } }

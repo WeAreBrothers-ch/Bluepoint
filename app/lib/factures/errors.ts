@@ -4,6 +4,9 @@ export type InvoiceErrorCode =
   | "reglages_incomplets"
   | "commande_introuvable"
   | "commande_non_livree"
+  | "paiement_partiel"
+  | "paiement_a_encaisser"
+  | "commande_remboursee"
   | "donnees_invalides"
   | "shopify_indisponible"
   | "facture_introuvable"
@@ -17,6 +20,11 @@ const MESSAGES: Readonly<Record<InvoiceErrorCode, string>> = {
   reglages_incomplets: "La facture n’a pas été faite\u202F: il manque vos coordonnées ou votre compte bancaire.",
   commande_introuvable: "Cette commande n’existe plus (elle a peut-être été supprimée).",
   commande_non_livree: "Touchez d’abord « J’ai livré la commande »\u202F: la facture indique le jour de livraison.",
+  paiement_partiel:
+    "Pas de facture : la commande est déjà payée en partie dans Shopify, et la QR-facture demanderait tout le montant. Faites la facture du reste à la main pour l’instant.",
+  paiement_a_encaisser:
+    "Pas de facture : le paiement par carte est accepté mais pas encore encaissé. Encaissez-le dans Shopify, sur la fiche de la commande, puis réessayez.",
+  commande_remboursee: "Pas de facture : cette commande a été entièrement remboursée.",
   donnees_invalides: "La facture n’a pas pu être faite.",
   shopify_indisponible: "Shopify ne répond pas pour le moment. Réessayez dans un instant.",
   facture_introuvable: "Cette facture n’existe plus.",

@@ -15,11 +15,19 @@ import {
 } from "./mise-en-page";
 import { ESPACES, TAILLES } from "./styles";
 
+/**
+ * Mention d'une facture acquittée, d'après ses conditions : « Payée en ligne » pour le reçu d'un paiement sur le site,
+ * « Payée » quand le client a pu payer autrement (espèces, virement, TWINT…).
+ */
+export function mentionAcquittee(conditions: string, payeeLe: string): string {
+  const texte = conditions.trim();
+  const debut = texte.charAt(0).toLocaleLowerCase("fr-CH") + texte.slice(1);
+  return `Facture acquittée : ${debut} le ${formaterDate(payeeLe)}. Aucun paiement supplémentaire n’est dû.`;
+}
+
 function lignesPaiement(f: FactureCalculee): string[] {
   const { facture } = f;
-  if (facture.paidOn !== undefined) {
-    return [`Facture acquittée : payée en ligne le ${formaterDate(facture.paidOn)}. Aucun paiement supplémentaire n’est dû.`];
-  }
+  if (facture.paidOn !== undefined) return [mentionAcquittee(facture.paymentTerms, facture.paidOn)];
   return [
     `${typographier(facture.paymentTerms)}, au plus tard le ${formaterDate(facture.dueDate)}, par QR-facture ou virement.`,
     libelleValeur(f.reference.type === "QRR" ? "QR-IBAN" : "IBAN", formatIBAN(f.compte)),

@@ -37,16 +37,17 @@ export interface ShopifyLineItem {
   variantTitle?: string | null;
   /** Fournisseur Shopify : chez BluePoint, le domaine producteur. */
   vendor?: string | null;
+  /** Quantité commandée au départ, bouteilles retirées depuis (« Modifier les vins ») comprises. */
   quantity: number;
+  /** Quantité encore sur la commande, après modifications et remboursements : c'est elle qui est facturée. */
+  currentQuantity: number;
   originalUnitPriceSet: ShopifyMoneyBag;
-  /** Total de la ligne après rabais propres à la ligne (hors rabais sur la commande). */
+  /** Total de la ligne après rabais propres à la ligne (hors rabais sur la commande), pour `quantity` bouteilles. */
   discountedTotalSet: ShopifyMoneyBag;
 }
 
 export interface ShopifyShippingLine {
   title: string;
-  /** Prix de la livraison après rabais sur la livraison. */
-  discountedPriceSet: ShopifyMoneyBag;
 }
 
 export interface ShopifyTaxLine {
@@ -67,12 +68,18 @@ export interface ShopifyOrderForInvoice {
   billingAddress?: ShopifyMailingAddress | null;
   shippingAddress?: ShopifyMailingAddress | null;
   lineItems: { nodes: readonly ShopifyLineItem[] };
+  /** Nom de la livraison ; son prix est `currentShippingPriceSet`. */
   shippingLine?: ShopifyShippingLine | null;
-  taxLines: readonly ShopifyTaxLine[];
+  /**
+   * Les champs `current…` sont ceux de la commande telle qu'elle est maintenant : après « Modifier les vins »,
+   * les remboursements et les retours. Les champs sans `current` gardent la commande d'origine.
+   */
+  currentShippingPriceSet: ShopifyMoneyBag;
+  currentTaxLines: readonly ShopifyTaxLine[];
   taxesIncluded: boolean;
   /** Somme des articles après tous les rabais (TVA comprise si `taxesIncluded`). */
-  subtotalPriceSet: ShopifyMoneyBag;
-  totalPriceSet: ShopifyMoneyBag;
+  currentSubtotalPriceSet: ShopifyMoneyBag;
+  currentTotalPriceSet: ShopifyMoneyBag;
   discountCodes?: readonly string[] | null;
   /** Remises automatiques appliquées (seul `title` nous intéresse) : ex. « Prix pro -15 % ». */
   discountApplications?: { nodes: readonly { title?: string | null }[] } | null;

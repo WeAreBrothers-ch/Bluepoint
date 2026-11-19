@@ -1,7 +1,7 @@
 import { swissIsoDate } from "../agenda/dates";
 import type { IsoDate } from "../metafields/definitions";
 import { firstValidPhone } from "./phone";
-import type { InvoiceContactOrder, InvoiceFulfillment } from "./order-query";
+import type { InvoiceContactDetails, InvoiceFulfillment } from "./order-query";
 
 /** Données de la commande utiles à la facture, hors moteur `facture-qr`. */
 
@@ -26,7 +26,7 @@ export interface CustomerContact {
   readonly phone: string | null;
 }
 
-export function contactOf(order: InvoiceContactOrder): CustomerContact {
+export function contactOf(order: InvoiceContactDetails): CustomerContact {
   const email = order.email?.trim() || order.customer?.defaultEmailAddress?.emailAddress.trim() || null;
   const phone = firstValidPhone([
     order.phone,

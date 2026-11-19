@@ -25,7 +25,7 @@ import { getShopInvoice, readInvoicePdf, recordInvoiceSent, type Invoice } from 
 /** Envoi d'une facture au client : e-mail avec PDF joint, ou envoi WhatsApp noté. */
 
 export function invoiceFileName(invoice: Pick<Invoice, "number" | "paidOn">): string {
-  return invoice.paidOn === null ? `Facture-${invoice.number}.pdf` : `Recu-pro-${invoice.number}.pdf`;
+  return invoice.paidOn === null ? `Facture-${invoice.number}.pdf` : `Recu-${invoice.number}.pdf`;
 }
 
 /** Données du message sans le récapitulatif des vins (relances) : aucun appel à Shopify. */

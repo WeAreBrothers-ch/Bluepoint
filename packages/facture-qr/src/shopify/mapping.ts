@@ -1,3 +1,4 @@
+import { TOLERANCE_CENTIMES } from "../coherence";
 import { ajouterJours, dateLocaleSuisse } from "../dates";
 import { sommeCentimes } from "../montants";
 import type { InvoiceInput, InvoiceInputRaw, InvoiceSellerRaw } from "../schema";
@@ -26,6 +27,16 @@ const DELAI_PAR_DEFAUT = 30;
 /** Shopify nomme ainsi la variante unique d'un produit : ce n'est pas un contenant. */
 const VARIANTE_PAR_DEFAUT = "Default Title";
 
+/**
+ * Total des bouteilles encore sur la commande. Shopify garde dans `discountedTotalSet` les bouteilles retirées
+ * par « Modifier les vins » : on n'en facture que la part des bouteilles restantes.
+ */
+function totalActuel(article: ShopifyLineItem, champ: string): number {
+  const total = centimesShopify(article.discountedTotalSet, champ);
+  if (article.currentQuantity === article.quantity) return total;
+  return Math.round((total * article.currentQuantity) / article.quantity);
+}
+
 function ligneFacture(article: ShopifyLineItem, index: number): InvoiceInputRaw["lines"][number] {
   const champ = `Article ${index + 1} (${article.title})`;
   const volume = article.variantTitle?.trim();
@@ -34,27 +45,34 @@ function ligneFacture(article: ShopifyLineItem, index: number): InvoiceInputRaw[
     description: article.title.trim(),
     ...(producteur ? { producer: producteur } : {}),
     ...(volume && volume !== VARIANTE_PAR_DEFAUT ? { volumeLabel: volume } : {}),
-    quantity: article.quantity,
+    quantity: article.currentQuantity,
     unitPriceCents: centimesShopify(article.originalUnitPriceSet, champ),
-    totalCents: centimesShopify(article.discountedTotalSet, champ),
+    totalCents: totalActuel(article, champ),
   };
 }
 
-/** Rabais sur la commande = articles (après rabais de ligne) − sous-total Shopify (après tous les rabais). */
+function nomsDesRabais(commande: ShopifyOrderForInvoice): string[] {
+  const titres = (commande.discountApplications?.nodes ?? []).flatMap((remise) => (remise.title?.trim() ? [remise.title.trim()] : []));
+  return [...titres, ...(commande.discountCodes ?? [])];
+}
+
+/**
+ * Rabais sur la commande = articles (après rabais de ligne) − sous-total Shopify (après tous les rabais).
+ * Un écart d'un centime sans aucun rabais nommé vient de l'arrondi d'une ligne modifiée : ce n'est pas un rabais.
+ */
 function rabaisCommande(commande: ShopifyOrderForInvoice, lignes: InvoiceInputRaw["lines"]): InvoiceInputRaw["discounts"] {
   const articles = sommeCentimes(lignes.map((l) => l.totalCents));
-  const sousTotal = centimesShopify(commande.subtotalPriceSet, "Sous-total");
+  const sousTotal = centimesShopify(commande.currentSubtotalPriceSet, "Sous-total");
   const rabais = articles - sousTotal;
-  if (rabais <= 0) return [];
-  const titres = (commande.discountApplications?.nodes ?? []).flatMap((remise) => (remise.title?.trim() ? [remise.title.trim()] : []));
-  const noms = [...titres, ...(commande.discountCodes ?? [])];
+  const noms = nomsDesRabais(commande);
+  if (rabais <= 0 || (rabais <= TOLERANCE_CENTIMES && noms.length === 0)) return [];
   return [{ label: noms.length === 0 ? "Rabais" : `Rabais (${noms.join(", ")})`, amountCents: rabais }];
 }
 
 function livraison(commande: ShopifyOrderForInvoice): Pick<InvoiceInputRaw, "shipping"> {
   const ligne = commande.shippingLine;
   if (!ligne) return {};
-  return { shipping: { label: ligne.title.trim() || "Livraison", amountCents: centimesShopify(ligne.discountedPriceSet, "Livraison") } };
+  return { shipping: { label: ligne.title.trim() || "Livraison", amountCents: centimesShopify(commande.currentShippingPriceSet, "Livraison") } };
 }
 
 /**
@@ -67,7 +85,7 @@ export function mapShopifyOrderToInvoiceInput(
   meta: InvoiceMeta,
 ): InvoiceInput {
   const delai = meta.paymentTermDays ?? DELAI_PAR_DEFAUT;
-  const lines = order.lineItems.nodes.map(ligneFacture);
+  const lines = order.lineItems.nodes.filter((article) => article.currentQuantity > 0).map(ligneFacture);
   const poNumber = order.poNumber?.trim();
   const brut: InvoiceInputRaw = {
     invoiceNumber: meta.invoiceNumber,
@@ -83,7 +101,7 @@ export function mapShopifyOrderToInvoiceInput(
     taxesIncluded: order.taxesIncluded,
     vatLines: lireTva(order),
     currency: "CHF",
-    totalCents: centimesShopify(order.totalPriceSet, "Total"),
+    totalCents: centimesShopify(order.currentTotalPriceSet, "Total"),
     paymentTerms: meta.paymentTerms ?? (meta.paidOn === undefined ? `Payable à ${delai} jours` : "Payée en ligne"),
     orderReference: order.name,
     ...(poNumber ? { poNumber } : {}),

@@ -60,10 +60,10 @@ function tauxEnPourcent(ligne: ShopifyTaxLine): number {
   return Math.round(taux * 100) / 100;
 }
 
-/** Lignes de TVA de Shopify, regroupées par taux (jamais recalculées). */
+/** Lignes de TVA actuelles de Shopify, regroupées par taux (jamais recalculées). */
 export function lireTva(commande: ShopifyOrderForInvoice): TvaBrute[] {
   const parTaux = new Map<number, number>();
-  for (const ligne of commande.taxLines) {
+  for (const ligne of commande.currentTaxLines) {
     const taux = tauxEnPourcent(ligne);
     const montant = centimesShopify(ligne.priceSet, `TVA ${ligne.title}`);
     parTaux.set(taux, (parTaux.get(taux) ?? 0) + montant);

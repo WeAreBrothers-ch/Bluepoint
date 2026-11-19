@@ -15,18 +15,25 @@ import { InvoiceError } from "./errors";
 import { formatInvoiceNumber, yearOfIsoDate } from "./numbering";
 import { nextInvoiceSequence } from "./numbering.server";
 import { findInvoiceByOrder, invoicePdfKey, type Invoice } from "./repository.server";
+import { invoicePaymentOf } from "./order-payment";
 import { fetchOrderForInvoice, type OrderForInvoice } from "./shopify-order.server";
 import { plainInvoiceProblems } from "./plain-problems";
 
 /**
- * Crée la facture d'une commande livrée, ou le reçu pro (facture acquittée) d'une commande payée,
- * une seule fois : si elle existe déjà, on la renvoie. Numéro, PDF et enregistrement se font
+ * Crée la facture d'une commande livrée (acquittée si le client a déjà payé), ou le reçu pro d'une commande
+ * payée en ligne, une seule fois : si elle existe déjà, on la renvoie. Numéro, PDF et enregistrement se font
  * dans une seule transaction.
  */
 
 export interface EnsuredInvoice {
   readonly invoice: Invoice;
   readonly created: boolean;
+}
+
+/** Facture acquittée (reçu, sans QR-facture) : jour du paiement et mention imprimée (« Payée en ligne », « Payée »). */
+interface PaidReceipt {
+  readonly paidOn: IsoDate;
+  readonly terms: string;
 }
 
 interface Draft {
@@ -36,8 +43,8 @@ interface Draft {
   readonly settings: ShopSettingsValues;
   readonly deliveryDate: IsoDate;
   readonly issueDate: IsoDate;
-  /** Date de paiement d'un reçu pro (facture acquittée, sans QR-facture), sinon null. */
-  readonly paidOn: IsoDate | null;
+  /** Déjà payée : facture acquittée ; null : QR-facture à payer. */
+  readonly paid: PaidReceipt | null;
 }
 
 const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 20_000 } as const;
@@ -46,18 +53,22 @@ function paymentTermsText(days: number): string | undefined {
   return days === 0 ? "Payable à réception" : undefined;
 }
 
+function paymentMeta(draft: Draft): { readonly paidOn?: IsoDate; readonly paymentTerms?: string } {
+  if (draft.paid !== null) return { paidOn: draft.paid.paidOn, paymentTerms: draft.paid.terms };
+  const terms = paymentTermsText(draft.settings.paymentTermDays);
+  return terms === undefined ? {} : { paymentTerms: terms };
+}
+
 async function createInvoice(draft: Draft): Promise<Invoice> {
   return prisma.$transaction(async (tx) => {
     const year = yearOfIsoDate(draft.issueDate);
     const number = formatInvoiceNumber(year, await nextInvoiceSequence(tx, draft.shop, year));
-    const terms = paymentTermsText(draft.settings.paymentTermDays);
     const input = mapShopifyOrderToInvoiceInput(draft.source.order, toInvoiceSeller(draft.settings), {
       invoiceNumber: number,
       issueDate: draft.issueDate,
       deliveryDate: draft.deliveryDate,
       paymentTermDays: draft.settings.paymentTermDays,
-      ...(draft.paidOn === null ? {} : { paidOn: draft.paidOn }),
-      ...(terms === undefined || draft.paidOn !== null ? {} : { paymentTerms: terms }),
+      ...paymentMeta(draft),
     });
     const pdf = await renderInvoicePdf(input);
     const pdfKey = invoicePdfKey(draft.shop, number);
@@ -72,7 +83,7 @@ async function createInvoice(draft: Draft): Promise<Invoice> {
         issueDate: input.issueDate,
         dueDate: input.dueDate,
         totalCents: input.totalCents,
-        paidOn: draft.paidOn,
+        paidOn: draft.paid?.paidOn ?? null,
         customerName: input.buyer.company ?? input.buyer.name,
         customerEmail: contact.email,
         customerPhone: contact.phone,
@@ -121,7 +132,12 @@ export async function ensureInvoice(
     if (!source.ok) return source;
     const deliveryDate = deliveryDateOf(source.value.contact.fulfillments);
     if (deliveryDate === null) return failure(new InvoiceError("commande_non_livree"));
-    return await createOrRecover({ shop, orderId, source: source.value, settings, deliveryDate, issueDate: swissIsoDate(now), paidOn: null });
+    const issueDate = swissIsoDate(now);
+    // Déjà payée : facture acquittée, jamais une QR-facture qui ferait payer le client une seconde fois.
+    const payment = invoicePaymentOf(source.value.contact, issueDate);
+    if (payment.kind === "bloquee") return failure(new InvoiceError(payment.code));
+    const paid = payment.kind === "payee" ? { paidOn: payment.paidOn, terms: "Payée" } : null;
+    return await createOrRecover({ shop, orderId, source: source.value, settings, deliveryDate, issueDate, paid });
   } catch (error) {
     logError("Préparation de la facture impossible", error, { orderId });
     return failure(new InvoiceError("erreur_interne"));
@@ -148,7 +164,8 @@ export async function ensureReceipt(
     const source = await fetchOrderForInvoice(admin, orderId);
     if (!source.ok) return source;
     const today = swissIsoDate(now);
-    const draft: Draft = { shop, orderId, source: source.value, settings, deliveryDate: plannedDeliveryDate ?? today, issueDate: today, paidOn: today };
+    const paid = { paidOn: today, terms: "Payée en ligne" };
+    const draft: Draft = { shop, orderId, source: source.value, settings, deliveryDate: plannedDeliveryDate ?? today, issueDate: today, paid };
     return await createOrRecover(draft);
   } catch (error) {
     logError("Préparation du reçu pro impossible", error, { orderId });
