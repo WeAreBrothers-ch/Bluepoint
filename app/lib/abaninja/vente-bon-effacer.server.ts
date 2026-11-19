@@ -5,7 +5,7 @@ import { deleteDeliveryNote, getDeliveryNote } from "./delivery-notes.server";
 import type { AbaNinjaError } from "./errors";
 import { deleteCompany, deleteInvoice } from "./invoice-cleanup.server";
 import { interpretInvoiceStatus, isGoneDocument, todayInZurich } from "./invoice-status";
-import { getInvoice } from "./invoices.server";
+import { getInvoice, type InvoiceDetails } from "./invoices.server";
 import { removeTestCopy } from "./vente-essai-effacer.server";
 import { STALE_MS, type RowOutcome } from "./vente-essai-resume";
 import { listTestSales, type AbaNinjaSale } from "./vente-repository.server";
@@ -47,22 +47,37 @@ function passing(error: AbaNinjaError): boolean {
   return error.code === "indisponible" || error.code === "trop_de_requetes";
 }
 
+const UNTOUCHED = "l’app ne l’efface pas, ni son bon ni son client.";
+
+/**
+ * Ce que la facture lue dans AbaNinja empêche d'effacer ; null si c'est un brouillon de l'essai (à effacer)
+ * ou une facture déjà annulée (on passe au bon). Une facture payée garde son paiement : il part d'abord, à la main.
+ */
+function invoiceBlock(sale: AbaNinjaSale, invoice: InvoiceDetails, now: Date): Step | "brouillon" {
+  const label = `facture ${invoice.systemInvoiceNumber ?? sale.invoiceNumber ?? sale.reference}`;
+  if (invoice.reference !== sale.reference) {
+    return byHand(sale, `la ${label} trouvée dans AbaNinja ne porte pas la référence de l’essai (${sale.reference}) : ${UNTOUCHED} Vérifiez-la dans AbaNinja.`);
+  }
+  const status = interpretInvoiceStatus(invoice, todayInZurich(now));
+  if (status === "annulee" || isGoneDocument(invoice)) return null;
+  if (status === "payee" || status === "partiellement_payee") {
+    return byHand(sale, `la ${label} est payée dans AbaNinja : ${UNTOUCHED} Supprimez d’abord son paiement dans AbaNinja, puis annulez la facture.`);
+  }
+  return status === "brouillon" ? "brouillon" : byHand(sale, `la ${label} n’est plus un brouillon dans AbaNinja : ${UNTOUCHED} Annulez-la dans AbaNinja.`);
+}
+
 async function eraseInvoice(config: AbaNinjaConfig, sale: AbaNinjaSale, now: Date): Promise<Step> {
   if (sale.invoiceUuid === null) {
     if (sale.invoiceState === null) return null;
     if (sale.invoiceState === "en_cours" && stillRunning(sale, now)) return keep(sale, "la facture est encore en train d’être faite. Réessayez dans deux minutes.");
     return byHand(sale, `cherchez dans AbaNinja une facture de référence ${sale.reference}, ${noteName(sale)} et ${clientHint(sale)}, et supprimez-les s’ils existent.`);
   }
-  const label = `facture ${sale.invoiceNumber ?? sale.reference}`;
   const read = await getInvoice(config, sale.invoiceUuid);
   if (!read.ok) return read.error.code === "introuvable" ? null : keep(sale, "AbaNinja n’a pas répondu. Réessayez dans un instant.");
-  if (read.value.reference !== sale.reference) return keep(sale, "la facture trouvée dans AbaNinja ne porte pas la référence de l’essai ; l’app n’y touche pas.");
-  const status = interpretInvoiceStatus(read.value, todayInZurich(now));
-  if (status === "annulee" || isGoneDocument(read.value)) return null;
-  if (status !== "brouillon") {
-    return byHand(sale, `la ${label} n’est plus un brouillon dans AbaNinja : l’app ne l’efface pas, ni son bon ni son client. Annulez-la dans AbaNinja.`);
-  }
-  return (await deleteInvoice(config, sale.invoiceUuid)).ok ? null : keep(sale, `AbaNinja n’a pas effacé la ${label}. Réessayez dans un instant.`);
+  const block = invoiceBlock(sale, read.value, now);
+  if (block !== "brouillon") return block;
+  const deleted = await deleteInvoice(config, sale.invoiceUuid);
+  return deleted.ok ? null : keep(sale, `AbaNinja n’a pas effacé la facture ${sale.invoiceNumber ?? sale.reference}. Réessayez dans un instant.`);
 }
 
 /**
@@ -87,7 +102,9 @@ async function eraseNote(config: AbaNinjaConfig, sale: AbaNinjaSale, now: Date):
   }
   const read = await getDeliveryNote(config, sale.noteUuid);
   if (!read.ok) return read.error.code === "introuvable" ? null : keep(sale, "AbaNinja n’a pas répondu. Réessayez dans un instant.");
-  if (read.value.reference !== sale.reference) return keep(sale, "le bon trouvé dans AbaNinja ne porte pas la référence de l’essai ; l’app n’y touche pas.");
+  if (read.value.reference !== sale.reference) {
+    return byHand(sale, `le bon trouvé dans AbaNinja ne porte pas la référence de l’essai (${sale.reference}) : l’app ne l’efface pas, ni son client. Vérifiez-le dans AbaNinja.`);
+  }
   if (ERASED_NOTE.has(read.value.status)) return null;
   const deleted = await deleteDeliveryNote(config, sale.noteUuid);
   if (deleted.ok) return null;

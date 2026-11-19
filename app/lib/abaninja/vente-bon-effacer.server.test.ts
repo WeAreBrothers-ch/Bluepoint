@@ -104,13 +104,31 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
     expect(tx.abaNinjaSale.deleteMany).not.toHaveBeenCalled();
   });
 
-  it("référence différente de celle de l'essai : l'app ne touche à rien", async () => {
+  it("facture à une autre référence que l'essai : l'app n'y touche pas, Eliott la vérifie (numéro et référence attendue)", async () => {
     api.getInvoice.mockResolvedValue(invoice("draft", "BP-1035"));
     const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
-    expect(outcome?.kind).toBe("gardee");
+    expect(outcome?.kind).toBe("a_la_main");
+    expect(outcome?.text).toContain("R02292");
+    expect(outcome?.text).toContain(REF);
     expect(api.deleteInvoice).not.toHaveBeenCalled();
     expect(api.deleteDeliveryNote).not.toHaveBeenCalled();
-    expect(tx.abaNinjaSale.deleteMany).not.toHaveBeenCalled();
+    expect(api.deleteCompany).not.toHaveBeenCalled();
+  });
+
+  it("bon à une autre référence que l'essai : l'app n'y touche pas, Eliott le vérifie", async () => {
+    api.listTestSales.mockResolvedValue(success([sale({ noteState: "cree", ...NO_INVOICE })]));
+    api.getDeliveryNote.mockResolvedValue(success({ uuid: NOTE, status: "draft", reference: "BL-1035", number: "L00042", companyUuid: COMPANY }));
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    expect(outcome).toMatchObject({ kind: "a_la_main", text: expect.stringContaining(REF) });
+    expect(api.deleteDeliveryNote).not.toHaveBeenCalled();
+  });
+
+  it("facture payée : Eliott supprime d'abord le paiement dans AbaNinja, puis annule la facture", async () => {
+    api.getInvoice.mockResolvedValue(invoice("paid"));
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    expect(outcome?.kind).toBe("a_la_main");
+    expect(outcome?.text).toContain("Supprimez d’abord son paiement dans AbaNinja, puis annulez la facture.");
+    expect(api.deleteInvoice).not.toHaveBeenCalled();
   });
 
   it("bon sans facture : efface le bon et le client d'essai", async () => {
