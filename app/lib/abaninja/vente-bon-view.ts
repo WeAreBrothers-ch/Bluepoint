@@ -2,7 +2,7 @@ import type { AbaNinjaSale } from "@prisma/client";
 import { frenchTypography } from "./trial-typography";
 import { NOTE_TOO_LATE } from "./vente-bon-plan";
 import type { SaleNoteOutcome } from "./vente-bon.server";
-import { NOTE_ERASE_HINT } from "./vente-errors";
+import { NOTE_ERASE_HINT, SALE_ERASE_HINT } from "./vente-errors";
 
 /** Ce que la fiche commande dit du bon de livraison AbaNinja, et la réponse au bouton qui le crée. Logique pure. */
 
@@ -28,7 +28,7 @@ export interface SaleNoteActionResult {
   readonly message: string;
 }
 
-/** Au-delà, un bon « en cours » n'avance plus : la création s'est arrêtée en route. */
+/** Au-delà, un bon ou une facture « en cours » n'avance plus : la création s'est arrêtée en route. */
 const STUCK_AFTER_MS = 2 * 60 * 1000;
 
 function shown(text: string, tone: SaleNoteView["tone"], canCreate = false): SaleNoteView {
@@ -37,6 +37,27 @@ function shown(text: string, tone: SaleNoteView["tone"], canCreate = false): Sal
 
 function toCheck(sale: AbaNinjaSale): SaleNoteView {
   return shown(`Bon de livraison à vérifier dans AbaNinja (référence ${sale.reference}). ${NOTE_ERASE_HINT}`, "warning");
+}
+
+function stillFresh(since: Date, now: Date): boolean {
+  return now.getTime() - since.getTime() < STUCK_AFTER_MS;
+}
+
+/** La facture née du bon est en doute (en cours, incertaine, ou paiement pas sûr) ; null si rien ne l'est. */
+function invoiceDoubt(sale: AbaNinjaSale, now: Date): SaleNoteView | null {
+  if (sale.invoiceState === "en_cours" && stillFresh(sale.updatedAt, now)) return shown("Facture en cours…", "info");
+  if (sale.invoiceState === "en_cours" || sale.invoiceState === "incertaine") {
+    return shown(`Facture à vérifier dans AbaNinja (référence ${sale.reference}). ${SALE_ERASE_HINT}`, "warning");
+  }
+  if (sale.paymentState !== "incertain") return null;
+  const invoice = sale.invoiceNumber === null ? "la facture" : `la facture ${sale.invoiceNumber}`;
+  return shown(`Paiement de ${invoice} à vérifier dans AbaNinja : inscrivez-le à la main s’il manque, avant de l’envoyer.`, "warning");
+}
+
+function madeNote(sale: AbaNinjaSale): SaleNoteView {
+  return sale.noteNumber === null
+    ? shown(`Bon de livraison fait dans AbaNinja (référence ${sale.reference}).`, "success")
+    : shown(`Bon de livraison n° ${sale.noteNumber} dans AbaNinja.`, "success");
 }
 
 function converted(sale: AbaNinjaSale): SaleNoteView {
@@ -62,13 +83,11 @@ export function saleNoteView(sale: AbaNinjaSale | null, order: SaleNoteOrder, no
   if (sale === null) return noNoteYet(order);
   switch (sale.noteState) {
     case "en_cours":
-      return now.getTime() - sale.createdAt.getTime() < STUCK_AFTER_MS ? shown("Bon de livraison en cours dans AbaNinja…", "info") : toCheck(sale);
+      return stillFresh(sale.createdAt, now) ? shown("Bon de livraison en cours dans AbaNinja…", "info") : toCheck(sale);
     case "cree":
-      return sale.noteNumber === null
-        ? shown(`Bon de livraison fait dans AbaNinja (référence ${sale.reference}).`, "success")
-        : shown(`Bon de livraison n° ${sale.noteNumber} dans AbaNinja.`, "success");
+      return invoiceDoubt(sale, now) ?? madeNote(sale);
     case "converti":
-      return converted(sale);
+      return invoiceDoubt(sale, now) ?? converted(sale);
     case "refuse":
       return refusedNote(sale, order);
     case "annule":

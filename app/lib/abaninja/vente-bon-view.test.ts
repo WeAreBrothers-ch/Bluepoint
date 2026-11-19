@@ -33,6 +33,8 @@ function sale(changes: Partial<AbaNinjaSale> = {}): AbaNinjaSale {
   };
 }
 
+const SALE_ERASE =
+  "Pour recommencer : page « Connexion AbaNinja », bouton « Effacer les factures d’essai » (il efface aussi les bons), puis « Créer le bon de livraison » et « Faire la facture » sur la commande.";
 const TEST_ORDER = { isTest: true, tooLate: false };
 const REAL_ORDER = { isTest: false, tooLate: false };
 const TOO_LATE = view("Facture faite avant les bons de livraison : pas de bon pour cette commande.", "info");
@@ -80,6 +82,25 @@ describe("état du bon de livraison AbaNinja sur la fiche commande", () => {
   it("donne le numéro du bon fait, ou sa référence s'il n'a pas encore de numéro", () => {
     expect(saleNoteView(sale({ noteState: "cree", noteNumber: "L00042" }), TEST_ORDER, NOW)).toEqual(view("Bon de livraison n° L00042 dans AbaNinja.", "success"));
     expect(saleNoteView(sale({ noteState: "cree" }), TEST_ORDER, NOW)).toEqual(view(`Bon de livraison fait dans AbaNinja (référence ${REF}).`, "success"));
+  });
+
+  it("facture commencée depuis moins de deux minutes : « en cours »", () => {
+    const running = sale({ noteState: "cree", noteNumber: "L00042", invoiceState: "en_cours", updatedAt: new Date("2026-11-19T11:04:30Z") });
+    expect(saleNoteView(running, TEST_ORDER, NOW)).toEqual(view("Facture en cours…", "info"));
+  });
+
+  it("facture restée en cours plus de deux minutes, ou incertaine : à vérifier dans AbaNinja", () => {
+    const toCheck = view(`Facture à vérifier dans AbaNinja (référence ${REF}). ${SALE_ERASE}`, "warning");
+    const stuck = sale({ noteState: "cree", invoiceState: "en_cours", updatedAt: new Date("2026-11-19T11:02:00Z") });
+    expect(saleNoteView(stuck, TEST_ORDER, NOW)).toEqual(toCheck);
+    expect(saleNoteView(sale({ noteState: "cree", invoiceState: "incertaine" }), TEST_ORDER, NOW)).toEqual(toCheck);
+  });
+
+  it("paiement pas sûr d'être inscrit : avertit, même une fois le bon réglé", () => {
+    const toCheck = view("Paiement de la facture R02292 à vérifier dans AbaNinja : inscrivez-le à la main s’il manque, avant de l’envoyer.", "warning");
+    const unsure = { invoiceState: "creee", invoiceNumber: "R02292", paymentState: "incertain" };
+    expect(saleNoteView(sale({ noteState: "cree", ...unsure }), TEST_ORDER, NOW)).toEqual(toCheck);
+    expect(saleNoteView(sale({ noteState: "converti", ...unsure }), TEST_ORDER, NOW)).toEqual(toCheck);
   });
 
   it("dit que le bon est réglé par sa facture", () => {
