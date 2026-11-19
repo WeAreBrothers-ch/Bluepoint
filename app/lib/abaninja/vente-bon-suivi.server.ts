@@ -58,6 +58,12 @@ export async function syncSaleNote(admin: AdminApiContext, shop: string, orderId
   return { kind: "fait" };
 }
 
+/** AbaNinja n'a pas annulé : si l'autre action partie en même temps (bouton ou webhook) l'a fait, c'est fait. */
+async function cancelledMeanwhile(orderId: string, message: string): Promise<FollowOutcome> {
+  const again = await findSale(orderId);
+  return again.ok && again.value?.noteState === "annule" ? { kind: "fait" } : failed(message);
+}
+
 /** Rejouable : le bouton « Annuler » puis le webhook orders/cancelled n'annulent qu'une fois. */
 export async function cancelSaleNote(shop: string, orderId: string): Promise<FollowOutcome> {
   const sale = await madeNoteOf(shop, orderId);
@@ -65,7 +71,7 @@ export async function cancelSaleNote(shop: string, orderId: string): Promise<Fol
   const config = readAbaNinjaConfig();
   if (!config.ok) return failed(config.error.message);
   const cancelled = await cancelDeliveryNote(config.value, sale.noteUuid);
-  if (!cancelled.ok) return failed(cancelled.error.message);
+  if (!cancelled.ok) return cancelledMeanwhile(orderId, cancelled.error.message);
   const problem = unsavedChange(await markNote(orderId, { state: "annule" }));
   if (problem !== null) logError("Bon AbaNinja annulé, état non enregistré", problem, { orderId });
   logInfo("Bon de livraison AbaNinja annulé", { orderId, reference: sale.reference });

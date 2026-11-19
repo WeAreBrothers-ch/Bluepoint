@@ -69,6 +69,6 @@ export async function ensureAbaNinjaSaleInvoice(sale: AbaNinjaSale, ctx: AbaNinj
   if (!made.ok) return failure(toInvoiceError(made.error));
   const saved = await saveCopy(ctx, lines.value, made.value, { paidOn: paid?.paidOn ?? null, hint: RETRY_HINT });
   if (!saved.ok) return saved;
-  logInfo("Facture AbaNinja née du bon prête dans l’app", { orderId: ctx.orderId, number: saved.value.number });
-  return success({ invoice: saved.value, created: true, inAbaNinja: true, fromNote: true });
+  logInfo("Facture AbaNinja née du bon prête dans l’app", { orderId: ctx.orderId, number: saved.value.invoice.number });
+  return success({ ...saved.value, inAbaNinja: true, fromNote: true });
 }

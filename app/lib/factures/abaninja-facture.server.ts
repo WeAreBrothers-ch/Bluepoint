@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { InvoiceInput } from "@bluepoint/facture-qr";
 import prisma from "../../db.server";
 import { readAbaNinjaConfig } from "../abaninja/config.server";
@@ -13,7 +14,7 @@ import { abaNinjaLinesOf } from "./abaninja-lines";
 import { contactOf } from "./delivery-date";
 import type { EnsuredInvoice } from "./ensured";
 import { InvoiceError } from "./errors";
-import { invoicePdfKey, type Invoice } from "./repository.server";
+import { findInvoiceByOrder, invoicePdfKey, type Invoice } from "./repository.server";
 import type { OrderForInvoice } from "./shopify-order.server";
 
 /**
@@ -48,13 +49,31 @@ export interface CopyOptions {
   readonly hint: string;
 }
 
+export interface SavedCopy {
+  readonly invoice: Invoice;
+  /** Faux : une autre action partie en même temps (bouton, livraison Shopify) l'avait déjà enregistrée. */
+  readonly created: boolean;
+}
+
+/** La copie enregistrée par l'action gagnante d'une course (contrainte d'unicité) ; null si ce n'en est pas une. */
+async function copyOfRace(sale: AbaNinjaSaleContext, error: unknown): Promise<Invoice | null> {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return null;
+  try {
+    const existing = await findInvoiceByOrder(sale.orderId);
+    return existing !== null && existing.shop === sale.shop ? existing : null;
+  } catch (thrown) {
+    logError("Copie de facture AbaNinja illisible après un doublon", thrown, { orderId: sale.orderId });
+    return null;
+  }
+}
+
 /** Copie de la facture AbaNinja dans l'app (numéro AbaNinja, PDF), pour qu'Eliott l'envoie avec les boutons habituels. */
 export async function saveCopy(
   sale: AbaNinjaSaleContext,
   lines: InvoiceInput,
   document: SaleInvoiceDocument,
   options: CopyOptions = { paidOn: null, hint: ERASE_HINT },
-): Promise<Result<Invoice, InvoiceError>> {
+): Promise<Result<SavedCopy, InvoiceError>> {
   const number = document.number ?? document.reference;
   const pdfKey = invoicePdfKey(sale.shop, number);
   const contact = contactOf(sale.source.contact);
@@ -78,8 +97,10 @@ export async function saveCopy(
         },
       });
     });
-    return success(invoice);
+    return success({ invoice, created: true });
   } catch (error) {
+    const existing = await copyOfRace(sale, error);
+    if (existing !== null) return success({ invoice: existing, created: false });
     logError("Facture AbaNinja faite mais non enregistrée dans l’app", error, { orderId: sale.orderId });
     return failure(new InvoiceError("abaninja_echec", [`La facture ${number} est faite dans AbaNinja, mais l’app n’a pas pu l’enregistrer.`, options.hint]));
   }
@@ -97,6 +118,6 @@ export async function ensureAbaNinjaTestInvoice(sale: AbaNinjaSaleContext): Prom
   if (!made.ok) return failure(toInvoiceError(made.error));
   const saved = await saveCopy(sale, lines.value, made.value);
   if (!saved.ok) return saved;
-  logInfo("Facture AbaNinja prête dans l’app", { orderId: sale.orderId, number: saved.value.number });
-  return success({ invoice: saved.value, created: true, inAbaNinja: true });
+  logInfo("Facture AbaNinja prête dans l’app", { orderId: sale.orderId, number: saved.value.invoice.number });
+  return success({ ...saved.value, inAbaNinja: true });
 }

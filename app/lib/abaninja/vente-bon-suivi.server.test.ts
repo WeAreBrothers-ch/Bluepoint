@@ -139,6 +139,13 @@ describe("le bon de livraison suit l'annulation de la commande", () => {
     expect(deps.cancelDeliveryNote).not.toHaveBeenCalled();
   });
 
+  it("bouton et webhook annulent ensemble : le perdant voit le bon déjà annulé et répond « fait »", async () => {
+    deps.findSale.mockResolvedValueOnce(success(SALE)).mockResolvedValue(success({ ...SALE, noteState: "annule" }));
+    deps.cancelDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
+    expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "fait" });
+    expect(deps.markNote).not.toHaveBeenCalled();
+  });
+
   it("garde le bon tel quel si AbaNinja ne l'annule pas", async () => {
     deps.cancelDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
     expect(await cancelSaleNote(SHOP, ORDER)).toMatchObject({ kind: "echec" });

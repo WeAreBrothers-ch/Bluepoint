@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { COMMANDE_SHOPIFY } from "../../../packages/facture-qr/src/fixtures/commande-shopify";
 import { VENDEUR_EXEMPLE } from "../../../packages/facture-qr/src/fixtures/vendeur";
@@ -10,10 +11,10 @@ import type { ShopSettingsValues } from "../reglages/schema";
 import { parseGid } from "../shopify/ids";
 
 const created = vi.hoisted(() => ({ files: [] as Record<string, unknown>[], invoices: [] as Record<string, unknown>[] }));
-const deps = vi.hoisted(() => ({ readAbaNinjaConfig: vi.fn(), createTestSaleInvoice: vi.fn() }));
+const deps = vi.hoisted(() => ({ readAbaNinjaConfig: vi.fn(), createTestSaleInvoice: vi.fn(), findInvoiceByOrder: vi.fn() }));
 
 const tx = {
-  storedFile: { create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => created.files.push(data)) },
+  storedFile: { create: vi.fn(async ({ data }: { data: Record<string, unknown> }): Promise<unknown> => created.files.push(data)) },
   invoice: { create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => (created.invoices.push(data), { id: "copie-1", ...data })) },
 };
 
@@ -22,6 +23,7 @@ vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() })
 vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE }));
 vi.mock("../abaninja/config.server", () => ({ readAbaNinjaConfig: deps.readAbaNinjaConfig }));
 vi.mock("../abaninja/vente-facture.server", () => ({ createTestSaleInvoice: deps.createTestSaleInvoice }));
+vi.mock("./repository.server", async (importOriginal) => ({ ...(await importOriginal<object>()), findInvoiceByOrder: deps.findInvoiceByOrder }));
 
 const { ensureAbaNinjaTestInvoice } = await import("./abaninja-facture.server");
 const { goesToAbaNinja } = await import("./abaninja-lines");
@@ -97,6 +99,13 @@ describe("facture AbaNinja d'une commande d'essai, vue depuis l'app", () => {
     deps.createTestSaleInvoice.mockResolvedValue(success({ uuid: "u", number: null, reference: "BP-ESSAI-FACT-1042-20261119-110530", pdf: PDF }));
     await ensureAbaNinjaTestInvoice(sale);
     expect(created.invoices[0]).toMatchObject({ number: "BP-ESSAI-FACT-1042-20261119-110530" });
+  });
+
+  it("copie déjà enregistrée par une action partie en même temps : la renvoie comme faite, created à faux", async () => {
+    const copy = { id: "copie-0", shop: "test.myshopify.com", orderId: ORDER, number: "R02291" };
+    tx.storedFile.create.mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError("doublon", { code: "P2002", clientVersion: "test" }));
+    deps.findInvoiceByOrder.mockResolvedValue(copy);
+    expect(await ensureAbaNinjaTestInvoice(sale)).toEqual({ ok: true, value: { invoice: copy, created: false, inAbaNinja: true } });
   });
 
   it("résultat incertain : le dit clairement et ne garde aucune copie", async () => {

@@ -1,4 +1,4 @@
-import type { AbaNinjaSale } from "@prisma/client";
+import { Prisma, type AbaNinjaSale } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { COMMANDE_SHOPIFY } from "../../../packages/facture-qr/src/fixtures/commande-shopify";
 import { VENDEUR_EXEMPLE } from "../../../packages/facture-qr/src/fixtures/vendeur";
@@ -10,10 +10,10 @@ import type { ShopSettingsValues } from "../reglages/schema";
 import { parseGid } from "../shopify/ids";
 
 const created = vi.hoisted(() => ({ invoices: [] as Record<string, unknown>[] }));
-const deps = vi.hoisted(() => ({ readAbaNinjaConfig: vi.fn(), convertSaleNote: vi.fn(), resumeSaleInvoice: vi.fn() }));
+const deps = vi.hoisted(() => ({ readAbaNinjaConfig: vi.fn(), convertSaleNote: vi.fn(), resumeSaleInvoice: vi.fn(), findInvoiceByOrder: vi.fn() }));
 
 const tx = {
-  storedFile: { create: vi.fn(async () => ({})) },
+  storedFile: { create: vi.fn(async (): Promise<unknown> => ({})) },
   invoice: { create: vi.fn(async ({ data }: { data: Record<string, unknown> }) => (created.invoices.push(data), { id: "copie-2", ...data })) },
 };
 
@@ -22,6 +22,7 @@ vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() })
 vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE }));
 vi.mock("../abaninja/config.server", () => ({ readAbaNinjaConfig: deps.readAbaNinjaConfig }));
 vi.mock("../abaninja/vente-conversion.server", () => ({ convertSaleNote: deps.convertSaleNote, resumeSaleInvoice: deps.resumeSaleInvoice }));
+vi.mock("./repository.server", async (importOriginal) => ({ ...(await importOriginal<object>()), findInvoiceByOrder: deps.findInvoiceByOrder }));
 
 const { ensureAbaNinjaSaleInvoice } = await import("./abaninja-vente.server");
 const realConfig = await vi.importActual<typeof import("../abaninja/config.server")>("../abaninja/config.server");
@@ -108,6 +109,14 @@ describe("facture d'une commande d'essai née de son bon de livraison", () => {
     await ensureAbaNinjaSaleInvoice({ ...SALE, noteState: "converti", invoiceState: "creee", invoiceUuid: DOCUMENT.uuid }, CONTEXT, null);
     expect(deps.resumeSaleInvoice).toHaveBeenCalled();
     expect(deps.convertSaleNote).not.toHaveBeenCalled();
+  });
+
+  it("bouton et livraison Shopify reprennent ensemble : le second retrouve la copie du premier, sans message d'échec", async () => {
+    const copy = { id: "copie-1", shop: CONTEXT.shop, orderId: ORDER, number: "R02292" };
+    tx.storedFile.create.mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError("doublon", { code: "P2002", clientVersion: "test" }));
+    deps.findInvoiceByOrder.mockResolvedValue(copy);
+    const result = await ensureAbaNinjaSaleInvoice({ ...SALE, noteState: "converti", invoiceState: "creee", invoiceUuid: DOCUMENT.uuid }, CONTEXT, null);
+    expect(result).toEqual({ ok: true, value: { invoice: copy, created: false, inAbaNinja: true, fromNote: true } });
   });
 
   it("attend quand la facture est déjà en train de se faire", async () => {
