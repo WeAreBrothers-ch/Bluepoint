@@ -14,9 +14,10 @@ const deps = vi.hoisted(() => ({
   readAbaNinjaConfig: vi.fn(),
   updateDeliveryNote: vi.fn(),
   cancelDeliveryNote: vi.fn(),
+  logError: vi.fn(),
 }));
 
-vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() }));
+vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: deps.logError }));
 vi.mock("./config.server", () => ({ readAbaNinjaConfig: deps.readAbaNinjaConfig }));
 vi.mock("./vente-repository.server", () => ({ findSale: deps.findSale, markNote: deps.markNote }));
 vi.mock("./vente-bon-source.server", () => ({ loadSaleSource: deps.loadSaleSource }));
@@ -42,14 +43,16 @@ const SALE = {
   noteUuid: NOTE,
   noteNumber: "L00042",
   ...RECEIVER,
+  invoiceState: null,
   createdAt: new Date("2026-11-19T11:05:30Z"),
 };
+const CONVERTING = "le bon est déjà en train de devenir une facture : il ne se modifie plus.";
 
 beforeEach(() => {
   vi.clearAllMocks();
   deps.readAbaNinjaConfig.mockReturnValue(CONFIG);
   deps.findSale.mockResolvedValue(success(SALE));
-  deps.markNote.mockResolvedValue(success(SALE));
+  deps.markNote.mockResolvedValue(success(true));
   deps.loadSaleSource.mockResolvedValue(success({ input: validateInvoiceInput(FACTURE_EXEMPLE), plannedDate: "2026-11-25", isTest: true }));
   deps.updateDeliveryNote.mockResolvedValue(success(undefined));
   deps.cancelDeliveryNote.mockResolvedValue(success(undefined));
@@ -88,6 +91,15 @@ describe("le bon de livraison suit « Modifier les vins »", () => {
     expect(deps.updateDeliveryNote).not.toHaveBeenCalled();
   });
 
+  it("bon en train de devenir une facture : ne bouge plus, rien n'est demandé à AbaNinja", async () => {
+    for (const invoiceState of ["en_cours", "incertaine", "creee"]) {
+      deps.findSale.mockResolvedValue(success({ ...SALE, invoiceState }));
+      expect(await syncSaleNote(ADMIN, SHOP, ORDER, NOW)).toEqual({ kind: "echec", message: CONVERTING });
+    }
+    expect(deps.loadSaleSource).not.toHaveBeenCalled();
+    expect(deps.updateDeliveryNote).not.toHaveBeenCalled();
+  });
+
   it("dit pourquoi le bon n'a pas suivi quand AbaNinja refuse", async () => {
     deps.updateDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
     const outcome = await syncSaleNote(ADMIN, SHOP, ORDER, NOW);
@@ -103,10 +115,23 @@ describe("le bon de livraison suit l'annulation de la commande", () => {
     expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "annule" });
   });
 
+  it("bon annulé dans AbaNinja mais ligne déjà changée entre-temps : fait, et journalisé", async () => {
+    deps.markNote.mockResolvedValue(success(false));
+    expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "fait" });
+    expect(deps.logError).toHaveBeenCalledWith(expect.any(String), expect.any(Error), expect.objectContaining({ orderId: ORDER }));
+  });
+
   it("ne refait rien à la deuxième annulation (bouton puis webhook)", async () => {
     deps.findSale.mockResolvedValue(success({ ...SALE, noteState: "annule" }));
     expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "rien" });
     expect(deps.cancelDeliveryNote).not.toHaveBeenCalled();
+  });
+
+  it("bon en train de devenir une facture : pas annulé, rien n'est demandé à AbaNinja", async () => {
+    deps.findSale.mockResolvedValue(success({ ...SALE, invoiceState: "en_cours" }));
+    expect(await cancelSaleNote(SHOP, ORDER)).toEqual({ kind: "echec", message: CONVERTING });
+    expect(deps.cancelDeliveryNote).not.toHaveBeenCalled();
+    expect(deps.markNote).not.toHaveBeenCalled();
   });
 
   it("ignore la ligne d'une autre boutique", async () => {

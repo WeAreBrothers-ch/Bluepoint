@@ -1,3 +1,5 @@
+import type { Result } from "../core/result";
+
 /** Échec de la facture AbaNinja faite à la livraison ; message et précisions écrits pour Eliott. */
 
 export type SaleInvoiceOutcome = "refusee" | "incertaine";
@@ -28,4 +30,13 @@ export class SaleInvoiceError extends Error {
   ) {
     super(message);
   }
+}
+
+/**
+ * Pour le journal : pourquoi un état n'a pas été noté (null : il l'a été). Faux veut dire que la ligne
+ * n'était plus dans l'état attendu, par exemple changée entre-temps par une autre action.
+ */
+export function unsavedChange(result: Result<boolean, Error>): Error | null {
+  if (!result.ok) return result.error;
+  return result.value ? null : new Error("La ligne de vente n’était plus dans l’état attendu : rien n’a été changé.");
 }

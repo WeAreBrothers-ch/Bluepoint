@@ -61,19 +61,30 @@ describe("une commande, une seule ligne de vente AbaNinja", () => {
 
   it("un bon refusé peut être libéré pour réessayer ; un bon fait ne l'est jamais", async () => {
     await repo.claimSale(CLAIM);
-    await repo.markNote(CLAIM.orderId, { state: "cree", noteUuid: "n", noteNumber: "L00042", addressUuid: "a", companyUuid: "c" });
-    await repo.releaseRefusedSale(CLAIM.orderId);
-    expect(rows.size).toBe(1);
     await repo.markNote(CLAIM.orderId, { state: "refuse", errorCode: "bon" });
     await repo.releaseRefusedSale(CLAIM.orderId);
     expect(rows.size).toBe(0);
+    await repo.claimSale(CLAIM);
+    await repo.markNote(CLAIM.orderId, { state: "cree", noteUuid: "n", noteNumber: "L00042", addressUuid: "a", companyUuid: "c" });
+    await repo.releaseRefusedSale(CLAIM.orderId);
+    expect(rows.size).toBe(1);
+  });
+
+  it("l'état du bon n'avance que dans l'ordre : un « annule » après « converti » ne change rien", async () => {
+    await repo.claimSale(CLAIM);
+    expect(await repo.markNote(CLAIM.orderId, { state: "annule" })).toEqual({ ok: true, value: false });
+    expect(await repo.markNote(CLAIM.orderId, { state: "cree", noteUuid: "n", noteNumber: null, addressUuid: "a", companyUuid: "c" })).toEqual({ ok: true, value: true });
+    expect(await repo.markNote(CLAIM.orderId, { state: "refuse", errorCode: "tard" })).toEqual({ ok: true, value: false });
+    expect(await repo.markNote(CLAIM.orderId, { state: "converti" })).toEqual({ ok: true, value: true });
+    expect(await repo.markNote(CLAIM.orderId, { state: "annule" })).toEqual({ ok: true, value: false });
+    expect(rows.get(CLAIM.orderId)).toMatchObject({ noteState: "converti" });
   });
 
   it("la facture ne se réserve qu'une fois, et seulement sur un bon fait", async () => {
     await repo.claimSale(CLAIM);
     expect(await repo.claimConversion(CLAIM.orderId)).toEqual({ ok: true, value: false });
     await repo.markNote(CLAIM.orderId, { state: "cree", noteUuid: "n", noteNumber: null, addressUuid: "a", companyUuid: "c" });
-    expect(fakePrisma.abaNinjaSale["updateMany"]).toHaveBeenLastCalledWith(expect.objectContaining({ where: { orderId: CLAIM.orderId } }));
+    expect(fakePrisma.abaNinjaSale["updateMany"]).toHaveBeenLastCalledWith(expect.objectContaining({ where: { orderId: CLAIM.orderId, noteState: "en_cours" } }));
     expect(await repo.claimConversion(CLAIM.orderId)).toEqual({ ok: true, value: true });
     expect(fakePrisma.abaNinjaSale["updateMany"]).toHaveBeenLastCalledWith({
       where: { orderId: CLAIM.orderId, noteState: "cree", invoiceState: null },

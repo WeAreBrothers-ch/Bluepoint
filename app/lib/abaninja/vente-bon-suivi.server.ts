@@ -6,11 +6,13 @@ import { cancelDeliveryNote, updateDeliveryNote } from "./delivery-notes.server"
 import { todayInZurich } from "./invoice-status";
 import { plannedDeliveryDate, saleNoteBody } from "./vente-bon-plan";
 import { loadSaleSource } from "./vente-bon-source.server";
+import { unsavedChange } from "./vente-errors";
 import { findSale, markNote, type AbaNinjaSale } from "./vente-repository.server";
 
 /**
  * Le bon de livraison suit la commande : « Modifier les vins » le remet aux vins actuels, l'annulation
- * l'annule pour de bon. Seul un bon fait (« cree ») est touché : un bon réglé par sa facture ne bouge plus.
+ * l'annule pour de bon. Seul un bon fait (« cree ») dont la facture n'est pas commencée est touché : un bon
+ * en train de devenir une facture, ou réglé par elle, ne bouge plus.
  */
 
 export type FollowOutcome = { readonly kind: "rien" } | { readonly kind: "fait" } | { readonly kind: "echec"; readonly message: string };
@@ -23,12 +25,13 @@ function failed(message: string): FollowOutcome {
   return { kind: "echec", message };
 }
 
-/** La ligne de la commande quand son bon est fait dans AbaNinja (et relève de cette boutique). */
+/** La ligne de la commande quand son bon est fait dans AbaNinja, sans facture commencée (et relève de cette boutique). */
 async function madeNoteOf(shop: string, orderId: string): Promise<MadeNote | FollowOutcome> {
   const sale = await findSale(orderId);
   if (!sale.ok) return failed("l’app n’a pas pu relire le bon.");
   const row = sale.value;
   if (row === null || row.shop !== shop || row.noteState !== "cree") return NOTHING;
+  if (row.invoiceState !== null) return failed("le bon est déjà en train de devenir une facture : il ne se modifie plus.");
   const { noteUuid, addressUuid, companyUuid } = row;
   if (noteUuid === null || addressUuid === null || companyUuid === null) return failed("le bon n’est pas complet dans l’app.");
   return { ...row, noteUuid, addressUuid, companyUuid };
@@ -63,8 +66,8 @@ export async function cancelSaleNote(shop: string, orderId: string): Promise<Fol
   if (!config.ok) return failed(config.error.message);
   const cancelled = await cancelDeliveryNote(config.value, sale.noteUuid);
   if (!cancelled.ok) return failed(cancelled.error.message);
-  const saved = await markNote(orderId, { state: "annule" });
-  if (!saved.ok) logError("Bon AbaNinja annulé, état non enregistré", saved.error, { orderId });
+  const problem = unsavedChange(await markNote(orderId, { state: "annule" }));
+  if (problem !== null) logError("Bon AbaNinja annulé, état non enregistré", problem, { orderId });
   logInfo("Bon de livraison AbaNinja annulé", { orderId, reference: sale.reference });
   return { kind: "fait" };
 }

@@ -55,7 +55,7 @@ beforeEach(() => {
   deps.readAbaNinjaConfig.mockReturnValue(realConfig.readAbaNinjaConfig({ ABANINJA_TOKEN: TEST_TOKEN, ABANINJA_ACCOUNT_UUID: TEST_ACCOUNT_UUID }));
   deps.findSale.mockResolvedValue(success(null));
   deps.claimSale.mockResolvedValue(success({ sale: SALE, claimed: true }));
-  deps.markNote.mockResolvedValue(success(SALE));
+  deps.markNote.mockResolvedValue(success(true));
   deps.createAddress.mockResolvedValue(success(RECEIVER));
   deps.createDeliveryNote.mockResolvedValue(success({ kind: "incertain" }));
 });

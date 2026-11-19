@@ -4,7 +4,9 @@ import { failure, success, toError, type Result } from "../core/result";
 
 /**
  * Ventes passées dans AbaNinja : une ligne par commande. La ligne est prise AVANT tout appel à AbaNinja
- * (qui ne protège pas des doublons) ; chaque changement d'état est un UPDATE conditionnel atomique.
+ * (qui ne protège pas des doublons). Les réservations (ligne, facture, paiement) et l'état du bon sont des
+ * UPDATE conditionnels atomiques : un seul appelant gagne, et un état plus avancé n'est jamais écrasé.
+ * markInvoice et markPayment notent sans condition le résultat d'une étape déjà réservée par l'appelant.
  */
 
 export type { AbaNinjaSale };
@@ -85,8 +87,21 @@ function noteData(update: NoteUpdate): Prisma.AbaNinjaSaleUpdateManyMutationInpu
   return { noteState: state, ...client, ...(errorCode === undefined ? {} : { lastErrorCode: errorCode }) };
 }
 
-export function markNote(orderId: string, update: NoteUpdate): Promise<Result<AbaNinjaSale, Error>> {
-  return guarded(() => updated(orderId, noteData(update)));
+/** L'état d'où chaque état du bon peut venir : « annule » ne remplace jamais « converti », ni l'inverse. */
+const NOTE_COMES_FROM: Readonly<Record<NoteUpdate["state"], string>> = {
+  cree: "en_cours",
+  incertain: "en_cours",
+  refuse: "en_cours",
+  annule: "cree",
+  converti: "cree",
+};
+
+/** Note ce qu'AbaNinja a fait du bon ; faux si la ligne n'était plus dans l'état attendu (rien n'est changé). */
+export function markNote(orderId: string, update: NoteUpdate): Promise<Result<boolean, Error>> {
+  return guarded(async () => {
+    const { count } = await prisma.abaNinjaSale.updateMany({ where: { orderId, noteState: NOTE_COMES_FROM[update.state] }, data: noteData(update) });
+    return count === 1;
+  });
 }
 
 /** Réserve la facture du bon : vrai pour un seul appelant, et seulement si le bon est fait. */

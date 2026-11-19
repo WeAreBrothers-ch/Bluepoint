@@ -5,6 +5,7 @@ import { testConfig } from "./test-support";
 import { BANK, callRecorder, INVOICE, INVOICE_BODY, MADE, NOTE, NOTE_BODY, ORDER, PDF, RECEIVER, REF, SALE, request } from "./vente-conversion.test-support";
 
 const deps = vi.hoisted(() => ({
+  logError: vi.fn(),
   claimConversion: vi.fn(),
   markInvoice: vi.fn(),
   markNote: vi.fn(),
@@ -21,7 +22,7 @@ const deps = vi.hoisted(() => ({
   downloadInvoicePdf: vi.fn(),
 }));
 
-vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() }));
+vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: deps.logError }));
 vi.mock("./vente-repository.server", () => ({
   claimConversion: deps.claimConversion,
   markInvoice: deps.markInvoice,
@@ -49,7 +50,7 @@ beforeEach(() => {
   calls.length = 0;
   deps.claimConversion.mockResolvedValue(success(true));
   deps.markInvoice.mockResolvedValue(success(SALE));
-  deps.markNote.mockResolvedValue(success(SALE));
+  deps.markNote.mockResolvedValue(success(true));
   deps.markPayment.mockResolvedValue(success(SALE));
   deps.listDeliveryNoteActionNames.mockResolvedValue(success(["convertDNI", "markSent", "cancel"]));
   deps.markDeliveryNoteSent.mockImplementation(tracked("markSent", success(undefined)));
@@ -73,6 +74,12 @@ describe("« J'ai livré » : le bon de livraison devient la facture AbaNinja", 
     expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "converti" });
     expect(deps.markInvoice).toHaveBeenLastCalledWith(ORDER, { state: "creee", invoiceUuid: INVOICE, invoiceNumber: "R02292" });
     expect(deps.recordPayment).not.toHaveBeenCalled();
+  });
+
+  it("bon plus « fait » au moment de le dire réglé : la facture continue, l'écart est journalisé", async () => {
+    deps.markNote.mockResolvedValue(success(false));
+    expect(await convertSaleNote(testConfig(), request())).toMatchObject({ ok: true });
+    expect(deps.logError).toHaveBeenCalledWith(expect.stringContaining("bon réglé"), expect.any(Error), { orderId: ORDER });
   });
 
   it("une seule facture même si « J'ai livré » et Shopify arrivent ensemble", async () => {

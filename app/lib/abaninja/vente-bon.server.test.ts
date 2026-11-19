@@ -21,9 +21,10 @@ const deps = vi.hoisted(() => ({
   deleteCompany: vi.fn(),
   findInvoiceByOrder: vi.fn(),
   logInfo: vi.fn(),
+  logError: vi.fn(),
 }));
 
-vi.mock("../core/logger.server", () => ({ logInfo: deps.logInfo, logError: vi.fn() }));
+vi.mock("../core/logger.server", () => ({ logInfo: deps.logInfo, logError: deps.logError }));
 vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE }));
 vi.mock("../reglages/settings.server", () => ({ loadCompleteSettings: deps.loadCompleteSettings }));
 vi.mock("../factures/shopify-order.server", () => ({ fetchOrderForInvoice: deps.fetchOrderForInvoice }));
@@ -56,7 +57,7 @@ beforeEach(() => {
   deps.findSale.mockResolvedValue(success(null));
   deps.claimSale.mockResolvedValue(success({ sale: SALE, claimed: true }));
   deps.releaseRefusedSale.mockResolvedValue(success(undefined));
-  deps.markNote.mockResolvedValue(success(SALE));
+  deps.markNote.mockResolvedValue(success(true));
   deps.createAddress.mockResolvedValue(success(RECEIVER));
   deps.createDeliveryNote.mockResolvedValue(success({ kind: "cree", uuid: NOTE }));
   deps.getDeliveryNote.mockResolvedValue(success({ uuid: NOTE, status: "draft", reference: SALE.reference, number: "L00042", companyUuid: RECEIVER.companyUuid }));
@@ -87,6 +88,12 @@ describe("bon de livraison AbaNinja à l'arrivée d'une commande", () => {
   it("journalise l'identifiant du bon dès qu'AbaNinja le donne", async () => {
     await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
     expect(deps.logInfo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ orderId: ORDER, noteUuid: NOTE }));
+  });
+
+  it("ligne changée pendant le bon (effacée entre-temps) : l'état non noté est journalisé", async () => {
+    deps.markNote.mockResolvedValue(success(false));
+    await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
+    expect(deps.logError).toHaveBeenCalledWith(expect.any(String), expect.any(Error), expect.objectContaining({ orderId: ORDER, state: "cree" }));
   });
 
   it("ne refait pas le bon quand Shopify renvoie la commande (ligne déjà prise)", async () => {

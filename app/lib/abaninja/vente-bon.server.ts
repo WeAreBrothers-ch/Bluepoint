@@ -11,7 +11,7 @@ import { deleteCompany } from "./invoice-cleanup.server";
 import { classifyCreateFailure } from "./invoice-errors";
 import { NOTE_TOO_LATE, planTestSaleNote, tooLateForNote, type SaleNotePlan } from "./vente-bon-plan";
 import { loadSaleOrder, saleInputOf } from "./vente-bon-source.server";
-import { NOTE_ERASE_HINT } from "./vente-errors";
+import { NOTE_ERASE_HINT, unsavedChange } from "./vente-errors";
 import { claimSale, findSale, markNote, releaseRefusedSale, type LeftClient, type NoteUpdate } from "./vente-repository.server";
 
 /**
@@ -35,8 +35,8 @@ function refused(message: string): SaleNoteOutcome {
 }
 
 async function remember(orderId: OrderGid, update: NoteUpdate): Promise<void> {
-  const saved = await markNote(orderId, update);
-  if (!saved.ok) logError("Bon de livraison AbaNinja : état non enregistré", saved.error, { orderId, state: update.state });
+  const problem = unsavedChange(await markNote(orderId, update));
+  if (problem !== null) logError("Bon de livraison AbaNinja : état non enregistré", problem, { orderId, state: update.state });
 }
 
 /**

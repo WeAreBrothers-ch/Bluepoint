@@ -1,4 +1,4 @@
-import { logInfo } from "../core/logger.server";
+import { logError, logInfo } from "../core/logger.server";
 import { failure, type Result } from "../core/result";
 import type { CallOptions } from "./call-options";
 import type { AbaNinjaConfig } from "./config.server";
@@ -6,7 +6,7 @@ import { convertDeliveryNoteToInvoice, listDeliveryNoteActionNames, markDelivery
 import type { AbaNinjaError } from "./errors";
 import { classifyCreateFailure } from "./invoice-errors";
 import { finishSaleInvoice, receiverOf, remember, type SaleConversionRequest, type SaleOutcome } from "./vente-conversion-finish.server";
-import { SALE_ERASE_HINT, SaleInvoiceError } from "./vente-errors";
+import { SALE_ERASE_HINT, SaleInvoiceError, unsavedChange } from "./vente-errors";
 import { claimConversion, markInvoice, markNote } from "./vente-repository.server";
 
 export type { SaleConversionRequest, SalePayment } from "./vente-conversion-finish.server";
@@ -65,7 +65,8 @@ export async function convertSaleNote(config: AbaNinjaConfig, request: SaleConve
   const invoiceUuid = converted.value;
   logInfo("Bon AbaNinja transformé en facture", { orderId, reference, invoiceUuid });
   const noted = await remember(markInvoice(orderId, { state: "creee", invoiceUuid, invoiceNumber: null }), "facture non notée", orderId);
-  await remember(markNote(orderId, { state: "converti" }), "bon réglé non noté", orderId);
+  const unsaved = unsavedChange(await markNote(orderId, { state: "converti" }));
+  if (unsaved !== null) logError("Facture du bon AbaNinja : bon réglé non noté", unsaved, { orderId });
   if (!noted) {
     return failure(new SaleInvoiceError("incertaine", "La facture est faite dans AbaNinja, mais l’app n’a pas pu le noter.", [`Référence du bon : ${reference}.`, SALE_ERASE_HINT]));
   }
