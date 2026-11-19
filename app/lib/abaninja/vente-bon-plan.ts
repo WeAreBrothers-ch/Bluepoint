@@ -42,7 +42,6 @@ export function saleNoteBody(
   });
 }
 
-/** Jour de livraison prévu s'il est encore à venir, sinon aujourd'hui (AbaNinja refuse une livraison avant le bon). */
 /** Commande facturée (copie dans l'app) ou livrée avant les bons de livraison : elle n'aura pas de bon. */
 export const NOTE_TOO_LATE = "Facture faite avant les bons de livraison : pas de bon pour cette commande.";
 
@@ -50,6 +49,7 @@ export function tooLateForNote(order: { readonly hasInvoice: boolean; readonly f
   return order.hasInvoice || order.fulfillments.some((fulfillment) => fulfillment.status === "SUCCESS");
 }
 
+/** Jour de livraison prévu s'il est encore à venir, sinon aujourd'hui (AbaNinja refuse une livraison avant le bon). */
 export function plannedDeliveryDate(plannedDate: string | null, today: string): string {
   return plannedDate !== null && ISO_DATE.test(plannedDate) && plannedDate >= today ? plannedDate : today;
 }

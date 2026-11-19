@@ -108,6 +108,12 @@ describe("facture AbaNinja d'une commande d'essai, vue depuis l'app", () => {
     expect(await ensureAbaNinjaTestInvoice(sale)).toEqual({ ok: true, value: { invoice: copy, created: false, inAbaNinja: true } });
   });
 
+  it("doublon, mais la copie trouvée est une autre facture (BluePoint) : échec dit, jamais cachée", async () => {
+    tx.storedFile.create.mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError("doublon", { code: "P2002", clientVersion: "test" }));
+    deps.findInvoiceByOrder.mockResolvedValue({ id: "copie-bp", shop: "test.myshopify.com", orderId: ORDER, number: "BP-2026-0042" });
+    expect(await ensureAbaNinjaTestInvoice(sale)).toMatchObject({ ok: false });
+  });
+
   it("résultat incertain : le dit clairement et ne garde aucune copie", async () => {
     deps.createTestSaleInvoice.mockResolvedValue(failure(new SaleInvoiceError("incertaine", "AbaNinja n’a pas confirmé la facture.", ["Regardez dans AbaNinja."])));
     const result = await ensureAbaNinjaTestInvoice(sale);

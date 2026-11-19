@@ -55,12 +55,15 @@ export interface SavedCopy {
   readonly created: boolean;
 }
 
-/** La copie enregistrée par l'action gagnante d'une course (contrainte d'unicité) ; null si ce n'en est pas une. */
-async function copyOfRace(sale: AbaNinjaSaleContext, error: unknown): Promise<Invoice | null> {
+/**
+ * La copie de CETTE facture enregistrée par l'action gagnante d'une course (contrainte d'unicité) ; null si ce
+ * n'en est pas une (autre facture de la commande, BluePoint par exemple : l'échec est dit, jamais caché).
+ */
+async function copyOfRace(sale: AbaNinjaSaleContext, number: string, error: unknown): Promise<Invoice | null> {
   if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") return null;
   try {
     const existing = await findInvoiceByOrder(sale.orderId);
-    return existing !== null && existing.shop === sale.shop ? existing : null;
+    return existing !== null && existing.shop === sale.shop && existing.number === number ? existing : null;
   } catch (thrown) {
     logError("Copie de facture AbaNinja illisible après un doublon", thrown, { orderId: sale.orderId });
     return null;
@@ -99,7 +102,7 @@ export async function saveCopy(
     });
     return success({ invoice, created: true });
   } catch (error) {
-    const existing = await copyOfRace(sale, error);
+    const existing = await copyOfRace(sale, number, error);
     if (existing !== null) return success({ invoice: existing, created: false });
     logError("Facture AbaNinja faite mais non enregistrée dans l’app", error, { orderId: sale.orderId });
     return failure(new InvoiceError("abaninja_echec", [`La facture ${number} est faite dans AbaNinja, mais l’app n’a pas pu l’enregistrer.`, options.hint]));

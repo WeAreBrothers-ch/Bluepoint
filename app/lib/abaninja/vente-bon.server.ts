@@ -68,7 +68,11 @@ async function makeNote(config: AbaNinjaConfig, orderId: OrderGid, plan: SaleNot
     const hint = `Si un client « ${plan.clientName} » apparaît quand même dans AbaNinja, supprimez-le.`;
     return refuse(orderId, receiver.error.code, `AbaNinja n’a pas créé le client d’essai : ${receiver.error.message} ${hint}`);
   }
-  if (!("companyUuid" in receiver.value)) return refuse(orderId, "client_personne", "AbaNinja a créé une personne au lieu d’une entreprise : le bon n’est pas fait.");
+  if (!("companyUuid" in receiver.value)) {
+    // L'app ne sait pas supprimer une personne dans AbaNinja : elle la nomme, sinon chaque essai en ajouterait une.
+    const person = `AbaNinja a créé une personne « ${plan.clientName} » au lieu d’une entreprise : le bon n’est pas fait.`;
+    return refuse(orderId, "client_personne", `${person} Supprimez-la dans AbaNinja avant de réessayer.`);
+  }
   const client = { addressUuid: receiver.value.addressUuid, companyUuid: receiver.value.companyUuid };
   const created = await createDeliveryNote(config, { ...plan.note, receiver: client });
   if (!created.ok) {

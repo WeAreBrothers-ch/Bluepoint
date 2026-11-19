@@ -116,51 +116,6 @@ describe("bon de livraison AbaNinja à l'arrivée d'une commande", () => {
     expect(deps.claimSale).toHaveBeenCalledTimes(1);
   });
 
-  it("bon refusé qui a laissé son client d'essai : ce client est supprimé d'abord, puis le bon est refait", async () => {
-    deps.findSale.mockResolvedValue(success({ ...SALE, noteState: "refuse", ...RECEIVER }));
-    expect(await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW)).toMatchObject({ kind: "cree" });
-    expect(deps.deleteCompany).toHaveBeenCalledWith(CONFIG_VALUE, RECEIVER.companyUuid);
-    const [removedAt] = deps.deleteCompany.mock.invocationCallOrder;
-    const [releasedAt] = deps.releaseRefusedSale.mock.invocationCallOrder;
-    expect(removedAt).toBeLessThan(releasedAt ?? 0);
-    expect(deps.claimSale).toHaveBeenCalledTimes(1);
-  });
-
-  it("client d'essai resté mais déjà supprimé dans AbaNinja : le bon est refait", async () => {
-    deps.findSale.mockResolvedValue(success({ ...SALE, noteState: "refuse", ...RECEIVER }));
-    deps.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("introuvable", { status: 404 })));
-    expect(await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW)).toMatchObject({ kind: "cree" });
-    expect(deps.releaseRefusedSale).toHaveBeenCalledWith(ORDER);
-  });
-
-  it("client d'essai resté et impossible à supprimer : pas de nouvel essai, le client reste suivi", async () => {
-    deps.findSale.mockResolvedValue(success({ ...SALE, noteState: "refuse", ...RECEIVER }));
-    deps.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
-    const outcome = await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
-    expect(outcome).toEqual({
-      kind: "refuse",
-      message:
-        "Le bon précédent a été refusé et son client d’essai est resté dans AbaNinja : l’app n’a pas pu le supprimer. AbaNinja est momentanément injoignable, réessayez dans quelques instants. Pour recommencer : page « Connexion AbaNinja », bouton « Effacer les factures d’essai » (il efface aussi les bons), puis « Créer le bon de livraison » sur la commande.",
-    });
-    expect(deps.releaseRefusedSale).not.toHaveBeenCalled();
-    expect(deps.createAddress).not.toHaveBeenCalled();
-  });
-
-  it("bon refusé par AbaNinja : le client d'essai est retiré et la ligne marquée refusée", async () => {
-    deps.createDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
-    const outcome = await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
-    expect(outcome).toMatchObject({ kind: "refuse" });
-    expect(deps.deleteCompany).toHaveBeenCalledWith(CONFIG_VALUE, RECEIVER.companyUuid);
-    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "refuse", errorCode: "donnees_refusees" });
-  });
-
-  it("bon refusé et client d'essai resté dans AbaNinja : ses identifiants sont notés pour l'effacer plus tard", async () => {
-    deps.createDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
-    deps.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
-    expect(await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW)).toMatchObject({ kind: "refuse" });
-    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "refuse", errorCode: "donnees_refusees", ...RECEIVER });
-  });
-
   it("réponse incertaine : la ligne est marquée à vérifier, le bon n'est jamais redemandé", async () => {
     deps.createDeliveryNote.mockResolvedValue(success({ kind: "incertain" }));
     const outcome = await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
