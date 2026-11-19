@@ -1,10 +1,26 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
+import { findSale } from "../abaninja/vente-repository.server";
 import { logError, logInfo } from "../core/logger.server";
 import type { OrderGid } from "../shopify/ids";
 import { ensureReceipt } from "./generate.server";
 import { receiptSkipReason } from "./pro-order";
 import { fetchReceiptFacts } from "./receipt-query";
 import { emailInvoice } from "./send.server";
+
+/**
+ * Étiquette « fictif » retirée après coup : la ligne d'essai garde le bon, et la facture en naîtra à la
+ * livraison. Base illisible : pas de reçu non plus (jamais une facture de trop ; il reste faisable depuis « Factures »).
+ */
+async function testNoteReason(shop: string, orderId: OrderGid): Promise<string | null> {
+  const sale = await findSale(orderId);
+  if (!sale.ok) {
+    logError("Reçu pro : vente AbaNinja illisible", sale.error, { orderId });
+    return "vente AbaNinja illisible, le reçu reste faisable depuis « Factures »";
+  }
+  const row = sale.value;
+  const followsNote = row !== null && row.shop === shop && row.isTest && row.noteState !== "refuse";
+  return followsNote ? "commande d’essai (étiquette retirée), sa facture naît de son bon de livraison AbaNinja" : null;
+}
 
 /**
  * Reçu pro : quand un professionnel paie sa commande en ligne (webhook orders/paid), l'app crée
@@ -19,7 +35,7 @@ export async function issueReceiptOnPayment(admin: AdminApiContext, shop: string
     logError("Reçu pro : lecture de la commande impossible", facts.error, { orderId, code: facts.error.code });
     return;
   }
-  const skipped = receiptSkipReason(facts.value);
+  const skipped = receiptSkipReason(facts.value) ?? (await testNoteReason(shop, orderId));
   if (skipped !== null) {
     logInfo(`Reçu pro ignoré : ${skipped}`, { orderId });
     return;

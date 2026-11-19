@@ -17,7 +17,7 @@ const { ensureViaAbaNinja } = await import("./abaninja-route.server");
 
 const SHOP = "boutique.myshopify.com";
 const ORDER = parseGid("gid://shopify/Order/1042", "Order") ?? expect.unreachable("identifiant de commande invalide");
-const SALE = { shop: SHOP, orderId: ORDER, noteState: "cree", invoiceState: null };
+const SALE = { shop: SHOP, orderId: ORDER, isTest: true, noteState: "cree", invoiceState: null };
 const CARD: PaymentTransaction = { kind: "SALE", status: "SUCCESS", processedAt: "2026-11-10T08:15:00Z", gateway: "shopify_payments" };
 const TO_PAY: InvoicePayment = { kind: "a_payer" };
 const PAID: InvoicePayment = { kind: "payee", paidOn: "2026-11-10" as IsoDate };
@@ -67,9 +67,26 @@ describe("aiguillage d'une commande d'essai vers AbaNinja", () => {
     expect(await ensureViaAbaNinja(context(["fictif"], [CARD]), PAID)).toBeNull();
   });
 
-  it("vraie commande : jamais AbaNinja, la base n'est même pas lue", async () => {
+  it("vraie commande sans ligne : facture BluePoint", async () => {
+    deps.findSale.mockResolvedValue(success(null));
     expect(await ensureViaAbaNinja(context(["pro"]), TO_PAY)).toBeNull();
-    expect(deps.findSale).not.toHaveBeenCalled();
+    expect(deps.ensureAbaNinjaSaleInvoice).not.toHaveBeenCalled();
+    expect(deps.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
+  });
+
+  it("étiquette « fictif » retirée, ligne d'essai présente : la facture naît quand même du bon", async () => {
+    await ensureViaAbaNinja(context(["pro"]), TO_PAY);
+    expect(deps.ensureAbaNinjaSaleInvoice).toHaveBeenCalledWith(SALE, expect.anything(), null);
+    expect(deps.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
+  });
+
+  it("sans étiquette, une ligne refusée ou qui n'est pas un essai ne mène jamais à AbaNinja", async () => {
+    for (const row of [{ ...SALE, noteState: "refuse" }, { ...SALE, isTest: false }]) {
+      deps.findSale.mockResolvedValue(success(row));
+      expect(await ensureViaAbaNinja(context(["pro"]), TO_PAY)).toBeNull();
+    }
+    expect(deps.ensureAbaNinjaSaleInvoice).not.toHaveBeenCalled();
+    expect(deps.ensureAbaNinjaTestInvoice).not.toHaveBeenCalled();
   });
 
   it("ligne d'une autre boutique : ignorée", async () => {

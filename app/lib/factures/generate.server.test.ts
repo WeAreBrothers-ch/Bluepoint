@@ -156,7 +156,7 @@ describe("ensureInvoice : commandes d'essai faites dans AbaNinja", () => {
 });
 
 describe("ensureInvoice : commande d'essai dont le bon de livraison est dans AbaNinja", () => {
-  const SALE = { shop: "boutique.myshopify.com", orderId: ORDER, noteState: "cree", invoiceState: null };
+  const SALE = { shop: "boutique.myshopify.com", orderId: ORDER, isTest: true, noteState: "cree", invoiceState: null };
 
   it("à payer : la facture naît du bon (jamais une deuxième facture directe)", async () => {
     orderTags = ["fictif"];
