@@ -2,9 +2,11 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { swissIsoDate } from "../agenda/dates";
 import { loadPaymentTerms } from "../agenda/payment-terms.server";
 import type { InvoiceRef } from "../agenda/types";
-import { saleNoteView, type SaleNoteView } from "../abaninja/vente-bon-view";
-import { findSale } from "../abaninja/vente-repository.server";
+import { tooLateForNote } from "../abaninja/vente-bon-plan";
+import { saleNoteView, type SaleNoteOrder, type SaleNoteView } from "../abaninja/vente-bon-view";
+import { findSale, type AbaNinjaSale } from "../abaninja/vente-repository.server";
 import { logError } from "../core/logger.server";
+import type { Result } from "../core/result";
 import { isTestOrder } from "../factures/abaninja-lines";
 import { findInvoiceByOrder, listInvoices } from "../factures/repository.server";
 import { channelsByCustomer, invoiceShortcuts } from "../factures/shortcuts.server";
@@ -52,12 +54,17 @@ export async function loadOrderPage(admin: AdminApiContext, shop: string, numeri
   const node = result.value.order;
   if (node === null) return { ...base, detail: null, invoice: null, problem: "Cette commande n’existe plus." };
 
-  const [terms, stored, settings, saleNote] = await Promise.all([
+  const [terms, stored, settings, sale] = await Promise.all([
     node.displayFinancialStatus === "PENDING" ? loadPaymentTerms(admin, [orderId]) : Promise.resolve(new Map()),
     findInvoiceByOrder(orderId),
     loadCompleteSettings(shop),
-    saleNoteOf(orderId, isTestOrder(node.tags ?? [], node.customer?.tags), now),
+    findSale(orderId),
   ]);
+  const order: SaleNoteOrder = {
+    isTest: isTestOrder(node.tags ?? [], node.customer?.tags),
+    tooLate: tooLateForNote({ hasInvoice: stored !== null, fulfillments: node.fulfillments }),
+  };
+  const saleNote = saleNoteOf(sale, orderId, order, now);
   const detail = toOrderDetail(node, terms.get(orderId) ?? null, today);
   if (detail === null) return { ...base, detail: null, invoice: null, problem: "Cette commande a été annulée : rien à livrer." };
   const invoice =
@@ -74,9 +81,8 @@ export async function loadOrderPage(admin: AdminApiContext, shop: string, numeri
 }
 
 /** L'état du bon AbaNinja ; une base injoignable n'empêche pas d'afficher la commande. */
-async function saleNoteOf(orderId: string, isTest: boolean, now: Date): Promise<SaleNoteView | null> {
-  const sale = await findSale(orderId);
-  if (sale.ok) return saleNoteView(sale.value, isTest, now);
+function saleNoteOf(sale: Result<AbaNinjaSale | null, Error>, orderId: string, order: SaleNoteOrder, now: Date): SaleNoteView | null {
+  if (sale.ok) return saleNoteView(sale.value, order, now);
   logError("État du bon de livraison illisible", sale.error, { orderId });
   return null;
 }

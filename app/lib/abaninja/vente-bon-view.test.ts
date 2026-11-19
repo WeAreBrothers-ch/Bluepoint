@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { frenchTypography } from "./trial-typography";
+import { tooLateForNote } from "./vente-bon-plan";
 import { saleNoteActionResult, saleNoteView, type SaleNoteView } from "./vente-bon-view";
 import type { AbaNinjaSale } from "./vente-repository.server";
 
@@ -32,53 +33,73 @@ function sale(changes: Partial<AbaNinjaSale> = {}): AbaNinjaSale {
   };
 }
 
+const TEST_ORDER = { isTest: true, tooLate: false };
+const REAL_ORDER = { isTest: false, tooLate: false };
+const TOO_LATE = view("Facture faite avant les bons de livraison : pas de bon pour cette commande.", "info");
+
 function view(text: string, tone: SaleNoteView["tone"], canCreate = false): SaleNoteView {
   return { text: frenchTypography(text), tone, canCreate };
 }
 
 describe("état du bon de livraison AbaNinja sur la fiche commande", () => {
   it("ne montre rien pour une vraie commande sans bon", () => {
-    expect(saleNoteView(null, false, NOW)).toBeNull();
+    expect(saleNoteView(null, REAL_ORDER, NOW)).toBeNull();
   });
 
   it("propose de créer le bon d'une commande d'essai qui n'en a pas", () => {
-    expect(saleNoteView(null, true, NOW)).toEqual(view("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true));
+    expect(saleNoteView(null, TEST_ORDER, NOW)).toEqual(view("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true));
   });
 
   it("dit que le bon est en cours pendant les deux premières minutes", () => {
-    expect(saleNoteView(sale(), true, NOW)).toEqual(view("Bon de livraison en cours dans AbaNinja…", "info"));
+    expect(saleNoteView(sale(), TEST_ORDER, NOW)).toEqual(view("Bon de livraison en cours dans AbaNinja…", "info"));
+  });
+
+  it("commande d'essai déjà facturée ou livrée sans bon : pas de bouton, elle n'aura pas de bon", () => {
+    expect(saleNoteView(null, { isTest: true, tooLate: true }, NOW)).toEqual(TOO_LATE);
+  });
+
+  it("bon refusé sur une commande facturée ou livrée depuis : pas de bouton non plus", () => {
+    expect(saleNoteView(sale({ noteState: "refuse" }), { isTest: true, tooLate: true }, NOW)).toEqual(TOO_LATE);
   });
 
   it("demande de vérifier un bon resté en cours ou au résultat incertain", () => {
     const stuck = view(`Bon de livraison à vérifier dans AbaNinja (référence ${REF}). ${NOTE_ERASE}`, "warning");
-    expect(saleNoteView(sale({ createdAt: new Date("2026-11-19T11:03:30Z") }), true, NOW)).toEqual(stuck);
-    expect(saleNoteView(sale({ noteState: "incertain" }), true, NOW)).toEqual(stuck);
+    expect(saleNoteView(sale({ createdAt: new Date("2026-11-19T11:03:30Z") }), TEST_ORDER, NOW)).toEqual(stuck);
+    expect(saleNoteView(sale({ noteState: "incertain" }), TEST_ORDER, NOW)).toEqual(stuck);
   });
 
   it("propose de recommencer un bon refusé", () => {
-    expect(saleNoteView(sale({ noteState: "refuse" }), true, NOW)).toEqual(view("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true));
+    expect(saleNoteView(sale({ noteState: "refuse" }), TEST_ORDER, NOW)).toEqual(view("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true));
   });
 
   it("bon refusé qui a laissé son client d'essai : pas de bouton, effacer les essais d'abord", () => {
     const left = sale({ noteState: "refuse", addressUuid: "22222222-2222-4222-8222-222222222222", companyUuid: "33333333-3333-4333-8333-333333333333" });
-    expect(saleNoteView(left, true, NOW)).toEqual(view(`Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE}`, "critical"));
+    expect(saleNoteView(left, TEST_ORDER, NOW)).toEqual(view(`Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE}`, "critical"));
   });
 
   it("donne le numéro du bon fait, ou sa référence s'il n'a pas encore de numéro", () => {
-    expect(saleNoteView(sale({ noteState: "cree", noteNumber: "L00042" }), true, NOW)).toEqual(view("Bon de livraison n° L00042 dans AbaNinja.", "success"));
-    expect(saleNoteView(sale({ noteState: "cree" }), true, NOW)).toEqual(view(`Bon de livraison fait dans AbaNinja (référence ${REF}).`, "success"));
+    expect(saleNoteView(sale({ noteState: "cree", noteNumber: "L00042" }), TEST_ORDER, NOW)).toEqual(view("Bon de livraison n° L00042 dans AbaNinja.", "success"));
+    expect(saleNoteView(sale({ noteState: "cree" }), TEST_ORDER, NOW)).toEqual(view(`Bon de livraison fait dans AbaNinja (référence ${REF}).`, "success"));
   });
 
   it("dit que le bon est réglé par sa facture", () => {
     const converted = sale({ noteState: "converti", noteNumber: "L00042", invoiceNumber: "R02292" });
-    expect(saleNoteView(converted, true, NOW)).toEqual(view("Bon de livraison n° L00042 réglé : facture R02292 faite dans AbaNinja.", "success"));
-    expect(saleNoteView({ ...converted, noteNumber: null, invoiceNumber: null }, true, NOW)).toEqual(
+    expect(saleNoteView(converted, TEST_ORDER, NOW)).toEqual(view("Bon de livraison n° L00042 réglé : facture R02292 faite dans AbaNinja.", "success"));
+    expect(saleNoteView({ ...converted, noteNumber: null, invoiceNumber: null }, TEST_ORDER, NOW)).toEqual(
       view("Bon de livraison réglé : facture faite dans AbaNinja.", "success"),
     );
   });
 
   it("dit que le bon d'une commande annulée est annulé", () => {
-    expect(saleNoteView(sale({ noteState: "annule" }), true, NOW)).toEqual(view("Bon de livraison annulé dans AbaNinja.", "info"));
+    expect(saleNoteView(sale({ noteState: "annule" }), TEST_ORDER, NOW)).toEqual(view("Bon de livraison annulé dans AbaNinja.", "info"));
+  });
+});
+
+describe("trop tard pour un bon de livraison", () => {
+  it("une copie de facture ou une livraison faite suffit ; une livraison annulée ne compte pas", () => {
+    expect(tooLateForNote({ hasInvoice: true, fulfillments: [] })).toBe(true);
+    expect(tooLateForNote({ hasInvoice: false, fulfillments: [{ status: "SUCCESS" }] })).toBe(true);
+    expect(tooLateForNote({ hasInvoice: false, fulfillments: [{ status: "CANCELLED" }] })).toBe(false);
   });
 });
 

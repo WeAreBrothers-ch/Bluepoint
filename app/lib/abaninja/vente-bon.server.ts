@@ -1,5 +1,7 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { logError, logInfo } from "../core/logger.server";
+import { findInvoiceByOrder } from "../factures/repository.server";
+import type { OrderForInvoice } from "../factures/shopify-order.server";
 import type { OrderGid } from "../shopify/ids";
 import { createAddress } from "./addresses.server";
 import { readAbaNinjaConfig, type AbaNinjaConfig } from "./config.server";
@@ -7,7 +9,7 @@ import { createDeliveryNote, getDeliveryNote } from "./delivery-notes.server";
 import type { AbaNinjaError } from "./errors";
 import { deleteCompany } from "./invoice-cleanup.server";
 import { classifyCreateFailure } from "./invoice-errors";
-import { planTestSaleNote, type SaleNotePlan } from "./vente-bon-plan";
+import { NOTE_TOO_LATE, planTestSaleNote, tooLateForNote, type SaleNotePlan } from "./vente-bon-plan";
 import { loadSaleOrder, saleInputOf } from "./vente-bon-source.server";
 import { NOTE_ERASE_HINT } from "./vente-errors";
 import { claimSale, findSale, markNote, releaseRefusedSale, type LeftClient, type NoteUpdate } from "./vente-repository.server";
@@ -98,6 +100,12 @@ async function earlierAttempt(orderId: OrderGid): Promise<SaleNoteOutcome | null
   return null;
 }
 
+/** Facturée ou livrée avant les bons de livraison : un bon ferait une pièce de trop à côté de la facture. */
+async function tooLate(orderId: OrderGid, source: OrderForInvoice): Promise<boolean> {
+  const invoice = await findInvoiceByOrder(orderId);
+  return tooLateForNote({ hasInvoice: invoice !== null, fulfillments: source.contact.fulfillments });
+}
+
 export async function createSaleNoteForOrder(
   admin: AdminApiContext,
   shop: string,
@@ -109,6 +117,7 @@ export async function createSaleNoteForOrder(
   const order = await loadSaleOrder(admin, orderId);
   if (!order.ok) return refused(order.error.message);
   if (!order.value.isTest) return { kind: "pas_concernee" };
+  if (await tooLate(orderId, order.value.source)) return refused(NOTE_TOO_LATE);
   const config = readAbaNinjaConfig();
   if (!config.ok) return refused(config.error.message);
   const input = await saleInputOf(shop, order.value, now);

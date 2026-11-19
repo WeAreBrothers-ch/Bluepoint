@@ -1,5 +1,6 @@
 import type { AbaNinjaSale } from "@prisma/client";
 import { frenchTypography } from "./trial-typography";
+import { NOTE_TOO_LATE } from "./vente-bon-plan";
 import type { SaleNoteOutcome } from "./vente-bon.server";
 import { NOTE_ERASE_HINT } from "./vente-errors";
 
@@ -10,6 +11,13 @@ export interface SaleNoteView {
   readonly tone: "success" | "info" | "warning" | "critical";
   /** Afficher « Créer le bon de livraison ». */
   readonly canCreate: boolean;
+}
+
+/** La commande, vue de sa fiche. */
+export interface SaleNoteOrder {
+  readonly isTest: boolean;
+  /** Facturée ou livrée avant les bons de livraison : pas de bon, pas de bouton. */
+  readonly tooLate: boolean;
 }
 
 export const SALE_NOTE_INTENT = "bon-creer";
@@ -37,14 +45,21 @@ function converted(sale: AbaNinjaSale): SaleNoteView {
   return shown(`${note} réglé : ${invoice} faite dans AbaNinja.`, "success");
 }
 
+function noNoteYet(order: SaleNoteOrder): SaleNoteView | null {
+  if (!order.isTest) return null;
+  if (order.tooLate) return shown(NOTE_TOO_LATE, "info");
+  return shown("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true);
+}
+
 /** Un client d'essai resté dans AbaNinja doit être effacé avant un nouvel essai (sinon plus personne ne le suit). */
-function refusedNote(sale: AbaNinjaSale): SaleNoteView {
+function refusedNote(sale: AbaNinjaSale, order: SaleNoteOrder): SaleNoteView {
   if (sale.companyUuid !== null) return shown(`Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE_HINT}`, "critical");
+  if (order.tooLate) return shown(NOTE_TOO_LATE, "info");
   return shown("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true);
 }
 
-export function saleNoteView(sale: AbaNinjaSale | null, isTest: boolean, now: Date): SaleNoteView | null {
-  if (sale === null) return isTest ? shown("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true) : null;
+export function saleNoteView(sale: AbaNinjaSale | null, order: SaleNoteOrder, now: Date): SaleNoteView | null {
+  if (sale === null) return noNoteYet(order);
   switch (sale.noteState) {
     case "en_cours":
       return now.getTime() - sale.createdAt.getTime() < STUCK_AFTER_MS ? shown("Bon de livraison en cours dans AbaNinja…", "info") : toCheck(sale);
@@ -55,7 +70,7 @@ export function saleNoteView(sale: AbaNinjaSale | null, isTest: boolean, now: Da
     case "converti":
       return converted(sale);
     case "refuse":
-      return refusedNote(sale);
+      return refusedNote(sale, order);
     case "annule":
       return shown("Bon de livraison annulé dans AbaNinja.", "info");
     default:

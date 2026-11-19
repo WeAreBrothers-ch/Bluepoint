@@ -1,12 +1,11 @@
-import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { COMMANDE_SHOPIFY } from "../../../packages/facture-qr/src/fixtures/commande-shopify";
 import { VENDEUR_EXEMPLE } from "../../../packages/facture-qr/src/fixtures/vendeur";
 import { failure, success } from "../core/result";
 import type { ShopSettingsValues } from "../reglages/schema";
-import { parseGid } from "../shopify/ids";
 import { AbaNinjaError } from "./errors";
 import { TEST_ACCOUNT_UUID, TEST_TOKEN } from "./test-support";
+import { ADMIN, contact, NOTE, NOW, ORDER, RECEIVER, SALE, SHOP } from "./vente-bon.test-support";
 
 const deps = vi.hoisted(() => ({
   fetchOrderForInvoice: vi.fn(),
@@ -20,6 +19,7 @@ const deps = vi.hoisted(() => ({
   createDeliveryNote: vi.fn(),
   getDeliveryNote: vi.fn(),
   deleteCompany: vi.fn(),
+  findInvoiceByOrder: vi.fn(),
   logInfo: vi.fn(),
 }));
 
@@ -27,6 +27,7 @@ vi.mock("../core/logger.server", () => ({ logInfo: deps.logInfo, logError: vi.fn
 vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE }));
 vi.mock("../reglages/settings.server", () => ({ loadCompleteSettings: deps.loadCompleteSettings }));
 vi.mock("../factures/shopify-order.server", () => ({ fetchOrderForInvoice: deps.fetchOrderForInvoice }));
+vi.mock("../factures/repository.server", () => ({ findInvoiceByOrder: deps.findInvoiceByOrder }));
 vi.mock("./config.server", () => ({ readAbaNinjaConfig: deps.readAbaNinjaConfig }));
 vi.mock("./vente-repository.server", () => ({
   findSale: deps.findSale,
@@ -43,33 +44,9 @@ const realConfig = await vi.importActual<typeof import("./config.server")>("./co
 const CONFIG = realConfig.readAbaNinjaConfig({ ABANINJA_TOKEN: TEST_TOKEN, ABANINJA_ACCOUNT_UUID: TEST_ACCOUNT_UUID });
 const CONFIG_VALUE = CONFIG.ok ? CONFIG.value : expect.unreachable("configuration d’essai invalide");
 
-const ADMIN = {} as AdminApiContext;
-const SHOP = "test.myshopify.com";
-const ORDER = parseGid("gid://shopify/Order/1042", "Order") ?? expect.unreachable("identifiant de commande invalide");
-const NOW = new Date("2026-11-19T11:05:30Z");
-const NOTE = "66666666-6666-4666-8666-666666666666";
-const RECEIVER = { addressUuid: "22222222-2222-4222-8222-222222222222", companyUuid: "33333333-3333-4333-8333-333333333333" };
-
-function contact(orderTags: string[], customerTags: string[]) {
-  return {
-    tags: orderTags,
-    email: "luca.fictif@example.com",
-    phone: null,
-    customer: { defaultEmailAddress: null, defaultPhoneNumber: null, tags: customerTags },
-    dateSouhaitee: { value: "2026-11-25" },
-    shippingAddress: null,
-    billingAddress: null,
-    fulfillments: [],
-    displayFinancialStatus: "PENDING",
-    transactions: [],
-  };
-}
-
 function orderFound(orderTags: string[], customerTags: string[], order = COMMANDE_SHOPIFY) {
   deps.fetchOrderForInvoice.mockResolvedValue(success({ order, contact: contact(orderTags, customerTags) }));
 }
-
-const SALE = { orderId: ORDER, reference: "BP-ESSAI-CMD-1042-20261119-110530", noteState: "en_cours", addressUuid: null, companyUuid: null };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -84,6 +61,7 @@ beforeEach(() => {
   deps.createDeliveryNote.mockResolvedValue(success({ kind: "cree", uuid: NOTE }));
   deps.getDeliveryNote.mockResolvedValue(success({ uuid: NOTE, status: "draft", reference: SALE.reference, number: "L00042", companyUuid: RECEIVER.companyUuid }));
   deps.deleteCompany.mockResolvedValue(success(undefined));
+  deps.findInvoiceByOrder.mockResolvedValue(null);
 });
 
 describe("bon de livraison AbaNinja à l'arrivée d'une commande", () => {
