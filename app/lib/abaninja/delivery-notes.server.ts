@@ -16,7 +16,7 @@ import { validateInput } from "./input-validation";
 import type { PathSegment } from "./path";
 
 /**
- * Bons de livraison AbaNinja : créer, relire, transformer en facture, supprimer.
+ * Bons de livraison AbaNinja : créer, relire, mettre à jour, annuler, transformer en facture, supprimer.
  * Aucune de ces fonctions n'envoie quoi que ce soit à un client.
  */
 
@@ -95,6 +95,40 @@ export async function convertDeliveryNoteToInvoice(
   if (!result.ok) return result;
   const created = result.value.data;
   return created.type === "invoice" ? success(created.uuid) : failure(new AbaNinjaError("reponse_invalide"));
+}
+
+/** Remplace le bon par ce corps (document entier, même schéma que la création) : rejouable sans risque. */
+export async function updateDeliveryNote(
+  config: AbaNinjaConfig,
+  noteUuid: string,
+  input: AbaNinjaDeliveryNoteInput,
+  options: CallOptions = {},
+): Promise<Result<void, AbaNinjaError>> {
+  const valid = validateInput(deliveryNoteInputSchema, input, "Mise à jour du bon de livraison");
+  if (!valid.ok) return valid;
+  const result = await abaNinjaRequest({
+    ...options,
+    config,
+    method: "PATCH",
+    path: noteSegments(config, { uuid: noteUuid }),
+    body: buildDeliveryNoteBody(valid.value),
+    idempotent: true,
+    schema: z.unknown(),
+  });
+  return result.ok ? success(undefined) : result;
+}
+
+/** Annule le bon pour de bon (« cancelPermanently » : plus modifiable ensuite), rejouable sans risque. */
+export async function cancelDeliveryNote(config: AbaNinjaConfig, noteUuid: string, options: CallOptions = {}): Promise<Result<void, AbaNinjaError>> {
+  const result = await abaNinjaRequest({
+    ...options,
+    config,
+    method: "PATCH",
+    path: noteSegments(config, { uuid: noteUuid }, "actions", "cancelPermanently"),
+    idempotent: true,
+    schema: z.unknown(),
+  });
+  return result.ok ? success(undefined) : result;
 }
 
 /** Supprime un bon (action « delete », rejouable sans risque). */
