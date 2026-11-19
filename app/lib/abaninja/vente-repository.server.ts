@@ -17,9 +17,16 @@ export interface SaleClaim {
   readonly isTest: boolean;
 }
 
+/** Client d'essai resté dans AbaNinja : noté pour que l'effacement le retrouve. */
+export interface LeftClient {
+  readonly addressUuid?: string;
+  readonly companyUuid?: string;
+}
+
 export type NoteUpdate =
   | { readonly state: "cree"; readonly noteUuid: string; readonly noteNumber: string | null; readonly addressUuid: string; readonly companyUuid: string }
-  | { readonly state: "incertain" | "refuse" | "annule" | "converti"; readonly errorCode?: string };
+  | ({ readonly state: "incertain" | "refuse"; readonly errorCode: string } & LeftClient)
+  | { readonly state: "annule" | "converti"; readonly errorCode?: string };
 
 export type InvoiceUpdate =
   | { readonly state: "creee"; readonly invoiceUuid: string; readonly invoiceNumber: string | null }
@@ -69,10 +76,17 @@ export function releaseRefusedSale(orderId: string): Promise<Result<void, Error>
   });
 }
 
+function noteData(update: NoteUpdate): Prisma.AbaNinjaSaleUpdateManyMutationInput {
+  if (update.state === "cree") {
+    const { state, ...made } = update;
+    return { noteState: state, ...made };
+  }
+  const { state, errorCode, ...client } = update;
+  return { noteState: state, ...client, ...(errorCode === undefined ? {} : { lastErrorCode: errorCode }) };
+}
+
 export function markNote(orderId: string, update: NoteUpdate): Promise<Result<AbaNinjaSale, Error>> {
-  const { state, ...rest } = update;
-  const data = "errorCode" in rest ? { noteState: state, lastErrorCode: rest.errorCode ?? null } : { noteState: state, ...rest };
-  return guarded(() => updated(orderId, data));
+  return guarded(() => updated(orderId, noteData(update)));
 }
 
 /** Réserve la facture du bon : vrai pour un seul appelant, et seulement si le bon est fait. */

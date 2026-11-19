@@ -59,6 +59,11 @@ describe("état du bon de livraison AbaNinja sur la fiche commande", () => {
     expect(saleNoteView(sale({ noteState: "refuse" }), true, NOW)).toEqual(view("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true));
   });
 
+  it("bon refusé qui a laissé son client d'essai : pas de bouton, effacer les essais d'abord", () => {
+    const left = sale({ noteState: "refuse", addressUuid: "22222222-2222-4222-8222-222222222222", companyUuid: "33333333-3333-4333-8333-333333333333" });
+    expect(saleNoteView(left, true, NOW)).toEqual(view(`Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE}`, "critical"));
+  });
+
   it("donne le numéro du bon fait, ou sa référence s'il n'a pas encore de numéro", () => {
     expect(saleNoteView(sale({ noteState: "cree", noteNumber: "L00042" }), true, NOW)).toEqual(view("Bon de livraison n° L00042 dans AbaNinja.", "success"));
     expect(saleNoteView(sale({ noteState: "cree" }), true, NOW)).toEqual(view(`Bon de livraison fait dans AbaNinja (référence ${REF}).`, "success"));

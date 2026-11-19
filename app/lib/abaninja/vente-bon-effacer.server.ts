@@ -65,11 +65,25 @@ async function eraseInvoice(config: AbaNinjaConfig, sale: AbaNinjaSale, now: Dat
   return (await deleteInvoice(config, sale.invoiceUuid)).ok ? null : keep(sale, `AbaNinja n’a pas effacé la ${label}. Réessayez dans un instant.`);
 }
 
+/**
+ * Bon jamais confirmé par AbaNinja : le client d'essai noté est effacé (AbaNinja répond 409 s'il sert encore,
+ * sans doute à ce bon), puis Eliott cherche le bon à la main.
+ */
+async function eraseUnconfirmedNote(config: AbaNinjaConfig, sale: AbaNinjaSale): Promise<RowOutcome> {
+  const search = `cherchez dans AbaNinja un bon de livraison de référence ${sale.reference}`;
+  const both = `${search} et ${clientHint(sale)}, et supprimez-les s’ils existent.`;
+  if (sale.companyUuid === null) return byHand(sale, both);
+  const removed = await deleteCompany(config, sale.companyUuid);
+  if (removed.ok || removed.error.code === "introuvable") return byHand(sale, `${search} et supprimez-le s’il existe (le client d’essai est effacé).`);
+  if (removed.error.status === 409) return byHand(sale, `${search} : ${clientHint(sale)} sert encore, sans doute à ce bon. Supprimez le bon, puis le client.`);
+  return passing(removed.error) ? keep(sale, "AbaNinja n’a pas répondu. Réessayez dans un instant.") : byHand(sale, both);
+}
+
 async function eraseNote(config: AbaNinjaConfig, sale: AbaNinjaSale, now: Date): Promise<Step> {
   if (sale.noteUuid === null) {
     if (sale.noteState === "refuse") return null;
     if (sale.noteState === "en_cours" && stillRunning(sale, now)) return keep(sale, "le bon est encore en train d’être fait. Réessayez dans deux minutes.");
-    return byHand(sale, `cherchez dans AbaNinja un bon de livraison de référence ${sale.reference} et ${clientHint(sale)}, et supprimez-les s’ils existent.`);
+    return eraseUnconfirmedNote(config, sale);
   }
   const read = await getDeliveryNote(config, sale.noteUuid);
   if (!read.ok) return read.error.code === "introuvable" ? null : keep(sale, "AbaNinja n’a pas répondu. Réessayez dans un instant.");
@@ -81,18 +95,27 @@ async function eraseNote(config: AbaNinjaConfig, sale: AbaNinjaSale, now: Date):
   return byHand(sale, `AbaNinja refuse d’effacer ${noteName(sale)} : supprimez-le à la main, puis ${clientHint(sale)}.`);
 }
 
+/** « bon, facture » ; null quand aucune pièce n'a été faite (bon refusé : seul le client d'essai a pu rester). */
+function piecesOf(sale: AbaNinjaSale): string | null {
+  const pieces = [sale.noteUuid === null ? null : "bon", sale.invoiceUuid === null ? null : "facture"].filter((piece) => piece !== null);
+  return pieces.length === 0 ? null : pieces.join(", ");
+}
+
 async function eraseClient(config: AbaNinjaConfig, sale: AbaNinjaSale): Promise<RowOutcome> {
-  const pieces = sale.invoiceUuid === null ? "bon" : "bon, facture";
-  if (sale.companyUuid === null) return { kind: "effacee", text: `${sale.orderName} : ${pieces} effacés.` };
+  const pieces = piecesOf(sale);
+  if (sale.companyUuid === null) {
+    return { kind: "effacee", text: `${sale.orderName} : ${pieces === null ? "rien n’avait été créé dans AbaNinja" : `${pieces} effacés`}.` };
+  }
   const removed = await deleteCompany(config, sale.companyUuid);
-  if (removed.ok || removed.error.code === "introuvable") return { kind: "effacee", text: `${sale.orderName} : ${pieces} et client d’essai effacés.` };
-  return byHand(sale, `${pieces} effacés, mais ${clientHint(sale)} reste dans AbaNinja : supprimez-le à la main.`);
+  if (removed.ok || removed.error.code === "introuvable") {
+    return { kind: "effacee", text: `${sale.orderName} : ${pieces === null ? "client d’essai effacé" : `${pieces} et client d’essai effacés`}.` };
+  }
+  const stillUsed = removed.error.status === 409 ? " (il sert encore à un document)" : "";
+  const left = `${clientHint(sale)} reste dans AbaNinja${stillUsed} : supprimez-le à la main.`;
+  return byHand(sale, pieces === null ? left : `${pieces} effacés, mais ${left}`);
 }
 
 async function eraseInAbaNinja(config: AbaNinjaConfig, sale: AbaNinjaSale, now: Date): Promise<RowOutcome> {
-  if (sale.noteState === "refuse" && sale.noteUuid === null && sale.invoiceUuid === null) {
-    return { kind: "effacee", text: `${sale.orderName} : rien n’avait été créé dans AbaNinja.` };
-  }
   return (await eraseInvoice(config, sale, now)) ?? (await eraseNote(config, sale, now)) ?? eraseClient(config, sale);
 }
 

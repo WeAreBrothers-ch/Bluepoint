@@ -36,6 +36,11 @@ describe("résumé des essais faits par les commandes fictives", () => {
     expect(saleSummaryLabel({ ...SALE, noteState: "converti", invoiceState: "incertaine" })).toBe("bon n° L00042 réglé · facture à vérifier dans AbaNinja");
   });
 
+  it("bon refusé : dit si un client d'essai est resté dans AbaNinja", () => {
+    expect(saleSummaryLabel({ ...SALE, noteState: "refuse", noteUuid: null, noteNumber: null, addressUuid: null, companyUuid: null })).toBe("bon refusé par AbaNinja, rien n’a été créé");
+    expect(saleSummaryLabel({ ...SALE, noteState: "refuse", noteUuid: null, noteNumber: null })).toBe("bon refusé par AbaNinja, client d’essai resté");
+  });
+
   it("rien à effacer : le dit simplement", () => {
     expect(summarize([])).toEqual({ tone: "success", heading: "Aucun essai à effacer", details: [] });
   });

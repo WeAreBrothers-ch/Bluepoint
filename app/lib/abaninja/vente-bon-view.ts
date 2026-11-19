@@ -1,6 +1,7 @@
 import type { AbaNinjaSale } from "@prisma/client";
 import { frenchTypography } from "./trial-typography";
 import type { SaleNoteOutcome } from "./vente-bon.server";
+import { NOTE_ERASE_HINT } from "./vente-errors";
 
 /** Ce que la fiche commande dit du bon de livraison AbaNinja, et la réponse au bouton qui le crée. Logique pure. */
 
@@ -22,9 +23,6 @@ export interface SaleNoteActionResult {
 /** Au-delà, un bon « en cours » n'avance plus : la création s'est arrêtée en route. */
 const STUCK_AFTER_MS = 2 * 60 * 1000;
 
-export const NOTE_ERASE_HINT =
-  "Pour recommencer : page « Connexion AbaNinja », bouton « Effacer les factures d’essai » (il efface aussi les bons), puis « Créer le bon de livraison » sur la commande.";
-
 function shown(text: string, tone: SaleNoteView["tone"], canCreate = false): SaleNoteView {
   return { text: frenchTypography(text), tone, canCreate };
 }
@@ -39,6 +37,12 @@ function converted(sale: AbaNinjaSale): SaleNoteView {
   return shown(`${note} réglé : ${invoice} faite dans AbaNinja.`, "success");
 }
 
+/** Un client d'essai resté dans AbaNinja doit être effacé avant un nouvel essai (sinon plus personne ne le suit). */
+function refusedNote(sale: AbaNinjaSale): SaleNoteView {
+  if (sale.companyUuid !== null) return shown(`Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE_HINT}`, "critical");
+  return shown("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true);
+}
+
 export function saleNoteView(sale: AbaNinjaSale | null, isTest: boolean, now: Date): SaleNoteView | null {
   if (sale === null) return isTest ? shown("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true) : null;
   switch (sale.noteState) {
@@ -51,7 +55,7 @@ export function saleNoteView(sale: AbaNinjaSale | null, isTest: boolean, now: Da
     case "converti":
       return converted(sale);
     case "refuse":
-      return shown("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true);
+      return refusedNote(sale);
     case "annule":
       return shown("Bon de livraison annulé dans AbaNinja.", "info");
     default:

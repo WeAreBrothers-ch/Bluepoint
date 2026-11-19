@@ -27,7 +27,7 @@ function noteLabel(sale: AbaNinjaSale): string {
     case "annule":
       return `${number} annulé`;
     case "refuse":
-      return "bon refusé par AbaNinja, rien n’a été créé";
+      return sale.companyUuid === null ? "bon refusé par AbaNinja, rien n’a été créé" : "bon refusé par AbaNinja, client d’essai resté";
     case "en_cours":
       return "bon en cours";
     default:

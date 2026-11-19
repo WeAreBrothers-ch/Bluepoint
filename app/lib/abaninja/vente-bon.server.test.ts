@@ -20,9 +20,10 @@ const deps = vi.hoisted(() => ({
   createDeliveryNote: vi.fn(),
   getDeliveryNote: vi.fn(),
   deleteCompany: vi.fn(),
+  logInfo: vi.fn(),
 }));
 
-vi.mock("../core/logger.server", () => ({ logInfo: vi.fn(), logError: vi.fn() }));
+vi.mock("../core/logger.server", () => ({ logInfo: deps.logInfo, logError: vi.fn() }));
 vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE }));
 vi.mock("../reglages/settings.server", () => ({ loadCompleteSettings: deps.loadCompleteSettings }));
 vi.mock("../factures/shopify-order.server", () => ({ fetchOrderForInvoice: deps.fetchOrderForInvoice }));
@@ -68,7 +69,7 @@ function orderFound(orderTags: string[], customerTags: string[], order = COMMAND
   deps.fetchOrderForInvoice.mockResolvedValue(success({ order, contact: contact(orderTags, customerTags) }));
 }
 
-const SALE = { orderId: ORDER, reference: "BP-ESSAI-CMD-1042-20261119-110530", noteState: "en_cours" };
+const SALE = { orderId: ORDER, reference: "BP-ESSAI-CMD-1042-20261119-110530", noteState: "en_cours", addressUuid: null, companyUuid: null };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -105,6 +106,11 @@ describe("bon de livraison AbaNinja à l'arrivée d'une commande", () => {
     expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "cree", noteUuid: NOTE, noteNumber: "L00042", ...RECEIVER });
   });
 
+  it("journalise l'identifiant du bon dès qu'AbaNinja le donne", async () => {
+    await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
+    expect(deps.logInfo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ orderId: ORDER, noteUuid: NOTE }));
+  });
+
   it("ne refait pas le bon quand Shopify renvoie la commande (ligne déjà prise)", async () => {
     deps.claimSale.mockResolvedValue(success({ sale: { ...SALE, noteState: "cree" }, claimed: false }));
     expect(await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW)).toEqual({ kind: "deja_fait" });
@@ -125,6 +131,14 @@ describe("bon de livraison AbaNinja à l'arrivée d'une commande", () => {
     expect(deps.claimSale).toHaveBeenCalledTimes(1);
   });
 
+  it("bon refusé qui a laissé son client d'essai : pas de nouvel essai avant l'effacement, le client reste suivi", async () => {
+    deps.findSale.mockResolvedValue(success({ ...SALE, noteState: "refuse", ...RECEIVER }));
+    const outcome = await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
+    expect(outcome.kind === "refuse" ? outcome.message : "").toContain("Effacer les factures d’essai");
+    expect(deps.releaseRefusedSale).not.toHaveBeenCalled();
+    expect(deps.createAddress).not.toHaveBeenCalled();
+  });
+
   it("bon refusé par AbaNinja : le client d'essai est retiré et la ligne marquée refusée", async () => {
     deps.createDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
     const outcome = await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
@@ -133,20 +147,27 @@ describe("bon de livraison AbaNinja à l'arrivée d'une commande", () => {
     expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "refuse", errorCode: "donnees_refusees" });
   });
 
+  it("bon refusé et client d'essai resté dans AbaNinja : ses identifiants sont notés pour l'effacer plus tard", async () => {
+    deps.createDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 422 })));
+    deps.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
+    expect(await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW)).toMatchObject({ kind: "refuse" });
+    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "refuse", errorCode: "donnees_refusees", ...RECEIVER });
+  });
+
   it("réponse incertaine : la ligne est marquée à vérifier, le bon n'est jamais redemandé", async () => {
     deps.createDeliveryNote.mockResolvedValue(success({ kind: "incertain" }));
     const outcome = await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW);
     expect(outcome).toMatchObject({ kind: "incertain" });
     expect(deps.createDeliveryNote).toHaveBeenCalledTimes(1);
     expect(deps.deleteCompany).not.toHaveBeenCalled();
-    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "incertain", errorCode: "bon_en_attente" });
+    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "incertain", errorCode: "bon_en_attente", ...RECEIVER });
   });
 
   it("AbaNinja injoignable pendant le bon : à vérifier, jamais effacé (un bon a peut-être été fait)", async () => {
     deps.createDeliveryNote.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
     expect(await createSaleNoteForOrder(ADMIN, SHOP, ORDER, NOW)).toMatchObject({ kind: "incertain" });
     expect(deps.deleteCompany).not.toHaveBeenCalled();
-    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "incertain", errorCode: "indisponible" });
+    expect(deps.markNote).toHaveBeenCalledWith(ORDER, { state: "incertain", errorCode: "indisponible", ...RECEIVER });
   });
 
   it("commande avec un rabais : pas de bon, message clair, rien créé dans AbaNinja", async () => {

@@ -57,6 +57,8 @@ function sale(changes: Partial<AbaNinjaSale> = {}): AbaNinjaSale {
   };
 }
 
+const NO_INVOICE = { invoiceState: null, invoiceUuid: null, invoiceNumber: null };
+
 function invoice(status: string, reference = REF) {
   return success({ uuid: INVOICE, status, sentStatus: null, openAmount: 1551, dueDate: "2026-12-19", systemInvoiceNumber: "R02292", reference, isCancelled: false, companyUuid: COMPANY });
 }
@@ -124,9 +126,43 @@ describe("effacer les essais faits par les commandes fictives (bon, facture, cli
   it("bon refusé : rien n'avait été créé, l'app oublie la ligne", async () => {
     api.listTestSales.mockResolvedValue(success([sale({ noteState: "refuse", noteUuid: null, companyUuid: null, invoiceState: null, invoiceUuid: null })]));
     const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
-    expect(outcome?.kind).toBe("effacee");
+    expect(outcome).toEqual({ kind: "effacee", text: "#1035 : rien n’avait été créé dans AbaNinja." });
+    expect(api.deleteCompany).not.toHaveBeenCalled();
     expect(api.deleteDeliveryNote).not.toHaveBeenCalled();
     expect(tx.abaNinjaSale.deleteMany).toHaveBeenCalled();
+  });
+
+  it("bon refusé qui a laissé son client d'essai : le client est effacé", async () => {
+    api.listTestSales.mockResolvedValue(success([sale({ noteState: "refuse", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
+    expect(outcome).toEqual({ kind: "effacee", text: "#1035 : client d’essai effacé." });
+    expect(tx.abaNinjaSale.deleteMany).toHaveBeenCalled();
+  });
+
+  it("client d'essai encore utilisé dans AbaNinja (409) : à faire à la main", async () => {
+    api.listTestSales.mockResolvedValue(success([sale({ noteState: "refuse", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
+    api.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 409 })));
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    expect(outcome?.kind).toBe("a_la_main");
+    expect(outcome?.text).not.toContain("rien n’avait été créé");
+  });
+
+  it("bon non confirmé : le client noté est effacé, Eliott cherche le bon à la main", async () => {
+    api.listTestSales.mockResolvedValue(success([sale({ noteState: "incertain", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    expect(api.deleteCompany).toHaveBeenCalledWith(expect.anything(), COMPANY);
+    expect(outcome?.kind).toBe("a_la_main");
+    expect(outcome?.text).toContain(REF);
+    expect(outcome?.text).toContain("client d’essai est effacé");
+  });
+
+  it("bon non confirmé dont le client sert encore (409) : bon puis client à supprimer à la main", async () => {
+    api.listTestSales.mockResolvedValue(success([sale({ noteState: "incertain", noteUuid: null, noteNumber: null, ...NO_INVOICE })]));
+    api.deleteCompany.mockResolvedValue(failure(new AbaNinjaError("donnees_refusees", { status: 409 })));
+    const [outcome] = await eraseTestSaleNotes(testConfig(), "test.myshopify.com", NOW);
+    expect(outcome?.kind).toBe("a_la_main");
+    expect(outcome?.text).toContain("sert encore");
   });
 
   it("bon dont la suppression est refusée : l'app oublie, Eliott le supprime à la main", async () => {

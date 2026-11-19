@@ -10,6 +10,10 @@ export const ERASE_HINT =
 export const SALE_ERASE_HINT =
   "Pour recommencer : page « Connexion AbaNinja », bouton « Effacer les factures d’essai » (il efface aussi les bons), puis « Créer le bon de livraison » et « Faire la facture » sur la commande.";
 
+/** Rappel pour refaire un bon de livraison : l'effacement prend le bon et le client d'essai. */
+export const NOTE_ERASE_HINT =
+  "Pour recommencer : page « Connexion AbaNinja », bouton « Effacer les factures d’essai » (il efface aussi les bons), puis « Créer le bon de livraison » sur la commande.";
+
 /** Une facture née du bon existe déjà : « Faire la facture » la reprend sans en refaire une. */
 export const RETRY_HINT = "Touchez « Faire la facture » pour réessayer : la facture déjà faite sera reprise, jamais refaite.";
 
