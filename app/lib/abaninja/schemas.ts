@@ -26,6 +26,7 @@ const invoiceRecord = z.looseObject({
   openAmount: looseNumber.nullish(),
   dueDate: z.string().nullish(),
   systemInvoiceNumber: z.string().nullish(),
+  reference: z.string().nullish(),
   isCancelled: z.boolean().optional(),
 });
 

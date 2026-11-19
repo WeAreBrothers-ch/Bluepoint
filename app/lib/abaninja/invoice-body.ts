@@ -2,9 +2,10 @@ import type { ValidInvoiceInput } from "./invoice-input";
 
 /** Traduit une facture validée en corps de requête `{ documents: [...] }` (champs de la spec §2). */
 
-type Position = ValidInvoiceInput["positions"][number];
+export type Position = ValidInvoiceInput["positions"][number];
 
-function buildPosition(position: Position): object {
+/** Ligne commune aux factures et aux bons de livraison. */
+export function buildPosition(position: Position): object {
   return {
     positionNumber: position.positionNumber,
     kind: "product",

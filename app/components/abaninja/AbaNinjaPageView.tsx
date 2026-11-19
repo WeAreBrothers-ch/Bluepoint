@@ -1,10 +1,12 @@
 import { TITRES } from "../../lib/titres";
+import type { FictitiousOrders } from "../../lib/abaninja/bl-essai-order";
 import type { ConfigStatus, TrialPageStatus } from "../../lib/abaninja/trial-types";
 import { frenchTypography } from "../../lib/abaninja/trial-typography";
+import { DeliveryNoteTrialSection } from "./DeliveryNoteTrialSection";
 import { LastTrialSection } from "./LastTrialSection";
 import { TrialSection } from "./TrialSection";
 
-/** Page « Connexion AbaNinja » : l'état de la configuration, le dernier essai, et le bouton d'essai. */
+/** Page « Connexion AbaNinja » : l'état de la configuration, l'essai bon de livraison → facture, puis l'essai de connexion. */
 
 const OK_HEADING = frenchTypography("Les accès AbaNinja sont enregistrés et bien formés.");
 const OK_DETAIL = frenchTypography("Seul un essai montre qu’AbaNinja les accepte vraiment.");
@@ -26,10 +28,11 @@ function ConfigBanner({ config }: { readonly config: ConfigStatus }) {
   );
 }
 
-export function AbaNinjaPageView({ status }: { readonly status: TrialPageStatus }) {
+export function AbaNinjaPageView({ status, orders }: { readonly status: TrialPageStatus; readonly orders: FictitiousOrders }) {
   return (
     <s-page heading={TITRES.abaninja} inlineSize="base">
       <ConfigBanner config={status.config} />
+      <DeliveryNoteTrialSection configured={status.config.kind === "ok"} orders={orders} />
       <TrialSection configured={status.config.kind === "ok"} />
       <LastTrialSection status={status} />
     </s-page>

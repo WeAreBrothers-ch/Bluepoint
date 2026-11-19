@@ -6,7 +6,8 @@ import { receiverSchema } from "./receiver";
 
 const MAX_POSITIONS = 200;
 
-const positionSchema = z.strictObject({
+/** Ligne de document (facture ou bon de livraison). */
+export const positionSchema = z.strictObject({
   positionNumber: z.number().int().min(1).max(MAX_POSITIONS),
   productNumber: singleLine(255).optional(),
   description: singleLine(500),
@@ -30,7 +31,7 @@ const positionSchema = z.strictObject({
   discountPercentage: z.number().min(0).max(100).optional(),
 });
 
-function hasConsecutiveNumbers(positions: readonly { positionNumber: number }[]): boolean {
+export function hasConsecutiveNumbers(positions: readonly { positionNumber: number }[]): boolean {
   const numbers = positions.map((position) => position.positionNumber).sort((a, b) => a - b);
   return numbers.every((value, index) => value === index + 1);
 }

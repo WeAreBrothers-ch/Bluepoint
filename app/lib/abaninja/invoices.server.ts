@@ -23,6 +23,8 @@ export interface InvoiceDetails {
   readonly openAmount: number | null;
   readonly dueDate: string | null;
   readonly systemInvoiceNumber: string | null;
+  /** Référence choisie à la création (ex. « BP-1042 ») ; null si AbaNinja n'en renvoie pas. */
+  readonly reference: string | null;
   readonly isCancelled: boolean | undefined;
 }
 
@@ -88,6 +90,7 @@ export async function getInvoice(
     openAmount: record.openAmount ?? null,
     dueDate: record.dueDate ?? null,
     systemInvoiceNumber: record.systemInvoiceNumber ?? null,
+    reference: record.reference ?? null,
     isCancelled: record.isCancelled,
   });
 }
