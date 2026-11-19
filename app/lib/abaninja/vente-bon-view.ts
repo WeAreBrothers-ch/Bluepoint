@@ -72,9 +72,11 @@ function noNoteYet(order: SaleNoteOrder): SaleNoteView | null {
   return shown("Pas encore de bon de livraison dans AbaNinja. Touchez « Créer le bon de livraison » : s’il ne peut pas se faire, l’app dit pourquoi.", "info", true);
 }
 
-/** Un client d'essai resté dans AbaNinja doit être effacé avant un nouvel essai (sinon plus personne ne le suit). */
+/** Un client d'essai resté dans AbaNinja est supprimé par le nouvel essai ; sans nouvel essai possible, par l'effacement. */
 function refusedNote(sale: AbaNinjaSale, order: SaleNoteOrder): SaleNoteView {
-  if (sale.companyUuid !== null) return shown(`Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE_HINT}`, "critical");
+  const left = "Le bon de livraison n’a pas pu être fait et son client d’essai est resté dans AbaNinja.";
+  if (sale.companyUuid !== null && order.tooLate) return shown(`${left} ${NOTE_ERASE_HINT}`, "critical");
+  if (sale.companyUuid !== null) return shown(`${left} Touchez « Créer le bon de livraison » pour réessayer : l’app supprime d’abord ce client.`, "critical", true);
   if (order.tooLate) return shown(NOTE_TOO_LATE, "info");
   return shown("Le bon de livraison n’a pas pu être fait. Touchez « Créer le bon de livraison » pour réessayer et voir pourquoi.", "critical", true);
 }

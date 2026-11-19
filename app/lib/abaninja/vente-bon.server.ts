@@ -40,8 +40,8 @@ async function remember(orderId: OrderGid, update: NoteUpdate): Promise<void> {
 }
 
 /**
- * Pas de bon dans AbaNinja : la ligne est marquée refusée. Sans client resté, un nouvel essai pourra la reprendre ;
- * avec un client resté (noté ici), l'effacement des essais doit passer d'abord.
+ * Pas de bon dans AbaNinja : la ligne est marquée refusée, et un nouvel essai pourra la reprendre. Un client
+ * resté est noté ici : le nouvel essai le supprime d'abord, l'effacement des essais le retrouve.
  */
 async function refuse(orderId: OrderGid, errorCode: string, message: string, client: LeftClient = {}): Promise<SaleNoteOutcome> {
   await remember(orderId, { state: "refuse", errorCode, ...client });
@@ -54,7 +54,7 @@ async function uncertain(orderId: OrderGid, errorCode: string, reference: string
   return { kind: "incertain", message: `AbaNinja n’a pas confirmé le bon de livraison (référence ${reference}). ${CHECK_HINT}` };
 }
 
-async function noteRefused(config: AbaNinjaConfig, orderId: OrderGid, client: Receiver, plan: SaleNotePlan, error: AbaNinjaError) {
+async function noteRefused(config: AbaNinjaConfig, orderId: OrderGid, client: Receiver, plan: SaleNotePlan, error: AbaNinjaError): Promise<SaleNoteOutcome> {
   const removed = await deleteCompany(config, client.companyUuid);
   const message = `AbaNinja a refusé le bon de livraison : ${error.message}`;
   if (removed.ok) return refuse(orderId, error.code, message);
@@ -84,9 +84,22 @@ async function makeNote(config: AbaNinjaConfig, orderId: OrderGid, plan: SaleNot
   return { kind: "cree", noteNumber };
 }
 
+/** Le client d'essai laissé par un bon refusé est supprimé avant un nouvel essai ; null s'il n'est plus dans AbaNinja. */
+async function leftClientRemoved(orderId: OrderGid, companyUuid: string): Promise<SaleNoteOutcome | null> {
+  const config = readAbaNinjaConfig();
+  if (!config.ok) return refused(config.error.message);
+  const removed = await deleteCompany(config.value, companyUuid);
+  if (removed.ok || removed.error.code === "introuvable") {
+    logInfo("Client d’essai resté supprimé avant un nouveau bon", { orderId, companyUuid });
+    return null;
+  }
+  const left = "Le bon précédent a été refusé et son client d’essai est resté dans AbaNinja : l’app n’a pas pu le supprimer.";
+  return refused(`${left} ${removed.error.message} ${NOTE_ERASE_HINT}`);
+}
+
 /**
- * La réponse quand la commande a déjà eu son essai (bon fait, à vérifier, ou refusé avec un client resté) ;
- * null pour faire le bon. Une ligne refusée sans rien dans AbaNinja est libérée pour recommencer.
+ * La réponse quand la commande a déjà eu son essai (bon fait ou à vérifier) ; null pour faire le bon. Une ligne
+ * refusée est libérée pour recommencer, une fois supprimé le client d'essai qu'elle avait laissé dans AbaNinja.
  */
 async function earlierAttempt(orderId: OrderGid): Promise<SaleNoteOutcome | null> {
   const existing = await findSale(orderId);
@@ -94,7 +107,8 @@ async function earlierAttempt(orderId: OrderGid): Promise<SaleNoteOutcome | null
   const row = existing.value;
   if (row === null) return null;
   if (row.noteState !== "refuse") return { kind: "deja_fait" };
-  if (row.companyUuid !== null) return refused(`Le bon précédent a été refusé et son client d’essai est resté dans AbaNinja. ${NOTE_ERASE_HINT}`);
+  const blocked = row.companyUuid === null ? null : await leftClientRemoved(orderId, row.companyUuid);
+  if (blocked !== null) return blocked;
   const released = await releaseRefusedSale(orderId);
   if (!released.ok) throw released.error;
   return null;
