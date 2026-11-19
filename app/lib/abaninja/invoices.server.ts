@@ -6,6 +6,7 @@ import { AbaNinjaError } from "./errors";
 import { abaNinjaRequest } from "./http.server";
 import { buildInvoiceBody } from "./invoice-body";
 import { classifyCreateFailure, CreateInvoiceError } from "./invoice-errors";
+import { todayInZurich } from "./invoice-status";
 import { invoiceInputSchema, type AbaNinjaInvoiceInput } from "./invoice-input";
 import { validateInput } from "./input-validation";
 import { createInvoiceResponseSchema, downloadPdfResponseSchema, readInvoiceResponseSchema } from "./schemas";
@@ -73,6 +74,19 @@ export async function createInvoice(
 }
 
 /** Lit l'état d'une facture ; refuse une réponse qui concerne une autre facture. */
+const WITH_ZONE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i;
+const LOCAL_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+
+/** Le jour d'une date AbaNinja : telle quelle, ou le jour à Zurich d'un instant donné avec son fuseau ; null sinon. */
+function dayOf(value: string | null | undefined): IsoDate | null {
+  if (typeof value !== "string") return null;
+  if (WITH_ZONE.test(value)) {
+    const at = new Date(value);
+    return Number.isNaN(at.getTime()) ? null : parseIsoDate(todayInZurich(at));
+  }
+  return parseIsoDate(LOCAL_TIME.test(value) ? value.slice(0, 10) : value);
+}
+
 export async function getInvoice(
   config: AbaNinjaConfig,
   invoiceUuid: string,
@@ -94,7 +108,7 @@ export async function getInvoice(
     sentStatus: record.sentStatus ?? null,
     openAmount: record.openAmount ?? null,
     dueDate: record.dueDate ?? null,
-    invoiceDate: parseIsoDate(record.invoiceDate?.slice(0, 10)),
+    invoiceDate: dayOf(record.invoiceDate),
     systemInvoiceNumber: record.systemInvoiceNumber ?? null,
     reference: record.reference ?? null,
     isCancelled: record.isCancelled,

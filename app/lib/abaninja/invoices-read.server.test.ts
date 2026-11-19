@@ -30,7 +30,7 @@ describe("getInvoice", () => {
   });
 
   it("lit la date de la facture quand AbaNinja la donne, au jour près", async () => {
-    for (const [given, day] of [["2026-11-19", "2026-11-19"], ["2026-11-19T00:00:00+01:00", "2026-11-19"], ["19.11.2026", null], [null, null]]) {
+    for (const [given, day] of [["2026-11-19", "2026-11-19"], ["2026-11-19T00:00:00+01:00", "2026-11-19"], ["2026-11-18T23:00:00Z", "2026-11-19"], ["2026-11-19T00:00:00", "2026-11-19"], ["19.11.2026", null], ["2026-11-19Tminuit", null], [null, null]]) {
       const { fetchImpl } = scriptedFetch([jsonResponse({ data: { ...record, invoiceDate: given } })]);
       const result = await getInvoice(testConfig(), INVOICE_UUID, { fetchImpl });
       expect(result.ok && result.value.invoiceDate).toBe(day);

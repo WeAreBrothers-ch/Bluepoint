@@ -129,12 +129,14 @@ async function pdfOf(config: AbaNinjaConfig, invoiceUuid: string, input: AbaNinj
 
 /**
  * La facture est déjà complétée dans AbaNinja quand son numéro ou son paiement est noté (ils viennent après) :
- * on ne la remet pas à jour, ni après son paiement, ni pour changer sa date. Seule exception : à payer et sans
- * sa date d'origine, elle est remise au jour comme avant, pour que l'aperçu et AbaNinja disent la même date.
+ * on ne la remet pas à jour, ni après son paiement, ni pour changer sa date. Deux exceptions :
+ * - complétée à payer, la commande est payée depuis (aucun paiement réservé) : elle passe aux conditions de la payée ;
+ * - à payer et sans sa date d'origine : remise au jour comme avant, pour que l'aperçu et AbaNinja disent la même date.
  */
-function needsUpdate(request: SaleConversionRequest): boolean {
-  const completed = request.sale.invoiceNumber !== null || request.sale.paymentState !== null;
-  return !completed || (request.payment === null && !request.datedFromAbaNinja);
+function needsUpdate({ sale, payment, datedFromAbaNinja }: SaleConversionRequest): boolean {
+  if (sale.invoiceNumber === null && sale.paymentState === null) return true;
+  if (payment !== null) return sale.paymentState === null;
+  return !datedFromAbaNinja;
 }
 
 export async function finishSaleInvoice(config: AbaNinjaConfig, request: SaleConversionRequest, invoiceUuid: string, options: CallOptions = {}): Promise<SaleOutcome> {
@@ -149,7 +151,7 @@ export async function finishSaleInvoice(config: AbaNinjaConfig, request: SaleCon
     if (!updated.ok) return incomplete(sale.reference, "client, dates, conditions et compte de la QR-facture", updated.error);
   }
   const read = await getInvoice(config, invoiceUuid, options);
-  const number = read.ok ? read.value.systemInvoiceNumber : null;
+  const number = (read.ok ? read.value.systemInvoiceNumber : null) ?? sale.invoiceNumber;
   const label = number ?? sale.reference;
   const alreadyPaid = read.ok && interpretInvoiceStatus(read.value, todayInZurich(new Date())) === "payee";
   const unpaid = await settlePayment(config, request, { uuid: invoiceUuid, label, alreadyPaid }, options);

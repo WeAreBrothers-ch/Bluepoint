@@ -121,6 +121,19 @@ describe("compléter la facture née du bon : paiement et PDF", () => {
     expect(deps.downloadDraftInvoicePdf).toHaveBeenCalledWith(expect.anything(), INVOICE, expect.objectContaining({ invoiceDate: resumed.invoice.invoiceDate }), {});
   });
 
+  it("faite à payer, payée en ligne avant la reprise : remise à jour (conditions de la payée) avant d'inscrire le paiement", async () => {
+    const resumed = { ...request(PAID, { ...MADE, invoiceNumber: "R02292" }), datedFromAbaNinja: true };
+    await finishSaleInvoice(testConfig(), resumed, INVOICE);
+    expect(deps.updateInvoice).toHaveBeenCalledWith(expect.anything(), INVOICE, expect.objectContaining({ terms: resumed.invoice.terms }), {});
+    expect(calls).toEqual(["facture", "paiement", "pdf"]);
+  });
+
+  it("numéro illisible à la reprise : le numéro déjà noté est gardé, jamais effacé", async () => {
+    deps.getInvoice.mockResolvedValue(failure(new AbaNinjaError("indisponible", { status: 503 })));
+    await finishSaleInvoice(testConfig(), request(null, { ...MADE, invoiceNumber: "R02292" }), INVOICE);
+    expect(deps.markInvoice).toHaveBeenCalledWith(ORDER, { state: "creee", invoiceUuid: INVOICE, invoiceNumber: "R02292" });
+  });
+
   it("à payer, reprise avec numéro noté mais date illisible : remise à jour comme avant (aperçu et AbaNinja à la même date)", async () => {
     await finishSaleInvoice(testConfig(), request(null, { ...MADE, invoiceNumber: "R02292" }), INVOICE);
     expect(calls).toEqual(["facture", "apercu"]);
