@@ -1,14 +1,16 @@
 import type { ActionFunctionArgs } from "react-router";
 import { authenticate } from "../shopify.server";
+import { scheduleSaleNote } from "../lib/abaninja/vente-bon-schedule.server";
 import { logError, logInfo } from "../lib/core/logger.server";
 import { copyCartDeliveryToMetafields } from "../lib/webhooks/cart-delivery.server";
 import { readOrderCreated } from "../lib/webhooks/payloads";
 
 /**
  * Nouvelle commande : les attributs de livraison du panier (date souhaitée, date limite, mode)
- * sont recopiés dans les métachamps `$app` pour l'agenda et les filtres de l'admin.
+ * sont recopiés dans les métachamps `$app` pour l'agenda et les filtres de l'admin. Ensuite, une
+ * commande d'essai reçoit son bon de livraison AbaNinja, fait après la réponse (jour prévu déjà copié).
  * Réponse 200 rapide ; 500 seulement si Shopify n'a pas répondu, pour qu'il renvoie
- * le webhook (le traitement est idempotent).
+ * le webhook (le traitement est idempotent, le bon ne se fait qu'une fois).
  */
 export const action = async ({ request }: ActionFunctionArgs): Promise<Response> => {
   // Signature HMAC invalide : la librairie lance une réponse 401, qu'on laisse remonter.
@@ -26,7 +28,9 @@ export const action = async ({ request }: ActionFunctionArgs): Promise<Response>
       return new Response(null, { status: 200 });
     }
     const outcome = await copyCartDeliveryToMetafields(admin, order.orderId, order.noteAttributes);
-    return new Response(null, { status: outcome === "a_reessayer" ? 500 : 200 });
+    if (outcome === "a_reessayer") return new Response(null, { status: 500 });
+    scheduleSaleNote(admin, shop, order.orderId);
+    return new Response(null, { status: 200 });
   } catch (error) {
     logError("Échec du traitement du webhook orders/create", error, { shop });
     return new Response(null, { status: 200 });

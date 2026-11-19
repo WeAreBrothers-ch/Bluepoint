@@ -1,6 +1,5 @@
-import { FactureError, mapShopifyOrderToInvoiceInput, type InvoiceInput } from "@bluepoint/facture-qr";
+import type { InvoiceInput } from "@bluepoint/facture-qr";
 import prisma from "../../db.server";
-import { FICTITIOUS_TAG } from "../abaninja/bl-essai-order";
 import { readAbaNinjaConfig } from "../abaninja/config.server";
 import { ERASE_HINT, type SaleInvoiceError } from "../abaninja/vente-errors";
 import { createTestSaleInvoice, type SaleInvoiceDocument } from "../abaninja/vente-facture.server";
@@ -8,13 +7,12 @@ import { planTestSaleInvoice } from "../abaninja/vente-plan";
 import { logError, logInfo } from "../core/logger.server";
 import { failure, success, type Result } from "../core/result";
 import type { IsoDate } from "../metafields/definitions";
-import { toInvoiceSeller } from "../reglages/seller";
 import type { ShopSettingsValues } from "../reglages/schema";
 import type { OrderGid } from "../shopify/ids";
+import { abaNinjaLinesOf } from "./abaninja-lines";
 import { contactOf } from "./delivery-date";
 import type { EnsuredInvoice } from "./ensured";
 import { InvoiceError } from "./errors";
-import { plainInvoiceProblems } from "./plain-problems";
 import { invoicePdfKey, type Invoice } from "./repository.server";
 import type { OrderForInvoice } from "./shopify-order.server";
 
@@ -34,23 +32,9 @@ export interface AbaNinjaSaleContext {
   readonly now: Date;
 }
 
-export function goesToAbaNinja(source: OrderForInvoice): boolean {
-  return source.contact.tags.includes(FICTITIOUS_TAG);
-}
-
-/** Numéro provisoire, jamais imprimé : le moteur de facture exige un chiffre (pour la référence QR) ; AbaNinja donne le vrai. */
-const PLACEHOLDER_NUMBER = "ABANINJA-1";
-
 /** Mêmes lignes, même TVA et même total que la facture BluePoint de cette commande. */
 function invoiceLinesOf(sale: AbaNinjaSaleContext): Result<InvoiceInput, InvoiceError> {
-  try {
-    const meta = { invoiceNumber: PLACEHOLDER_NUMBER, issueDate: sale.issueDate, deliveryDate: sale.deliveryDate, paymentTermDays: sale.settings.paymentTermDays };
-    return success(mapShopifyOrderToInvoiceInput(sale.source.order, toInvoiceSeller(sale.settings), meta));
-  } catch (error) {
-    if (!(error instanceof FactureError)) throw error;
-    const problems = error.details.length > 0 ? error.details : [error.message];
-    return failure(new InvoiceError("donnees_invalides", plainInvoiceProblems(problems)));
-  }
+  return abaNinjaLinesOf(sale.source.order, sale.settings, { issueDate: sale.issueDate, deliveryDate: sale.deliveryDate });
 }
 
 function toInvoiceError(error: SaleInvoiceError): InvoiceError {

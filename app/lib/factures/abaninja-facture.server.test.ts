@@ -23,7 +23,8 @@ vi.mock("../reglages/seller", () => ({ toInvoiceSeller: () => VENDEUR_EXEMPLE })
 vi.mock("../abaninja/config.server", () => ({ readAbaNinjaConfig: deps.readAbaNinjaConfig }));
 vi.mock("../abaninja/vente-facture.server", () => ({ createTestSaleInvoice: deps.createTestSaleInvoice }));
 
-const { ensureAbaNinjaTestInvoice, goesToAbaNinja } = await import("./abaninja-facture.server");
+const { ensureAbaNinjaTestInvoice } = await import("./abaninja-facture.server");
+const { goesToAbaNinja } = await import("./abaninja-lines");
 const realConfig = await vi.importActual<typeof import("../abaninja/config.server")>("../abaninja/config.server");
 const CONFIG = realConfig.readAbaNinjaConfig({ ABANINJA_TOKEN: TEST_TOKEN, ABANINJA_ACCOUNT_UUID: TEST_ACCOUNT_UUID });
 
@@ -62,6 +63,12 @@ describe("facture AbaNinja d'une commande d'essai, vue depuis l'app", () => {
   it("ne concerne que les commandes étiquetées « fictif »", () => {
     expect(goesToAbaNinja(sale.source)).toBe(true);
     expect(goesToAbaNinja({ ...sale.source, contact: { ...contact, tags: ["pro"] } })).toBe(false);
+  });
+
+  it("reconnaît aussi un client d'essai qui commande par le site (étiquette sur le client, pas sur la commande)", () => {
+    const customer = { defaultEmailAddress: null, defaultPhoneNumber: null, tags: ["fictif"] };
+    expect(goesToAbaNinja({ contact: { ...contact, tags: [], customer } })).toBe(true);
+    expect(goesToAbaNinja({ contact: { ...contact, tags: [], customer: { ...customer, tags: ["pro"] } } })).toBe(false);
   });
 
   it("garde une copie avec le numéro et le PDF d'AbaNinja, au total de la commande, pour l'envoyer", async () => {

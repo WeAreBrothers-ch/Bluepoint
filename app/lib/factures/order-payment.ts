@@ -12,6 +12,8 @@ export interface PaymentTransaction {
   /** `SUCCESS`, `FAILURE`, `PENDING`… */
   readonly status: string;
   readonly processedAt: string | null;
+  /** Moyen de paiement Shopify (« shopify_payments », « paypal »…) : donne le type du paiement inscrit dans AbaNinja. */
+  readonly gateway?: string | null;
 }
 
 export interface OrderPaymentFacts {
