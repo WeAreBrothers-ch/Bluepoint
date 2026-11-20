@@ -10,11 +10,13 @@ import {
 
 /**
  * « Modifier la fiche » d'un vin depuis la page Stock : nom, producteur, sorte, pays, région, année, appellation,
- * contenance, degré, cépages et textes de la fiche du site. Lecture et vérification du formulaire (logique pure).
+ * contenance, degré, sticker de la photo, cépages et textes de la fiche du site. Lecture et vérification du formulaire
+ * (logique pure).
  *
  * Le site lit ces informations à deux endroits (voir docs/README-boutique.md) :
  * - les étiquettes Shopify (sorte, « pays:… », « region:… », « millesime:… », « appellation:… », « contenance:… ») ;
- * - les métachamps « bluepoint » (ligne « Région » de la fiche, cépages, degré, dégustation, producteur, service, conservation).
+ * - les métachamps « bluepoint » (ligne « Région » de la fiche, cépages, degré, sticker, dégustation, producteur,
+ *   service, conservation).
  * Le prix, la photo et le stock ont leurs propres boutons : ils ne changent pas ici.
  */
 
@@ -32,6 +34,7 @@ export const FICHE_FIELDS = [
   "appellation",
   "size",
   "degre",
+  "sticker",
   "cepage",
   "regionLine",
   "degustation",
@@ -41,6 +44,14 @@ export const FICHE_FIELDS = [
 ] as const;
 export type FicheField = (typeof FICHE_FIELDS)[number];
 
+/**
+ * Ce que montre le sticker posé sur la photo du vin, sur le site (snippets/bp-sticker-vin.liquid) : l'année
+ * (« 2023 ») ou le degré d'alcool (« Vol. 13,5 % »). Choisi dans la fiche, enregistré dans le métachamp
+ * bluepoint.sticker ; le thème le lit à chaque affichage, donc le sticker suit la fiche dès qu'elle est enregistrée.
+ */
+export const STICKER_CHOICES = ["annee", "degre"] as const;
+export type StickerChoice = (typeof STICKER_CHOICES)[number];
+
 export type FicheValues = Readonly<Record<FicheField, string>>;
 export type FicheErrors = Partial<Record<FicheField, string>>;
 
@@ -49,13 +60,14 @@ export const FICHE_METAFIELDS = {
   regionLine: { key: "region", type: "single_line_text_field" },
   cepage: { key: "cepage", type: "single_line_text_field" },
   degre: { key: "degre", type: "number_decimal" },
+  sticker: { key: "sticker", type: "single_line_text_field" },
   degustation: { key: "degustation", type: "multi_line_text_field" },
   producteur: { key: "producteur", type: "multi_line_text_field" },
   service: { key: "service", type: "multi_line_text_field" },
   conservation: { key: "conservation", type: "multi_line_text_field" },
 } as const satisfies Partial<Record<FicheField, { readonly key: string; readonly type: string }>>;
 
-type TextMetafieldField = Exclude<keyof typeof FICHE_METAFIELDS, "degre">;
+type TextMetafieldField = Exclude<keyof typeof FICHE_METAFIELDS, "degre" | "sticker">;
 const TEXT_METAFIELDS: readonly TextMetafieldField[] = ["regionLine", "cepage", "degustation", "producteur", "service", "conservation"];
 
 export const METAFIELD_NAMESPACE = "bluepoint";
@@ -72,6 +84,7 @@ const MAX_LENGTH: Readonly<Record<FicheField, number>> = {
   appellation: 80,
   size: 10,
   degre: 6,
+  sticker: 10,
   cepage: 200,
   regionLine: 120,
   degustation: 3000,
@@ -131,22 +144,74 @@ function degreText(raw: string | null | undefined): string {
   return String(Math.round(value * 10) / 10).replace(".", ",");
 }
 
+function isStickerChoice(value: string | null | undefined): value is StickerChoice {
+  return STICKER_CHOICES.some((choice) => choice === value);
+}
+
+/**
+ * Le sticker d'un vin dont la fiche n'a pas encore été choisie : ce que le site montrait jusqu'ici
+ * (même règle que snippets/bp-sticker-vin.liquid) — le degré d'un spiritueux, sinon l'année, sinon le degré.
+ */
+export function defaultSticker(type: string, vintage: string, degre: string): StickerChoice {
+  if (degre !== "" && (type === "Spiritueux" || vintage === "")) return "degre";
+  if (vintage !== "") return "annee";
+  return type === "Spiritueux" ? "degre" : "annee";
+}
+
+/** L'année écrite dans le nom du vin (« Peng 2022 » → « 2022 ») ; la dernière s'il y en a plusieurs ; `null` sans année. */
+export function titleYear(title: string): string | null {
+  const years = title.match(/(?<!\d)(?:19|20)\d{2}(?!\d)/g);
+  return years === null ? null : (years[years.length - 1] ?? null);
+}
+
+/** Le texte du sticker tel que le site l'écrit : « 2023 », « Vol. 13,5 % » ; vide si l'information manque. */
+export function stickerText(choice: string, values: Pick<FicheValues, "vintage" | "degre">): string {
+  if (choice === "annee") return /^\d{4}$/.test(values.vintage) ? values.vintage : "";
+  const degre = parseDegre(values.degre);
+  return degre === null ? "" : `Vol. ${degreText(degre)}\u00A0%`;
+}
+
+/**
+ * L'année et le sticker doivent dire la même chose partout : l'année du nom = la case « Année » (que lisent le sticker
+ * et la fiche d'identité du site), et le sticker montre une information qui existe. Vérifié pendant la saisie et à
+ * l'enregistrement. Une année encore incomplète (« 202 ») n'est pas comparée : sa forme est vérifiée à l'enregistrement.
+ */
+export function yearAndStickerErrors(values: Pick<FicheValues, "title" | "vintage" | "degre" | "sticker">): FicheErrors {
+  const errors: FicheErrors = {};
+  const named = titleYear(values.title);
+  if (named !== null && named !== values.vintage && (values.vintage === "" || /^\d{4}$/.test(values.vintage))) {
+    errors.vintage =
+      values.vintage === ""
+        ? `Le nom du vin dit ${named}\u202F: écrivez aussi ${named} ici.`
+        : `Le nom du vin dit ${named}, cette case dit ${values.vintage}\u202F: mettez la même année aux deux endroits.`;
+  }
+  if (!isStickerChoice(values.sticker)) errors.sticker = "Choisissez ce que montre le sticker\u202F: l’année ou le degré.";
+  else if (values.sticker === "annee" && values.vintage === "") errors.sticker = "Écrivez l’année dans la case « Année », ou choisissez le degré.";
+  else if (values.sticker === "degre" && values.degre === "") errors.sticker = "Écrivez le degré dans la case « Degré d’alcool », ou choisissez l’année.";
+  return errors;
+}
+
 /** Les valeurs du formulaire, lues dans le vin tel qu'il est dans Shopify. */
 export function ficheValuesFromProduct(product: FicheProduct): FicheValues {
   const info = readWineInfo(product.productType, product.tags);
   const volume = product.metafields.volume_ml;
   const bottleMl = info.bottleMl ?? (volume !== null && volume !== undefined && /^\d+$/.test(volume) ? Number(volume) : null);
   const size = bottleMl === null ? "" : sizeTagValue(bottleMl);
+  const type = ficheType(product.productType);
+  const vintage = info.vintage ?? "";
+  const degre = degreText(product.metafields.degre);
+  const sticker = product.metafields.sticker;
   return {
     title: product.title,
     vendor: product.vendor,
-    type: ficheType(product.productType),
+    type,
     country: info.country ?? "",
     region: info.region ?? "",
-    vintage: info.vintage ?? "",
+    vintage,
     appellation: info.appellation ?? "",
     size: FICHE_SIZE_CHOICES.some((choice) => choice.value === size) ? size : "",
-    degre: degreText(product.metafields.degre),
+    degre,
+    sticker: isStickerChoice(sticker) ? sticker : defaultSticker(type, vintage, degre),
     cepage: product.metafields.cepage ?? "",
     regionLine: product.metafields.regionLine ?? "",
     degustation: product.metafields.degustation ?? "",
@@ -243,6 +308,10 @@ export function parseFiche(form: FormData): ParsedFiche {
   if (bottleMl === null || !FICHE_SIZE_CHOICES.some((choice) => choice.value === values.size)) errors.size = "Choisissez la contenance de la bouteille.";
   const degre = values.degre === "" ? null : parseDegre(values.degre);
   if (values.degre !== "" && degre === null) errors.degre = "Écrivez le degré en chiffres, par exemple 13,5.";
+  // L'année du nom et le sticker : une case déjà en erreur (année illisible…) garde son message.
+  for (const [field, message] of Object.entries(yearAndStickerErrors(values)) as [FicheField, string][]) {
+    if (errors[field] === undefined) errors[field] = message;
+  }
   if (Object.keys(errors).length > 0 || !isFicheType(values.type) || bottleMl === null) return { ok: false, values, errors };
 
   const metafields: MetafieldWrite[] = [];
@@ -255,6 +324,7 @@ export function parseFiche(form: FormData): ParsedFiche {
   }
   if (degre === null) clearedKeys.push(FICHE_METAFIELDS.degre.key);
   else metafields.push({ namespace: METAFIELD_NAMESPACE, key: FICHE_METAFIELDS.degre.key, type: FICHE_METAFIELDS.degre.type, value: degre });
+  metafields.push({ namespace: METAFIELD_NAMESPACE, key: FICHE_METAFIELDS.sticker.key, type: FICHE_METAFIELDS.sticker.type, value: values.sticker });
   metafields.push({ namespace: METAFIELD_NAMESPACE, key: VOLUME_METAFIELD.key, type: VOLUME_METAFIELD.type, value: String(bottleMl) });
 
   return {

@@ -19,13 +19,15 @@ import {
 
 /**
  * « Modifier la fiche » d'un vin (page Stock) : lit la fiche dans Shopify, puis enregistre le nom, le producteur,
- * la sorte, les étiquettes (pays, région, année, appellation, contenance) et les métachamps « bluepoint » (`write_products`).
+ * la sorte, les étiquettes (pays, région, année, appellation, contenance) et les métachamps « bluepoint »
+ * (dont « sticker » : l'année ou le degré sur la photo du site) (`write_products`).
  */
 
 const METAFIELDS_SELECTION = `
     region: metafield(namespace: "bluepoint", key: "region") { value }
     cepage: metafield(namespace: "bluepoint", key: "cepage") { value }
     degre: metafield(namespace: "bluepoint", key: "degre") { value }
+    sticker: metafield(namespace: "bluepoint", key: "sticker") { value }
     degustation: metafield(namespace: "bluepoint", key: "degustation") { value }
     producteur: metafield(namespace: "bluepoint", key: "producteur") { value }
     service: metafield(namespace: "bluepoint", key: "service") { value }
@@ -69,6 +71,7 @@ interface ProductMetafields {
   readonly region: MetafieldValue;
   readonly cepage: MetafieldValue;
   readonly degre: MetafieldValue;
+  readonly sticker: MetafieldValue;
   readonly degustation: MetafieldValue;
   readonly producteur: MetafieldValue;
   readonly service: MetafieldValue;
@@ -108,6 +111,7 @@ function ficheProduct(product: NonNullable<FicheData["product"]>): FicheProduct 
       regionLine: product.region?.value ?? null,
       cepage: product.cepage?.value ?? null,
       degre: product.degre?.value ?? null,
+      sticker: product.sticker?.value ?? null,
       degustation: product.degustation?.value ?? null,
       producteur: product.producteur?.value ?? null,
       service: product.service?.value ?? null,

@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { ficheSavedMessage, ficheTags, ficheValuesFromProduct, frenchSpacing, parseDegre, parseFiche, regionChoices, retitle, type FicheValues } from "./fiche";
+import {
+  defaultSticker,
+  ficheSavedMessage,
+  ficheTags,
+  ficheValuesFromProduct,
+  frenchSpacing,
+  parseDegre,
+  parseFiche,
+  regionChoices,
+  retitle,
+  stickerText,
+  titleYear,
+  yearAndStickerErrors,
+  type FicheValues,
+} from "./fiche";
 
 const PENG = {
   title: "Peng 2022",
@@ -37,6 +51,7 @@ describe("fiche d'un vin : lecture", () => {
       appellation: "",
       size: "75",
       degre: "14",
+      sticker: "annee",
       cepage: "Refosco dal Peduncolo Rosso, Merlot",
       regionLine: "Venezia Giulia IGT, Frioul",
       degustation: "Ligne 1\nLigne 2",
@@ -61,6 +76,7 @@ describe("fiche d'un vin : vérification", () => {
     expect(parsed.input.metafields).toContainEqual({ namespace: "bluepoint", key: "degre", type: "number_decimal", value: "13.5" });
     expect(parsed.input.metafields).toContainEqual({ namespace: "bluepoint", key: "volume_ml", type: "number_integer", value: "750" });
     expect(parsed.input.metafields).toContainEqual({ namespace: "bluepoint", key: "conservation", type: "multi_line_text_field", value: "Se garde 10\u00A0ans." });
+    expect(parsed.input.metafields).toContainEqual({ namespace: "bluepoint", key: "sticker", type: "single_line_text_field", value: "annee" });
     expect(parsed.input.clearedKeys).toEqual([]);
   });
 
@@ -162,5 +178,67 @@ describe("fiche d'un vin : régions et année du nom", () => {
     expect(retitle("Peng", "2022", "2023")).toBe("Peng");
     expect(retitle("Peng 2022", "2022", "202")).toBe("Peng 2022");
     expect(retitle("Peng", "", "2023")).toBe("Peng");
+  });
+});
+
+describe("fiche d'un vin : sticker de la photo", () => {
+  it("garde le choix enregistré, sinon reprend ce que le site montrait", () => {
+    expect(ficheValuesFromProduct({ ...PENG, metafields: { ...PENG.metafields, sticker: "degre" } }).sticker).toBe("degre");
+    expect(ficheValuesFromProduct({ ...PENG, metafields: { ...PENG.metafields, sticker: "autre" } }).sticker).toBe("annee");
+    expect(defaultSticker("Rouge", "2022", "14")).toBe("annee");
+    expect(defaultSticker("Rouge", "", "14")).toBe("degre");
+    expect(defaultSticker("Spiritueux", "2022", "43")).toBe("degre");
+    expect(defaultSticker("Blanc", "", "")).toBe("annee");
+  });
+
+  it("enregistre le degré comme sticker, même pour un vin qui a une année", () => {
+    const parsed = parseFiche(form({ sticker: "degre", degre: "13,5" }));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.input.metafields).toContainEqual({ namespace: "bluepoint", key: "sticker", type: "single_line_text_field", value: "degre" });
+  });
+
+  it("refuse un sticker sans l'information qu'il doit montrer", () => {
+    const sansDegre = parseFiche(form({ sticker: "degre", degre: "" }));
+    expect(!sansDegre.ok && sansDegre.errors.sticker).toBe("Écrivez le degré dans la case « Degré d’alcool », ou choisissez l’année.");
+    const sansAnnee = parseFiche(form({ sticker: "annee", vintage: "", title: "Peng" }));
+    expect(!sansAnnee.ok && sansAnnee.errors.sticker).toBe("Écrivez l’année dans la case « Année », ou choisissez le degré.");
+    const inconnu = parseFiche(form({ sticker: "prix" }));
+    expect(!inconnu.ok && Object.keys(inconnu.errors)).toEqual(["sticker"]);
+  });
+
+  it("écrit le sticker comme le site", () => {
+    expect(stickerText("annee", { vintage: "2023", degre: "13,5" })).toBe("2023");
+    expect(stickerText("degre", { vintage: "2023", degre: "13,5" })).toBe("Vol. 13,5\u00A0%");
+    expect(stickerText("degre", { vintage: "2023", degre: "14" })).toBe("Vol. 14\u00A0%");
+    expect(stickerText("degre", { vintage: "2023", degre: "" })).toBe("");
+    expect(stickerText("annee", { vintage: "202", degre: "14" })).toBe("");
+  });
+});
+
+describe("fiche d'un vin : l'année du nom et la case « Année »", () => {
+  it("lit l'année écrite dans le nom", () => {
+    expect(titleYear("Peng 2022")).toBe("2022");
+    expect(titleYear("Merlot del Ticino Picaia 2022 Bio Suisse")).toBe("2022");
+    expect(titleYear("57022 Bolgheri 2024")).toBe("2024");
+    expect(titleYear("Cuvée 12022")).toBeNull();
+    expect(titleYear("Brunello di Montalcino")).toBeNull();
+  });
+
+  it("refuse un nom et une année qui ne disent pas la même chose", () => {
+    const parsed = parseFiche(form({ title: "Le Trésor de la Tour 2025", vintage: "2023" }));
+    expect(!parsed.ok && parsed.errors.vintage).toBe("Le nom du vin dit 2025, cette case dit 2023\u202F: mettez la même année aux deux endroits.");
+    const vide = parseFiche(form({ title: "Il Pino di Biserno 2023", vintage: "", sticker: "degre" }));
+    expect(!vide.ok && vide.errors.vintage).toBe("Le nom du vin dit 2023\u202F: écrivez aussi 2023 ici.");
+  });
+
+  it("accepte un nom sans année, et ne compare pas une année en cours de saisie", () => {
+    expect(parseFiche(form({ title: "Peng", vintage: "2022" })).ok).toBe(true);
+    expect(yearAndStickerErrors({ title: "Peng 2022", vintage: "202", degre: "14", sticker: "annee" })).toEqual({});
+  });
+
+  it("garde le message d'une année mal écrite plutôt que celui du nom", () => {
+    const parsed = parseFiche(form({ title: "Peng 2022", vintage: "1850" }));
+    expect(!parsed.ok && parsed.errors.vintage).toBe("L’année s’écrit avec quatre chiffres, par exemple 2024.");
   });
 });

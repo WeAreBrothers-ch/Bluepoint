@@ -1,9 +1,12 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { WINE_COUNTRIES } from "../../lib/litres/wine-info";
 import {
   FICHE_SIZE_CHOICES,
   FICHE_TYPES,
   retitle,
+  stickerText,
+  titleYear,
+  yearAndStickerErrors,
   type FicheErrors,
   type FicheField,
   type FicheLoadResult,
@@ -26,6 +29,21 @@ interface FichePanelProps {
   readonly failure: { readonly message: string; readonly errors: FicheErrors } | undefined;
   readonly onSubmit: (values: FicheValues) => void;
   readonly onCancel: () => void;
+}
+
+/**
+ * Les messages à afficher : ceux du dernier envoi, sauf pour l'année et le sticker, vérifiés pendant la saisie
+ * (le message disparaît dès que la case est corrigée). Une année mal écrite garde le message de l'envoi.
+ */
+function currentErrors(sent: FicheErrors, values: FicheValues): FicheErrors {
+  const errors: FicheErrors = {};
+  for (const field of Object.keys(sent) as FicheField[]) {
+    const message = sent[field];
+    if (message !== undefined && field !== "vintage" && field !== "sticker") errors[field] = message;
+  }
+  const badYear = values.vintage !== "" && !/^\d{4}$/.test(values.vintage);
+  if (badYear && sent.vintage !== undefined) errors.vintage = sent.vintage;
+  return { ...errors, ...yearAndStickerErrors(values) };
 }
 
 function errorProps(errors: FicheErrors, field: FicheField) {
@@ -66,17 +84,22 @@ interface FicheFormProps {
 
 function FicheForm({ initial, regions, saving, failure, onSubmit, onCancel }: FicheFormProps) {
   const [values, setValues] = useState<FicheValues>(initial);
-  // L'année écrite dans le nom : quand on tape une nouvelle année, le nom suit (« Peng 2022 » → « Peng 2023 »).
-  const titleVintage = useRef(initial.vintage);
   // Une région qui n'est pas encore dans le menu du site : on l'écrit à la main.
   const [typingRegion, setTypingRegion] = useState(initial.region !== "" && !regions.includes(initial.region));
-  const errors = failure?.errors ?? {};
+  const errors = currentErrors(failure?.errors ?? {}, values);
   const set = (field: FicheField, value: string) => setValues((current) => ({ ...current, [field]: value }));
 
+  // L'année du nom et la case « Année » se suivent dans les deux sens : « Peng 2022 » → « Peng 2023 ».
   const setVintage = (vintage: string) => {
-    const title = retitle(values.title, titleVintage.current, vintage);
-    if (title !== values.title) titleVintage.current = vintage;
-    setValues({ ...values, vintage, title });
+    setValues({ ...values, vintage, title: retitle(values.title, titleYear(values.title) ?? "", vintage) });
+  };
+  const setTitle = (title: string) => {
+    const year = titleYear(title);
+    setValues({ ...values, title, ...(year !== null && year !== titleYear(values.title) ? { vintage: year } : {}) });
+  };
+  const sticker = (choice: "annee" | "degre", label: string) => {
+    const text = stickerText(choice, values);
+    return `${label}\u202F: ${text === "" ? "à écrire ci-dessus" : text}`;
   };
 
   const disabled = saving ? { disabled: true } : {};
@@ -88,8 +111,8 @@ function FicheForm({ initial, regions, saving, failure, onSubmit, onCancel }: Fi
         <s-text-field
           label="Nom du vin"
           value={values.title}
-          details="Comme sur le site, avec l’année. L’année du nom suit la case « Année »."
-          onInput={(event) => set("title", event.currentTarget.value)}
+          details="Comme sur le site, avec l’année. L’année du nom et la case « Année » se suivent."
+          onInput={(event) => setTitle(event.currentTarget.value)}
           {...errorProps(errors, "title")}
           {...disabled}
         />
@@ -163,6 +186,18 @@ function FicheForm({ initial, regions, saving, failure, onSubmit, onCancel }: Fi
           {...errorProps(errors, "vintage")}
           {...disabled}
         />
+        <s-text-field label="Degré d’alcool (%)" value={values.degre} details="Ex. 13,5" onInput={(event) => set("degre", event.currentTarget.value)} {...errorProps(errors, "degre")} {...disabled} />
+        <s-select
+          label="Sticker sur la photo du site"
+          value={values.sticker}
+          details="Le rond collé sur la photo du vin. Il change dès que la fiche est enregistrée."
+          onChange={(event) => set("sticker", event.currentTarget.value)}
+          {...errorProps(errors, "sticker")}
+          {...disabled}
+        >
+          <s-option value="annee">{sticker("annee", "L’année")}</s-option>
+          <s-option value="degre">{sticker("degre", "Le degré d’alcool")}</s-option>
+        </s-select>
         <s-select label="Contenance d’une bouteille" value={values.size} details="Sert à compter les litres vendus" onChange={(event) => set("size", event.currentTarget.value)} {...errorProps(errors, "size")} {...disabled}>
           {values.size === "" ? <s-option value="">Choisir la contenance…</s-option> : null}
           {FICHE_SIZE_CHOICES.map((choice) => (
@@ -171,7 +206,6 @@ function FicheForm({ initial, regions, saving, failure, onSubmit, onCancel }: Fi
             </s-option>
           ))}
         </s-select>
-        <s-text-field label="Degré d’alcool (%)" value={values.degre} details="Ex. 13,5" onInput={(event) => set("degre", event.currentTarget.value)} {...errorProps(errors, "degre")} {...disabled} />
         <s-text-field label="Cépages" value={values.cepage} details="Ex. Sangiovese, Merlot" onInput={(event) => set("cepage", event.currentTarget.value)} {...errorProps(errors, "cepage")} {...disabled} />
         <s-text-field
           label="Ligne « Région » de la fiche"

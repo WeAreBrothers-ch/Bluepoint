@@ -45,3 +45,12 @@ Ces trois étiquettes servent à compter les litres vendus (page « Litres vendu
 - Le rayon « Rouges » apparaît dès qu'une bouteille de type Rouge existe, et disparaît s'il n'y en a plus.
 - Adresses des rayons : `/collections/all/rouge`, `/collections/all/region-piemont`, `/collections/all/rouge+pays-italie`.
 - Limite actuelle : les rayons sont calculés sur les 50 premières bouteilles de la boutique.
+
+## Sticker de la photo (fiche vin)
+
+Le rond collé sur la photo d'une fiche vin montre **soit l'année, soit le degré d'alcool**, au choix, dans
+« Modifier la fiche » (page Stock de l'app, case « Sticker sur la photo du site »). Le choix est gardé dans le
+métachamp `bluepoint.sticker` (`annee` ou `degre`) ; l'année vient de l'étiquette `millesime:…`, le degré du métachamp
+`bluepoint.degre`. La fiche refuse un choix sans l'information à montrer, et un nom dont l'année n'est pas celle de la
+case « Année » (les deux se suivent quand on tape). Sans choix enregistré : le degré d'un spiritueux, sinon l'année,
+sinon le degré (`theme/snippets/bp-sticker-vin.liquid`).
