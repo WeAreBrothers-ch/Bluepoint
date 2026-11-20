@@ -1,5 +1,7 @@
 /**
- * BluePoint — bloc « Livraison » du panier (snippets/bp-cart-delivery.liquid).
+ * BluePoint — bloc « Livraison » du panier : pros (snippets/bp-cart-delivery.liquid) et particuliers
+ * (snippets/bp-cart-delivery-prive.liquid, sans choix ni date : le choix se fait au paiement).
+ * - Particulier : un mode ou une date restés dans le panier sont vidés tout de suite (paiement express compris).
  * - Date minimale : aujourd’hui à Zurich + N jours ouvrables (samedi et dimanche sautés).
  * - Envoi par la Poste : pas de date, le champ disparaît et l’attribut est vidé.
  * - Chaque changement est enregistré dans les attributs du panier (/cart/update.js), après une courte pause.
@@ -172,8 +174,28 @@
     validate(el);
   }
 
+  /* Particulier : vide le mode et la date restés dans le panier ; en cas d’échec, le prochain affichage réessaie. */
+  function clearStale(block) {
+    block.removeAttribute("data-bp-livraison-vider");
+    var attributes = {};
+    attributes[MODE_KEY] = "";
+    attributes[DATE_KEY] = "";
+    fetch(ROOT + "cart/update.js", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ attributes: attributes }),
+    })
+      .then(function (response) {
+        if (!response.ok) throw new Error(UNAVAILABLE);
+      })
+      .catch(function () {
+        block.setAttribute("data-bp-livraison-vider", "");
+      });
+  }
+
   function initAll() {
     Array.prototype.forEach.call(document.querySelectorAll("[data-bp-livraison]"), init);
+    Array.prototype.forEach.call(document.querySelectorAll("[data-bp-livraison-vider]"), clearStale);
   }
 
   document.addEventListener("change", function (event) {

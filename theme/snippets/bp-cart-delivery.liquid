@@ -1,5 +1,6 @@
 {%- comment -%}
-  Bloc « Livraison » du récapitulatif panier : mode (livraison, Poste, retrait) et date souhaitée.
+  Bloc « Livraison » du récapitulatif panier, pour les pros seulement : mode (livraison, Poste,
+  retrait) et date souhaitée. Les particuliers ont snippets/bp-cart-delivery-prive.liquid.
   Les champs s’appellent attributes[...] et vivent dans le formulaire du panier : sans script,
   le bouton « Commander » les envoie avec la commande. assets/bp-cart-delivery.js les enregistre
   dès qu’ils changent (/cart/update.js), recalcule la date minimale (heure de Zurich, jours ouvrables)
@@ -55,11 +56,12 @@
             {%- when 'poste' -%}
               Envoi par la Poste
             {%- when 'retrait' -%}
-              Retrait à Lutry
+              Retrait au dépôt <span class="bp-cart__muted">(Savigny)</span>
           {%- endcase -%}
         </span>
       </label>
     {%- endfor -%}
+    <p class="bp-livraison__hint">Si vous venez au dépôt, choisissez aussi le retrait au moment du paiement.</p>
   </fieldset>
 
   <div class="bp-livraison__date" data-bp-livraison-date-field>

@@ -1,0 +1,38 @@
+{%- comment -%}
+  Bloc « Livraison » du panier pour les particuliers : pas de choix ici ni de date. Le client choisit
+  au moment du paiement entre l’envoi par la Poste (tarif « Livraison » de Shopify, offert dès
+  4 cartons par une remise automatique) et le retrait gratuit au dépôt (retrait activé dans Shopify).
+  Un mode ou une date restés dans le panier (choisis avant, comme pro) sont vidés : par les champs
+  cachés à l’envoi du formulaire, et tout de suite par assets/bp-cart-delivery.js (data-bp-livraison-vider),
+  pour que le paiement express ne les emporte pas.
+  Paramètres : post_cents (prix de l’envoi par la Poste, en centimes), missing (bouteilles manquantes
+  pour la livraison offerte)
+{%- endcomment -%}
+{%- liquid
+  assign stale = false
+  if cart.attributes['Mode de livraison'] != blank or cart.attributes['Date de livraison souhaitée'] != blank
+    assign stale = true
+  endif
+-%}
+<div class="bp-livraison" data-bp-livraison-prive{% if stale %} data-bp-livraison-vider{% endif %}>
+  <p class="bp-ui bp-livraison__legend">Livraison</p>
+  <dl class="bp-ui bp-livraison__tarifs">
+    <div class="bp-livraison__tarif">
+      <dt>Envoi par la Poste</dt>
+      <dd>
+        {%- if missing == 0 -%}
+          offert
+        {%- else -%}
+          {{ post_cents | money | replace: "'", '’' }}
+        {%- endif -%}
+      </dd>
+    </div>
+    <div class="bp-livraison__tarif">
+      <dt>Retrait au dépôt <span class="bp-cart__muted">(Savigny)</span></dt>
+      <dd>gratuit</dd>
+    </div>
+  </dl>
+  <p class="bp-livraison__hint">Vous choisissez au moment du paiement.</p>
+  <input type="hidden" name="attributes[Mode de livraison]" value="">
+  <input type="hidden" name="attributes[Date de livraison souhaitée]" value="">
+</div>

@@ -38,7 +38,7 @@
     "faq": {
       "type": "bp-faq",
       "blocks": {
-        "q1": { "type": "question", "settings": { "question": "Quels sont les délais et les frais de livraison ?", "answer": "<p>Livraison sous 48 h en Suisse, offerte dès 24 bouteilles.</p>" } },
+        "q1": { "type": "question", "settings": { "question": "Quels sont les délais et les frais de livraison ?", "answer": "<p>Envoi par la Poste sous 48 h en Suisse : CHF 20.–, offert dès 24 bouteilles (4 cartons). Retrait gratuit à notre dépôt de Savigny.</p>" } },
         "q2": { "type": "question", "settings": { "question": "Puis-je commander une seule bouteille ?", "answer": "<p>Non. Nos vins se vendent par cartons de 6 bouteilles, au minimum un carton (6, 12, 18…).</p>" } }
       },
       "block_order": ["q1", "q2"],

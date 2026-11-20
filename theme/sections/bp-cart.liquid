@@ -19,12 +19,19 @@
   if missing < 0
     assign missing = 0
   endif
+  # Un pro (entreprise B2B ou étiquette « pro ») choisit son mode et son jour de livraison ;
+  # un particulier choisit seulement Poste ou retrait, au paiement.
+  assign is_pro_customer = false
+  if customer
+    if customer.b2b? or customer.tags contains 'pro'
+      assign is_pro_customer = true
+    endif
+  endif
+  assign post_cents = section.settings.post_price | default: 20 | times: 100
   assign is_pro_buyer = false
   # Choix pro (facture, rabais carte) seulement quand la boutique pro est ouverte (réglage du thème « Afficher les prix pro »).
-  if customer and settings.bp_prix_pro
-    if customer.b2b? or customer.tags contains 'pro'
-      assign is_pro_buyer = true
-    endif
+  if is_pro_customer and settings.bp_prix_pro
+    assign is_pro_buyer = true
   endif
   assign carton_error = false
   for item in cart.items
@@ -94,7 +101,11 @@
             Encore {{ missing }}&nbsp;bouteille{% if missing > 1 %}s{% endif %} pour la livraison offerte
           {%- endif -%}
         </p>
-        {%- render 'bp-cart-delivery', lead_days: section.settings.lead_days, section_id: section.id -%}
+        {%- if is_pro_customer -%}
+          {%- render 'bp-cart-delivery', lead_days: section.settings.lead_days, section_id: section.id -%}
+        {%- else -%}
+          {%- render 'bp-cart-delivery-prive', post_cents: post_cents, missing: missing -%}
+        {%- endif -%}
         {%- if section.settings.note != blank -%}
           <p class="bp-phrase bp-cart__muted">{{ section.settings.note | escape }}</p>
         {%- endif -%}
@@ -116,7 +127,7 @@
         </button>
         {%- comment -%}
           Paiement express (Apple Pay, Google Pay, Shop Pay…) : seulement ici, pas sur la fiche,
-          pour que le client choisisse d’abord le mode et la date de livraison ci-dessus.
+          pour qu’un pro choisisse d’abord le mode et la date de livraison ci-dessus.
           Les boutons n’apparaissent que si un de ces moyens est activé dans Shopify (Paramètres › Paiements).
           assets/bp-cart-page.js les garde en place quand le panier se met à jour.
           Masqués tant qu’une ligne n’est pas un carton complet.
@@ -159,7 +170,15 @@
       "type": "number",
       "id": "free_shipping_from",
       "label": "Livraison offerte dès (bouteilles)",
+      "info": "Doit rester égal à la remise Shopify « Livraison offerte dès 4 cartons ».",
       "default": 24
+    },
+    {
+      "type": "number",
+      "id": "post_price",
+      "label": "Envoi par la Poste (CHF)",
+      "info": "Prix affiché aux particuliers. Doit rester égal au tarif « Livraison » de Shopify (Paramètres › Expédition et livraison).",
+      "default": 20
     },
     {
       "type": "number",
@@ -172,7 +191,7 @@
       "type": "text",
       "id": "note",
       "label": "Note sous le total",
-      "default": "Livraison sous 48 h en Suisse. Frais calculés à l’étape suivante."
+      "default": "Livraison sous 48 h en Suisse."
     }
   ]
 }
