@@ -1,9 +1,10 @@
 {%- comment -%}
   Grand menu de l'ordinateur : Boutique, puis un rayon par type de vin (Rouges, Blancs…), centrés dans la barre.
-  Chaque rayon est un bouton qui ouvre, sous la barre, un panneau de toute la largeur (snippets/bp-nav-panel.liquid) :
-  producteurs, pays et régions, cépages, producteur à la une. Le lien vers tout le rayon est en tête du panneau.
-  Ouverture au clic, au clavier, ou à la souris après un court arrêt ; fermeture avec Échap, en cliquant ailleurs
-  ou en quittant le menu (assets/bp-nav.js). Le rayon ouvert devient une pilule cernée d'encre (assets/bp-nav.css).
+  Le nom de chaque rayon est un lien vers toutes ses bouteilles (snippets/bp-nav-head.liquid). La souris posée dessus
+  ouvre, sous la barre, un panneau de toute la largeur (snippets/bp-nav-panel.liquid) : producteurs, pays et régions,
+  cépages, producteur à la une. Au clavier, un petit chevron après le nom ouvre ce panneau ; sur écran tactile, le
+  premier toucher l'ouvre. Fermeture avec Échap, en cliquant ailleurs ou en quittant le menu (assets/bp-nav.js).
+  Le rayon ouvert devient une pilule cernée d'encre (assets/bp-nav.css).
   Sans script, le panneau s'ouvre au survol et quand le focus entre dans le rayon.
   « Espace pro » et « Panier » sont à droite de l'en-tête (sections/bp-header.liquid).
   Paramètres : products (tout le catalogue), types, shop_url, shop_active, settings (réglages de l'en-tête)
@@ -25,11 +26,10 @@
 <nav aria-label="Navigation principale" class="bp-ui bp-nav" data-bp-nav>
   <ul class="bp-nav__bar">
     <li class="bp-nav__entry">
-      <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="bp-rayon-boutique" data-bp-nav-trigger {% if shop_current %}data-current{% endif %}>
-        Boutique
-      </button>
+      {%- render 'bp-nav-head', label: 'Boutique', url: shop_url, panel_id: 'bp-rayon-boutique', current: shop_current -%}
       {%- render 'bp-nav-panel',
         id: 'bp-rayon-boutique',
+        rayon_url: shop_url,
         products: products,
         all_products: products,
         types: types,
@@ -45,13 +45,21 @@
         assign typed = products | where: 'type', type
         assign panel_id = 'bp-rayon-' | append: type_handle
         assign setting_key = 'featured_' | append: type_handle
+        assign rayon_url = shop_url | append: '/' | append: type_handle
+        assign type_current = false
+        if current_handles contains type_marker
+          assign type_current = true
+        endif
+        capture type_label
+          render 'bp-type-label', type: type
+        endcapture
+        assign type_label = type_label | strip
       -%}
       <li class="bp-nav__entry">
-        <button type="button" class="bp-nav__trigger" aria-expanded="false" aria-controls="{{ panel_id }}" data-bp-nav-trigger {% if current_handles contains type_marker %}data-current{% endif %}>
-          {%- render 'bp-type-label', type: type -%}
-        </button>
+        {%- render 'bp-nav-head', label: type_label, url: rayon_url, panel_id: panel_id, current: type_current -%}
         {%- render 'bp-nav-panel',
           id: panel_id,
+          rayon_url: rayon_url,
           products: typed,
           all_products: products,
           types: types,

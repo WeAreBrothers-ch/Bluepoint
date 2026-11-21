@@ -6,18 +6,17 @@
   3. cépages (pour un type de vin) ou types (pour la boutique entière) ;
   4. le producteur à la une (snippets/bp-nav-feature.liquid).
   Paramètres :
-  - id : identifiant du panneau (le bouton du rayon s'y rattache par aria-controls)
+  - id : identifiant du panneau (le chevron du rayon s'y rattache par aria-controls)
+  - rayon_url : la page de tout le rayon (la même que le nom du rayon dans la barre)
   - products : les bouteilles du rayon ; type : le type de produit (« Rouge »), vide pour toute la boutique
   - all_products : tout le catalogue (pour les nombres de bouteilles par type) ; types : les types, dans l'ordre du caviste
   - shop_url ; featured : le producteur choisi dans l'éditeur de thème (texte, peut être vide)
 {%- endcomment -%}
 {%- liquid
-  assign rayon_url = shop_url
   assign type_prefix = ''
   assign all_label = 'Toute la boutique'
   if type != blank
     assign type_handle = type | handle
-    assign rayon_url = shop_url | append: '/' | append: type_handle
     assign type_prefix = type_handle | append: '+'
     capture type_label
       render 'bp-type-label', type: type

@@ -1,0 +1,21 @@
+{%- comment -%}
+  La tête d'un rayon dans la barre du grand menu de l'ordinateur (snippets/bp-nav-desktop.liquid).
+  - Le nom est un lien vers tout le rayon : un clic mène directement à toutes les bouteilles.
+  - La souris posée sur le nom ouvre le panneau du rayon (assets/bp-nav.js). Sur un écran tactile, qui n'a pas de
+    survol, le premier toucher ouvre le panneau et le second mène au rayon.
+  - Le petit bouton à chevron ouvre le panneau au clavier : caché à la souris, il apparaît quand il reçoit le focus
+    (Tab après le nom), à cheval sur le filet du bas de la barre (assets/bp-nav.css).
+  Paramètres : label (le nom affiché), url (la page du rayon), panel_id (le panneau qu'ouvre le chevron),
+  current (vrai quand la page en cours fait partie de ce rayon : le nom est souligné).
+{%- endcomment -%}
+<div class="bp-nav__head" data-bp-nav-head>
+  <a class="bp-nav__link" href="{{ url }}" data-bp-nav-link{% if current %} aria-current="true"{% endif %}>
+    {{- label -}}
+  </a>
+  <button type="button" class="bp-nav__toggle" aria-expanded="false" aria-controls="{{ panel_id }}" data-bp-nav-trigger>
+    <span class="bp-sr-only">Plus de choix : {{ label }}</span>
+    <svg class="bp-nav__chevron" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true" focusable="false">
+      <path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>

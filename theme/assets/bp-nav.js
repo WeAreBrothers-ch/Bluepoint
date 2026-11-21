@@ -1,10 +1,13 @@
 /**
- * BluePoint — grand menu de l'ordinateur (snippets/bp-nav-desktop.liquid), motif « disclosure » :
- * chaque rayon est un bouton (aria-expanded, aria-controls) qui montre ou cache son panneau.
- * - Clic, Entrée ou Espace : ouvre ou ferme le rayon.
- * - Souris : le rayon s'ouvre après un court arrêt dessus (un simple passage n'ouvre rien) ; quitter le menu
- *   le referme après un délai, pour pouvoir descendre en biais vers le panneau.
- * - Échap referme et rend le focus au bouton ; un clic ailleurs ou un focus qui sort du menu referme aussi.
+ * BluePoint — grand menu de l'ordinateur (snippets/bp-nav-desktop.liquid), motif « disclosure » avec liens en tête :
+ * le nom de chaque rayon est un lien vers toutes ses bouteilles, suivi d'un bouton à chevron (aria-expanded,
+ * aria-controls) qui montre ou cache son panneau (snippets/bp-nav-head.liquid).
+ * - Souris : le panneau s'ouvre après un court arrêt sur le nom (un simple passage n'ouvre rien) ; un clic sur le
+ *   nom mène au rayon. Quitter le menu le referme après un délai, pour pouvoir descendre en biais vers le panneau.
+ * - Écran tactile (pas de survol) : le premier toucher sur le nom ouvre le panneau, le second mène au rayon.
+ * - Clavier : Entrée sur le nom mène au rayon ; Tab amène au chevron, qui ouvre ou ferme le panneau.
+ * - Échap referme (et rend le focus au chevron s'il était dans le panneau) ; un clic ailleurs ou un focus qui sort
+ *   du menu referme aussi.
  * Passer d'un rayon ouvert à un autre est immédiat (data-instant : pas de nouvelle apparition).
  */
 (function () {
@@ -73,8 +76,13 @@
       timer = window.setTimeout(action, delay);
     }
 
-    nav.querySelectorAll("[data-bp-nav-trigger]").forEach(function (trigger) {
-      trigger.addEventListener("focus", function () {
+    nav.querySelectorAll("[data-bp-nav-head]").forEach(function (head) {
+      var trigger = head.querySelector("[data-bp-nav-trigger]");
+      var link = head.querySelector("[data-bp-nav-link]");
+      if (!trigger) return;
+      var tapping = false;
+
+      head.addEventListener("focusin", function () {
         preload(trigger);
         // Au clavier, arriver sur un autre rayon referme le panneau précédent.
         if (current && current !== trigger) close(false);
@@ -84,17 +92,31 @@
         if (current === trigger && !openedByHover) close(false);
         else open(trigger, false);
       });
-      trigger.addEventListener("pointerenter", function (event) {
+      head.addEventListener("pointerenter", function (event) {
         if (event.pointerType !== "mouse" || !finePointer.matches) return;
         preload(trigger);
         later(function () {
           open(trigger, true);
         }, current ? SWITCH_DELAY_MS : OPEN_DELAY_MS);
       });
-      // Passage rapide sur le bouton : l'ouverture prévue est annulée.
-      trigger.addEventListener("pointerleave", function (event) {
+      // Passage rapide sur le nom : l'ouverture prévue est annulée.
+      head.addEventListener("pointerleave", function (event) {
         if (event.pointerType !== "mouse" || current === trigger) return;
         window.clearTimeout(timer);
+      });
+
+      if (!link) return;
+      // Écran tactile : sans survol, le premier toucher montre les choix du rayon au lieu de quitter la page.
+      link.addEventListener("pointerdown", function (event) {
+        tapping = event.pointerType === "touch" || event.pointerType === "pen";
+      });
+      link.addEventListener("click", function (event) {
+        var firstTap = tapping && current !== trigger;
+        tapping = false;
+        if (!firstTap) return;
+        event.preventDefault();
+        preload(trigger);
+        open(trigger, false);
       });
     });
 
@@ -111,7 +133,10 @@
     });
 
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && current) close(true);
+      if (event.key !== "Escape" || !current) return;
+      // Le focus ne revient au chevron que s'il était dans le panneau (ouvert au survol, il ne bouge pas).
+      var panel = panelOf(current);
+      close(Boolean(panel && panel.contains(document.activeElement)));
     });
 
     document.addEventListener("click", function (event) {

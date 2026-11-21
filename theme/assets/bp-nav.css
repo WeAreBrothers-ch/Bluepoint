@@ -1,7 +1,9 @@
 /*
  * BluePoint — grand menu de l'ordinateur (snippets/bp-nav-desktop.liquid, bp-nav-panel.liquid, bp-nav-feature.liquid).
- * La barre : une case par rayon, entre deux filets (bp-header.css). Le rayon ouvert devient une pilule cernée
- * d'encre qui tient dans sa case (même motif que les pastilles de la boutique) ; celui de la page en cours est souligné.
+ * La barre : une case par rayon, entre deux filets (bp-header.css). Le nom du rayon est un lien vers toutes ses
+ * bouteilles ; le rayon ouvert devient une pilule cernée d'encre qui tient dans sa case (même motif que les pastilles
+ * de la boutique) ; celui de la page en cours est souligné. Le chevron qui ouvre le panneau au clavier n'apparaît
+ * qu'avec le focus, à cheval sur le filet du bas de la barre (comme les stickers).
  * Le panneau : toute la largeur, sous la barre, sur le fond de la page ; des colonnes de liens calmes séparées par des
  * filets d'encre (les filets de la grille des bouteilles), puis le producteur à la une sur le panneau bleu des fiches.
  * Mouvement : le panneau apparaît en fondu avec un léger glissement (180 ms) ; d'un rayon à l'autre, rien ne bouge.
@@ -40,20 +42,25 @@
     border-left: var(--trait) solid var(--ligne);
   }
 
-  .bp-nav__trigger {
+  /* Le nom et son chevron occupent toute la hauteur de la case : le chevron se pose sur le filet du bas. */
+  .bp-nav__head {
+    position: relative;
+    display: flex;
+    align-self: stretch;
+    align-items: center;
+  }
+
+  .bp-nav__link {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
     padding-inline: 1rem;
     border: var(--trait) solid transparent;
     border-radius: var(--rayon-pilule);
-    background: none;
     color: inherit;
-    font: inherit;
     font-size: 1.0625rem;
     font-weight: 600;
     white-space: nowrap;
-    cursor: pointer;
     text-decoration: underline;
     text-decoration-color: transparent;
     text-decoration-thickness: 2px;
@@ -63,19 +70,53 @@
       text-decoration-color 160ms var(--ease-out);
   }
 
-  .bp-nav__trigger[data-current] {
+  .bp-nav__link[aria-current] {
     text-decoration-color: currentColor;
   }
 
-  .bp-nav__trigger[aria-expanded="true"] {
+  .bp-nav__head:has([aria-expanded="true"]) .bp-nav__link {
     border-color: var(--encre);
     text-decoration-color: transparent;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .bp-nav__trigger:hover {
+    .bp-nav__link:hover {
       border-color: var(--encre);
     }
+  }
+
+  /* Le chevron : présent pour le clavier et les lecteurs d'écran, invisible (et sans prise) pour la souris. */
+  .bp-nav__toggle {
+    position: absolute;
+    bottom: calc(var(--trait) / -2);
+    left: 50%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 1.5rem;
+    padding: 0;
+    border: var(--trait) solid var(--encre);
+    border-radius: var(--rayon-pilule);
+    background: var(--fond);
+    color: var(--encre);
+    cursor: pointer;
+    translate: -50% 50%;
+    clip-path: inset(50%);
+  }
+
+  /* Visible quand il a le focus du clavier, et tant que le clavier parcourt son panneau ouvert. */
+  .bp-nav__toggle:focus-visible,
+  .bp-nav__entry:has(:focus-visible) .bp-nav__toggle[aria-expanded="true"] {
+    clip-path: none;
+  }
+
+  .bp-nav__chevron {
+    transition: rotate 160ms var(--ease-out);
+  }
+
+  .bp-nav__toggle[aria-expanded="true"] .bp-nav__chevron {
+    rotate: 180deg;
   }
 
   /* ---------- Le panneau ---------- */
@@ -111,10 +152,28 @@
   }
 }
 
+/* De 1200 à 1400 px, la barre est juste : les rayons (case 0,25 + pilule 0,75) et les cases Chercher, Espace pro et
+   Panier (1 rem + trait, cases de bp-header.css) se resserrent pour que les rayons ne passent pas sous le logo. */
+@media (min-width: 75rem) and (max-width: 87.999rem) {
+  .bp-nav__entry {
+    padding-inline: 0.25rem;
+  }
+  .bp-nav__link {
+    padding-inline: 0.75rem;
+  }
+  .bp-header__cell {
+    padding-inline: calc(1rem + var(--trait));
+  }
+}
+
 @media (min-width: 75rem) and (prefers-reduced-motion: reduce) {
   @starting-style {
     .bp-nav__panel {
       translate: none;
     }
+  }
+
+  .bp-nav__chevron {
+    transition: none;
   }
 }
