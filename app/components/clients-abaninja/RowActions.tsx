@@ -6,7 +6,7 @@ import { useClientsAction, type ClientsAction } from "./useClientsAction";
 
 /** Les boutons d'une fiche : relier à un client, dire que ce n'est pas lui, créer, mettre de côté. */
 
-const PRO_NOTE = "Relier en fait un client pro, avec paiement sur facture. Aucun e-mail ne lui est envoyé.";
+const PRO_NOTE = "Relier en fait un client pro. Aucun e-mail ne lui est envoyé.";
 
 function spinning(action: ClientsAction, intent: string, fiche: string, client: string | null = null) {
   const mine = action.pendingIntent === intent && action.pendingFiche === fiche && action.pendingClient === client;
