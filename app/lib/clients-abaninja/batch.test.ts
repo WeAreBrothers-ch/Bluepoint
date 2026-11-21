@@ -32,7 +32,7 @@ describe("runBatch", () => {
 describe("batchMessage", () => {
   it("dit ce qui est fait, ce qui a échoué et ce qui reste", () => {
     expect(batchMessage({ done: 12, failures: [{ name: "Hôtel du Parc", message: "refusé" }], remaining: 30 }, "reliée")).toBe(
-      "12 fiches reliées. 1 n’a pas marché (Hôtel du Parc : refusé). Encore 30 : touchez à nouveau le bouton.",
+      "12 fiches reliées. 1 n’a pas marché (Hôtel du Parc\u202F: refusé). Encore 30\u202F: touchez à nouveau le bouton.",
     );
   });
 

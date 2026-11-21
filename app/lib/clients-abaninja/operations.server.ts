@@ -11,6 +11,7 @@ import type { AbaNinjaCard } from "./cards";
 import type { CardStatus } from "./match";
 import type { ShopifyClient } from "./shopify-client";
 import { addAddress, createPersonCustomer, setLinks, setPhone, tagPro } from "./shopify-write.server";
+import { missingEmailSentence } from "./view";
 
 /**
  * Relier une fiche à un client, ou la créer dans la boutique. Une société devient client pro comme dans
@@ -90,7 +91,7 @@ export async function linkCard(context: OperationContext, card: AbaNinjaCard, cl
 
 export async function createCard(context: OperationContext, status: AbsentStatus): Promise<Outcome> {
   const { card, email, phone } = status;
-  if (email === null) return { ok: false, message: missingEmailMessage(status) };
+  if (email === null) return { ok: false, message: missingEmailSentence(status) };
   const after = `Il pourra se connecter à la boutique avec ${email}. Aucun e-mail ne lui a été envoyé.`;
   if (card.kind === "company") {
     const made = await proCompany(context, card, email, phone);
@@ -107,10 +108,4 @@ export async function createCard(context: OperationContext, status: AbsentStatus
     if (!added.ok) logError("Clients AbaNinja : adresse non ajoutée", added.error, { fiche: card.uuid });
   }
   return { ok: true, message: `${card.name} est créé dans la boutique. ${after}` };
-}
-
-export function missingEmailMessage(status: AbsentStatus): string {
-  return status.blockedBy === null
-    ? `${status.card.name} n’a pas d’e-mail dans AbaNinja\u202F: ajoutez-le dans AbaNinja, puis rechargez la page.`
-    : `L’e-mail de ${status.card.name} appartient déjà à ${status.blockedBy} dans la boutique. Corrigez l’e-mail dans AbaNinja, ou reliez la fiche à ce client.`;
 }

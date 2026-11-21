@@ -43,6 +43,14 @@ export function AbaNinjaPageView({ status, orders, testSales }: AbaNinjaPageView
   return (
     <s-page heading={TITRES.abaninja} inlineSize="base">
       <ConfigBanner config={status.config} />
+      <s-section heading={TITRES.clientsAbaninja}>
+        <s-stack direction="block" gap="small-200">
+          <s-paragraph>Relier les clients d’AbaNinja à ceux de la boutique, ou les y créer, sans doublon.</s-paragraph>
+          <s-stack direction="inline">
+            <s-button href="/app/clients/abaninja">Ouvrir {TITRES.clientsAbaninja}</s-button>
+          </s-stack>
+        </s-stack>
+      </s-section>
       <TestSalesSection sales={testSales} configured={status.config.kind === "ok"} />
       <DeliveryNoteTrialSection configured={status.config.kind === "ok"} orders={orders} />
       <TrialSection configured={status.config.kind === "ok"} />

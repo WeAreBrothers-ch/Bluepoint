@@ -12,6 +12,7 @@ export const TITRES = {
   litres: "Litres vendus",
   clients: "Clients",
   clientsPro: "Clients pro",
+  clientsAbaninja: "Clients AbaNinja",
   commandes: "Toutes les commandes",
   entreprise: "Informations de l’entreprise",
   abaninja: "Connexion AbaNinja",

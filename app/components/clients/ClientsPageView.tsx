@@ -98,6 +98,9 @@ export function ClientsPageView({ data }: { readonly data: ClientsPageData }) {
       <s-button slot="secondary-actions" href="/app/clients/pros">
         {TITRES.clientsPro}
       </s-button>
+      <s-button slot="secondary-actions" href="/app/clients/abaninja">
+        {TITRES.clientsAbaninja}
+      </s-button>
       {deleted === null ? null : <s-banner tone="success" heading={deletedMessage(deleted)} />}
       {data.pendingProRequests === 0 ? null : (
         <s-banner tone="info" heading={proRequestsHeading(data.pendingProRequests)}>
