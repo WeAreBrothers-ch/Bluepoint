@@ -39,10 +39,15 @@ export function useClientsAction(): ClientsAction {
   };
 }
 
-/** Une réussite s'annonce aussi en bas de l'écran : la fiche quitte sa place pour son nouveau groupe. */
-export function useSuccessToast(result: ClientsAbaNinjaResult | undefined): void {
+/**
+ * Le résultat s'annonce aussi en bas de l'écran, où qu'on soit dans la page : une réussite (la fiche quitte sa place
+ * pour son nouveau groupe) ou la fin d'un lot, même en partie refusé.
+ */
+export function useResultToast(result: ClientsAbaNinjaResult | undefined): void {
   const shopify = useAppBridge();
   useEffect(() => {
-    if (result?.ok === true) shopify.toast.show(result.message, { duration: 6000 });
+    if (result === undefined) return;
+    const batch = result.intent === "relier_tous" || result.intent === "creer_tous";
+    if (result.ok || batch) shopify.toast.show(result.message, { duration: 8000, isError: !result.ok });
   }, [result, shopify]);
 }

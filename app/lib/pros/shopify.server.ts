@@ -97,6 +97,8 @@ export interface MakeProOptions {
   readonly onCompanyCreated: (companyId: string) => Promise<void>;
   /** false : aucun e-mail d'invitation (reprise des clients AbaNinja). Vrai par défaut. */
   readonly invite?: boolean;
+  /** true : refuser, avant toute écriture, si un client a déjà cet e-mail (création d'une fiche AbaNinja absente). */
+  readonly newCustomerOnly?: boolean;
 }
 
 export async function makePro(
@@ -107,6 +109,9 @@ export async function makePro(
   const found = await findCustomer(admin, input.email);
   if (!found.ok) return failure(plainFailure("recherche du client", found.error, options.existingCompanyId));
   const customer = found.value;
+  if (customer !== null && options.newCustomerOnly === true) {
+    return failure(new MakeProFailure("Un client de la boutique a déjà cet e-mail. Rechargez la page pour le voir, puis reliez la fiche.", null));
+  }
 
   // Déjà rattachée à une entreprise : on s'assure seulement de l'étiquette « pro ».
   const profile = customer?.companyContactProfiles[0];

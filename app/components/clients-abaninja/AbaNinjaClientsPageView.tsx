@@ -1,4 +1,5 @@
 import type { AbaNinjaClientsPageData } from "../../lib/clients-abaninja/page-data.server";
+import { pageLevelResult } from "../../lib/clients-abaninja/page-text";
 import type { ComparisonView } from "../../lib/clients-abaninja/view";
 import { TITRES } from "../../lib/titres";
 import { BatchButton } from "./BatchButton";
@@ -7,7 +8,7 @@ import { IgnoredLine, LinkedLine } from "./CompactLists";
 import { GroupList, Paged } from "./GroupList";
 import { ResultBanner } from "./ResultBanner";
 import { AbsentActions, CandidateActions } from "./RowActions";
-import { useClientsAction, useSuccessToast } from "./useClientsAction";
+import { useClientsAction, useResultToast } from "./useClientsAction";
 
 /**
  * Page « Clients AbaNinja » : chaque fiche AbaNinja comparée aux clients de la boutique, rangée par ce qu'il reste à décider.
@@ -26,8 +27,8 @@ function Notices({ view, canCreate }: { readonly view: ComparisonView; readonly 
         </s-banner>
       )}
       {view.truncated ? (
-        <s-banner tone="warning" heading="La liste est coupée">
-          Il y a trop de fiches pour les comparer toutes en une fois. Traitez celles-ci, puis rechargez la page.
+        <s-banner tone="warning" heading="La comparaison est incomplète">
+          {"Il y a plus de fiches ou de clients que la page ne peut en lire d’un coup\u202F: certaines fiches manquent ici. Appelez la personne qui s’occupe de l’application."}
         </s-banner>
       ) : null}
       {view.skipped === 0 ? null : (
@@ -54,7 +55,7 @@ function Groups({ view }: { readonly view: ComparisonView }) {
               intent="relier_tous"
               label={`Relier les ${counts.meme_email} fiches`}
               question={`Relier les ${counts.meme_email} fiches à leur client\u202F?`}
-              detail="Chaque fiche est reliée au client qui a le même e-mail. Les sociétés deviennent clients pro. Aucun e-mail n’est envoyé."
+              detail={"Chaque fiche est reliée au client qui a le même e-mail. Les sociétés deviennent clients pro. Aucun e-mail n’est envoyé. Les fiches sont traitées par 15\u202F: touchez à nouveau le bouton pour la suite."}
             />
           ) : undefined
         }
@@ -86,7 +87,7 @@ function Groups({ view }: { readonly view: ComparisonView }) {
               intent="creer_tous"
               label={`Créer les ${creatable} fiches qui ont un e-mail`}
               question={`Créer ${creatable} clients dans la boutique\u202F?`}
-              detail="Vérifiez d’abord qu’il n’y a pas de fournisseur dans la liste. Les sociétés deviennent clients pro. Aucun e-mail n’est envoyé."
+              detail={"Vérifiez d’abord qu’il n’y a pas de fournisseur dans la liste. Les sociétés deviennent clients pro. Aucun e-mail n’est envoyé. Les fiches sont traitées par 15\u202F: touchez à nouveau le bouton pour la suite."}
             />
           ) : undefined
         }
@@ -112,8 +113,7 @@ function Groups({ view }: { readonly view: ComparisonView }) {
 
 export function AbaNinjaClientsPageView({ data }: { readonly data: AbaNinjaClientsPageData }) {
   const action = useClientsAction();
-  useSuccessToast(action.result);
-  const orphan = action.result !== undefined && action.result.fiche === null && action.result.intent === null ? action.result : undefined;
+  useResultToast(action.result);
   return (
     <s-page heading={TITRES.clientsAbaninja} inlineSize="base">
       <s-button slot="secondary-actions" href="/app/clients">
@@ -133,7 +133,7 @@ export function AbaNinjaClientsPageView({ data }: { readonly data: AbaNinjaClien
           <s-section>
             <s-paragraph>{INTRO}</s-paragraph>
           </s-section>
-          <ResultBanner result={orphan} />
+          <ResultBanner result={pageLevelResult(action.result, data.view)} />
           <Notices view={data.view} canCreate={data.canCreate} />
           <Groups view={data.view} />
         </>

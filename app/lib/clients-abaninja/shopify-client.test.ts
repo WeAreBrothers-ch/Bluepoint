@@ -46,18 +46,34 @@ describe("toShopifyClient", () => {
         lien: { value: JSON.stringify({ uuid: UUID, kind: "company", number: "A1" }) },
         refus: { value: JSON.stringify([OTHER]) },
         companyContactProfiles: [
-          { company: { id: "gid://shopify/Company/3", name: "Lac SA", lien: { value: JSON.stringify({ uuid: UUID, kind: "company", number: null }) } } },
+          {
+            roleAssignments: { nodes: [{ id: "gid://shopify/CompanyContactRoleAssignment/1" }] },
+            company: { id: "gid://shopify/Company/3", name: "Lac SA", lien: { value: JSON.stringify({ uuid: UUID, kind: "company", number: null }) } },
+          },
         ],
       }),
     );
     expect(client).toMatchObject({
       isPro: true,
+      proReady: true,
+      linkedCompanyId: "gid://shopify/Company/3",
       companyIds: ["gid://shopify/Company/3"],
       link: { uuid: UUID, number: "A1" },
       companyLink: { uuid: UUID, number: null },
       refused: [OTHER],
     });
     expect(client.names).toContain("Lac SA");
+  });
+
+  it("voit un compte pro inachevé : sans étiquette pro, ou sans rôle sur l'établissement", () => {
+    const profile = (roles: number) => ({
+      roleAssignments: { nodes: Array.from({ length: roles }, (_, index) => ({ id: `gid://shopify/CompanyContactRoleAssignment/${index}` })) },
+      company: { id: "gid://shopify/Company/3", name: "Lac SA", lien: null },
+    });
+    expect(toShopifyClient(node({ tags: [], companyContactProfiles: [profile(1)] })).proReady).toBe(false);
+    expect(toShopifyClient(node({ tags: ["pro"], companyContactProfiles: [profile(0)] })).proReady).toBe(false);
+    expect(toShopifyClient(node({ tags: ["pro"], companyContactProfiles: [profile(1)] })).proReady).toBe(true);
+    expect(toShopifyClient(node({ tags: ["pro"] })).proReady).toBe(true);
   });
 
   it("supporte un client sans adresse, sans e-mail ni téléphone", () => {

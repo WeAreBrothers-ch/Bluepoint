@@ -40,8 +40,23 @@ describe("listAbaNinjaCards", () => {
     expect(result.ok && result.value.skipped).toBe(2);
   });
 
-  it("s'arrête sur une page incomplète quand AbaNinja ne dit pas combien il y en a", async () => {
-    const { fetchImpl, calls } = scriptedFetch([jsonResponse({ data: [{ uuid: A, name: "Bar" }] }), jsonResponse({ data: [] })]);
+  it("continue jusqu'à une page vide quand AbaNinja ne dit pas combien il y en a (il peut rendre moins de 100 fiches par page)", async () => {
+    const { fetchImpl, calls } = scriptedFetch([
+      jsonResponse({ data: [{ uuid: A, name: "Bar" }] }),
+      jsonResponse({ data: [{ uuid: B, name: "Café" }] }),
+      jsonResponse({ data: [] }),
+      jsonResponse({ data: [] }),
+    ]);
+    const result = await listAbaNinjaCards(testConfig(), { fetchImpl });
+    expect(result.ok && result.value.cards.map((card) => card.uuid)).toEqual([A, B]);
+    expect(calls).toHaveLength(4);
+  });
+
+  it("lit un nombre de pages écrit en texte", async () => {
+    const { fetchImpl, calls } = scriptedFetch([
+      jsonResponse({ data: [{ uuid: A, name: "Bar" }], meta: { last_page: "1" } }),
+      jsonResponse({ data: [], meta: { last_page: "1" } }),
+    ]);
     const result = await listAbaNinjaCards(testConfig(), { fetchImpl });
     expect(result.ok && result.value.cards).toHaveLength(1);
     expect(calls).toHaveLength(2);

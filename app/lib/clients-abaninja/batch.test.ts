@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { batchMessage, runBatch } from "./batch";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../core/logger.server", () => ({ logError: vi.fn() }));
+
+const { batchMessage, runBatch } = await import("./batch");
 
 const names = (n: number) => Array.from({ length: n }, (_, index) => `Fiche ${index + 1}`);
 
@@ -39,5 +42,20 @@ describe("batchMessage", () => {
   it("accorde au singulier", () => {
     expect(batchMessage({ done: 1, failures: [], remaining: 0 }, "créée")).toBe("1 fiche créée.");
     expect(batchMessage({ done: 0, failures: [], remaining: 0 }, "créée")).toBe("0 fiche créée.");
+  });
+});
+
+describe("runBatch : imprévu", () => {
+  it("garde le compte rendu quand une fiche lève une exception", async () => {
+    const report = await runBatch(
+      names(3),
+      (name) => name,
+      async (name) => {
+        if (name === "Fiche 2") throw new Error("base indisponible");
+        return { ok: true, message: "" };
+      },
+    );
+    expect(report.done).toBe(2);
+    expect(report.failures).toEqual([{ name: "Fiche 2", message: "Ça n’a pas marché. Rechargez la page, puis réessayez." }]);
   });
 });

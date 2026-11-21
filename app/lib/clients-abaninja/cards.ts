@@ -73,14 +73,23 @@ function phoneOf(record: ParsedRecord): string | null {
   return null;
 }
 
+const COUNTRY_CODE = /^[A-Z]{2}$/;
+
+/** Code pays à deux lettres (Shopify refuse le reste) ; absent → Suisse ; illisible → null. */
+function countryOf(raw: string | null | undefined): string | null {
+  const code = clean(raw)?.toUpperCase() ?? "CH";
+  return COUNTRY_CODE.test(code) ? code : null;
+}
+
 function addressOf(record: ParsedRecord): CardAddress | null {
   for (const address of record.addresses ?? []) {
     const street = clean([address.address, address.street_number].map((part) => part?.trim() ?? "").join(" "));
     const zip = clean(address.zip_code);
     const city = clean(address.city);
-    if (street !== null && zip !== null && city !== null) {
+    const countryCode = countryOf(address.country_code);
+    if (street !== null && zip !== null && city !== null && countryCode !== null) {
       const extra = clean(address.extension) ?? clean(address.additional_field);
-      return { street, extra, zip, city, countryCode: clean(address.country_code)?.toUpperCase() ?? "CH" };
+      return { street, extra, zip, city, countryCode };
     }
   }
   return null;

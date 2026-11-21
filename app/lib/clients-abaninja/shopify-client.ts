@@ -1,5 +1,6 @@
 import { PRO_CUSTOMER_TAGS } from "../agenda/mapping";
 import { normalizePhoneE164 } from "../factures/phone";
+import { hasProTag } from "../factures/pro-tag";
 import { parseLink, parseUuidList, type AbaNinjaLink } from "./link";
 import { normalizeEmail } from "./normalize";
 
@@ -16,8 +17,12 @@ export interface ShopifyClient {
   readonly town: string | null;
   readonly hasAddress: boolean;
   readonly isPro: boolean;
+  /** Étiquette « pro » posée et un rôle sur chaque entreprise : le compte pro est complet. */
+  readonly proReady: boolean;
   /** Entreprises Shopify (B2B) dont il est contact. */
   readonly companyIds: readonly string[];
+  /** L'entreprise qui porte le lien AbaNinja (`companyLink`). */
+  readonly linkedCompanyId: string | null;
   readonly link: AbaNinjaLink | null;
   readonly companyLink: AbaNinjaLink | null;
   /** Fiches AbaNinja pour lesquelles on a répondu « ce n'est pas lui ». */
@@ -29,6 +34,8 @@ export interface ShopifySide {
   readonly clients: readonly ShopifyClient[];
   /** Fiches AbaNinja mises de côté (fournisseurs, fiches qui ne sont pas des clients). */
   readonly ignored: readonly string[];
+  /** Entreprises qui portent un lien AbaNinja, même sans client rattaché (création interrompue). */
+  readonly linkedCompanies: readonly { readonly companyId: string; readonly link: AbaNinjaLink }[];
   readonly truncated: boolean;
 }
 
@@ -49,6 +56,7 @@ export interface CustomerMatchNode {
   readonly lien: MetafieldValue | null;
   readonly refus: MetafieldValue | null;
   readonly companyContactProfiles: readonly {
+    readonly roleAssignments: { readonly nodes: readonly { readonly id: string }[] };
     readonly company: { readonly id: string; readonly name: string; readonly lien: MetafieldValue | null };
   }[];
 }
@@ -59,7 +67,9 @@ function filled(values: readonly (string | null | undefined)[]): string[] {
 }
 
 export function toShopifyClient(node: CustomerMatchNode): ShopifyClient {
-  const companies = node.companyContactProfiles.map((profile) => profile.company);
+  const profiles = node.companyContactProfiles;
+  const companies = profiles.map((profile) => profile.company);
+  const linkedCompany = companies.find((company) => parseLink(company.lien?.value) !== null) ?? null;
   const fullName = filled([node.firstName, node.lastName]).join(" ");
   const reversed = filled([node.lastName, node.firstName]).join(" ");
   const address = node.defaultAddress;
@@ -74,9 +84,11 @@ export function toShopifyClient(node: CustomerMatchNode): ShopifyClient {
     town: town === "" ? null : town,
     hasAddress: address !== null,
     isPro: companies.length > 0 || tags.some((tag) => PRO_CUSTOMER_TAGS.includes(tag)),
+    proReady: hasProTag(node.tags) && profiles.every((profile) => profile.roleAssignments.nodes.length > 0),
     companyIds: companies.map((company) => company.id),
+    linkedCompanyId: linkedCompany?.id ?? null,
     link: parseLink(node.lien?.value),
-    companyLink: companies.map((company) => parseLink(company.lien?.value)).find((link) => link !== null) ?? null,
+    companyLink: parseLink(linkedCompany?.lien?.value),
     refused: parseUuidList(node.refus?.value),
   };
 }

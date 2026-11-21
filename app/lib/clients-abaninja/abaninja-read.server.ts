@@ -49,9 +49,13 @@ async function listKind(config: AbaNinjaConfig, kind: CardKind, options: CallOpt
       if (card === null) skipped += 1;
       else cards.push(card);
     }
+    // Sans nombre de pages, seule une page vide dit la fin : AbaNinja peut rendre moins de fiches que demandé.
     const lastPage = result.value.meta?.last_page ?? null;
-    const done = lastPage === null ? result.value.data.length < PAGE_SIZE : page >= lastPage;
-    if (done) return success({ cards, skipped, truncated: false });
+    const done = lastPage === null ? result.value.data.length === 0 : page >= lastPage;
+    if (done) {
+      logInfo("Fiches AbaNinja : pages lues", { type: kind, pages: page, fiches: cards.length, nombreDePages: lastPage });
+      return success({ cards, skipped, truncated: false });
+    }
   }
   return success({ cards, skipped, truncated: true });
 }

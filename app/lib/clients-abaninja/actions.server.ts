@@ -4,7 +4,8 @@ import { batchMessage, runBatch, type Outcome } from "./batch";
 import { loadComparison, type Comparison } from "./comparison.server";
 import { parseAbaNinjaClientsForm, type ClientsAbaNinjaIntent } from "./form";
 import { findStatus, type CardStatus } from "./match";
-import { createCard, linkCard, type OperationContext } from "./operations.server";
+import { operationContext, type OperationContext } from "./context.server";
+import { createCard, finishPro, linkCard } from "./operations.server";
 import { addRefusal, setIgnored } from "./shopify-write.server";
 
 /**
@@ -40,7 +41,12 @@ async function onCard(context: OperationContext, comparison: Comparison, request
   if (status === undefined) return { ok: false, message: STALE };
   const { card } = status;
   if (status.kind === "relie" && request.intent !== "remettre") {
+    const unfinished = card.kind === "company" && !status.client.proReady && (request.intent === "relier" || request.intent === "creer");
+    if (unfinished) return finishPro(context, card, status.client);
     return { ok: true, message: `C’était déjà fait\u202F: ${card.name} est relié à ${status.client.displayName}.` };
+  }
+  if (status.kind === "ignore" && status.auto) {
+    return { ok: false, message: `${card.name} regroupe les ventes aux particuliers\u202F: cette fiche reste de côté.` };
   }
   const { side } = comparison;
   switch (request.intent) {
@@ -89,7 +95,7 @@ export async function handleAbaNinjaClientsAction(
   try {
     const comparison = await loadComparison(admin);
     if (!comparison.ok) return { ok: false, intent: request.intent, fiche, message: comparison.error.message };
-    const context: OperationContext = { admin, shop };
+    const context: OperationContext = operationContext(admin, shop, comparison.value.side);
     const outcome = isBatch(request)
       ? await onAll(context, comparison.value, request.intent)
       : await onCard(context, comparison.value, request);

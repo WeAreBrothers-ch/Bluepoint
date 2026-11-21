@@ -35,7 +35,9 @@ export function client(overrides: Partial<ShopifyClient> = {}): ShopifyClient {
     town: "1003 Lausanne",
     hasAddress: true,
     isPro: false,
+    proReady: false,
     companyIds: [],
+    linkedCompanyId: null,
     link: null,
     companyLink: null,
     refused: [],
@@ -43,6 +45,10 @@ export function client(overrides: Partial<ShopifyClient> = {}): ShopifyClient {
   };
 }
 
-export function side(clients: readonly ShopifyClient[], ignored: readonly string[] = []): ShopifySide {
-  return { shopId: "gid://shopify/Shop/1", clients, ignored, truncated: false };
+export function side(
+  clients: readonly ShopifyClient[],
+  ignored: readonly string[] = [],
+  linkedCompanies: ShopifySide["linkedCompanies"] = [],
+): ShopifySide {
+  return { shopId: "gid://shopify/Shop/1", clients, ignored, linkedCompanies, truncated: false };
 }

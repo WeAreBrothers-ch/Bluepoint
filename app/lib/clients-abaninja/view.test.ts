@@ -42,7 +42,7 @@ describe("toComparisonView", () => {
       tags: ["Restaurant"],
     });
     expect(row?.canCreate).toBe(true);
-    expect(row?.note).toBe("Sera créé en client pro, avec paiement sur facture. Aucun e-mail ne lui sera envoyé.");
+    expect(row?.note).toBe("Sera créé en client pro. Aucun e-mail ne lui sera envoyé.");
   });
 
   it("dit ce qu'une personne recevra d'AbaNinja", () => {
@@ -59,6 +59,26 @@ describe("toComparisonView", () => {
     const [row] = view([card({ emails: [] })], side([])).groups.absent;
     expect(row?.canCreate).toBe(false);
     expect(row?.note).toBe("Restaurant du Lac Sàrl n’a pas d’e-mail dans AbaNinja\u202F: ajoutez-le dans AbaNinja, puis rechargez la page.");
+  });
+
+  it("dit quel e-mail servira, et pourquoi un e-mail déjà pris bloque la création", () => {
+    const parc = card({ uuid: UUID_PARC, name: "Hôtel du Parc", emails: ["pris@x.ch"], phone: null });
+    const holder = client({ email: "pris@x.ch", link: { uuid: UUID_PARC, kind: "company", number: null }, proReady: true });
+    const both = view([card({ emails: ["pris@x.ch", "libre@x.ch"] }), parc], side([holder]));
+    expect(both.groups.absent[0]?.card.email).toBe("libre@x.ch");
+    const blocked = view([card({ emails: ["pris@x.ch"] }), parc], side([holder])).groups.absent[0];
+    expect(blocked?.canCreate).toBe(false);
+    expect(blocked?.note).toBe(
+      "L’e-mail de Restaurant du Lac Sàrl est déjà celui de Paul Martin dans la boutique, relié à une autre fiche. Mettez un autre e-mail dans AbaNinja, puis rechargez la page.",
+    );
+  });
+
+  it("signale un compte pro à terminer parmi les fiches reliées", () => {
+    const linked = { uuid: UUID_LAC, kind: "company" as const, number: "A0153" };
+    expect(view([card()], side([client({ link: linked })])).groups.relie[0]?.toFinish).toBe(true);
+    expect(view([card()], side([client({ link: linked, proReady: true })])).groups.relie[0]?.toFinish).toBe(false);
+    const person = card({ kind: "person", name: "Luc Favre" });
+    expect(view([person], side([client({ link: { ...linked, kind: "person" } })])).groups.relie[0]?.toFinish).toBe(false);
   });
 
   it("dit qu'une fiche est mise de côté d'office ou à la main", () => {

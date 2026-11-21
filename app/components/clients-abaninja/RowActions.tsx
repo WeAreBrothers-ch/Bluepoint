@@ -93,3 +93,13 @@ export function RestoreButton({ fiche, name }: { readonly fiche: string; readonl
     </s-button>
   );
 }
+
+/** Fiche reliée dont le compte pro n'est pas fini : refait la fin (étiquette, rôle), sans rien créer. */
+export function FinishButton({ fiche, client }: { readonly fiche: string; readonly client: string }) {
+  const action = useClientsAction();
+  return (
+    <s-button icon="check" onClick={() => action.submit({ intent: "relier", fiche, client })} {...spinning(action, "relier", fiche, client)}>
+      Terminer le compte pro
+    </s-button>
+  );
+}

@@ -1,3 +1,5 @@
+import { logError } from "../core/logger.server";
+
 /** Lots « Relier les N » et « Créer les N » : 15 fiches au plus, 45 s au plus par clic, puis on dit ce qui reste. */
 
 export const BATCH_MAX_ITEMS = 15;
@@ -8,10 +10,23 @@ export interface Outcome {
   readonly message: string;
 }
 
+const UNEXPECTED = "Ça n’a pas marché. Rechargez la page, puis réessayez.";
+
 export interface BatchReport {
   readonly done: number;
   readonly failures: readonly { readonly name: string; readonly message: string }[];
   readonly remaining: number;
+}
+
+/** Une fiche qui lève une exception compte comme un échec : les autres continuent et le compte rendu reste juste. */
+async function runOne<TItem>(run: (item: TItem) => Promise<Outcome>, item: TItem): Promise<Outcome> {
+  try {
+    return await run(item);
+  } catch (error) {
+    if (error instanceof Response) throw error;
+    logError("Clients AbaNinja : fiche d'un lot impossible", error);
+    return { ok: false, message: UNEXPECTED };
+  }
 }
 
 export async function runBatch<TItem>(
@@ -26,7 +41,7 @@ export async function runBatch<TItem>(
   let index = 0;
   for (; index < items.length && index < BATCH_MAX_ITEMS && now() - startedAt < BATCH_BUDGET_MS; index += 1) {
     const item = items[index] as TItem;
-    const outcome = await run(item);
+    const outcome = await runOne(run, item);
     if (outcome.ok) done += 1;
     else failures.push({ name: nameOf(item), message: outcome.message });
   }

@@ -30,7 +30,11 @@ export async function loadComparison(admin: AdminApiContext): Promise<Result<Com
   ]);
   if (!listing.ok) {
     logError("Clients AbaNinja : lecture d'AbaNinja impossible", listing.error, { code: listing.error.code });
-    return failure(new ComparisonError(`Les fiches d’AbaNinja n’ont pas pu être lues. ${listing.error.message}`));
+    return failure(
+      new ComparisonError(
+        `Les fiches d’AbaNinja n’ont pas pu être lues. ${listing.error.message} Si le problème continue, appelez la personne qui s’occupe de l’application.`,
+      ),
+    );
   }
   if (!side.ok) {
     logError("Clients AbaNinja : lecture des clients de la boutique impossible", side.error);

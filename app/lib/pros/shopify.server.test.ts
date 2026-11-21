@@ -144,3 +144,14 @@ describe("makePro : sans invitation", () => {
     expect(variablesOf("InvitationPro")).toHaveLength(1);
   });
 });
+
+describe("makePro : nouveau client seulement", () => {
+  it("refuse avant toute création si un client a déjà cet e-mail", async () => {
+    searchHits = [{ id: "gid://shopify/Customer/42", email: "info@dummy-resto.test" }];
+
+    const result = await makePro(admin, request, { ...options, invite: false, newCustomerOnly: true });
+
+    expect(result.ok).toBe(false);
+    expect(mutations).toEqual([]);
+  });
+});

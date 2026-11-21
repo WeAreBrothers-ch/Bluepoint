@@ -52,5 +52,6 @@ export type AbaNinjaContact = z.output<typeof contactSchema>;
 /** Une page de liste : les éléments sont validés un par un ensuite. */
 export const abaNinjaPageSchema = z.looseObject({
   data: z.array(z.unknown()),
-  meta: z.looseObject({ last_page: z.number().int().nullish() }).nullish(),
+  // Nombre de pages : en chiffres ou en texte selon les réponses ; illisible → inconnu (on lit alors jusqu'à une page vide).
+  meta: z.looseObject({ last_page: z.coerce.number().int().positive().nullish().catch(null) }).nullish(),
 });

@@ -79,4 +79,12 @@ describe("isPrivateCustomersCard", () => {
     expect(byName !== null && isPrivateCustomersCard(byName)).toBe(true);
     expect(other !== null && isPrivateCustomersCard(other)).toBe(false);
   });
+
+  it("n'envoie pas à Shopify un code pays qu'il ne comprendrait pas", () => {
+    const withCountry = (country_code: string | null) =>
+      toCard({ uuid: UUID, name: "Bar", addresses: [{ address: "Rue 1", zip_code: "1000", city: "Lausanne", country_code }] }, "company")?.address;
+    expect(withCountry("fr")?.countryCode).toBe("FR");
+    expect(withCountry(null)?.countryCode).toBe("CH");
+    expect(withCountry("Suisse")).toBeNull();
+  });
 });

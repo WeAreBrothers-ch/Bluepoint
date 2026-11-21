@@ -32,6 +32,8 @@ export interface ClientView {
 export interface LinkedRow {
   readonly card: CardView;
   readonly client: ClientView;
+  /** Société reliée dont le compte pro n'est pas fini (étiquette ou rôle manquant) : bouton « Terminer ». */
+  readonly toFinish: boolean;
 }
 export interface CandidatesRow {
   readonly card: CardView;
@@ -72,10 +74,11 @@ type AbsentStatus = Extract<CardStatus, { kind: "absent" }>;
 export function missingEmailSentence(status: AbsentStatus): string {
   return status.blockedBy === null
     ? `${status.card.name} n’a pas d’e-mail dans AbaNinja\u202F: ajoutez-le dans AbaNinja, puis rechargez la page.`
-    : `L’e-mail de ${status.card.name} appartient déjà à ${status.blockedBy} dans la boutique. Corrigez l’e-mail dans AbaNinja, ou reliez la fiche à ce client.`;
+    : `L’e-mail de ${status.card.name} est déjà celui de ${status.blockedBy} dans la boutique, relié à une autre fiche. Mettez un autre e-mail dans AbaNinja, puis rechargez la page.`;
 }
 
-function cardView(card: AbaNinjaCard): CardView {
+/** `email` : celui qui servira (pour une fiche à créer, le premier e-mail libre). */
+function cardView(card: AbaNinjaCard, email: string | null = card.emails[0] ?? null): CardView {
   const company = card.kind === "company";
   return {
     uuid: card.uuid,
@@ -83,7 +86,7 @@ function cardView(card: AbaNinjaCard): CardView {
     number: card.number,
     isCompany: company,
     kindLabel: company ? "Société" : "Personne",
-    email: card.emails[0] ?? null,
+    email,
     place: card.address === null ? null : `${card.address.zip} ${card.address.city}`,
     tags: card.tags,
   };
@@ -113,8 +116,8 @@ function personNote(status: AbsentStatus): string {
 
 function absentRow(status: AbsentStatus): AbsentRow {
   if (status.email === null) return { card: cardView(status.card), canCreate: false, note: missingEmailSentence(status) };
-  const note = status.card.kind === "company" ? `Sera créé en client pro, avec paiement sur facture. ${NO_EMAIL_SENT}` : personNote(status);
-  return { card: cardView(status.card), canCreate: true, note };
+  const note = status.card.kind === "company" ? `Sera créé en client pro. ${NO_EMAIL_SENT}` : personNote(status);
+  return { card: cardView(status.card, status.email), canCreate: true, note };
 }
 
 export function toComparisonView(statuses: readonly CardStatus[], side: ShopifySide, listing: CardsListing): ComparisonView {
@@ -126,7 +129,10 @@ export function toComparisonView(statuses: readonly CardStatus[], side: ShopifyS
     ignore: [] as IgnoredRow[],
   };
   for (const status of statuses) {
-    if (status.kind === "relie") groups.relie.push({ card: cardView(status.card), client: clientView(status.client) });
+    if (status.kind === "relie") {
+      const toFinish = status.card.kind === "company" && !status.client.proReady;
+      groups.relie.push({ card: cardView(status.card), client: clientView(status.client), toFinish });
+    }
     else if (status.kind === "ignore") groups.ignore.push({ card: cardView(status.card), auto: status.auto });
     else if (status.kind === "absent") groups.absent.push(absentRow(status));
     else if (status.kind === "meme_email") groups.meme_email.push({ card: cardView(status.card), candidates: [candidateView(status.candidate)] });
