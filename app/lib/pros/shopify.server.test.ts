@@ -128,3 +128,19 @@ describe("makePro : choix du client Shopify", () => {
     expect(variablesOf("EtiquettePro")).toEqual([{ id: "gid://shopify/Customer/42", tags: ["pro"] }]);
   });
 });
+
+describe("makePro : sans invitation", () => {
+  it("n'envoie pas l'e-mail d'invitation quand on le demande", async () => {
+    const result = await makePro(admin, request, { ...options, invite: false });
+
+    expect(result).toMatchObject({ ok: true, value: { invited: false } });
+    expect(variablesOf("InvitationPro")).toEqual([]);
+    expect(variablesOf("EtiquettePro")).toEqual([{ id: NEW_CUSTOMER_ID, tags: ["pro"] }]);
+  });
+
+  it("envoie l'invitation par défaut, comme avant", async () => {
+    await makePro(admin, request, options);
+
+    expect(variablesOf("InvitationPro")).toHaveLength(1);
+  });
+});

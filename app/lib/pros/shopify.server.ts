@@ -5,15 +5,29 @@ import { ShopifyUserErrors, type ShopifyGraphqlError } from "../shopify/errors";
 import { runAdminGraphql, runAdminMutation } from "../shopify/graphql.server";
 import { plainShopifyRefusal } from "../shopify/plain-refusal";
 import { pickCustomerWithEmail } from "./customer-match";
-import type { ProRequestInput } from "./request";
+import { companyInput, type ProAccountInput } from "./company-input";
+import {
+  ACCESS_QUERY,
+  CUSTOMER_BY_EMAIL_QUERY,
+  COMPANY_QUERY,
+  COMPANY_CREATE_MUTATION,
+  ASSIGN_CUSTOMER_MUTATION,
+  ASSIGN_ROLE_MUTATION,
+  TAGS_ADD_MUTATION,
+  WELCOME_EMAIL_MUTATION,
+  type UserErrorList,
+  type AccessData,
+  type CustomerByEmailData,
+  type CompanyData,
+} from "./shopify-documents";
 
 /**
  * « Accepter » une demande de compte pro dans Shopify (Admin API 2026-10, `write_customers`) :
  * 1. retrouver le client par son e-mail, identique à celui de la demande (il a peut-être déjà un compte de particulier) ;
  * 2. créer l'entreprise et son établissement, avec le paiement à N jours (bon de commande) ;
  * 3. rattacher la personne à l'établissement (rôle « Commande uniquement ») ;
- * 4. poser l'étiquette « pro » (remise automatique « Prix pro ») ;
- * 5. envoyer l'e-mail d'invitation de Shopify.
+ * 4. poser l’étiquette « pro » (le site et l’app reconnaissent ainsi un pro) ;
+ * 5. envoyer l'e-mail d'invitation de Shopify (sauf `invite: false`).
  * Chaque étape peut être rejouée : un nouvel essai reprend l'entreprise déjà créée.
  */
 
@@ -23,104 +37,6 @@ export const PRO_TAG = "pro";
 export const PRO_WRITE_SCOPE = "write_customers";
 
 const ORDER_ONLY_ROLE = /commande uniquement|ordering only/i;
-
-const ACCESS_QUERY = `#graphql
-query AutorisationsApp { currentAppInstallation { accessScopes { handle } } }`;
-
-const CUSTOMER_BY_EMAIL_QUERY = `#graphql
-query ClientParEmail($query: String!) {
-  customers(first: 10, query: $query) {
-    nodes { id defaultEmailAddress { emailAddress } companyContactProfiles { id company { id name } } }
-  }
-}`;
-
-const COMPANY_QUERY = `#graphql
-query LireEntreprise($id: ID!) {
-  company(id: $id) {
-    id
-    contactRoles(first: 10) { nodes { id name } }
-    locations(first: 1) { nodes { id } }
-    contacts(first: 20) {
-      nodes {
-        id
-        customer { id defaultEmailAddress { emailAddress } }
-        roleAssignments(first: 5) { nodes { companyLocation { id } } }
-      }
-    }
-  }
-}`;
-
-const COMPANY_CREATE_MUTATION = `#graphql
-mutation CreerEntreprisePro($input: CompanyCreateInput!) {
-  companyCreate(input: $input) {
-    company { id }
-    userErrors { field message code }
-  }
-}`;
-
-const ASSIGN_CUSTOMER_MUTATION = `#graphql
-mutation RattacherClient($companyId: ID!, $customerId: ID!) {
-  companyAssignCustomerAsContact(companyId: $companyId, customerId: $customerId) {
-    companyContact { id }
-    userErrors { field message code }
-  }
-}`;
-
-const ASSIGN_ROLE_MUTATION = `#graphql
-mutation DonnerRole($companyContactId: ID!, $companyContactRoleId: ID!, $companyLocationId: ID!) {
-  companyContactAssignRole(companyContactId: $companyContactId, companyContactRoleId: $companyContactRoleId, companyLocationId: $companyLocationId) {
-    companyContactRoleAssignment { id }
-    userErrors { field message code }
-  }
-}`;
-
-const TAGS_ADD_MUTATION = `#graphql
-mutation EtiquettePro($id: ID!, $tags: [String!]!) {
-  tagsAdd(id: $id, tags: $tags) {
-    userErrors { field message }
-  }
-}`;
-
-const WELCOME_EMAIL_MUTATION = `#graphql
-mutation InvitationPro($companyContactId: ID!) {
-  companyContactSendWelcomeEmail(companyContactId: $companyContactId) {
-    companyContact { id }
-    userErrors { field message code }
-  }
-}`;
-
-interface UserErrorList {
-  readonly userErrors: readonly { readonly field: readonly string[] | null; readonly message: string; readonly code?: string | null }[];
-}
-
-interface AccessData {
-  readonly currentAppInstallation: { readonly accessScopes: readonly { readonly handle: string }[] };
-}
-
-interface CustomerByEmailData {
-  readonly customers: {
-    readonly nodes: readonly {
-      readonly id: string;
-      readonly defaultEmailAddress: { readonly emailAddress: string } | null;
-      readonly companyContactProfiles: readonly { readonly id: string; readonly company: { readonly id: string; readonly name: string } }[];
-    }[];
-  };
-}
-
-interface CompanyData {
-  readonly company: {
-    readonly id: string;
-    readonly contactRoles: { readonly nodes: readonly { readonly id: string; readonly name: string }[] };
-    readonly locations: { readonly nodes: readonly { readonly id: string }[] };
-    readonly contacts: {
-      readonly nodes: readonly {
-        readonly id: string;
-        readonly customer: { readonly id: string; readonly defaultEmailAddress: { readonly emailAddress: string } | null } | null;
-        readonly roleAssignments: { readonly nodes: readonly { readonly companyLocation: { readonly id: string } }[] };
-      }[];
-    };
-  } | null;
-}
 
 type CompanyNode = NonNullable<CompanyData["company"]>;
 
@@ -175,43 +91,18 @@ async function readCompany(admin: AdminApiContext, id: string): Promise<Result<C
   return result.value.company === null ? failure(new ShopifyUserErrors([{ field: null, message: "Company not found" }])) : success(result.value.company);
 }
 
-function companyInput(input: ProRequestInput, paymentTermsTemplateId: string | null, withContact: boolean) {
-  const address = {
-    address1: input.street,
-    zip: input.postalCode,
-    city: input.city,
-    countryCode: input.country,
-    firstName: input.firstName,
-    lastName: input.lastName,
-    phone: input.phone,
-  };
-  return {
-    company: { name: input.companyName, note: "Compte pro créé par l’app BluePoint Gestion." },
-    companyLocation: {
-      name: input.companyName,
-      locale: "fr",
-      phone: input.phone,
-      shippingAddress: address,
-      billingSameAsShipping: true,
-      ...(input.vatNumber === null ? {} : { taxRegistrationId: input.vatNumber }),
-      ...(paymentTermsTemplateId === null
-        ? {}
-        : { buyerExperienceConfiguration: { paymentTermsTemplateId, checkoutToDraft: false, editableShippingAddress: false } }),
-    },
-    ...(withContact
-      ? { companyContact: { email: input.email, firstName: input.firstName, lastName: input.lastName, phone: input.phone, locale: "fr" } }
-      : {}),
-  };
+export interface MakeProOptions {
+  readonly existingCompanyId: string | null;
+  readonly paymentTermsTemplateId: string | null;
+  readonly onCompanyCreated: (companyId: string) => Promise<void>;
+  /** false : aucun e-mail d'invitation (reprise des clients AbaNinja). Vrai par défaut. */
+  readonly invite?: boolean;
 }
 
 export async function makePro(
   admin: AdminApiContext,
-  input: ProRequestInput,
-  options: {
-    readonly existingCompanyId: string | null;
-    readonly paymentTermsTemplateId: string | null;
-    readonly onCompanyCreated: (companyId: string) => Promise<void>;
-  },
+  input: ProAccountInput,
+  options: MakeProOptions,
 ): Promise<Result<MakeProSuccess, MakeProFailure>> {
   const found = await findCustomer(admin, input.email);
   if (!found.ok) return failure(plainFailure("recherche du client", found.error, options.existingCompanyId));
@@ -288,6 +179,8 @@ export async function makePro(
     tags: [PRO_TAG],
   });
   if (!tagged.ok) return failure(plainFailure("étiquette pro", tagged.error, companyId));
+
+  if (options.invite === false) return success({ companyId, customerId, alreadyPro: false, invited: false });
 
   // L'invitation est un plus : son échec n'annule pas le compte pro.
   const invitation = await runAdminMutation(
