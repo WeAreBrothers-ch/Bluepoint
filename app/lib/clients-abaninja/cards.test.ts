@@ -101,7 +101,8 @@ describe("unreadableReason", () => {
     expect(unreadableReason({ uuid: UUID, name: "Bar", contacts: [{ type: "email", value: 5 }] })).toContain("contacts.#.value");
   });
 
-  it("dit « sans nom » quand la fiche se lit mais n'a pas de nom", () => {
-    expect(unreadableReason(record({ name: " " }))).toBe("sans nom");
+  it("dit « sans nom » et liste les champs remplis, sans leurs valeurs", () => {
+    const reason = unreadableReason(record({ name: " ", customer_number: "A0153", tags: [] }));
+    expect(reason).toBe("sans nom (champs remplis : customer_number, name, uuid)");
   });
 });

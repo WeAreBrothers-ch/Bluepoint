@@ -143,10 +143,20 @@ function issuePath(path: readonly PropertyKey[]): string {
   return joined === "" ? "fiche" : joined;
 }
 
+/** Noms des champs remplis d'une fiche (jamais leurs valeurs), pour savoir où AbaNinja range ce qui manque. */
+function filledKeys(raw: unknown): string {
+  if (typeof raw !== "object" || raw === null) return "";
+  return Object.entries(raw)
+    .filter(([, value]) => value !== null && value !== "" && !(Array.isArray(value) && value.length === 0))
+    .map(([key]) => key)
+    .sort()
+    .join(", ");
+}
+
 /** Pourquoi toCard écarte une fiche : les champs refusés et le type attendu, jamais leurs valeurs (rien du client au journal). */
 export function unreadableReason(raw: unknown): string {
   const parsed = abaNinjaRecordSchema.safeParse(raw);
-  if (parsed.success) return "sans nom";
+  if (parsed.success) return `sans nom (champs remplis : ${filledKeys(raw)})`;
   return parsed.error.issues
     .slice(0, MAX_REASONS)
     .map((issue) => `${issuePath(issue.path)} : ${issue.message}`)
