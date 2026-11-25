@@ -74,6 +74,9 @@ const REASON_WORDS: Readonly<Record<MatchReason, string>> = { email: "même e-ma
 type AbsentStatus = Extract<CardStatus, { kind: "absent" }>;
 
 export function missingEmailSentence(status: AbsentStatus): string {
+  if (status.sharedEmail) {
+    return `L’e-mail de ${status.card.name} est aussi sur d’autres fiches d’AbaNinja\u202F: il ne désigne pas ce client. Mettez son propre e-mail dans AbaNinja, puis rechargez la page.`;
+  }
   return status.blockedBy === null
     ? `${status.card.name} n’a pas d’e-mail dans AbaNinja\u202F: ajoutez-le dans AbaNinja, puis rechargez la page.`
     : `L’e-mail de ${status.card.name} est déjà celui de ${status.blockedBy} dans la boutique, relié à une autre fiche. Mettez un autre e-mail dans AbaNinja, puis rechargez la page.`;

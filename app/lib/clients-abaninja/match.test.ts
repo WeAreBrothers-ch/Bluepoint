@@ -104,6 +104,29 @@ describe("compareCards : fiches absentes de la boutique", () => {
     expect(statusOf([card()], side([holder]))).toMatchObject({ kind: "absent", phone: null });
   });
 
+  it("ne crée pas avec un e-mail porté par plusieurs sociétés : il ne désigne aucun client précis", () => {
+    const cards = [card(), card({ uuid: UUID_PARC, name: "Hôtel du Parc", emails: ["info@lac.ch"] })];
+    const statuses = compareCards(cards, side([]));
+    for (const uuid of [UUID_LAC, UUID_PARC]) {
+      expect(findStatus(statuses, uuid)).toMatchObject({ kind: "absent", email: null, blockedBy: null, sharedEmail: true });
+    }
+  });
+
+  it("prend alors un autre e-mail de la fiche, s'il lui est propre", () => {
+    const cards = [card({ emails: ["patron@gmail.com", "info@lac.ch"] }), card({ uuid: UUID_PARC, name: "Hôtel du Parc", emails: ["patron@gmail.com"] })];
+    expect(findStatus(compareCards(cards, side([])), UUID_LAC)).toMatchObject({ kind: "absent", email: "info@lac.ch", sharedEmail: false });
+  });
+
+  it("garde l'e-mail d'une société qu'une personne (son contact) porte aussi", () => {
+    const cards = [card(), card({ uuid: UUID_FAVRE, kind: "person", name: "Marie Rochat", emails: ["info@lac.ch"] })];
+    expect(findStatus(compareCards(cards, side([])), UUID_LAC)).toMatchObject({ kind: "absent", email: "info@lac.ch" });
+  });
+
+  it("ne crée pas non plus une personne avec un e-mail porté par plusieurs personnes", () => {
+    const cards = [card({ uuid: UUID_FAVRE, kind: "person", name: "Luc Favre", emails: ["patron@gmail.com"] }), card({ uuid: UUID_PARC, kind: "person", name: "Ana Roy", emails: ["patron@gmail.com"] })];
+    expect(findStatus(compareCards(cards, side([])), UUID_FAVRE)).toMatchObject({ kind: "absent", email: null, sharedEmail: true });
+  });
+
   it("laisse une fiche sans e-mail à compléter dans AbaNinja", () => {
     expect(statusOf([card({ uuid: UUID_FAVRE, kind: "person", emails: [] })], side([]), UUID_FAVRE)).toMatchObject({
       kind: "absent",

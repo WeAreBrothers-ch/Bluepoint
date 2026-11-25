@@ -1,4 +1,5 @@
 import { isPrivateCustomersCard, type AbaNinjaCard } from "./cards";
+import type { CardKind } from "./link";
 import { namesMatch } from "./normalize";
 import type { ShopifyClient, ShopifySide } from "./shopify-client";
 
@@ -28,6 +29,8 @@ export type CardStatus =
       readonly blockedBy: string | null;
       /** Téléphone à reprendre, null s'il manque ou appartient déjà à un client. */
       readonly phone: string | null;
+      /** Pas d'e-mail utilisable parce que d'autres fiches du même type portent le même (souvent celui du patron, mis en attendant). */
+      readonly sharedEmail: boolean;
     };
 
 const MAX_CANDIDATES = 3;
@@ -64,12 +67,28 @@ function ranked(candidates: readonly Candidate[]): Candidate[] {
   return [...candidates].sort((a, b) => b.reasons.length - a.reasons.length).slice(0, MAX_CANDIDATES);
 }
 
-function absent(card: AbaNinjaCard, clients: readonly ShopifyClient[]): CardStatus {
+const emailKey = (kind: CardKind, email: string): string => `${kind} ${email}`;
+
+/**
+ * E-mails que plusieurs fiches du même type portent : ils ne désignent aucun client précis et ne servent pas à en créer un.
+ * Une société et une personne qui partagent un e-mail restent possibles (la personne est souvent le contact de la société).
+ */
+function sharedEmailKeys(cards: readonly AbaNinjaCard[]): ReadonlySet<string> {
+  const counts = new Map<string, number>();
+  for (const card of cards) {
+    for (const email of card.emails) counts.set(emailKey(card.kind, email), (counts.get(emailKey(card.kind, email)) ?? 0) + 1);
+  }
+  return new Set([...counts].filter(([, count]) => count > 1).map(([key]) => key));
+}
+
+function absent(card: AbaNinjaCard, clients: readonly ShopifyClient[], shared: ReadonlySet<string>): CardStatus {
   const used = new Set(clients.map((client) => client.email).filter((email): email is string => email !== null));
-  const email = card.emails.find((candidate) => !used.has(candidate)) ?? null;
+  const isShared = (candidate: string) => shared.has(emailKey(card.kind, candidate));
+  const email = card.emails.find((candidate) => !used.has(candidate) && !isShared(candidate)) ?? null;
   const holder = email === null ? clients.find((client) => client.email !== null && card.emails.includes(client.email)) : undefined;
+  const sharedEmail = email === null && holder === undefined && card.emails.some(isShared);
   const phoneTaken = card.phone !== null && clients.some((client) => client.phone === card.phone);
-  return { kind: "absent", card, email, blockedBy: holder?.displayName ?? null, phone: phoneTaken ? null : card.phone };
+  return { kind: "absent", card, email, blockedBy: holder?.displayName ?? null, phone: phoneTaken ? null : card.phone, sharedEmail };
 }
 
 /** Clients Shopify qui sont le seul « même e-mail » de plus d'une fiche : à vérifier, jamais reliés d'un clic. */
@@ -92,6 +111,8 @@ export function compareCards(cards: readonly AbaNinjaCard[], side: ShopifySide):
   }
   const ignored = new Set(side.ignored);
   const contested = contestedClients(cards, side.clients);
+  // Une fiche jamais reprise (mise de côté, archivée, « Clients privés ») ne bloque pas l'e-mail d'une autre.
+  const shared = sharedEmailKeys(cards.filter((card) => !ignored.has(card.uuid) && !card.archived && !isPrivateCustomersCard(card)));
   return cards.map((card): CardStatus => {
     const owner = owners.get(card.uuid);
     if (owner !== undefined) return { kind: "relie", card, client: owner };
@@ -102,7 +123,7 @@ export function compareCards(cards: readonly AbaNinjaCard[], side: ShopifySide):
     const sole = byEmail.length === 1 ? byEmail[0] : undefined;
     if (sole !== undefined && !contested.has(sole.client.customerId)) return { kind: "meme_email", card, candidate: sole };
     const toCheck = byEmail.length > 0 ? byEmail : candidates;
-    return toCheck.length > 0 ? { kind: "a_verifier", card, candidates: ranked(toCheck) } : absent(card, side.clients);
+    return toCheck.length > 0 ? { kind: "a_verifier", card, candidates: ranked(toCheck) } : absent(card, side.clients, shared);
   });
 }
 

@@ -28,6 +28,14 @@ describe("toComparisonView", () => {
     expect(result.groups.absent.find((row) => row.card.uuid === UUID_FAVRE)?.canCreate).toBe(true);
   });
 
+  it("explique qu'un e-mail partagé par plusieurs fiches ne sert pas à créer", () => {
+    const cards = [card(), card({ uuid: UUID_PARC, name: "Hôtel du Parc", emails: ["info@lac.ch"] })];
+    const row = view(cards, side([])).groups.absent.find((absentRow) => absentRow.card.uuid === UUID_PARC);
+    expect(row?.canCreate).toBe(false);
+    expect(row?.note).toContain("aussi sur d’autres fiches d’AbaNinja");
+    expect(view(cards, side([])).creatable).toBe(0);
+  });
+
   it("dit pourquoi une fiche est mise de côté d'office", () => {
     const cards = [card({ archived: true }), card({ uuid: UUID_PARC, name: "Clients privés", number: "1062" })];
     expect(view(cards, side([])).groups.ignore.map((row) => row.autoReason)).toEqual(["archivee", "prives"]);
