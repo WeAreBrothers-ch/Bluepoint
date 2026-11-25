@@ -1,45 +1,33 @@
-import type { LoaderFunctionArgs } from "react-router";
-import { redirect, Form, useLoaderData } from "react-router";
-import { login } from "../../shopify.server";
-import styles from "./styles.module.css";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect, useLoaderData } from "react-router";
+import { AccueilPage, ACCUEIL_TEXTES } from "../../components/accueil/AccueilPage";
+import { findInstalledShop, logBareVisit } from "../../lib/accueil/accueil.server";
+import { entryLinks, shopEntry, type EntryLink } from "../../lib/accueil/entree-app";
+import { readRequiredEnv } from "../../lib/core/env.server";
 
 /**
- * Page publique de l'app. Ouverte depuis l'admin (paramètre `shop`), elle
- * redirige vers l'app intégrée ; sinon elle propose de se connecter.
+ * Page publique de l'app. Ouverte par Shopify (paramètre `shop`), elle passe tout de suite à l'app intégrée ;
+ * sinon elle montre comment rentrer dans l'app, page par page (voir `AccueilPage`).
  */
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+interface AccueilData {
+  readonly links: readonly EntryLink[] | null;
+}
+
+export const meta: MetaFunction = () => [{ title: ACCUEIL_TEXTES.titre }];
+
+export const loader = async ({ request }: LoaderFunctionArgs): Promise<AccueilData> => {
   const url = new URL(request.url);
   if (url.searchParams.get("shop")) {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
-  return { showForm: Boolean(login) };
+  logBareVisit(request);
+  const entry = shopEntry(await findInstalledShop());
+  // La clé API (publique) sert à l'adresse de l'app dans l'admin Shopify ; le secret ne quitte jamais le serveur.
+  return { links: entry === null ? null : entryLinks(entry, readRequiredEnv("SHOPIFY_API_KEY")) };
 };
 
-export default function App() {
-  const { showForm } = useLoaderData<typeof loader>();
-
-  return (
-    <div className={styles.index}>
-      <div className={styles.content}>
-        <h1 className={styles.heading}>BluePoint Gestion</h1>
-        <p className={styles.text}>
-          Agenda des livraisons, commandes par téléphone et factures de BluePoint.
-          L’app s’ouvre depuis l’admin Shopify de la boutique.
-        </p>
-        {showForm && (
-          <Form className={styles.form} method="post" action="/auth/login">
-            <label className={styles.label}>
-              <span>Adresse de la boutique</span>
-              <input className={styles.input} type="text" name="shop" autoComplete="on" />
-              <span>ex. nom-de-boutique.myshopify.com</span>
-            </label>
-            <button className={styles.button} type="submit">
-              Se connecter
-            </button>
-          </Form>
-        )}
-      </div>
-    </div>
-  );
+export default function Accueil() {
+  const { links } = useLoaderData<typeof loader>();
+  return <AccueilPage links={links} />;
 }
