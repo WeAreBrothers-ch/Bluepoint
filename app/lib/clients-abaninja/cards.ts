@@ -136,6 +136,23 @@ export function toCard(raw: unknown, kind: CardKind): AbaNinjaCard | null {
   };
 }
 
+const MAX_REASONS = 3;
+
+function issuePath(path: readonly PropertyKey[]): string {
+  const joined = path.map((part) => (typeof part === "number" ? "#" : String(part))).join(".");
+  return joined === "" ? "fiche" : joined;
+}
+
+/** Pourquoi toCard écarte une fiche : les champs refusés et le type attendu, jamais leurs valeurs (rien du client au journal). */
+export function unreadableReason(raw: unknown): string {
+  const parsed = abaNinjaRecordSchema.safeParse(raw);
+  if (parsed.success) return "sans nom";
+  return parsed.error.issues
+    .slice(0, MAX_REASONS)
+    .map((issue) => `${issuePath(issue.path)} : ${issue.message}`)
+    .join(" ; ");
+}
+
 /** La fiche « Clients privés » (n° 1062) regroupe tous les particuliers : elle n'est pas un client à reprendre. */
 export function isPrivateCustomersCard(card: AbaNinjaCard): boolean {
   return card.number === PRIVATE_CUSTOMERS_NUMBER || normalizeName(card.name) === PRIVATE_CUSTOMERS_NAME;

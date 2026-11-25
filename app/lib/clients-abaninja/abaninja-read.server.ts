@@ -5,7 +5,7 @@ import type { AbaNinjaConfig } from "../abaninja/config.server";
 import type { AbaNinjaError } from "../abaninja/errors";
 import { abaNinjaRequest } from "../abaninja/http.server";
 import { abaNinjaPageSchema } from "./abaninja-schema";
-import { toCard, type AbaNinjaCard } from "./cards";
+import { toCard, unreadableReason, type AbaNinjaCard } from "./cards";
 import type { CardKind } from "./link";
 
 /**
@@ -31,8 +31,19 @@ interface KindListing {
   readonly truncated: boolean;
 }
 
+/** « contact_persons.#.contacts : … ×313 » : les raisons les plus fréquentes, pour le journal. */
+function describeReasons(reasons: ReadonlyMap<string, number>): string | null {
+  if (reasons.size === 0) return null;
+  return [...reasons]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([reason, count]) => `${reason} ×${count}`)
+    .join(" | ");
+}
+
 async function listKind(config: AbaNinjaConfig, kind: CardKind, options: CallOptions): Promise<Result<KindListing, AbaNinjaError>> {
   const cards: AbaNinjaCard[] = [];
+  const reasons = new Map<string, number>();
   let skipped = 0;
   for (let page = 1; page <= MAX_PAGES; page += 1) {
     const result = await abaNinjaRequest({
@@ -46,14 +57,23 @@ async function listKind(config: AbaNinjaConfig, kind: CardKind, options: CallOpt
     if (!result.ok) return result;
     for (const item of result.value.data) {
       const card = toCard(item, kind);
-      if (card === null) skipped += 1;
-      else cards.push(card);
+      if (card === null) {
+        skipped += 1;
+        const reason = unreadableReason(item);
+        reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
+      } else cards.push(card);
     }
     // Sans nombre de pages, seule une page vide dit la fin : AbaNinja peut rendre moins de fiches que demandé.
     const lastPage = result.value.meta?.last_page ?? null;
     const done = lastPage === null ? result.value.data.length === 0 : page >= lastPage;
     if (done) {
-      logInfo("Fiches AbaNinja : pages lues", { type: kind, pages: page, fiches: cards.length, nombreDePages: lastPage });
+      logInfo("Fiches AbaNinja : pages lues", {
+        type: kind,
+        pages: page,
+        fiches: cards.length,
+        nombreDePages: lastPage,
+        illisibles: describeReasons(reasons),
+      });
       return success({ cards, skipped, truncated: false });
     }
   }

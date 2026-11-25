@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AbaNinjaRecord } from "./abaninja-schema";
-import { isPrivateCustomersCard, toCard } from "./cards";
+import { isPrivateCustomersCard, toCard, unreadableReason } from "./cards";
 
 const UUID = "123e4567-e89b-42d3-a456-426614174000";
 
@@ -86,5 +86,22 @@ describe("isPrivateCustomersCard", () => {
     expect(withCountry("fr")?.countryCode).toBe("FR");
     expect(withCountry(null)?.countryCode).toBe("CH");
     expect(withCountry("Suisse")).toBeNull();
+  });
+});
+
+describe("unreadableReason", () => {
+  it("nomme le champ refusé et le type attendu, sans recopier la valeur", () => {
+    const reason = unreadableReason({ uuid: UUID, name: "Hôtel du Parc", vat_number: 123456789 });
+    expect(reason).toContain("vat_number");
+    expect(reason).not.toContain("123456789");
+    expect(reason).not.toContain("Hôtel");
+  });
+
+  it("remplace les numéros de ligne par # pour regrouper les fiches", () => {
+    expect(unreadableReason({ uuid: UUID, name: "Bar", contacts: [{ type: "email", value: 5 }] })).toContain("contacts.#.value");
+  });
+
+  it("dit « sans nom » quand la fiche se lit mais n'a pas de nom", () => {
+    expect(unreadableReason(record({ name: " " }))).toBe("sans nom");
   });
 });
