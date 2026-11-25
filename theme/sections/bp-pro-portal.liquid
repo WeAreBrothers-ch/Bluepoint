@@ -61,7 +61,11 @@
         <div class="bp-pro__login">
           <p class="bp-pro__text">{{ s.login_text | escape }}</p>
           <div class="bp-pro__actions">
-            <a href="{{ routes.account_login_url }}?return_url={{ page.url | url_encode }}" class="bp-ui bp-carre bp-button" data-variant="plein">Se connecter</a>
+            {%- comment -%}
+              Après la connexion, retour sur cette page (et pas sur la page « commandes » de Shopify, où mène
+              routes.account_login_url). return_to n'accepte qu'une adresse du site.
+            {%- endcomment -%}
+            <a href="/customer_authentication/login?return_to={{ page.url | url_encode }}" class="bp-ui bp-carre bp-button" data-variant="plein">Se connecter</a>
           </div>
         </div>
       {%- endif -%}
