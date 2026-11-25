@@ -40,11 +40,12 @@ describe("formulaire de la fiche pro", () => {
   });
 
   it("dit quoi corriger, avec les mêmes phrases que la demande de compte pro", () => {
-    const parsed = parseFiche(["name", "phone", "address"], { ...TYPED, firstName: "", phone: "12", postalCode: "10" });
+    const parsed = parseFiche(["name", "phone", "address"], { ...TYPED, firstName: "", phone: "12", street: " ", postalCode: "10" });
     expect(parsed.ok).toBe(false);
     if (parsed.ok) return;
     expect(parsed.errors).toEqual({
       firstName: "Le prénom est obligatoire.",
+      street: "La rue et le numéro sont obligatoires.",
       phone: "Numéro de téléphone invalide (exemple : 079 123 45 67).",
       postalCode: "NPA à 4 chiffres (exemple : 1095).",
     });

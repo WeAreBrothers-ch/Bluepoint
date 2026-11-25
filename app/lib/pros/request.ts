@@ -49,8 +49,8 @@ export const EMPTY_PRO_REQUEST: ProRequestValues = {
   message: "",
 };
 
-const required = (what: string, max: number) =>
-  z.string().trim().min(1, `${what} est obligatoire.`).max(max, `${max} caractères au plus.`);
+const required = (what: string, max: number, verb = "est obligatoire") =>
+  z.string().trim().min(1, `${what} ${verb}.`).max(max, `${max} caractères au plus.`);
 
 /** Coordonnées de la personne et adresse de livraison : mêmes règles pour la demande et pour la fiche pro à compléter. */
 export const PRO_CONTACT_RULES = {
@@ -64,7 +64,7 @@ export const PRO_CONTACT_RULES = {
     }
     return phone;
   }),
-  street: required("La rue et le numéro", 70),
+  street: required("La rue et le numéro", 70, "sont obligatoires"),
   postalCode: z.string().trim().regex(/^\d{4}$/, "NPA à 4 chiffres (exemple\u202F: 1095)."),
   city: required("La localité", 35),
   country: z.enum(["CH", "LI"], { message: "Choisissez Suisse ou Liechtenstein." }),

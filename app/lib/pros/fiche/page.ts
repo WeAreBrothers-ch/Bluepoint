@@ -16,7 +16,7 @@ const LOGIN_URL = `/customer_authentication/login?return_to=${encodeURIComponent
 const STYLE = `{{ 'bp-pro-portal.css' | asset_url | stylesheet_tag }}
 <style>
 .bp-fiche{display:grid;justify-items:start;gap:clamp(1.25rem,3vw,2rem);padding:calc(var(--hauteur-entete) + clamp(2rem,5vw,3.5rem)) var(--marge) var(--section)}
-.bp-fiche .bp-pro__panel{width:100%}
+.bp-fiche .bp-pro__panel{width:100%;max-width:var(--mesure)}
 .bp-fiche fieldset{display:grid;gap:1rem;margin:0;padding:0;border:0}
 .bp-fiche legend{margin-block-end:.75rem;font-size:var(--t-sous-titre);font-weight:800}
 .bp-fiche select{width:100%;min-height:3.25rem;padding:.75rem 1.25rem;border:var(--trait) solid var(--encre);border-radius:var(--rayon-pilule);background:var(--c-blanc);color:var(--encre);font:inherit;font-size:1rem}
