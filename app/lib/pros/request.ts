@@ -52,11 +52,10 @@ export const EMPTY_PRO_REQUEST: ProRequestValues = {
 const required = (what: string, max: number) =>
   z.string().trim().min(1, `${what} est obligatoire.`).max(max, `${max} caractères au plus.`);
 
-const proRequestSchema = z.object({
-  companyName: required("Le nom de l’entreprise", 70),
+/** Coordonnées de la personne et adresse de livraison : mêmes règles pour la demande et pour la fiche pro à compléter. */
+export const PRO_CONTACT_RULES = {
   firstName: required("Le prénom", 40),
   lastName: required("Le nom", 40),
-  email: z.string().trim().toLowerCase().pipe(z.email("Adresse e-mail invalide (exemple\u202F: nom@restaurant.ch).")),
   phone: z.string().transform((raw, ctx) => {
     const phone = normalizePhoneE164(raw);
     if (phone === null) {
@@ -69,6 +68,12 @@ const proRequestSchema = z.object({
   postalCode: z.string().trim().regex(/^\d{4}$/, "NPA à 4 chiffres (exemple\u202F: 1095)."),
   city: required("La localité", 35),
   country: z.enum(["CH", "LI"], { message: "Choisissez Suisse ou Liechtenstein." }),
+} as const;
+
+const proRequestSchema = z.object({
+  companyName: required("Le nom de l’entreprise", 70),
+  email: z.string().trim().toLowerCase().pipe(z.email("Adresse e-mail invalide (exemple\u202F: nom@restaurant.ch).")),
+  ...PRO_CONTACT_RULES,
   vatNumber: z.string().transform((raw, ctx) => {
     if (raw.trim() === "") return null;
     const vat = normalizeVatNumber(raw);

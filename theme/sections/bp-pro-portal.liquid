@@ -49,6 +49,20 @@
           <span class="bp-pro__location">Lieu&#8239;: {{ customer.current_location.name | escape }}</span>
         {%- endif -%}
       </p>
+      {%- comment -%}
+        Fiche incomplète (comptes repris d'AbaNinja : souvent sans nom ni téléphone) : on le dit tout de suite,
+        avec le lien vers la page de l'app qui ne demande que ce qui manque.
+      {%- endcomment -%}
+      {%- capture fiche_manque -%}{%- render 'bp-pro-fiche-manque' -%}{%- endcapture -%}
+      {%- if fiche_manque != blank -%}
+        <div class="bp-pro__todo">
+          <h2 class="bp-ui bp-pro__todo-title">Votre fiche pro est à compléter</h2>
+          <p class="bp-pro__text">Il nous manque {{ fiche_manque }}. Nous en avons besoin pour préparer vos commandes et vous livrer.</p>
+          <div class="bp-pro__actions">
+            <a href="/apps/bon-commande/ma-fiche?lieu={{ customer.current_location.id }}" class="bp-ui bp-carre bp-button" data-variant="plein">Compléter ma fiche</a>
+          </div>
+        </div>
+      {%- endif -%}
       <p class="bp-pro__text">{{ s.welcome_text | escape }}</p>
       <div class="bp-pro__actions">
         <a href="{{ routes.all_products_collection_url }}" class="bp-ui bp-carre bp-button" data-variant="plein">{{ s.shop_label | escape }}</a>

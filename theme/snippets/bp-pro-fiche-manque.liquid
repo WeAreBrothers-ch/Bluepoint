@@ -1,0 +1,34 @@
+{%- doc -%}
+  Ce qui manque à la fiche du pro connecté, en une phrase (« votre nom, votre numéro de téléphone et l’adresse de
+  livraison »), ou rien si elle est complète ou si le visiteur n'est pas un pro.
+  Même règle que la page « Compléter ma fiche » de l'app (app/lib/pros/fiche/state.ts) : prénom et nom, téléphone de la
+  personne, adresse de livraison de l'établissement (rue, NPA, localité). Si les deux divergeaient, l'encart enverrait
+  le client sur une page qui lui dit que tout est complet.
+
+  @example
+  {%- capture fiche_manque -%}{%- render 'bp-pro-fiche-manque' -%}{%- endcapture -%}
+{%- enddoc -%}
+{%- liquid
+  assign parts = ''
+  if customer and customer.b2b?
+    if customer.first_name == blank or customer.last_name == blank
+      assign parts = parts | append: 'votre nom|'
+    endif
+    if customer.phone == blank
+      assign parts = parts | append: 'votre numéro de téléphone|'
+    endif
+    assign address = customer.current_location.shipping_address
+    if address == blank or address.address1 == blank or address.zip == blank or address.city == blank
+      assign parts = parts | append: 'l’adresse de livraison|'
+    endif
+  endif
+  assign parts = parts | split: '|'
+  case parts.size
+    when 1
+      echo parts[0]
+    when 2
+      echo parts[0] | append: ' et ' | append: parts[1]
+    when 3
+      echo parts[0] | append: ', ' | append: parts[1] | append: ' et ' | append: parts[2]
+  endcase
+-%}
