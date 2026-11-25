@@ -3,7 +3,7 @@ import { namesMatch } from "./normalize";
 import type { ShopifyClient, ShopifySide } from "./shopify-client";
 
 /**
- * Range chaque fiche AbaNinja : déjà reliée, ignorée, même e-mail (un seul client possible), à vérifier
+ * Range chaque fiche AbaNinja : déjà reliée, ignorée (à la main, ou d'office : « Clients privés » et fiches archivées), même e-mail (un seul client possible), à vérifier
  * (nom ou téléphone proche, ou e-mail partagé), ou absente de la boutique. Logique pure, sans écriture.
  */
 
@@ -95,7 +95,7 @@ export function compareCards(cards: readonly AbaNinjaCard[], side: ShopifySide):
   return cards.map((card): CardStatus => {
     const owner = owners.get(card.uuid);
     if (owner !== undefined) return { kind: "relie", card, client: owner };
-    if (isPrivateCustomersCard(card)) return { kind: "ignore", card, auto: true };
+    if (isPrivateCustomersCard(card) || card.archived) return { kind: "ignore", card, auto: true };
     if (ignored.has(card.uuid)) return { kind: "ignore", card, auto: false };
     const candidates = candidatesFor(card, side.clients);
     const byEmail = candidates.filter((candidate) => candidate.reasons.includes("email"));

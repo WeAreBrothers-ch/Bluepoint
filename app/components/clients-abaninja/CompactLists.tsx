@@ -1,4 +1,4 @@
-import type { IgnoredRow, LinkedRow } from "../../lib/clients-abaninja/view";
+import type { AutoReason, IgnoredRow, LinkedRow } from "../../lib/clients-abaninja/view";
 import { cardSubtitle } from "./CardRow";
 import { ResultBanner } from "./ResultBanner";
 import { FinishButton, RestoreButton } from "./RowActions";
@@ -31,6 +31,11 @@ export function LinkedLine({ row }: { readonly row: LinkedRow }) {
   );
 }
 
+const AUTO_REASON_TEXT: Readonly<Record<AutoReason, string>> = {
+  prives: "Fiche des ventes aux particuliers\u202F: jamais reprise",
+  archivee: "Archivée dans AbaNinja\u202F: pas reprise. Désarchivez-la dans AbaNinja pour la reprendre.",
+};
+
 export function IgnoredLine({ row }: { readonly row: IgnoredRow }) {
   const action = useClientsAction();
   return (
@@ -39,9 +44,9 @@ export function IgnoredLine({ row }: { readonly row: IgnoredRow }) {
         <s-grid gridTemplateColumns="minmax(0, 1fr) auto" gap="small-200" alignItems="center">
           <s-stack direction="block" gap="small-100">
             <s-text type="strong">{row.card.name}</s-text>
-            <s-text color="subdued">{row.auto ? "Fiche des ventes aux particuliers\u202F: jamais reprise" : cardSubtitle(row.card)}</s-text>
+            <s-text color="subdued">{row.autoReason === null ? cardSubtitle(row.card) : AUTO_REASON_TEXT[row.autoReason]}</s-text>
           </s-stack>
-          {row.auto ? null : <RestoreButton fiche={row.card.uuid} name={row.card.name} />}
+          {row.autoReason === null ? <RestoreButton fiche={row.card.uuid} name={row.card.name} /> : null}
         </s-grid>
         <ResultBanner result={action.result?.fiche === row.card.uuid ? action.result : undefined} />
       </s-stack>

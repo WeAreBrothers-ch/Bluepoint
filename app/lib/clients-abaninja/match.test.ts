@@ -23,6 +23,15 @@ describe("compareCards : fiches déjà reliées ou ignorées", () => {
     expect(statusOf([card({ name: "Clients privés", number: "1062" })], side([]))).toMatchObject({ kind: "ignore", auto: true });
   });
 
+  it("met d'office de côté une fiche archivée dans AbaNinja", () => {
+    expect(statusOf([card({ archived: true })], side([]))).toMatchObject({ kind: "ignore", auto: true });
+  });
+
+  it("garde reliée une fiche archivée après coup", () => {
+    const linked = client({ link: LINK_LAC });
+    expect(statusOf([card({ archived: true })], side([linked]))).toMatchObject({ kind: "relie" });
+  });
+
   it("ignore une fiche mise de côté", () => {
     expect(statusOf([card()], side([], [UUID_LAC]))).toMatchObject({ kind: "ignore", auto: false });
   });

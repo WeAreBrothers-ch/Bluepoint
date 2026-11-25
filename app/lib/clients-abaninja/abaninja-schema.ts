@@ -36,6 +36,8 @@ export const abaNinjaRecordSchema = z.looseObject({
   uuid: uuidField,
   customer_number: z.union([z.string(), z.number().transform(String)]).nullish(),
   name: text,
+  /** La liste des sociétés range le nom ici (constaté le 25/11/2026), pas dans « name » comme le dit la documentation. */
+  company_name: text,
   first_name: text,
   last_name: text,
   vat_number: text,
@@ -44,6 +46,8 @@ export const abaNinjaRecordSchema = z.looseObject({
   contacts: z.array(contactSchema).nullish(),
   addresses: z.array(postalAddressSchema).nullish(),
   contact_persons: z.array(contactPersonSchema).nullish(),
+  /** Valeur inattendue → non archivée : la fiche reste visible plutôt que de disparaître sans bruit. */
+  isArchived: z.boolean().nullish().catch(null),
 });
 
 export type AbaNinjaRecord = z.input<typeof abaNinjaRecordSchema>;

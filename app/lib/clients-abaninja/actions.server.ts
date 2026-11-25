@@ -46,7 +46,8 @@ async function onCard(context: OperationContext, comparison: Comparison, request
     return { ok: true, message: `C’était déjà fait\u202F: ${card.name} est relié à ${status.client.displayName}.` };
   }
   if (status.kind === "ignore" && status.auto) {
-    return { ok: false, message: `${card.name} regroupe les ventes aux particuliers\u202F: cette fiche reste de côté.` };
+    const why = card.archived ? "est archivé dans AbaNinja" : "regroupe les ventes aux particuliers";
+    return { ok: false, message: `${card.name} ${why}\u202F: cette fiche reste de côté.` };
   }
   const { side } = comparison;
   switch (request.intent) {
@@ -77,8 +78,10 @@ async function onAll(context: OperationContext, comparison: Comparison, intent: 
     const report = await runBatch(items, (item) => item.card.name, (item) => linkCard(context, item.card, item.candidate.client));
     return { ok: report.failures.length === 0, message: batchMessage(report, "reliée") };
   }
+  // Le lot ne crée que les sociétés (clients pro) : une personne est un particulier, créé une par une s'il le faut.
   const items = comparison.statuses.filter(
-    (status): status is Extract<CardStatus, { kind: "absent" }> => status.kind === "absent" && status.email !== null,
+    (status): status is Extract<CardStatus, { kind: "absent" }> =>
+      status.kind === "absent" && status.email !== null && status.card.kind === "company",
   );
   const report = await runBatch(items, (item) => item.card.name, (item) => createCard(context, item));
   return { ok: report.failures.length === 0, message: batchMessage(report, "créée") };

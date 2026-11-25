@@ -29,6 +29,8 @@ export interface AbaNinjaCard {
   readonly vatNumber: string | null;
   readonly language: string | null;
   readonly tags: readonly string[];
+  /** Archivée dans AbaNinja : ancien client, jamais repris dans la boutique. */
+  readonly archived: boolean;
 }
 
 const PRIVATE_CUSTOMERS_NUMBER = "1062";
@@ -102,7 +104,8 @@ function namesOf(record: ParsedRecord, kind: CardKind): { name: string | null; f
     return { name: clean([firstName, lastName].filter(Boolean).join(" ")), firstName, lastName };
   }
   const contact = (record.contact_persons ?? []).find((person) => clean(person.first_name) !== null || clean(person.last_name) !== null);
-  return { name: clean(record.name), firstName: clean(contact?.first_name), lastName: clean(contact?.last_name) };
+  const name = clean(record.name) ?? clean(record.company_name);
+  return { name, firstName: clean(contact?.first_name), lastName: clean(contact?.last_name) };
 }
 
 /** Une étiquette arrive en texte ou en objet { name } selon les comptes. */
@@ -133,6 +136,7 @@ export function toCard(raw: unknown, kind: CardKind): AbaNinjaCard | null {
     vatNumber: clean(record.vat_number),
     language: language !== null && /^[a-z]{2}$/.test(language) ? language : null,
     tags: (record.tags ?? []).map(tagName).filter((tag): tag is string => tag !== null),
+    archived: record.isArchived === true,
   };
 }
 

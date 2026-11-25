@@ -85,9 +85,9 @@ function Groups({ view }: { readonly view: ComparisonView }) {
           creatable > 1 ? (
             <BatchButton
               intent="creer_tous"
-              label={`Créer les ${creatable} fiches qui ont un e-mail`}
-              question={`Créer ${creatable} clients dans la boutique\u202F?`}
-              detail={"Vérifiez d’abord qu’il n’y a pas de fournisseur dans la liste. Les sociétés deviennent clients pro. Aucun e-mail n’est envoyé. Les fiches sont traitées par 15\u202F: touchez à nouveau le bouton pour la suite."}
+              label={`Créer les ${creatable} sociétés qui ont un e-mail`}
+              question={`Créer ${creatable} clients pro dans la boutique\u202F?`}
+              detail={"Vérifiez d’abord qu’il n’y a pas de fournisseur dans la liste. Chaque société devient client pro, avec paiement sur facture. Les personnes (particuliers) ne sont pas créées par ce bouton. Aucun e-mail n’est envoyé. Les fiches sont traitées par 15\u202F: touchez à nouveau le bouton pour la suite."}
             />
           ) : undefined
         }

@@ -49,7 +49,7 @@ describe("page Clients AbaNinja", () => {
     expect(html).toContain("Relier les 2 fiches");
     expect(html).toContain("Relier à ce client");
     expect(html).toContain("Pas encore dans la boutique (22)");
-    expect(html).toContain("Créer les 21 fiches qui ont un e-mail");
+    expect(html).toContain("Créer les 21 sociétés qui ont un e-mail");
     expect(html).toContain("Voir 2 fiches de plus");
     expect(html).not.toContain("Luc Sansmail");
     expect(html).not.toContain("Restaurant 20");

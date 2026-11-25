@@ -96,14 +96,22 @@ describe("lots", () => {
 
   it("garde les réussites et dit combien ont échoué", async () => {
     fake.cards = ["a@x.ch", "b@x.ch", "c@x.ch"].map((email, index) =>
-      card({ uuid: [UUID_LAC, UUID_PARC, UUID_FAVRE][index], kind: "person", name: `Personne ${index}`, emails: [email], phone: null, address: null }),
+      card({ uuid: [UUID_LAC, UUID_PARC, UUID_FAVRE][index], name: `Société ${index}`, emails: [email], phone: null, address: null }),
     );
     fake.failCreateFor = "b@x.ch";
     const result = await act({ intent: "creer_tous" });
-    expect(fake.writes.filter((write) => write.name === "createPersonCustomer")).toHaveLength(2);
+    expect(fake.writes.filter((write) => write.name === "makePro")).toHaveLength(3);
     expect(result.ok).toBe(false);
     expect(result.message).toContain("2 fiches créées");
     expect(result.message).toContain("1 n’a pas marché");
+  });
+
+  it("ne crée que les sociétés, en clients pro : les personnes restent à créer une par une", async () => {
+    fake.cards = [card(), card({ uuid: UUID_FAVRE, kind: "person", name: "Luc Favre", emails: ["luc@favre.ch"], phone: null })];
+    const result = await act({ intent: "creer_tous" });
+    expect(result.message).toContain("1 fiche créée");
+    expect(names()).not.toContain("createPersonCustomer");
+    expect(fake.writes.filter((write) => write.name === "makePro")).toHaveLength(1);
   });
 });
 

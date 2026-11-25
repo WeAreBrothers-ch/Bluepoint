@@ -55,6 +55,22 @@ describe("toCard : société", () => {
   });
 });
 
+describe("toCard : forme réelle de la liste AbaNinja", () => {
+  it("lit le nom d'une société dans company_name (la liste n'a pas de « name »)", () => {
+    const card = toCard({ uuid: UUID, type: "company", company_name: " Restaurant du Lac Sàrl ", isArchived: false }, "company");
+    expect(card).toMatchObject({ name: "Restaurant du Lac Sàrl", archived: false });
+  });
+
+  it("repère une fiche archivée dans AbaNinja", () => {
+    expect(toCard({ uuid: UUID, company_name: "Bar fermé", isArchived: true }, "company")?.archived).toBe(true);
+    expect(toCard({ uuid: UUID, first_name: "Luc", last_name: "Favre", isArchived: true }, "person")?.archived).toBe(true);
+  });
+
+  it("garde une fiche dont l'archivage est illisible, comme non archivée", () => {
+    expect(toCard({ uuid: UUID, company_name: "Bar", isArchived: "peut-être" }, "company")?.archived).toBe(false);
+  });
+});
+
 describe("toCard : personne", () => {
   it("compose le nom et laisse l'adresse vide si elle est incomplète", () => {
     const card = toCard(

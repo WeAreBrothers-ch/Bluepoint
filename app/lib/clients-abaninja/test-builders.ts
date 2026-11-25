@@ -21,6 +21,7 @@ export function card(overrides: Partial<AbaNinjaCard> = {}): AbaNinjaCard {
     vatNumber: null,
     language: "fr",
     tags: [],
+    archived: false,
     ...overrides,
   };
 }

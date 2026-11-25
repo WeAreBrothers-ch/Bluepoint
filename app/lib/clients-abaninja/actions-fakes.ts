@@ -58,9 +58,10 @@ interface MakeProOptionsSeen {
 }
 
 export const prosModule = {
-  makePro: vi.fn(async (_admin: unknown, input: { companyName: string }, options: MakeProOptionsSeen) => {
+  makePro: vi.fn(async (_admin: unknown, input: { companyName: string; email: string }, options: MakeProOptionsSeen) => {
     const { invite, newCustomerOnly, existingCompanyId } = options;
     fake.writes.push({ name: "makePro", args: [input, { invite, newCustomerOnly, existingCompanyId }] });
+    if (input.email === fake.failCreateFor) return failure(new Error("Cet e-mail est déjà celui d’un client de la boutique."));
     if (existingCompanyId === null) await options.onCompanyCreated("gid://shopify/Company/9");
     const companyId = existingCompanyId ?? "gid://shopify/Company/9";
     return success({ companyId, customerId: "gid://shopify/Customer/90", alreadyPro: false, invited: false });

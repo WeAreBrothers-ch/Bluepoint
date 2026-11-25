@@ -1,5 +1,5 @@
 import type { CardsListing } from "./abaninja-read.server";
-import type { AbaNinjaCard } from "./cards";
+import { isPrivateCustomersCard, type AbaNinjaCard } from "./cards";
 import type { Candidate, CardStatus, MatchReason } from "./match";
 import type { ShopifyClient, ShopifySide } from "./shopify-client";
 
@@ -45,10 +45,12 @@ export interface AbsentRow {
   /** Ce que « Créer » fera, ou pourquoi ce n'est pas possible. */
   readonly note: string;
 }
+/** Pourquoi une fiche est mise de côté d'office (sans bouton « Remettre ») ; null si elle l'a été à la main. */
+export type AutoReason = "prives" | "archivee";
+
 export interface IgnoredRow {
   readonly card: CardView;
-  /** Mise de côté d'office (fiche « Clients privés »), sans bouton « Remettre ». */
-  readonly auto: boolean;
+  readonly autoReason: AutoReason | null;
 }
 
 export interface ComparisonView {
@@ -60,7 +62,7 @@ export interface ComparisonView {
     readonly relie: readonly LinkedRow[];
     readonly ignore: readonly IgnoredRow[];
   };
-  /** Fiches « Pas encore dans la boutique » que « Créer les N » peut créer (celles qui ont un e-mail libre). */
+  /** Sociétés « Pas encore dans la boutique » que « Créer les N » crée en clients pro (celles qui ont un e-mail libre). */
   readonly creatable: number;
   /** Fiches AbaNinja illisibles, laissées de côté. */
   readonly skipped: number;
@@ -120,6 +122,11 @@ function absentRow(status: AbsentStatus): AbsentRow {
   return { card: cardView(status.card, status.email), canCreate: true, note };
 }
 
+function autoReason(status: Extract<CardStatus, { kind: "ignore" }>): AutoReason | null {
+  if (!status.auto) return null;
+  return isPrivateCustomersCard(status.card) ? "prives" : "archivee";
+}
+
 export function toComparisonView(statuses: readonly CardStatus[], side: ShopifySide, listing: CardsListing): ComparisonView {
   const groups = {
     meme_email: [] as CandidatesRow[],
@@ -133,7 +140,7 @@ export function toComparisonView(statuses: readonly CardStatus[], side: ShopifyS
       const toFinish = status.card.kind === "company" && !status.client.proReady;
       groups.relie.push({ card: cardView(status.card), client: clientView(status.client), toFinish });
     }
-    else if (status.kind === "ignore") groups.ignore.push({ card: cardView(status.card), auto: status.auto });
+    else if (status.kind === "ignore") groups.ignore.push({ card: cardView(status.card), autoReason: autoReason(status) });
     else if (status.kind === "absent") groups.absent.push(absentRow(status));
     else if (status.kind === "meme_email") groups.meme_email.push({ card: cardView(status.card), candidates: [candidateView(status.candidate)] });
     else groups.a_verifier.push({ card: cardView(status.card), candidates: status.candidates.map(candidateView) });
@@ -147,7 +154,7 @@ export function toComparisonView(statuses: readonly CardStatus[], side: ShopifyS
       ignore: groups.ignore.length,
     },
     groups,
-    creatable: groups.absent.filter((row) => row.canCreate).length,
+    creatable: groups.absent.filter((row) => row.canCreate && row.card.isCompany).length,
     skipped: listing.skipped,
     truncated: listing.truncated || side.truncated,
   };

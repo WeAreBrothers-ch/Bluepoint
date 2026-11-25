@@ -21,6 +21,18 @@ describe("toComparisonView", () => {
     expect(result.creatable).toBe(1);
   });
 
+  it("ne compte dans le lot que les sociétés : une personne avec e-mail se crée une par une", () => {
+    const cards = [card(), card({ uuid: UUID_FAVRE, kind: "person", name: "Luc Favre", emails: ["luc@favre.ch"], phone: null })];
+    const result = view(cards, side([]));
+    expect(result.creatable).toBe(1);
+    expect(result.groups.absent.find((row) => row.card.uuid === UUID_FAVRE)?.canCreate).toBe(true);
+  });
+
+  it("dit pourquoi une fiche est mise de côté d'office", () => {
+    const cards = [card({ archived: true }), card({ uuid: UUID_PARC, name: "Clients privés", number: "1062" })];
+    expect(view(cards, side([])).groups.ignore.map((row) => row.autoReason)).toEqual(["archivee", "prives"]);
+  });
+
   it("écrit les raisons en mots et montre où habite le client", () => {
     const shopify = side([client({ names: ["Restaurant du Lac"], phone: "+41211234567", town: "1095 Lutry" })]);
     const [row] = view([card()], shopify).groups.a_verifier;
@@ -84,7 +96,7 @@ describe("toComparisonView", () => {
   it("dit qu'une fiche est mise de côté d'office ou à la main", () => {
     const cards = [card({ number: "1062", name: "Clients privés" }), card({ uuid: UUID_PARC, name: "Fournisseur" })];
     const rows = view(cards, side([], [UUID_PARC])).groups.ignore;
-    expect(rows.map((row) => row.auto)).toEqual([true, false]);
+    expect(rows.map((row) => row.autoReason)).toEqual(["prives", null]);
   });
 
   it("montre à qui une fiche déjà reliée correspond", () => {
